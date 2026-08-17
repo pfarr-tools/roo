@@ -8,18 +8,17 @@
     "school_types": [
       "Gymnasium"
     ],
-    "plan_code": "DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV(V3.0)",
-    "version": "V3.0",
-    "version_date": "2026-05-21",
-    "title": "Gymnasium - Evangelische Religionslehre – Überarbeitete Fassung vom 21. Mai 2026 (V3.0)",
-    "source_url": "https://www.bildungsplaene-bw.de/,Lde/DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV(V3.0)",
+    "plan_code": "BP2016BW_ALLG_GYM_REV",
+    "version": "V1",
+    "version_date": "2016-03-23",
+    "title": "Gymnasium - Evangelische Religionslehre",
+    "source_url": "https://www.bildungsplaene-bw.de/,Lde/BP2016BW_ALLG_GYM_REV",
     "conversion": {
       "status": "structure_only",
       "complete": false,
-      "reason": "Die offizielle V3.0-Seite ist im Webindex auffindbar und ihre Struktur verifizierbar, läuft beim vollständigen Abruf aber wiederholt in ein Timeout. Es wurden bewusst keine fehlenden Kompetenztexte aus V1 übernommen.",
+      "reason": "In diesem Lauf war die Inhaltsseite erreichbar, die vollständige maschinelle Extraktion sämtlicher Kompetenztexte jedoch nicht zuverlässig möglich. Es wurden keine Texte erfunden.",
       "verified_scope": [
         "Metadaten",
-        "Fassungsdatum",
         "Stufenstruktur",
         "Bereichsstruktur",
         "Prozesskompetenzbereiche"
@@ -299,7 +298,7 @@
         },
         {
           "id": "3.3.3",
-          "title": "Gott",
+          "title": "Bibel",
           "introduction": null,
           "competencies": [],
           "notes": {
@@ -312,7 +311,7 @@
         },
         {
           "id": "3.3.4",
-          "title": "Jesus Christus",
+          "title": "Gott",
           "introduction": null,
           "competencies": [],
           "notes": {
@@ -325,7 +324,7 @@
         },
         {
           "id": "3.3.5",
-          "title": "Kirche und Kirchen",
+          "title": "Jesus Christus",
           "introduction": null,
           "competencies": [],
           "notes": {
@@ -338,6 +337,19 @@
         },
         {
           "id": "3.3.6",
+          "title": "Kirche und Kirchen",
+          "introduction": null,
+          "competencies": [],
+          "notes": {
+            "raw": null,
+            "bible_passages": [],
+            "terms": [],
+            "other": []
+          },
+          "source_raw": null
+        },
+        {
+          "id": "3.3.7",
           "title": "Religionen und Weltanschauungen",
           "introduction": null,
           "competencies": [],
@@ -353,11 +365,15 @@
     },
     {
       "id": "3.4",
-      "label": "Klasse 11",
+      "label": "Klassen 11/12 (Basisfach)",
       "grades": [
-        11
+        11,
+        12
       ],
-      "course": null,
+      "course": {
+        "id": "basic",
+        "label": "Basisfach"
+      },
       "levels": [],
       "domains": [
         {
@@ -388,7 +404,7 @@
         },
         {
           "id": "3.4.3",
-          "title": "Bibel",
+          "title": "Gott",
           "introduction": null,
           "competencies": [],
           "notes": {
@@ -424,19 +440,32 @@
             "other": []
           },
           "source_raw": null
+        },
+        {
+          "id": "3.4.6",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": null,
+          "competencies": [],
+          "notes": {
+            "raw": null,
+            "bible_passages": [],
+            "terms": [],
+            "other": []
+          },
+          "source_raw": null
         }
       ]
     },
     {
       "id": "3.5",
-      "label": "Klassen 12/13 (Basisfach)",
+      "label": "Klassen 11/12 (Leistungsfach)",
       "grades": [
-        12,
-        13
+        11,
+        12
       ],
       "course": {
-        "id": "basic",
-        "label": "Basisfach"
+        "id": "advanced",
+        "label": "Leistungsfach"
       },
       "levels": [],
       "domains": [
@@ -507,99 +536,6 @@
         },
         {
           "id": "3.5.6",
-          "title": "Religionen und Weltanschauungen",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        }
-      ]
-    },
-    {
-      "id": "3.6",
-      "label": "Klassen 12/13 (Leistungsfach)",
-      "grades": [
-        12,
-        13
-      ],
-      "course": {
-        "id": "advanced",
-        "label": "Leistungsfach"
-      },
-      "levels": [],
-      "domains": [
-        {
-          "id": "3.6.1",
-          "title": "Mensch",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        },
-        {
-          "id": "3.6.2",
-          "title": "Welt und Verantwortung",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        },
-        {
-          "id": "3.6.3",
-          "title": "Gott",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        },
-        {
-          "id": "3.6.4",
-          "title": "Jesus Christus",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        },
-        {
-          "id": "3.6.5",
-          "title": "Kirche und Kirchen",
-          "introduction": null,
-          "competencies": [],
-          "notes": {
-            "raw": null,
-            "bible_passages": [],
-            "terms": [],
-            "other": []
-          },
-          "source_raw": null
-        },
-        {
-          "id": "3.6.6",
           "title": "Religionen und Weltanschauungen",
           "introduction": null,
           "competencies": [],
