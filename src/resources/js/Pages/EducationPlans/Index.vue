@@ -1,7 +1,7 @@
 <script setup>
 import de from '../../i18n/de'
 
-const props = defineProps({ educationPlans: Array })
+const props = defineProps({ educationPlans: Array, search: String })
 
 function formatDate(value) {
     if (!value) return de.noVersionDate
@@ -20,6 +20,12 @@ function formatDate(value) {
             </div>
             <a href="/schulen" class="btn btn-outline-secondary">{{ de.schools }}</a>
         </div>
+
+        <form method="get" action="/bildungsplaene" class="input-group mb-4" role="search">
+            <label for="education-plan-search" class="visually-hidden">{{ de.search }}</label>
+            <input id="education-plan-search" name="q" :value="props.search" class="form-control" :placeholder="de.searchEducationPlans">
+            <button class="btn btn-outline-primary" type="submit">{{ de.search }}</button>
+        </form>
 
         <div v-if="!props.educationPlans.length" class="alert alert-info" role="status">
             {{ de.noEducationPlans }}

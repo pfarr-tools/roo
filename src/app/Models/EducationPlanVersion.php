@@ -26,6 +26,11 @@ class EducationPlanVersion extends Model
         return $this->hasMany(EducationPlanCompetenceArea::class);
     }
 
+    public function importRuns(): HasMany
+    {
+        return $this->hasMany(EducationPlanImportRun::class);
+    }
+
     protected function casts(): array
     {
         return ['version_date' => 'date', 'is_complete' => 'boolean', 'conversion_metadata' => AsArrayObject::class, 'raw_payload' => AsArrayObject::class];

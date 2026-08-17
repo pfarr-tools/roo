@@ -125,7 +125,9 @@ Die generische Austauschstruktur wird wie folgt relational abgebildet:
   nichtnumerische bzw. planabhängige Bezeichnungen offen.
 - Eine `Competence` trägt externe Kennung und laufende Nummer. Der direkte
   Text ist optional; differenzierte Formulierungen werden als geordnete
-  `CompetenceVariant` mit optionalem Niveau gespeichert.
+  `CompetenceVariant` mit optionalem Niveau gespeichert. Kompetenzen besitzen
+  außerdem einen fachlichen Aktivstatus, damit importierte, aber für Roo nicht
+  verwendete Einträge ausgeblendet bzw. gezielt wieder aktiviert werden können.
 - `references_raw` werden als `CompetenceRelation` gespeichert. Die
   Rohreferenz bleibt immer erhalten; eine spätere Normalisierung kann interne
   oder planübergreifende Zielkennungen ergänzen.
@@ -137,6 +139,12 @@ Die generische Austauschstruktur wird wie folgt relational abgebildet:
 Zeitpunkte, Fehler und Importstatistik. Ein erneuter Import derselben
 Plan-/Versionskennung aktualisiert den Versionssnapshot und ersetzt deren
 abgeleitete relationale Inhalte innerhalb einer Transaktion.
+
+Die Phase-2-Oberfläche unterstützt Suche über Plan-, Fassungs-, Bereichs- und
+Kompetenztexte, hierarchische Detailansicht, Fassungsvergleich und die Anzeige
+der Importläufe. Der Vergleich arbeitet mit den stabilen externen
+Kompetenzkennungen und kennzeichnet hinzugekommene, entfernte, geänderte und
+unveränderte Einträge.
 
 ### Beobachtung vs. Bewertung
 

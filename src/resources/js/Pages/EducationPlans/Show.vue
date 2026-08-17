@@ -1,7 +1,16 @@
 <script setup>
+import CompetenceList from '../../Components/EducationPlans/CompetenceList.vue'
 import de from '../../i18n/de'
 
-const props = defineProps({ educationPlan: Object, versions: Array, selectedVersion: Object })
+const props = defineProps({
+    educationPlan: Object,
+    versions: Array,
+    selectedVersion: Object,
+    comparisonVersion: Object,
+    comparisonRows: Array,
+    importRuns: Array,
+})
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 
 function formatDate(value) {
     if (!value) return de.noVersionDate
@@ -10,6 +19,9 @@ function formatDate(value) {
 }
 
 function versionUrl(id) { return `/bildungsplaene/${props.educationPlan.id}?version=${id}` }
+function comparisonUrl(id) { return `/bildungsplaene/${props.educationPlan.id}?version=${props.selectedVersion.id}&compare=${id}` }
+function statusClass(status) { return { added: 'text-bg-success', removed: 'text-bg-danger', changed: 'text-bg-warning', unchanged: 'text-bg-secondary' }[status] }
+function goToComparison(event) { window.location.href = event.target.value ? comparisonUrl(event.target.value) : versionUrl(props.selectedVersion.id) }
 </script>
 
 <template>
@@ -48,15 +60,41 @@ function versionUrl(id) { return `/bildungsplaene/${props.educationPlan.id}?vers
 
                 <div class="card mb-4">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                             <div>
                                 <h2 class="h4 mb-1">{{ selectedVersion.title }}</h2>
                                 <p class="text-muted mb-0">{{ de.version }} {{ selectedVersion.external_identifier }} · {{ formatDate(selectedVersion.version_date) }}</p>
                             </div>
                             <a v-if="selectedVersion.source_url" :href="selectedVersion.source_url" target="_blank" rel="noreferrer" class="btn btn-sm btn-outline-secondary">{{ de.source }}</a>
                         </div>
+                        <div v-if="versions.length > 1" class="row align-items-center mt-3 g-2">
+                            <label for="compare-version" class="col-sm-auto col-form-label">{{ de.compareWith }}</label>
+                            <div class="col-sm-6">
+                                <select id="compare-version" class="form-select form-select-sm" :value="comparisonVersion?.id ?? ''" @change="goToComparison">
+                                    <option value="">{{ de.noComparison }}</option>
+                                    <option v-for="version in versions" :key="version.id" :value="version.id" :disabled="version.id === selectedVersion.id">{{ version.external_identifier || version.title }}</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <section v-if="comparisonVersion" class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h5">{{ de.comparison }}: {{ selectedVersion.external_identifier }} ↔ {{ comparisonVersion.external_identifier }}</h2>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead><tr><th>Kennung</th><th>Bereich</th><th>{{ selectedVersion.external_identifier }}</th><th>{{ comparisonVersion.external_identifier }}</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="row in comparisonRows" :key="row.external_identifier">
+                                        <td>{{ row.external_identifier }}</td><td>{{ row.title }}</td><td class="small text-break">{{ row.current }}</td><td class="small text-break">{{ row.other }}</td>
+                                        <td><span :class="['badge', statusClass(row.status)]">{{ de.comparisonStatus[row.status] }}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
 
                 <section v-if="selectedVersion.competence_areas?.length" class="mb-4">
                     <h2 class="h4">{{ de.processCompetencies }}</h2>
@@ -64,7 +102,7 @@ function versionUrl(id) { return `/bildungsplaene/${props.educationPlan.id}?vers
                         <div class="card-body">
                             <h3 class="h5">{{ area.external_identifier }} {{ area.title }}</h3>
                             <p v-if="area.introduction" class="text-muted">{{ area.introduction }}</p>
-                            <competence-list :competencies="area.competencies" />
+                            <CompetenceList :competencies="area.competencies" :plan-id="educationPlan.id" :csrf-token="csrfToken" :labels="de" />
                         </div>
                     </article>
                 </section>
@@ -78,22 +116,18 @@ function versionUrl(id) { return `/bildungsplaene/${props.educationPlan.id}?vers
                         <div class="card-body">
                             <h3 class="h5">{{ area.external_identifier }} {{ area.title }}</h3>
                             <p v-if="area.introduction" class="text-muted">{{ area.introduction }}</p>
-                            <competence-list :competencies="area.competencies" />
+                            <CompetenceList :competencies="area.competencies" :plan-id="educationPlan.id" :csrf-token="csrfToken" :labels="de" />
                         </div>
                     </article>
+                </section>
+
+                <section v-if="importRuns.length" class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h5">{{ de.importHistory }}</h2>
+                        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>{{ de.version }}</th><th>{{ de.importSource }}</th><th>{{ de.importStatus }}</th><th>{{ de.date }}</th></tr></thead><tbody><tr v-for="run in importRuns" :key="run.id"><td>{{ run.version?.external_identifier }}</td><td class="text-break">{{ run.source_path }}</td><td>{{ run.status }}</td><td>{{ formatDate(run.finished_at) }}</td></tr></tbody></table></div>
+                    </div>
                 </section>
             </section>
         </div>
     </main>
 </template>
-
-<script>
-export default {
-    components: {
-        CompetenceList: {
-            props: { competencies: Array },
-            template: `<ol class="list-group list-group-numbered list-group-flush"><li v-for="competency in competencies" :key="competency.id" class="list-group-item px-0"><div class="d-flex gap-2"><span class="text-muted">{{ competency.external_identifier }}</span><div class="flex-grow-1"><p v-if="competency.text" class="mb-2">{{ competency.text }}</p><div v-for="variant in competency.variants" :key="variant.id" class="small mb-1"><span class="badge text-bg-light me-2">{{ variant.level?.external_identifier ?? 'Standard' }}</span>{{ variant.text }}</div><details v-if="competency.relations?.length" class="small text-muted mt-2"><summary>Quellverweise ({{ competency.relations.length }})</summary><div v-for="relation in competency.relations" :key="relation.id">{{ relation.raw_reference }}</div></details></div></div></li></ol>`,
-        },
-    },
-}
-</script>
