@@ -27,6 +27,17 @@ it('registers a user and redirects to the dashboard', function () {
     $response->assertRedirect('/dashboard');
     $this->assertAuthenticated();
     $this->assertDatabaseHas('users', ['email' => 'erika@example.test']);
+
+    $this->post('/logout', ['_token' => csrf_token()])->assertRedirect('/');
+    $this->assertGuest();
+
+    $this->post('/login', [
+        '_token' => csrf_token(),
+        'email' => 'erika@example.test',
+        'password' => 'Ein-sicheres-Passwort-123!',
+    ])->assertRedirect('/dashboard');
+
+    $this->assertAuthenticated();
 });
 
 it('protects the dashboard and allows an authenticated user to log out', function () {

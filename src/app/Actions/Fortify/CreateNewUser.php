@@ -4,7 +4,6 @@ namespace App\Actions\Fortify;
 
 use App\Models\Organization;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -42,7 +41,8 @@ class CreateNewUser implements CreatesNewUsers
                 'organization_id' => $organization->id,
                 'name' => $input['name'],
                 'email' => $input['email'],
-                'password' => Hash::make($input['password']),
+                // User::$casts hashes the password exactly once when it is persisted.
+                'password' => $input['password'],
             ]);
         });
     }
