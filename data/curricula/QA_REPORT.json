@@ -1,0 +1,175 @@
+{
+  "generated": "2026-08-17",
+  "documents": [
+    {
+      "id": "GS_1-2_A",
+      "complete": true,
+      "unit_count": 17,
+      "content_competencies": 115,
+      "process_competencies": 80,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GS_1-2_B",
+      "complete": true,
+      "unit_count": 15,
+      "content_competencies": 122,
+      "process_competencies": 127,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GS_3-4_A",
+      "complete": true,
+      "unit_count": 15,
+      "content_competencies": 81,
+      "process_competencies": 105,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GS_3-4_B",
+      "complete": true,
+      "unit_count": 14,
+      "content_competencies": 132,
+      "process_competencies": 135,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_5-6_A",
+      "complete": true,
+      "unit_count": 8,
+      "content_competencies": 69,
+      "process_competencies": 78,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_5-6_B",
+      "complete": true,
+      "unit_count": 10,
+      "content_competencies": 69,
+      "process_competencies": 98,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_7-9_A",
+      "complete": true,
+      "unit_count": 12,
+      "content_competencies": 81,
+      "process_competencies": 101,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_7-9_B",
+      "complete": true,
+      "unit_count": 12,
+      "content_competencies": 108,
+      "process_competencies": 136,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_10_A",
+      "complete": true,
+      "unit_count": 5,
+      "content_competencies": 22,
+      "process_competencies": 14,
+      "process_denomination_inferred_by_exact_text_match": 3,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "SEK1_10_B",
+      "complete": true,
+      "unit_count": 5,
+      "content_competencies": 33,
+      "process_competencies": 26,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_5-6_A",
+      "complete": true,
+      "unit_count": 8,
+      "content_competencies": 70,
+      "process_competencies": 61,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_5-6_B",
+      "complete": true,
+      "unit_count": 10,
+      "content_competencies": 72,
+      "process_competencies": 94,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_7-8_A",
+      "complete": true,
+      "unit_count": 5,
+      "content_competencies": 76,
+      "process_competencies": 50,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_7-8_B",
+      "complete": true,
+      "unit_count": 7,
+      "content_competencies": 93,
+      "process_competencies": 86,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_9-10_A",
+      "complete": true,
+      "unit_count": 10,
+      "content_competencies": 82,
+      "process_competencies": 163,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    },
+    {
+      "id": "GYM_9-10_B",
+      "complete": true,
+      "unit_count": 7,
+      "content_competencies": 70,
+      "process_competencies": 111,
+      "process_denomination_inferred_by_exact_text_match": 0,
+      "process_without_denomination": 0,
+      "number_spacing_issues": 0
+    }
+  ],
+  "totals": {
+    "documents": 16,
+    "complete_documents": 16,
+    "units": 160,
+    "content_competency_occurrences": 1295,
+    "process_competency_occurrences": 1465,
+    "process_denomination_inferred_by_exact_text_match": 3,
+    "process_competencies_without_denomination": 0,
+    "number_spacing_issues": 0
+  }
+}

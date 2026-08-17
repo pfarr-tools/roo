@@ -137,9 +137,10 @@ Die generische Austauschstruktur wird wie folgt relational abgebildet:
   `CompetenceVariant` mit optionalem Niveau gespeichert. Kompetenzen besitzen
   außerdem einen fachlichen Aktivstatus, damit importierte, aber für Roo nicht
   verwendete Einträge ausgeblendet bzw. gezielt wieder aktiviert werden können.
-- `references_raw` werden als `CompetenceRelation` gespeichert. Die
-  Rohreferenz bleibt immer erhalten; eine spätere Normalisierung kann interne
-  oder planübergreifende Zielkennungen ergänzen.
+- Strukturierte oder rohe Kompetenzverweise werden als
+  `CompetenceRelation` gespeichert. Die Rohreferenz sowie, sofern vorhanden,
+  Typ, Zielplan und Zielkennung bleiben erhalten; eine spätere Normalisierung
+  kann interne oder planübergreifende Zielbeziehungen ergänzen.
 - Bereichsnotizen und Rohtexte werden strukturiert bzw. als Text übernommen.
   Unbekannte Provider-Metadaten und der gesamte Quellstand bleiben im
   Payload-Snapshot erhalten.
@@ -170,6 +171,14 @@ ihre erkannte Kennung, Anzeigeform und den unveränderten Referenztext. Eine
 Binding darf zunächst nur `plan_code` besitzen; wird der zugehörige
 Bildungsplan später importiert, kann `education_plan_id` ergänzt werden.
 
+`CurriculumTopicCompetency.denomination` ist für importierte
+prozessbezogene Kompetenzen verpflichtend, weil die offiziellen
+Curriculum-Quellen jede Prozesskompetenz konfessionell kennzeichnen.
+Die Datenbank lässt das Feld dennoch nullable, damit ein eigenes Curriculum
+gemeinsame Prozesskompetenzen zunächst ohne Zuordnung erfassen und später
+zuordnen kann. Inhaltsbezogene Kompetenzen übernehmen ihre Konfession aus dem
+jeweiligen Profil.
+
 Ein eigenes Curriculum wird aus einer oder mehreren importierten Fassungen
 abgeleitet. Die Einheiten, Kompetenzreferenzen und Perspektiven werden beim
 Anlegen kopiert (Copy-on-use), `derived_from_id` dokumentiert die Herkunft.
@@ -181,6 +190,21 @@ an der Quellvorlage.
 Eine vorhandene `units[].year`-Angabe im JSON-Quellformat wird beim Import als
 Startzuordnung übernommen. Dadurch können redaktionell gepflegte
 Jahrgangsverteilungen zwischen Quelle und Datenbank ausgetauscht werden.
+
+Curriculumfassungen besitzen `CurriculumEducationPlanBinding`-Einträge je
+Konfession und Rolle. Der `plan_code` kann in der Curriculumansicht gegen
+einen importierten Bildungsplan aufgelöst werden. Die einzelnen
+`CurriculumTopicCompetency`-Referenzen werden über ihre externe Kennung auf
+`EducationPlanCompetency` verknüpft; nicht auflösbare Referenzen bleiben mit
+Rohtext und Kennung erhalten. Beim Import muss jede Prozesskompetenz eine
+Konfession tragen; bei eigenen Curricula sind gemeinsame Prozesskompetenzen
+als noch nicht zugeordnete Entwürfe möglich.
+
+Die Curriculumansicht stellt die Bildungsplanbindungen sowie getrennte
+Bearbeitungsdialoge für inhaltsbezogene und prozessbezogene Kompetenzen bereit.
+Bei eigenen Curricula werden Bindungen, Kompetenzreferenzen und optionale
+Prozesskonfessionen aus den gewählten Vorlagen übernommen. Ein eigenes
+Curriculum kann außerdem ohne Vorlage angelegt werden.
 
 Die Bearbeitungsansicht verwendet `Curriculum.grades` als Metadaten für die
 Jahrgangsspalten und blendet nicht relevante Jahrgänge aus. Beim Anlegen eines

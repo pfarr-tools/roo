@@ -12,7 +12,9 @@ Aktuelle Schemaversion: `2.0.0`.
 2. **Keine fest codierten Domains.** Ein Plan kann beliebig viele Bereiche mit beliebigen Namen enthalten. Eine künftige Revision darf sie umbenennen, hinzufügen, entfernen oder völlig anders ordnen.
 3. **Differenzierung als Variante.** Formulierungen derselben Kompetenzposition auf G-, M- oder E-Niveau werden nicht zu drei unabhängigen Kompetenzen, sondern zu `variants` derselben Kompetenz.
 4. **Stufen sind generisch.** Jahrgangsbänder, einzelne Klassen, Kursarten und Niveaus werden über `stages`, `grades`, `course` und `levels` beschrieben.
-5. **Quelltreue vor Normalisierung.** `source_raw` und `references_raw` bewahren Informationen, die ein Importer später weiter normalisieren kann.
+5. **Quelltreue vor Normalisierung.** `source_raw` sowie strukturierte oder rohe
+   `references` bewahren Informationen, die ein Importer später weiter
+   normalisieren kann.
 6. **Keine implizite Vollständigkeit.** Der Konvertierungsstatus kann in `metadata.conversion` dokumentiert werden. Ein Importer sollte `complete: false` sichtbar behandeln.
 
 ## 3. Top-Level-Struktur
@@ -166,7 +168,7 @@ Bereinigte, aber strukturell möglichst quellnahe Textrepräsentation des gesamt
     {"level": "M", "text": "…"},
     {"level": "E", "text": "…"}
   ],
-  "references_raw": []
+"references": []
 }
 ```
 
@@ -186,15 +188,26 @@ Der Wert in `variant.level` verweist auf eine ID aus `stage.levels`. Dadurch kan
 
 ## 9. Verweise
 
-Die aktuelle Konvertierung bewahrt Verweise zunächst verlustarm als:
+Die Konvertierung bewahrt Verweise zunächst verlustarm als `references`-Arrays.
+Sie können direkt an einer Kompetenz, an einer Variante oder an einer
+prozessbezogenen Kompetenz stehen. Ein Eintrag ist entweder ein String oder ein
+strukturiertes Objekt:
 
 ```json
-"references_raw": [
-  "2.2 Deuten (1)",
-  "3.1.2 Welt und Verantwortung (3)",
-  "D 3.1.1.1 Literarische Texte"
+"references": [
+  {
+    "type": "process_competency",
+    "target": "2.1.5",
+    "targetPlan": "self",
+    "targetSubject": null,
+    "raw": "2.1.5"
+  }
 ]
 ```
+
+`references_raw` bleibt als kompatibles Eingabeformat für ältere Exporte
+zulässig. Roo überführt beide Formen in `EducationPlanCompetenceRelation` und
+bewahrt Typ, Zielplan, Zielkennung und den Rohtext.
 
 Für Roo empfiehlt sich in einem zweiten Import-/Normalisierungsschritt zusätzlich eine strukturierte Relationstabelle. Ein mögliches internes Zielmodell wäre:
 
@@ -245,4 +258,9 @@ Für Roo sollten folgende Regeln gelten:
 
 ## 13. Aktuelle Dateien dieses Pakets
 
-Das Paket enthält fünf Plan-Dateien. Grundschule, Sekundarstufe I, die ältere Gymnasium-V1-Fassung und GMS-Oberstufe wurden aus den offiziellen PDF-Exporten extrahiert. Beim Gymnasium V3.0 konnte die offizielle Hauptseite im verwendeten Extraktionszugang nicht vollständig geladen werden; deshalb enthält diese Datei nur die verifizierte Struktur und ist ausdrücklich mit `metadata.conversion.complete = false` markiert. Die ältere V1-Fassung bleibt als eigene, klar gekennzeichnete Planfassung erhalten und wird nicht als Ersatz für V3.0 verwendet.
+Das Paket enthält mehrere konfessionelle Bildungspläne für Grundschule,
+Sekundarstufe I, Gymnasium und Gemeinschaftsschul-Oberstufe sowie die
+verifizierten Strukturdateien der Gymnasium-V3.0-Fassungen. Dateien mit
+identischem `metadata.plan_code` werden beim Paketimport in ihrer Reihenfolge
+aktualisiert; die letzte Quelle ist die maßgebliche Fassung. Unvollständige
+Strukturdateien bleiben über `metadata.conversion.complete = false` sichtbar.

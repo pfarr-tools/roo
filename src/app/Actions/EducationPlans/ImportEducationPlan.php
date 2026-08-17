@@ -47,19 +47,20 @@ class ImportEducationPlan
                     ],
                 );
                 $versionIdentifier = (string) ($metadata['version'] ?? 'unversioned');
-                $version = EducationPlanVersion::updateOrCreate(
-                    ['education_plan_id' => $plan->id, 'external_identifier' => $versionIdentifier],
-                    [
-                        'schema_version' => $payload['schema_version'],
-                        'title' => $metadata['title'],
-                        'version_date' => $metadata['version_date'] ?? null,
-                        'source_url' => $metadata['source_url'] ?? null,
-                        'is_complete' => $metadata['conversion']['complete'] ?? true,
-                        'conversion_metadata' => $metadata['conversion'] ?? null,
-                        'raw_payload' => $payload,
-                        'supplementary_content_raw' => $payload['supplementary_content_raw'] ?? null,
-                    ],
-                );
+                $version = $versionIdentifier === 'unversioned'
+                    ? ($plan->versions()->where('title', $metadata['title'])->latest('id')->first() ?? new EducationPlanVersion(['education_plan_id' => $plan->id, 'external_identifier' => $versionIdentifier]))
+                    : EducationPlanVersion::firstOrNew(['education_plan_id' => $plan->id, 'external_identifier' => $versionIdentifier]);
+                $version->fill([
+                    'schema_version' => $payload['schema_version'],
+                    'title' => $metadata['title'],
+                    'version_date' => $metadata['version_date'] ?? null,
+                    'source_url' => $metadata['source_url'] ?? null,
+                    'is_complete' => $metadata['conversion']['complete'] ?? true,
+                    'conversion_metadata' => $metadata['conversion'] ?? null,
+                    'raw_payload' => $payload,
+                    'supplementary_content_raw' => $payload['supplementary_content_raw'] ?? null,
+                ]);
+                $version->save();
 
                 $this->clearVersion($version);
                 $counts = ['stages' => 0, 'areas' => 0, 'competencies' => 0, 'variants' => 0, 'relations' => 0];
@@ -174,10 +175,24 @@ class ImportEducationPlan
                 $counts['variants']++;
             }
 
-            foreach ($data['references_raw'] ?? [] as $referencePosition => $reference) {
+            $references = $data['references_raw'] ?? [];
+            foreach ($data['references'] ?? [] as $reference) {
+                $references[] = $reference;
+            }
+            foreach ($data['variants'] ?? [] as $variant) {
+                foreach ($variant['references'] ?? [] as $reference) {
+                    $references[] = $reference;
+                }
+            }
+            foreach ($references as $referencePosition => $reference) {
+                $structured = is_array($reference) ? $reference : [];
+                $rawReference = is_string($reference) ? $reference : ($structured['raw'] ?? json_encode($reference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                 DB::table('education_plan_competence_relations')->insert([
                     'source_competency_id' => $competency->id,
-                    'raw_reference' => $reference,
+                    'relation_type' => $structured['type'] ?? null,
+                    'target_plan_identifier' => $structured['targetPlan'] ?? $structured['target_plan'] ?? null,
+                    'target_external_identifier' => $structured['target'] ?? null,
+                    'raw_reference' => $rawReference,
                     'position' => $referencePosition,
                 ]);
                 $counts['relations']++;

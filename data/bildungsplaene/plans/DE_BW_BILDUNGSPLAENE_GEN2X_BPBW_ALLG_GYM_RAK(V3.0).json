@@ -1,0 +1,30 @@
+{
+  "schema_version": "2.0.0",
+  "type": "education_plan",
+  "metadata": {
+    "country": "DE",
+    "state": "BW",
+    "subject": "Altkatholische Religionslehre Überarbeitete Fassung vom 21. Mai 2026 (V3.0)",
+    "school_types": [],
+    "plan_code": "DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_RAK(V3.0)",
+    "version": null,
+    "version_date": null,
+    "title": "Altkatholische Religionslehre Überarbeitete Fassung vom 21. Mai 2026 (V3.0)",
+    "source_url": "https://www.bildungsplaene-bw.de/,Lde/DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_RAK(V3.0)",
+    "source": {
+      "root_url": "https://www.bildungsplaene-bw.de/,Lde/DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_RAK(V3.0)",
+      "retrieved_at": "2026-08-17T16:30:00.413Z",
+      "page_count": 1,
+      "corpus_sha256": "1ae892b1c643df8813e1bffb7a303e5eb5208175e0dc472681e81f5398fddf7e"
+    },
+    "conversion": {
+      "complete": false,
+      "status": "incomplete",
+      "errors": 2,
+      "warnings": 0
+    }
+  },
+  "guiding_principles": [],
+  "process_competencies": [],
+  "stages": []
+}

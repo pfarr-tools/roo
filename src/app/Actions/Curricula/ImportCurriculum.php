@@ -10,6 +10,8 @@ use App\Models\CurriculumTopicCompetency;
 use App\Models\CurriculumTopicProfile;
 use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
+use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanVersion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -54,17 +56,28 @@ class ImportCurriculum
                     ],
                 );
                 $existingYears = $version->topics()->pluck('year', 'external_identifier');
+                $existingBindings = $version->bindings()->get()->keyBy(fn ($binding): string => implode('|', [$binding->denomination, $binding->role]));
                 $version->topics()->delete();
                 $version->bindings()->delete();
                 foreach ($payload['education_plan_bindings'] ?? [] as $binding) {
-                    $plan = ! empty($binding['plan_code']) ? EducationPlan::where('external_identifier', $binding['plan_code'])->first() : null;
+                    $previousBinding = $existingBindings->get(implode('|', [$binding['denomination'] ?? null, $binding['role'] ?? null]));
+                    $planCode = $binding['plan_code'] ?? $previousBinding?->plan_code;
+                    $plan = ! empty($planCode) ? EducationPlan::where('external_identifier', $planCode)->first() : null;
                     CurriculumEducationPlanBinding::create([
                         'curriculum_version_id' => $version->id, 'education_plan_id' => $plan?->id,
-                        'plan_code' => $binding['plan_code'] ?? null, 'role' => $binding['role'] ?? null,
+                        'plan_code' => $planCode, 'role' => $binding['role'] ?? null,
                         'denomination' => $binding['denomination'] ?? null, 'subject' => $binding['subject'] ?? null,
                         'raw_data' => $binding,
                     ]);
                 }
+                $planVersionIds = EducationPlanVersion::whereIn('education_plan_id', CurriculumEducationPlanBinding::where('curriculum_version_id', $version->id)->whereNotNull('education_plan_id')->pluck('education_plan_id'))->pluck('id');
+                $findCompetency = function (?string $identifier) use ($planVersionIds): ?int {
+                    if (! $identifier) {
+                        return null;
+                    }
+
+                    return EducationPlanCompetency::where('external_identifier', $identifier)->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $planVersionIds))->value('id');
+                };
                 foreach ($payload['units'] as $position => $unit) {
                     $topic = CurriculumTopic::create([
                         'curriculum_version_id' => $version->id, 'external_identifier' => $unit['id'] ?? null,
@@ -76,12 +89,18 @@ class ImportCurriculum
                     ]);
                     $competencyPosition = 0;
                     foreach ($unit['process_competencies'] ?? [] as $competency) {
-                        $this->createCompetency($topic, null, 'process', $competency, $competencyPosition++);
+                        $this->createCompetency($topic, $competency['denomination'] ?? null, 'process', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
                     }
                     foreach ($unit['denominational_profiles'] ?? [] as $denomination => $profile) {
                         CurriculumTopicProfile::create(['curriculum_topic_id' => $topic->id, 'denomination' => $denomination, 'perspective' => $profile['perspective'] ?? []]);
                         foreach ($profile['content_competencies'] ?? [] as $competency) {
-                            $this->createCompetency($topic, $denomination, 'content', $competency, $competencyPosition++);
+                            $references = $competency['references'] ?? [];
+                            if ($references === []) {
+                                $this->createCompetency($topic, $denomination, 'content', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
+                            }
+                            foreach ($references as $reference) {
+                                $this->createCompetency($topic, $denomination, 'content', ['id' => $reference['id'] ?? null, 'display' => $reference['display'] ?? null, 'raw' => $competency['raw'] ?? null], $competencyPosition++, $findCompetency($reference['id'] ?? null));
+                            }
                         }
                     }
                 }
@@ -96,10 +115,10 @@ class ImportCurriculum
         });
     }
 
-    private function createCompetency(CurriculumTopic $topic, ?string $denomination, string $kind, array $data, int $position): void
+    private function createCompetency(CurriculumTopic $topic, ?string $denomination, string $kind, array $data, int $position, ?int $educationPlanCompetencyId = null): void
     {
         CurriculumTopicCompetency::create([
-            'curriculum_topic_id' => $topic->id, 'denomination' => $denomination, 'competency_kind' => $kind,
+            'curriculum_topic_id' => $topic->id, 'education_plan_competency_id' => $educationPlanCompetencyId, 'denomination' => $denomination, 'competency_kind' => $kind,
             'external_identifier' => $data['id'] ?? ($data['references'][0]['id'] ?? null),
             'display' => $data['display'] ?? ($data['references'][0]['display'] ?? null),
             'raw_text' => $data['raw'] ?? null, 'position' => $position,
@@ -110,6 +129,14 @@ class ImportCurriculum
     {
         if (($payload['type'] ?? null) !== 'confessional_cooperative_curriculum' || ! isset($payload['schema_version'], $payload['metadata']['title'], $payload['units']) || ! is_array($payload['units'])) {
             throw new \InvalidArgumentException('Ungültiges Curriculum-Importformat.');
+        }
+
+        foreach ($payload['units'] as $unit) {
+            foreach ($unit['process_competencies'] ?? [] as $competency) {
+                if (! is_string($competency['denomination'] ?? null) || trim($competency['denomination']) === '') {
+                    throw new \InvalidArgumentException('Jede Prozesskompetenz muss eine Konfession enthalten.');
+                }
+            }
         }
     }
 }

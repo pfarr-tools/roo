@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum Sek.I 10 A",
@@ -17,12 +17,15 @@
     ],
     "source": {
       "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6250_02lg8izo.docx",
-      "format": "docx"
+      "format": "docx",
+      "sha256": "8aed9a8aab1e97b025ee47ed5b46fbf5ab73736da85f5356920f05126688e819"
     },
     "conversion": {
       "complete": true,
-      "method": "OOXML table extraction",
-      "unit_count": 5
+      "method": "OOXML table/paragraph extraction with formatting-aware denomination attribution",
+      "unit_count": 5,
+      "content_competency_occurrences": 22,
+      "process_competency_occurrences": 14
     }
   },
   "education_plan_bindings": [
@@ -30,13 +33,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_SEK1_REV"
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_SEK1_RRK"
     }
   ],
   "units": [
@@ -46,41 +49,161 @@
       "title": "Die Bergpredigt als Herausforderung: Nach der Bergpredigt heute leben?",
       "hours": null,
       "preparation_questions": [
-        "Wie lässt sich die ethische Botschaft Jesu kurz zusammenfassen? Wie ist die Bergpredigt gemeint? Kann man (muss man) als Christin, als Christ von heute nach der Bergpredigt leben?"
+        "Impulsfragen für das Vorbereitungsteam: Wie lässt sich die ethische Botschaft Jesu kurz zusammenfassen?",
+        "Wie ist die Bergpredigt gemeint?",
+        "Kann man (muss man) als Christin, als Christ von heute nach der Bergpredigt leben?"
       ],
-      "shared_plan": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Didaktische Fragen und inhaltliche Umsetzungsschritte"
+        }
+      ],
       "denominational_profiles": {
         "evangelical": {
-          "content_competencies": [],
-          "perspective": []
+          "content_competencies": [
+            {
+              "id": "3.3.2.1",
+              "number": 1,
+              "display": "3.3.2 (1)",
+              "denomination": "evangelical",
+              "text": "G den herausfordernden und zusprechenden Charakter der Bergpredigt für christliches Leben an Beispielen beschreiben.M den herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen.E sich mit dem herausfordernden und zusprechenden Charakter der Bergpredigt (z. B. im Hinblick auf Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseinandersetzen.3.3.1 Mensch (2)G / M: Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der biblischen Sichtweise des Menschen aufzeigenE auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusammenleben entwickeln",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.2(1)G den herausfordernden und zusprechenden Charakter der Bergpredigt für christliches Leben an Beispielen beschreiben.M den herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen.E sich mit dem herausfordernden und zusprechenden Charakter der Bergpredigt (z. B. im Hinblick auf Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseinandersetzen.3.3.1 Mensch (2)G / M: Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der biblischen Sichtweise des Menschen aufzeigenE auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusammenleben entwickeln",
+              "references": [
+                {
+                  "id": "3.3.2.1",
+                  "display": "3.3.2 (1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Inhaltsbezogene Kompetenzen evangelisch"
+          ]
         },
         "catholic": {
-          "content_competencies": [],
+          "content_competencies": [
+            {
+              "id": "3.3.1.6",
+              "number": 6,
+              "display": "3.3.1 (6)",
+              "denomination": "catholic",
+              "text": "ausgehend von christlichen Normen (z. B. Mt 7,12) und Werten (z. B. Gerechtigkeit und Freiheit) G zeigen, wie / M erklären, wie / E beurteilen, warum verantwortliches Handeln zur Gestaltung einer solidarischen Gesellschaft beiträgt",
+              "levels_mentioned": [
+                "G",
+                "M"
+              ],
+              "raw": "3.3.1(6)ausgehend von christlichen Normen (z. B. Mt 7,12) und Werten (z. B. Gerechtigkeit und Freiheit) G zeigen, wie / M erklären, wie / E beurteilen, warum verantwortliches Handeln zur Gestaltung einer solidarischen Gesellschaft beiträgt",
+              "references": [
+                {
+                  "id": "3.3.1.6",
+                  "display": "3.3.1 (6)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.5.5",
+              "number": 5,
+              "display": "3.3.5 (5)",
+              "denomination": "catholic",
+              "text": "an Beispielen aus der Bergpredigt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren, wie die Botschaft Jesu zum Perspektivenwechsel herausfordert",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.5(5)an Beispielen aus der Bergpredigt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren, wie die Botschaft Jesu zum Perspektivenwechsel herausfordert",
+              "references": [
+                {
+                  "id": "3.3.5.5",
+                  "display": "3.3.5 (5)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.2.6",
+              "number": 6,
+              "display": "3.3.2 (6)",
+              "denomination": "catholic",
+              "text": "sich am Beispiel des „Projekts Weltethos“ mit christlicher Weltverantwortung auseinandersetzen",
+              "levels_mentioned": [],
+              "raw": "3.3.2(6) sich am Beispiel des „Projekts Weltethos“ mit christlicher Weltverantwortung auseinandersetzen",
+              "references": [
+                {
+                  "id": "3.3.2.6",
+                  "display": "3.3.2 (6)"
+                }
+              ]
+            }
+          ],
           "perspective": [
-            "Prozessbezogene Kompetenzen aus beiden Fachplänen: 2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Übe r zeugungen im Dialog argumentativ auseinandersetzen"
+            "Inhaltsbezogene Kompetenzen katholisch"
           ]
         }
       },
       "process_competencies": [
         {
           "id": "2.1.4",
-          "display": "2.1.4"
+          "display": "2.1.4",
+          "denomination": "evangelical",
+          "text": "in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren",
+          "raw": "2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.2.4",
-          "display": "2.2.4"
+          "display": "2.2.4",
+          "denomination": "evangelical",
+          "text": "den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen",
+          "raw": "2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.4.3",
-          "display": "2.4.3"
+          "display": "2.4.3",
+          "denomination": "evangelical",
+          "text": "sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen",
+          "raw": "2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.3.1",
-          "display": "2.3.1"
+          "display": "2.3.1",
+          "denomination": "catholic",
+          "text": "die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen",
+          "raw": "2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen",
+          "source_formatting": {
+            "fill": "FFFF00",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.4.6",
-          "display": "2.4.6"
+          "display": "2.4.6",
+          "denomination": "catholic",
+          "text": "sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen",
+          "raw": "2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen",
+          "source_formatting": {
+            "fill": "FFFF00",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         }
       ],
       "raw_rows": [
@@ -88,25 +211,25 @@
           "UE 1: Die Bergpredigt als Herausforderung: Nach der Bergpredigt heute leben?"
         ],
         [
-          "Impulsfragen für das Vorbereitungsteam: Wie lässt sich die ethische Botschaft Jesu kurz zusammenfassen? Wie ist die Bergpredigt gemeint? Kann man (muss man) als Christin, als Christ von heute nach der Bergpredigt leben?"
+          "Impulsfragen für das Vorbereitungsteam:Wie lässt sich die ethische Botschaft Jesu kurz zusammenfassen?Wie ist die Bergpredigt gemeint?Kann man (muss man) als Christin, als Christ von heute nach der Bergpredigt leben?"
         ],
         [
-          "Inhaltsbezogene Komp e tenzen evangelisch",
+          "Inhaltsbezogene Kompetenzen evangelisch",
           "Didaktische Fragen und inhaltliche Umsetzungsschritte",
-          "Inhaltsbezogene Kompete n zen katholisch"
+          "Inhaltsbezogene Kompetenzen katholisch"
         ],
         [
-          "Die Schülerinnen und Sch ü ler können 3.3.2(1) G den herausfordernden und zusprechenden Chara k ter der Bergpredigt für christliches Leben an Be i spielen beschreiben. M den herausfordernden und zusprechenden Chara k ter der Bergpredigt zu Fr a gen christlicher Lebensg e staltung (z. B. Gebet, G e walt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen. E sich mit dem herausfo r dernden und zuspreche n den Charakter der Bergpr e digt (z. B. im Hinblick auf Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseina n dersetzen. 3.3.1 Mensch (2) G / M: Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der bibl i schen Sichtweise des Me n schen aufzeigen E auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusamme n leben entwickeln",
-          "Umsetzungsschritte Die Bergpredigt als Grun d satzerklärung der Ethik Jesu: Aufbau, Gliederung, Parall e len im Lukasevangelium Unterschiedliche Auslegung s traditionen der Bergpredigt (wörtl i ches/bildhaftes/exklusives Verständnis der Bergpredigt) Zentrale Texte aus der Ber g predigt in Auswahl: Seligpre i sungen, Antithesen; Sorget nicht; Vaterunser; Goldene Regel; Haus auf Sand.",
-          "Die Schülerinnen und Schüler können 3.3.1(6) ausgehend von christlichen Normen (z. B. Mt 7,12) und Werten (z. B. Gerechtigkeit und Freiheit) G zeigen, wie / M erklären, wie / E beurteilen, warum verantwortliches Ha n deln zur Gestaltung einer sol i darischen Gesellschaft beiträgt 3.3.5(5) an Beispielen aus der Bergpr e digt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren , wie die Botschaft Jesu zum Perspektivenwechsel herau s fordert"
+          "Die Schülerinnen und Schüler können3.3.2(1)G den herausfordernden und zusprechenden Charakter der Bergpredigt für christliches Leben an Beispielen beschreiben.M den herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen.E sich mit dem herausfordernden und zusprechenden Charakter der Bergpredigt (z. B. im Hinblick auf Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseinandersetzen.3.3.1 Mensch (2)G / M: Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der biblischen Sichtweise des Menschen aufzeigenE auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusammenleben entwickeln",
+          "UmsetzungsschritteDie Bergpredigt als Grundsatzerklärung der Ethik Jesu: Aufbau, Gliederung, Parallelen im LukasevangeliumUnterschiedliche Auslegungstraditionen der Bergpredigt (wörtliches/bildhaftes/exklusives Verständnis der Bergpredigt) Zentrale Texte aus der Bergpredigt in Auswahl: Seligpreisungen, Antithesen; Sorget nicht; Vaterunser; Goldene Regel; Haus auf Sand.",
+          "Die Schülerinnen und Schüler können3.3.1(6)ausgehend von christlichen Normen (z. B. Mt 7,12) und Werten (z. B. Gerechtigkeit und Freiheit) G zeigen, wie / M erklären, wie / E beurteilen, warum verantwortliches Handeln zur Gestaltung einer solidarischen Gesellschaft beiträgt3.3.5(5)an Beispielen aus der Bergpredigt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren, wie die Botschaft Jesu zum Perspektivenwechsel herausfordert"
         ],
         [
-          "Katholischer Blickwinkel: Die Reich-Gottes-Botschaft Jesu und seine ethischen Fo r derungen in der Bergpredigt zielen als Zuspruch und A n spruch auf ein verantwortl i ches Handeln in Gesellschaft und Welt.",
+          "Katholischer Blickwinkel:Die Reich-Gottes-Botschaft Jesu und seine ethischen Forderungen in der Bergpredigt zielen als Zuspruch und Anspruch auf ein verantwortliches Handeln in Gesellschaft und Welt.",
           "",
-          "3.3.2(6) sich am Beispiel des „Projekts Weltethos“ mit christlicher Weltverantwortung auseina n dersetzen"
+          "3.3.2(6) sich am Beispiel des „Projekts Weltethos“ mit christlicher Weltverantwortung auseinandersetzen"
         ],
         [
-          "Prozessbezogene Kompetenzen aus beiden Fachplänen: 2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Übe r zeugungen im Dialog argumentativ auseinandersetzen"
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen: 2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
       ]
     },
@@ -116,46 +239,238 @@
       "title": "Was glauben wir, wenn wir an Jesus Christus glauben?",
       "hours": null,
       "preparation_questions": [
-        "Was sagen die Leute über Jesus Christus? – Was sagen Jugendliche, was denke ich? Was bedeutet es, Jesus sei der „Herr“, der „Christus“ oder der „Gottessohn“? Wo gibt es Unterschiede und Gemeinsamkeiten zwischen Isa im Koran und Jesus Christus in der B i bel? Was bedeutet „Glaube an Jesus Christus“ heute?"
+        "Impulsfragen für das Vorbereitungsteam: Was sagen die Leute über Jesus Christus?",
+        "– Was sagen Jugendliche, was denke ich?",
+        "Was bedeutet es, Jesus sei der „Herr“, der „Christus“ oder der „Gottessohn“?",
+        "Wo gibt es Unterschiede und Gemeinsamkeiten zwischen Isa im Koran und Jesus Christus in der Bibel?",
+        "Was bedeutet „Glaube an Jesus Christus“ heute?"
       ],
-      "shared_plan": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Didaktische Fragen und inhaltliche Umsetzungsschritte"
+        }
+      ],
       "denominational_profiles": {
         "evangelical": {
-          "content_competencies": [],
-          "perspective": []
+          "content_competencies": [
+            {
+              "id": "3.3.5.1",
+              "number": 1,
+              "display": "3.3.5 (1)",
+              "denomination": "evangelical",
+              "text": "verschiedene Sichtweisen auf Jesus (z.B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) G beschreiben / M miteinander vergleichenE einen begründeten Standpunkt zu Aussagen über Jesus (z.B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen",
+              "levels_mentioned": [
+                "G",
+                "M"
+              ],
+              "raw": "3.3.5(1)verschiedene Sichtweisen auf Jesus (z.B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) G beschreiben / M miteinander vergleichenE einen begründeten Standpunkt zu Aussagen über Jesus (z.B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen",
+              "references": [
+                {
+                  "id": "3.3.5.1",
+                  "display": "3.3.5 (1)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.3.1",
+              "number": 1,
+              "display": "3.3.3 (1)",
+              "denomination": "evangelical",
+              "text": "G die Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) beschreiben / M erläuternE zur Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) kritisch Stellung nehmen",
+              "levels_mentioned": [
+                "G",
+                "M"
+              ],
+              "raw": "3.3.3(1)G die Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) beschreiben / M erläuternE zur Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) kritisch Stellung nehmen",
+              "references": [
+                {
+                  "id": "3.3.3.1",
+                  "display": "3.3.3 (1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Inhaltsbezogene Kompetenzen evangelisch"
+          ]
         },
         "catholic": {
-          "content_competencies": [],
+          "content_competencies": [
+            {
+              "id": "3.3.3.1",
+              "number": 1,
+              "display": "3.3.3 (1)",
+              "denomination": "catholic",
+              "text": "an einem Beispiel G darstellen M erläutern / E entfalten, dass biblische Texte eine Glaubensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.3(1)an einem Beispiel G darstellen M erläutern / E entfalten, dass biblische Texte eine Glaubensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104)",
+              "references": [
+                {
+                  "id": "3.3.3.1",
+                  "display": "3.3.3 (1)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.3.2",
+              "number": 2,
+              "display": "3.3.3 (2)",
+              "denomination": "catholic",
+              "text": "G / M / E an Beispielen zeigen, wie biblische Texte oder Motive aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.3(2)G / M / E an Beispielen zeigen, wie biblische Texte oder Motive aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur)",
+              "references": [
+                {
+                  "id": "3.3.3.2",
+                  "display": "3.3.3 (2)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.5.1",
+              "number": 1,
+              "display": "3.3.5 (1)",
+              "denomination": "catholic",
+              "text": "G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich auseinandersetzen mit die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.5(1)G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich auseinandersetzen mit die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)",
+              "references": [
+                {
+                  "id": "3.3.5.1",
+                  "display": "3.3.5 (1)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.5.2",
+              "number": 2,
+              "display": "3.3.5 (2)",
+              "denomination": "catholic",
+              "text": "G eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Überlieferung vergleichen M/E in Beziehung setzen",
+              "levels_mentioned": [
+                "G",
+                "M"
+              ],
+              "raw": "3.3.5 (2) G eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Überlieferung vergleichen M/E in Beziehung setzen",
+              "references": [
+                {
+                  "id": "3.3.5.2",
+                  "display": "3.3.5 (2)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.5.1",
+              "number": 1,
+              "display": "3.3.5 (1)",
+              "denomination": "catholic",
+              "text": ":G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich mit … auseinandersetzen, die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.5(1):G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich mit … auseinandersetzen, die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)",
+              "references": [
+                {
+                  "id": "3.3.5.1",
+                  "display": "3.3.5 (1)"
+                }
+              ]
+            }
+          ],
           "perspective": [
-            "P rozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sac h verhalte ermöglichen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angeme s sen erschließen"
+            "Inhaltsbezogene Kompetenzen katholisch"
           ]
         }
       },
-      "process_competencies": [],
+      "process_competencies": [
+        {
+          "id": "2.4.3",
+          "display": "2.4.3",
+          "denomination": "evangelical",
+          "text": "sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.",
+          "raw": "2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5",
+          "denomination": "catholic",
+          "text": "aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen",
+          "raw": "2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen",
+          "source_formatting": {
+            "fill": "FFFF00",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2",
+          "denomination": "catholic",
+          "text": "ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen",
+          "raw": "2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen",
+          "source_formatting": {
+            "fill": "FFFF00",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4",
+          "denomination": "catholic",
+          "text": "biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen",
+          "raw": "2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen",
+          "source_formatting": {
+            "fill": "FFFF00",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
+        }
+      ],
       "raw_rows": [
         [
           "UE 2: Was glauben wir, wenn wir an Jesus Christus glauben?"
         ],
         [
-          "Impulsfragen für das Vorbereitungsteam: Was sagen die Leute über Jesus Christus? – Was sagen Jugendliche, was denke ich? Was bedeutet es, Jesus sei der „Herr“, der „Christus“ oder der „Gottessohn“? Wo gibt es Unterschiede und Gemeinsamkeiten zwischen Isa im Koran und Jesus Christus in der B i bel? Was bedeutet „Glaube an Jesus Christus“ heute?"
+          "Impulsfragen für das Vorbereitungsteam:Was sagen die Leute über Jesus Christus? – Was sagen Jugendliche, was denke ich?Was bedeutet es, Jesus sei der „Herr“, der „Christus“ oder der „Gottessohn“?Wo gibt es Unterschiede und Gemeinsamkeiten zwischen Isa im Koran und Jesus Christus in der Bibel?Was bedeutet „Glaube an Jesus Christus“ heute?"
         ],
         [
-          "Inhaltsbezogene Kompete n zen evangelisch",
+          "Inhaltsbezogene Kompetenzen evangelisch",
           "Didaktische Fragen und inhaltliche Umsetzungsschritte",
-          "Inhaltsbezogene Kompete n zen katholisch"
+          "Inhaltsbezogene Kompetenzen katholisch"
         ],
         [
-          "Die Schüle r innen und Schüler können 3.3.5(1) verschiedene Sichtweisen auf Jesus (z.B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) G beschreiben / M mite i nander vergleichen E einen begründeten Standpunkt zu Aussagen über Jesus (z.B. J e sus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen 3.3. 3 (1) G die Rezeption biblischer Texte und Motive in Medien (z.B. M u sik, Bildende Kunst, Film, We r bung, Literatur) beschreiben / M erläutern E zur Rezeption biblischer Texte und Motive in Medien (z.B. M u sik, Bildende Kunst, Film, We r bung, Literatur) kritisch Stellung nehmen",
-          "Inhaltliche Umsetzungsschritte: Jesus in Werbung, Musik, Film Bekenntnisse zu Jesus Christus he u te: Poetry slam ; Promis (Sportler und Sportler innen). Wie ist Werbung mit Jesus Christus zu verstehen? Die „christologischen Hoheitstitel“ (Christus: Apg 2,33-36.- Herr: Phil 2,6-10; Röm 10,9. - Gottes Sohn: Mk 14,39; Joh 1,1-18.)",
-          "Die Schülerinnen und Schüler können 3.3.3(1) an einem Beispiel G darstellen M erläutern / E entfalten , dass biblische Texte eine Gla u bensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104) 3.3.3(2) G / M / E an Beispielen zeigen , wie biblische Texte oder Mot i ve aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur) 3.3.5(1) G Jesusvorstellungen in der Alltags- und Jugendkultur b e schreiben / M erläutern / E sich auseinandersetzen mit die von Klischees geprägt werden (z.B. in der Popmusik, im Sport) 3.3.5 (2) G eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit bibl i scher Überlieferung vergle i chen M/E in Beziehung setzen"
+          "Die Schülerinnen und Schüler können3.3.5(1)verschiedene Sichtweisen auf Jesus (z.B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) G beschreiben / M miteinander vergleichenE einen begründeten Standpunkt zu Aussagen über Jesus (z.B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen3.3.3(1)G die Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) beschreiben / M erläuternE zur Rezeption biblischer Texte und Motive in Medien (z.B. Musik, Bildende Kunst, Film, Werbung, Literatur) kritisch Stellung nehmen",
+          "Inhaltliche Umsetzungsschritte:Jesus in Werbung, Musik, FilmBekenntnisse zu Jesus Christus heute: Poetry slam; Promis (Sportler und Sportlerinnen). Wie ist Werbung mit Jesus Christus zu verstehen?Die „christologischen Hoheitstitel“ (Christus: Apg 2,33-36.- Herr: Phil 2,6-10; Röm 10,9. - Gottes Sohn: Mk 14,39; Joh 1,1-18.)",
+          "Die Schülerinnen und Schüler können3.3.3(1)an einem Beispiel G darstellen M erläutern / E entfalten, dass biblische Texte eine Glaubensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104)3.3.3(2)G / M / E an Beispielen zeigen, wie biblische Texte oder Motive aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur)3.3.5(1)G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich auseinandersetzen mit die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)3.3.5 (2) G eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Überlieferung vergleichen M/E in Beziehung setzen"
         ],
         [
-          "Katholischer Blickwinkel: Deutungen von Jesus Christus in (Jugend-)Kultur und Gesellschaft im Horizont von Bibel und Tradit i on.",
+          "Katholischer Blickwinkel:Deutungen von Jesus Christus in (Jugend-)Kultur und Gesellschaft im Horizont von Bibel und Tradition.",
           "",
-          "3.3.5(1): G Jesusvorstellungen in der Alltags- und Jugendkultur b e schreiben / M erläutern / E sich mit … auseinandersetzen, die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)"
+          "3.3.5(1):G Jesusvorstellungen in der Alltags- und Jugendkultur beschreiben / M erläutern / E sich mit … auseinandersetzen, die von Klischees geprägt werden (z.B. in der Popmusik, im Sport)"
         ],
         [
-          "P rozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sac h verhalte ermöglichen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angeme s sen erschließen"
+          "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen"
         ]
       ]
     },
@@ -165,32 +480,47 @@
       "title": "Mit dem Strom schwimmen oder Widerstand leisten? Christen und Kirche in der Welt",
       "hours": null,
       "preparation_questions": [
-        "Was ist das Besondere an der Kirche? Hat die Kirche nicht ganz oft ihren Auftrag verfehlt? Wie verhält sich die Kirche zum religiös neutralen oder antireligiösen Staat? Gibt es eine christliche Pflicht zum Widerstand?"
+        "Impulsfragen für das Vorbereitungsteam: Was ist das Besondere an der Kirche?",
+        "Hat die Kirche nicht ganz oft ihren Auftrag verfehlt?",
+        "Wie verhält sich die Kirche zum religiös neutralen oder antireligiösen Staat?",
+        "Gibt es eine christliche Pflicht zum Widerstand?"
       ],
-      "shared_plan": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Didaktische Fragen und inhaltliche Umsetzungsschritte"
+        }
+      ],
       "denominational_profiles": {
         "evangelical": {
           "content_competencies": [
             {
-              "raw": "Die Schülerinnen und Schüler können 3.3.6(1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M darstellen / E untersuchen (z.B. NS-Zeit, Ki r che in der DDR, Verfolgung und Unterdrückung von Christen weltweit) 3.3.6(2) das Verhältnis evang e lischer Kirchen zu Staat und Gesellschaft (z.B. Religionsu n terricht, Kirchenasyl, Kirche n steuer, Friedensfrage) b e schreiben [M: erläutern; E: sich auseinandersetzen]",
+              "id": "3.3.6.1",
+              "number": 1,
+              "display": "3.3.6 (1)",
+              "denomination": "evangelical",
+              "text": "an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M darstellen / E untersuchen (z.B. NS-Zeit, Kirche in der DDR, Verfolgung und Unterdrückung von Christen weltweit)",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.6(1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M darstellen / E untersuchen (z.B. NS-Zeit, Kirche in der DDR, Verfolgung und Unterdrückung von Christen weltweit)",
               "references": [
                 {
                   "id": "3.3.6.1",
-                  "display": "3.3.6(1)"
-                },
-                {
-                  "id": "3.3.6.2",
-                  "display": "3.3.6(2)"
+                  "display": "3.3.6 (1)"
                 }
               ]
-            }
-          ],
-          "perspective": []
-        },
-        "catholic": {
-          "content_competencies": [
+            },
             {
-              "raw": "Die Schülerinnen und Schüler können 3.3.6 (2) G/M/E ausgehend vom Unrecht der Shoah die Rolle der Kathol i schen Kirche in der Zeit des Nat i onalsozialismus herausarbeiten",
+              "id": "3.3.6.2",
+              "number": 2,
+              "display": "3.3.6 (2)",
+              "denomination": "evangelical",
+              "text": "das Verhältnis evangelischer Kirchen zu Staat und Gesellschaft (z.B. Religionsunterricht, Kirchenasyl, Kirchensteuer, Friedensfrage) beschreiben [M: erläutern; E: sich auseinandersetzen]",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.6(2) das Verhältnis evangelischer Kirchen zu Staat und Gesellschaft (z.B. Religionsunterricht, Kirchenasyl, Kirchensteuer, Friedensfrage) beschreiben [M: erläutern; E: sich auseinandersetzen]",
               "references": [
                 {
                   "id": "3.3.6.2",
@@ -200,7 +530,52 @@
             }
           ],
           "perspective": [
-            "PbK aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflekti e ren. 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesel l schaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
+            "Inhaltsbezogene Kompetenzen evangelisch"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "id": "3.3.6.2",
+              "number": 2,
+              "display": "3.3.6 (2)",
+              "denomination": "catholic",
+              "text": "G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.6 (2)G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+              "references": [
+                {
+                  "id": "3.3.6.2",
+                  "display": "3.3.6 (2)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.6.2",
+              "number": 2,
+              "display": "3.3.6 (2)",
+              "denomination": "catholic",
+              "text": "G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.6 (2)G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+              "references": [
+                {
+                  "id": "3.3.6.2",
+                  "display": "3.3.6 (2)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Inhaltsbezogene Kompetenzen katholisch"
           ]
         }
       },
@@ -210,7 +585,7 @@
           "UE 3: Mit dem Strom schwimmen oder Widerstand leisten? Christen und Kirche in der Welt"
         ],
         [
-          "Impulsfragen für das Vorbereitungsteam: Was ist das Besondere an der Kirche? Hat die Kirche nicht ganz oft ihren Auftrag verfehlt? Wie verhält sich die Kirche zum religiös neutralen oder antireligiösen Staat? Gibt es eine christliche Pflicht zum Widerstand?"
+          "Impulsfragen für das Vorbereitungsteam:Was ist das Besondere an der Kirche?Hat die Kirche nicht ganz oft ihren Auftrag verfehlt? Wie verhält sich die Kirche zum religiös neutralen oder antireligiösen Staat?Gibt es eine christliche Pflicht zum Widerstand?"
         ],
         [
           "Inhaltsbezogene Kompetenzen evangelisch",
@@ -218,17 +593,17 @@
           "Inhaltsbezogene Kompetenzen katholisch"
         ],
         [
-          "Die Schülerinnen und Schüler können 3.3.6(1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M darstellen / E untersuchen (z.B. NS-Zeit, Ki r che in der DDR, Verfolgung und Unterdrückung von Christen weltweit) 3.3.6(2) das Verhältnis evang e lischer Kirchen zu Staat und Gesellschaft (z.B. Religionsu n terricht, Kirchenasyl, Kirche n steuer, Friedensfrage) b e schreiben [M: erläutern; E: sich auseinandersetzen]",
-          "Inhaltliche Umsetzungsschritte: Vom Landesherrlichen Kirchenr e giment zur Kirche im Dritten Reich Christsein im Nationalsozialismus – Christsein gegen den Nationalsozi a lismus? Christsein im Widerstand gegen den totalitären Staat Christenverfolgung: aktueller denn je",
-          "Die Schülerinnen und Schüler können 3.3.6 (2) G/M/E ausgehend vom Unrecht der Shoah die Rolle der Kathol i schen Kirche in der Zeit des Nat i onalsozialismus herausarbeiten"
+          "Die Schülerinnen und Schüler können3.3.6(1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M darstellen / E untersuchen (z.B. NS-Zeit, Kirche in der DDR, Verfolgung und Unterdrückung von Christen weltweit)3.3.6(2) das Verhältnis evangelischer Kirchen zu Staat und Gesellschaft (z.B. Religionsunterricht, Kirchenasyl, Kirchensteuer, Friedensfrage) beschreiben [M: erläutern; E: sich auseinandersetzen]",
+          "Inhaltliche Umsetzungsschritte:Vom Landesherrlichen Kirchenregiment zur Kirche im Dritten ReichChristsein im Nationalsozialismus – Christsein gegen den Nationalsozialismus?Christsein im Widerstand gegen den totalitären StaatChristenverfolgung: aktueller denn je",
+          "Die Schülerinnen und Schüler können3.3.6 (2)G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten"
         ],
         [
-          "Katholischer Blickwinkel Die Kirchen haben angesichts des Unrechts der Shoah ve r sagt, es gab aber auch Christi n nen und Christen, die sich zum Widerstand herausfordern li e ßen.",
+          "Katholischer Blickwinkel Die Kirchen haben angesichts des Unrechts der Shoah versagt, es gab aber auch Christinnen und Christen, die sich zum Widerstand herausfordern ließen.",
           "",
-          "3.3.6 (2) G/M/E ausgehend vom Unrecht der Shoah die Rolle der Kathol i schen Kirche in der Zeit des Nat i onalsozialismus herausarbeiten"
+          "3.3.6 (2)G/M/E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten"
         ],
         [
-          "PbK aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflekti e ren. 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesel l schaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
+          "PbK aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren.2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
         ]
       ]
     },
@@ -238,51 +613,149 @@
       "title": "Glauben – ohne Gott?",
       "hours": null,
       "preparation_questions": [
-        "Woran glaubt man, wenn an glaubt Woran zweifelt man, wenn man zweifelt? Wie passen Zweifel und Glauben zusammen? Was glauben Atheisten? Was glaubst denn Du? (DVD komplett, Stuttgart 2009) Glauben – Zweifel – Atheismus – Agnostizismus „Wer nichts mehr glaubt, glaubt am Ende alles“"
+        "Impulsfragen für das Vorbereitungsteam: Woran glaubt man, wenn an glaubt Woran zweifelt man, wenn man zweifelt?",
+        "Wie passen Zweifel und Glauben zusammen?",
+        "Was glauben Atheisten?",
+        "Was glaubst denn Du?",
+        "(DVD komplett, Stuttgart 2009) Glauben – Zweifel – Atheismus – Agnostizismus „Wer nichts mehr glaubt, glaubt am Ende alles“"
       ],
-      "shared_plan": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Didaktische Fragen und inhaltliche Umsetzungsschritte"
+        }
+      ],
       "denominational_profiles": {
         "evangelical": {
-          "content_competencies": [],
-          "perspective": []
+          "content_competencies": [
+            {
+              "id": "3.3.4.1",
+              "number": 1,
+              "display": "3.3.4 (1)",
+              "denomination": "evangelical",
+              "text": "G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellenM zur Frage nach der Existenz Gottes einen begründeten Standpunkt einnehmenE sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.4 (1) G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellenM zur Frage nach der Existenz Gottes einen begründeten Standpunkt einnehmenE sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen",
+              "references": [
+                {
+                  "id": "3.3.4.1",
+                  "display": "3.3.4 (1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Inhaltsbezogene Kompetenzen evangelisch"
+          ]
         },
         "catholic": {
           "content_competencies": [
             {
-              "raw": "Die Schülerinnen und Schüler können 3.3.4 (2) G aufzeigen, inwiefern die E r fahrung von Leid und Tod die Frage nach Gott aufwirft M beschreiben E erläutern (Aspekte der The o dizee)",
+              "id": "3.3.4.2",
+              "number": 2,
+              "display": "3.3.4 (2)",
+              "denomination": "catholic",
+              "text": "G aufzeigen, inwiefern die Erfahrung von Leid und Tod die Frage nach Gott aufwirftM beschreiben E erläutern (Aspekte der Theodizee)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.4 (2)G aufzeigen, inwiefern die Erfahrung von Leid und Tod die Frage nach Gott aufwirftM beschreiben E erläutern (Aspekte der Theodizee)",
               "references": [
                 {
                   "id": "3.3.4.2",
                   "display": "3.3.4 (2)"
                 }
               ]
+            },
+            {
+              "id": "3.3.4.6",
+              "number": 6,
+              "display": "3.3.4 (6)",
+              "denomination": "catholic",
+              "text": "G zeigen / M darstellen / E erläutern, dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.4(6) G zeigen / M darstellen / E erläutern, dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben",
+              "references": [
+                {
+                  "id": "3.3.4.6",
+                  "display": "3.3.4 (6)"
+                }
+              ]
             }
           ],
           "perspective": [
-            "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.3.4 Zweifel und Kritik an Religion erörtern 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens b e schreiben und sie in verschiedenen Kontexten wiedererkennen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten"
+            "Inhaltsbezogene Kompetenzen katholisch"
           ]
         }
       },
       "process_competencies": [
         {
           "id": "2.4.3",
-          "display": "2.4.3"
+          "display": "2.4.3",
+          "denomination": "evangelical",
+          "text": "sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.",
+          "raw": "2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.3.4",
-          "display": "2.3.4"
+          "display": "2.3.4",
+          "denomination": "evangelical",
+          "text": "Zweifel und Kritik an Religion erörtern",
+          "raw": "2.3.4 Zweifel und Kritik an Religion erörtern",
+          "source_formatting": {
+            "fill": "E5DFEC",
+            "fill_source": "paragraph",
+            "attribution": "background_color"
+          }
         },
         {
           "id": "2.1.3",
-          "display": "2.1.3"
+          "display": "2.1.3",
+          "denomination": "catholic",
+          "text": "religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen",
+          "raw": "2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen",
+          "source_formatting": {
+            "fill": null,
+            "fill_source": null,
+            "attribution": "exact_text_match"
+          }
         },
         {
           "id": "2.3.3",
-          "display": "2.3.3"
+          "display": "2.3.3",
+          "denomination": "catholic",
+          "text": "lebensfördernde und lebensfeindliche Formen von Religion unterscheiden",
+          "raw": "2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden",
+          "source_formatting": {
+            "fill": null,
+            "fill_source": null,
+            "attribution": "exact_text_match"
+          }
         },
         {
           "id": "2.4.2",
-          "display": "2.4.2"
+          "display": "2.4.2",
+          "denomination": "catholic",
+          "text": "eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten",
+          "raw": "2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten",
+          "source_formatting": {
+            "fill": null,
+            "fill_source": null,
+            "attribution": "exact_text_match"
+          }
         }
       ],
       "raw_rows": [
@@ -290,25 +763,25 @@
           "UE 4: Glauben – ohne Gott?"
         ],
         [
-          "Impulsfragen für das Vorbereitungsteam: Woran glaubt man, wenn an glaubt Woran zweifelt man, wenn man zweifelt? Wie passen Zweifel und Glauben zusammen? Was glauben Atheisten? Was glaubst denn Du? (DVD komplett, Stuttgart 2009) Glauben – Zweifel – Atheismus – Agnostizismus „Wer nichts mehr glaubt, glaubt am Ende alles“"
+          "Impulsfragen für das Vorbereitungsteam: Woran glaubt man, wenn an glaubtWoran zweifelt man, wenn man zweifelt?Wie passen Zweifel und Glauben zusammen?Was glauben Atheisten?Was glaubst denn Du? (DVD komplett, Stuttgart 2009)Glauben – Zweifel – Atheismus – Agnostizismus„Wer nichts mehr glaubt, glaubt am Ende alles“"
         ],
         [
-          "Inhaltsbezogene Kompetenzen eva n gelisch",
-          "Didaktische Fragen und inhaltl i che Umsetzungsschritt e",
+          "Inhaltsbezogene Kompetenzen evangelisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
           "Inhaltsbezogene Kompetenzen katholisch"
         ],
         [
-          "Die Schülerinnen und Schüler können 3.3.4 (1) G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellen M zur Frage nach der Existenz Gottes einen begründeten Standpunkt ei n nehmen E sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen",
+          "Die Schülerinnen und Schüler können3.3.4 (1) G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellenM zur Frage nach der Existenz Gottes einen begründeten Standpunkt einnehmenE sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen",
           "",
-          "Die Schülerinnen und Schüler können 3.3.4 (2) G aufzeigen, inwiefern die E r fahrung von Leid und Tod die Frage nach Gott aufwirft M beschreiben E erläutern (Aspekte der The o dizee)"
+          "Die Schülerinnen und Schüler können3.3.4 (2)G aufzeigen, inwiefern die Erfahrung von Leid und Tod die Frage nach Gott aufwirftM beschreiben E erläutern (Aspekte der Theodizee)"
         ],
         [
-          "Katholischer Blickwinkel: Die Schülerinnen und Schüler setzen sich angesichts der Vielzahl religiöser und areligiöser O rientierungsangeb o te mit reflektiertem christlichem Go t tesglauben und seiner Bedeutung für das eigene Leben auseinander.",
+          "Katholischer Blickwinkel:Die Schülerinnen und Schüler setzen sich angesichts der Vielzahl religiöser und areligiöser Orientierungsangebote mit reflektiertem christlichem Gottesglauben und seiner Bedeutung für das eigene Leben auseinander.",
           "",
           "3.3.4(6) G zeigen / M darstellen / E erläutern, dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben"
         ],
         [
-          "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überze u gungen auseinandersetzen. 2.3.4 Zweifel und Kritik an Religion erörtern 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens b e schreiben und sie in verschiedenen Kontexten wiedererkennen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten"
+          "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.3.4 Zweifel und Kritik an Religion erörtern2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten"
         ]
       ]
     },
@@ -318,28 +791,97 @@
       "title": "„All You need is love“ – Lebensformen heute",
       "hours": null,
       "preparation_questions": [
-        "Was fällt alles unter „Liebe“? Was bedeutet „Ehe für alle“? Was passiert eigentlich, wenn man „christlich heiratet“?"
+        "Impulsfragen für das Vorbereitungsteam: Was fällt alles unter „Liebe“?",
+        "Was bedeutet „Ehe für alle“?",
+        "Was passiert eigentlich, wenn man „christlich heiratet“?"
       ],
-      "shared_plan": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Didaktische Fragen und inhaltliche Umsetzungsschritte"
+        }
+      ],
       "denominational_profiles": {
         "evangelical": {
           "content_competencies": [
             {
-              "raw": "Die Schülerinnen und Schüler können 3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesel l schaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
+              "id": "3.3.1.1",
+              "number": 1,
+              "display": "3.3.1 (1)",
+              "denomination": "evangelical",
+              "text": "sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
+              "levels_mentioned": [],
+              "raw": "3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
               "references": [
                 {
                   "id": "3.3.1.1",
-                  "display": "3.3.1(1)"
+                  "display": "3.3.1 (1)"
                 }
               ]
             }
           ],
-          "perspective": []
+          "perspective": [
+            "Inhaltsbezogene Kompetenzen evangelisch"
+          ]
         },
         "catholic": {
-          "content_competencies": [],
+          "content_competencies": [
+            {
+              "id": "3.3.1.1",
+              "number": 1,
+              "display": "3.3.1 (1)",
+              "denomination": "catholic",
+              "text": "G/M/E eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in Beziehung setzen (z. B. Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit)",
+              "levels_mentioned": [
+                "G",
+                "M",
+                "E"
+              ],
+              "raw": "3.3.1 (1)G/M/E eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in Beziehung setzen (z. B. Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit)",
+              "references": [
+                {
+                  "id": "3.3.1.1",
+                  "display": "3.3.1 (1)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.2.5",
+              "number": 5,
+              "display": "3.3.2 (5)",
+              "denomination": "catholic",
+              "text": "G eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)M beurteilen E sich mit der kirchlichen Position zu einer individual-ethischen und zu einer sozialethischen Fragestellung auseinandersetzen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.2 (5)G eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)M beurteilen E sich mit der kirchlichen Position zu einer individual-ethischen und zu einer sozialethischen Fragestellung auseinandersetzen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)",
+              "references": [
+                {
+                  "id": "3.3.2.5",
+                  "display": "3.3.2 (5)"
+                }
+              ]
+            },
+            {
+              "id": "3.3.2.5",
+              "number": 5,
+              "display": "3.3.2 (5)",
+              "denomination": "catholic",
+              "text": "eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung G prüfen / M beurteilen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit E sich mit der kirchlichen Position zu einer individualethischen und zu einer sozialethischen Fragestellung(z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit) auseinandersetzen",
+              "levels_mentioned": [
+                "G"
+              ],
+              "raw": "3.3.2 (5) eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung G prüfen / M beurteilen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit E sich mit der kirchlichen Position zu einer individualethischen und zu einer sozialethischen Fragestellung(z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit) auseinandersetzen",
+              "references": [
+                {
+                  "id": "3.3.2.5",
+                  "display": "3.3.2 (5)"
+                }
+              ]
+            }
+          ],
           "perspective": [
-            "PbK aus beiden Bildungsplänen: 2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
+            "Inhaltsbezogene Kompetenzen katholisch"
           ]
         }
       },
@@ -349,25 +891,25 @@
           "UE 5: „All You need is love“ – Lebensformen heute"
         ],
         [
-          "Impulsfragen für das Vorbereitungsteam: Was fällt alles unter „Liebe“? Was bedeutet „Ehe für alle“? Was passiert eigentlich, wenn man „christlich heiratet“?"
+          "Impulsfragen für das Vorbereitungsteam: Was fällt alles unter „Liebe“? Was bedeutet „Ehe für alle“?Was passiert eigentlich, wenn man „christlich heiratet“?"
         ],
         [
           "Inhaltsbezogene Kompetenzen evangelisch",
-          "Didaktische Fragen und inhaltl i che Umsetzungsschritte",
-          "Inhaltsbezogene Kompetenzen k a tholisch"
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen katholisch"
         ],
         [
-          "Die Schülerinnen und Schüler können 3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesel l schaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
-          "„Familie haben alle“ (Wol f gang Huber): Formen des Z u sammenlebens heute Zusammenhang von Liebe – Sexualität – Freiheit – Ve r antwortung Kirchliche Eheschließung und Zivilehe: „Muss“ man heir a ten? Mediale Darstellung von Liebe – Partnerschaft – Sexualität am Beispiel der Werbung",
-          "Die Schülerinnen und Schüler können 3.3.1 (1) G/M/E eigene Begabungen und F ä higkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in B e ziehung setzen (z. B. Freundschaft und Partnerschaft, Liebe und Sexu a lität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit) 3.3.2 (5) G eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit) M beurteilen E sich mit der kirchlichen Position zu einer individual-ethischen und zu einer sozialethischen Fragestellung auseinandersetzen (z. B. Schwange r schaftsabbruch, Krankheit, Sterbehi l fe; Krieg und Frieden, Gerechtigkeit)"
+          "Die Schülerinnen und Schüler können3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
+          "„Familie haben alle“ (Wolfgang Huber): Formen des Zusammenlebens heuteZusammenhang von Liebe – Sexualität – Freiheit – VerantwortungKirchliche Eheschließung und Zivilehe: „Muss“ man heiraten?Mediale Darstellung von Liebe – Partnerschaft – Sexualität am Beispiel der Werbung",
+          "Die Schülerinnen und Schüler können3.3.1 (1)G/M/E eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in Beziehung setzen (z. B. Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit)3.3.2 (5)G eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)M beurteilen E sich mit der kirchlichen Position zu einer individual-ethischen und zu einer sozialethischen Fragestellung auseinandersetzen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)"
         ],
         [
-          "Katholischer Blickwinkel Im Kontext partnerschaftlicher Beziehungen setzen sich die Schülerinnen und Schüler am Beispiel des Schwangerschaft s abbruchs mit einer individua l ethischen Konfliktsituation und der Vorstellung von dem Gewi s sen als letzter Entscheidung s instanz auseinander .",
+          "Katholischer BlickwinkelIm Kontext partnerschaftlicher Beziehungen setzen sich die Schülerinnen und Schüler am Beispiel des Schwangerschaftsabbruchs mit einer individualethischen Konfliktsituation und der Vorstellung von dem Gewissen als letzter Entscheidungsinstanz auseinander.",
           "",
-          "3.3.2 (5) eine kirchliche Position zu einer ind i vidualethischen und zu einer sozia l ethischen Fragestellung G prüfen / M beurteilen (z. B. Schwange r schaftsabbruch, Krankheit, Sterbehi l fe , Krieg und Frieden, Gerechtigkeit E sich mit der kirchlichen Position zu einer individualethischen und zu einer sozialethischen Fragestellung (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit) auseinande r setzen"
+          "3.3.2 (5) eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung G prüfen / M beurteilen (z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit E sich mit der kirchlichen Position zu einer individualethischen und zu einer sozialethischen Fragestellung(z. B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe, Krieg und Frieden, Gerechtigkeit) auseinandersetzen"
         ],
         [
-          "PbK aus beiden Bildungsplänen: 2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
+          "PbK aus beiden Bildungsplänen: 2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
         ]
       ]
     }

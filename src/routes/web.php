@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/curricula/{curriculum}/themen', [CurriculumController::class, 'storeTopic'])->name('curricula.topics.store');
     Route::put('/curricula/{curriculum}/themen/{topic}', [CurriculumController::class, 'updateTopic'])->name('curricula.topics.update');
     Route::post('/curricula/{curriculum}/themen/{topic}/jahr', [CurriculumController::class, 'updateTopicYear'])->name('curricula.topics.year');
+    Route::put('/curricula/{curriculum}/themen/{topic}/kompetenzen', [CurriculumController::class, 'updateTopicCompetencies'])->name('curricula.topics.competencies');
     Route::post('/bildungsplaene/{educationPlan}/kompetenzen/{competency}/status', [EducationPlanController::class, 'updateCompetencyStatus'])->name('education-plans.competencies.status');
     Route::post('/schulen', [SchoolController::class, 'store'])->name('schools.store');
     Route::put('/schulen/{school}', [SchoolController::class, 'update'])->name('schools.update');

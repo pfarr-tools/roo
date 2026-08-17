@@ -1,126 +1,171 @@
 # Roo-Schema: konfessionell-kooperative Curricula
 
-## Ziel
+## Version 1.1
 
-Dieses Format modelliert Curricula **getrennt von Bildungsplänen**. Ein Bildungsplan beschreibt normative Kompetenzen; ein Curriculum ordnet diese Kompetenzen zu Unterrichtseinheiten, gemeinsamen Inhalten, konfessionellen Perspektiven und Planungsfragen.
+Das Schema bleibt kompatibel mit dem zuvor verwendeten Root-Typ
+`confessional_cooperative_curriculum`, präzisiert aber die Kompetenzabbildung.
 
-Das Schema ist bewusst offen: Weder Unterrichtseinheiten, Konfessionen, Spalten, Perspektiven noch Arten gemeinsamer Inhalte sind fest auf die hier vorliegenden Beispielcurricula begrenzt.
+## Root
 
-## Wurzelobjekt
+- `schema_version`
+- `type`
+- `metadata`
+- `education_plan_bindings`
+- `units`
 
-- `schema_version`: Version dieses Importformats.
-- `type`: `confessional_cooperative_curriculum`.
-- `metadata`: Identität und Herkunft.
-- `education_plan_bindings`: Bildungspläne, auf die das Curriculum Bezug nimmt.
-- `units`: geordnete Unterrichtseinheiten.
+## Grundprinzip
 
-## `metadata`
+Ein Curriculum ist **kein Bildungsplan**. Es referenziert Kompetenzen aus mehreren
+konfessionellen Bildungsplänen und verbindet sie in Unterrichtseinheiten.
 
-- `title`: Titel des Curriculums.
-- `country`, `state`
-- `school_type`: frei importierbarer Schlüssel, hier `GS`, `SEK1`, `GYM`.
-- `grades`: konkrete Klassenstufen.
-- `variant`: Herausgebervariante, hier `A` oder `B`; semantisch **kein Niveau**.
-- `cooperation_model`: hier `confessional_cooperative`.
-- `denominations`: beteiligte Traditionen als offene Liste.
-- `source`: URL und Dateiformat.
-- `conversion`: technische Importinformationen.
+Konfessionen sind nicht als feste Enum im Schema definiert. Die hier vorliegenden
+Dateien verwenden `evangelical` und `catholic`.
+
+## `units[]`
+
+```json
+{
+  "id": "ue-01",
+  "number": 1,
+  "title": "...",
+  "hours": 6,
+  "preparation_questions": [],
+  "shared_plan": [],
+  "denominational_profiles": {},
+  "process_competencies": [],
+  "raw_rows": []
+}
+```
+
+### Nummern und Textnormalisierung
+
+Word zerlegt Wörter und Nummern häufig über mehrere OOXML-Runs. Beim Import werden
+Run-Texte daher **ohne künstlich eingefügte Leerzeichen** zusammengesetzt und erst
+anschließend normale Mehrfach-Leerzeichen vereinheitlicht. Dadurch entstehen keine
+Fehler wie eine auseinandergerissene `15` oder `3.1.5`.
+
+`raw` bedeutet in diesem Schema deshalb „inhaltlich quellnah“, nicht
+„byte-identische OOXML-Textdarstellung“.
+
+## Inhaltsbezogene Kompetenzen
+
+Sie liegen innerhalb des jeweiligen konfessionellen Profils:
+
+```json
+"denominational_profiles": {
+  "evangelical": {
+    "content_competencies": [
+      {
+        "id": "3.1.4.3",
+        "number": 3,
+        "display": "3.1.4 (3)",
+        "denomination": "evangelical",
+        "text": "...",
+        "levels_mentioned": ["G", "M", "E"],
+        "raw": "...",
+        "references": [
+          {"id": "3.1.4.3", "display": "3.1.4 (3)"}
+        ]
+      }
+    ],
+    "perspective": []
+  }
+}
+```
+
+**Jede im Quell-DOCX vorkommende Kompetenzposition wird als eigener Eintrag
+importiert.** Mehrere Kompetenzen in derselben Tabellenzelle werden nicht zu einem
+einzigen `raw`-Block zusammengezogen.
+
+`levels_mentioned` ist rein deskriptiv. G/M/E werden nicht als Konfessionen oder
+eigene Curriculum-Kompetenzen interpretiert.
+
+## Prozessbezogene Kompetenzen
+
+Prozesskompetenzen stehen auf Unit-Ebene, weil eine UE Kompetenzen mehrerer
+Konfessionen kombiniert. **Jeder Eintrag trägt zwingend eine `denomination`:**
+
+```json
+{
+  "id": "2.2.4",
+  "display": "2.2.4",
+  "denomination": "catholic",
+  "text": "...",
+  "raw": "...",
+  "source_formatting": {
+    "fill": "FFFF99",
+    "fill_source": "paragraph",
+    "attribution": "background_color"
+  }
+}
+```
+
+### Konfessionszuordnung über Hintergrundfarbe
+
+Die offiziellen Beispielcurricula markieren:
+
+- lila/purple -> `evangelical`
+- gelb/yellow -> `catholic`
+
+Die Word-Dateien enthalten mehrere technisch unterschiedliche Farbtöne derselben
+visuellen Farbfamilien. Der Importer klassifiziert sie nach RGB-Nähe zu den
+Referenzfarben `CCC0D9` (lila) und `FFFF99` (gelb).
+
+Reihenfolge der Auswertung:
+
+1. Absatz-Hintergrund (`w:pPr/w:shd`)
+2. Run-Hintergrund
+3. Zell-Hintergrund
+4. nur wenn die Formatierung in einer konkreten Quelldatei fehlt:
+   **exakte Textübereinstimmung** derselben Prozesskompetenz mit farbig markierten
+   Vorkommen in den anderen offiziellen Curricula.
+
+Der vierte Fall wird mit
+`source_formatting.attribution = "exact_text_match"` dokumentiert und zusätzlich
+im `*.validation.json` und `QA_REPORT.json` ausgewiesen.
+
+Ein produktiv vollständiger Datensatz darf **keine** Prozesskompetenz ohne
+`denomination` enthalten.
+
+## `shared_plan[]`
+
+Offene Liste gemeinsamer Unterrichtsinhalte, derzeit vor allem:
+
+```json
+{"type": "central_content", "text": "..."}
+```
+
+`type` ist absichtlich nicht fest auf eine Enum begrenzt.
 
 ## `education_plan_bindings`
-
-Ein Curriculum kann auf mehrere Bildungspläne verweisen. Bindings sind nicht auf evangelisch/katholisch beschränkt.
 
 ```json
 {
   "role": "denominational_basis",
   "denomination": "evangelical",
   "subject": "Evangelische Religionslehre",
-  "plan_code": "BP2016BW_ALLG_GS_REV"
+  "plan_code": null
 }
 ```
 
-`plan_code` darf beim Rohimport `null` sein und später durch einen Resolver gesetzt werden. Dadurch bleibt der Curriculum-Import unabhängig davon, ob der zugehörige Bildungsplan bereits in Roo vorhanden ist.
+Die `plan_code`-Auflösung kann später gegen die in Roo importierten
+EducationPlans erfolgen.
 
-## `units[]`
+## `raw_rows`
 
-Jede Unterrichtseinheit besitzt:
+Die normalisierten Zelltexte aller Tabellenzeilen einer UE bleiben erhalten.
+Dadurch kann Roo später verbesserte Normalisierung durchführen, ohne erneut auf
+die DOCX-Quelle zugreifen zu müssen.
 
-- `id`, `number`, `title`
-- `year`: optionale konkrete Jahrgangszuordnung der UE. Sie wird von Roo beim
-  Import übernommen und kann in der Anwendung korrigiert werden.
-- `hours`: soweit aus der Vorlage eindeutig extrahierbar
-- `preparation_questions[]`
-- `shared_plan[]`
-- `denominational_profiles`
-- `process_competencies[]`
-- `raw_rows`: verlustarme Repräsentation der Quelltabelle
+## Vollständigkeitsprüfung
 
-### `shared_plan[]`
+Zu jedem Curriculum gehört eine `*.validation.json`.
 
-Eine offene, geordnete Liste. `type` ist **nicht enum-festgelegt**. Die vorliegenden Dokumente liefern insbesondere:
+`metadata.conversion.complete = true` wird nur gesetzt, wenn:
 
-```json
-{"type":"central_content","text":"..."}
-```
+- alle erkannten inhaltsbezogenen Kompetenzvorkommen im Output vorkommen,
+- alle erkannten prozessbezogenen Kompetenzvorkommen im Output vorkommen,
+- jede Prozesskompetenz eine Konfession besitzt,
+- keine fehlerhaften Nummernabstände in normalisierten IDs/Nummern erkannt wurden.
 
-Künftige Curricula können weitere Typen einführen, ohne das Schema zu ändern.
-
-### `denominational_profiles`
-
-Map statt fest verdrahteter Felder:
-
-```json
-{
-  "evangelical": {
-    "content_competencies": [],
-    "perspective": []
-  },
-  "catholic": {
-    "content_competencies": [],
-    "perspective": []
-  }
-}
-```
-
-Der Schlüssel ist frei. Damit wären z. B. altkatholische, orthodoxe oder andere Kooperationsmodelle abbildbar.
-
-`content_competencies[]` enthält `raw` und erkannte `references[]`. Die Originalformulierung bleibt erhalten, weil ein Curriculum Kompetenzen zitieren, verkürzen oder mit Zusatzhinweisen versehen kann.
-
-### Kompetenzreferenzen
-
-```json
-{"id":"3.1.1.1","display":"3.1.1 (1)"}
-```
-
-Die Referenz-ID dient dem späteren Linking gegen einen importierten Bildungsplan. `display` bewahrt die Schreibweise der Quelle.
-
-### `process_competencies[]`
-
-Analog strukturierte Referenzen auf prozessbezogene Kompetenzen.
-
-### `raw_rows`
-
-Alle Tabellenzeilen der jeweiligen UE werden zusätzlich als Zellarrays erhalten. Das ist absichtlich Teil des Importformats: Die kirchlichen Vorlagen sind redaktionell nicht vollständig einheitlich. Roo kann dadurch später mit einem verbesserten Parser neu normalisieren, ohne die DOCX-Datei erneut zu benötigen.
-
-## Abgrenzung zum Bildungsplan-Schema
-
-`education_plan` und `confessional_cooperative_curriculum` sind zwei verschiedene Root-Typen. Das Curriculum **enthält den Bildungsplan nicht**, sondern referenziert ihn. Dadurch können:
-
-1. mehrere Curricula denselben Bildungsplan verwenden,
-2. A/B-Varianten parallel existieren,
-3. Schulen eigene Curricula aus einem Beispielcurriculum ableiten,
-4. Curriculum und Bildungsplan unabhängig revisioniert werden.
-
-## Empfohlene Roo-Relationen
-
-- `Curriculum belongsToMany EducationPlan`
-- `Curriculum hasMany CurriculumUnit`
-- `CurriculumUnit hasMany CompetencyReference`
-- `CurriculumUnit hasMany DenominationalProfile`
-- Schule ↔ Curriculum weiterhin many-to-many.
-
-Für abgeleitete schulinterne Curricula empfiehlt sich zusätzlich ein optionales `derived_from` auf Curriculum-Ebene.
-
-## Importprinzip
-
-Importer sollten unbekannte `school_type`, `denominations`, `shared_plan.type` und zusätzliche Felder tolerieren. Insbesondere dürfen Domains aus Bildungsplänen und Perspektiven aus Curricula niemals durch eine fest codierte Liste validiert werden.
+`QA_REPORT.json` fasst die Prüfungen des Gesamtpakets zusammen.

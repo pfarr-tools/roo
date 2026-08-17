@@ -14,7 +14,9 @@ class ImportCurriculumCommand extends Command
     public function handle(ImportCurriculum $import): int
     {
         $path = $this->argument('path');
-        $files = is_dir($path) ? glob(rtrim($path, '/').'/*.json') : [$path];
+        $files = is_dir($path)
+            ? array_values(array_filter(glob(rtrim($path, '/').'/*.json'), fn (string $file): bool => ! str_ends_with($file, '.validation.json')))
+            : [$path];
         foreach ($files as $file) {
             try {
                 $result = $import->execute($file);

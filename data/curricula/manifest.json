@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "package_type": "roo_curriculum_import_package",
   "generated": "2026-08-17",
   "count": 16,
@@ -7,6 +7,7 @@
     {
       "id": "GS_1-2_A",
       "file": "curricula/GS_1-2_A.json",
+      "validation": "curricula/GS_1-2_A.validation.json",
       "title": "KoKo Beispielcurriculum GS 1/2 A",
       "school_type": "GS",
       "grades": [
@@ -15,11 +16,16 @@
       ],
       "variant": "A",
       "unit_count": 17,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6241_l9620myt.docx"
+      "content_competency_occurrences": 115,
+      "process_competency_occurrences": 80,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6241_l9620myt.docx",
+      "source_sha256": "b81e496bc8fbba696a4f8db86d0b39893b7832c0a9353b92ba1b120ffedd2c85"
     },
     {
       "id": "GS_1-2_B",
       "file": "curricula/GS_1-2_B.json",
+      "validation": "curricula/GS_1-2_B.validation.json",
       "title": "KoKo Beispielcurriculum GS 1/2 B",
       "school_type": "GS",
       "grades": [
@@ -28,11 +34,16 @@
       ],
       "variant": "B",
       "unit_count": 15,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6242_ubanurcv.docx"
+      "content_competency_occurrences": 122,
+      "process_competency_occurrences": 127,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6242_ubanurcv.docx",
+      "source_sha256": "6438b9ff9fe43b2e2c9c2ae8617625b03070b3f5384f5e7c4d01775cb2be2acf"
     },
     {
       "id": "GS_3-4_A",
       "file": "curricula/GS_3-4_A.json",
+      "validation": "curricula/GS_3-4_A.validation.json",
       "title": "KoKo Beispielcurriculum GS 3/4 A",
       "school_type": "GS",
       "grades": [
@@ -41,11 +52,16 @@
       ],
       "variant": "A",
       "unit_count": 15,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6239_c616h8q2.docx"
+      "content_competency_occurrences": 81,
+      "process_competency_occurrences": 105,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6239_c616h8q2.docx",
+      "source_sha256": "eb9f519c2d6e94f73f786ea5be18a08935ac3218aa8195f984bc9a6415a3d5c4"
     },
     {
       "id": "GS_3-4_B",
       "file": "curricula/GS_3-4_B.json",
+      "validation": "curricula/GS_3-4_B.validation.json",
       "title": "KoKo Beispielcurriculum GS 3/4 B",
       "school_type": "GS",
       "grades": [
@@ -54,11 +70,16 @@
       ],
       "variant": "B",
       "unit_count": 14,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6238_mww0jt10.docx"
+      "content_competency_occurrences": 132,
+      "process_competency_occurrences": 135,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6238_mww0jt10.docx",
+      "source_sha256": "81c83166a4813ca853247cd2b4e094be816531b40a906660df6ad768a09b9036"
     },
     {
       "id": "SEK1_5-6_A",
       "file": "curricula/SEK1_5-6_A.json",
+      "validation": "curricula/SEK1_5-6_A.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 5/6 A",
       "school_type": "SEK1",
       "grades": [
@@ -67,11 +88,16 @@
       ],
       "variant": "A",
       "unit_count": 8,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6254_klkxwqpq.docx"
+      "content_competency_occurrences": 69,
+      "process_competency_occurrences": 78,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6254_klkxwqpq.docx",
+      "source_sha256": "41c19c9a4b064ff63b46c5176f4d6b9729a45eb803cb87fdeb28e528188633b8"
     },
     {
       "id": "SEK1_5-6_B",
       "file": "curricula/SEK1_5-6_B.json",
+      "validation": "curricula/SEK1_5-6_B.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 5/6 B",
       "school_type": "SEK1",
       "grades": [
@@ -80,11 +106,16 @@
       ],
       "variant": "B",
       "unit_count": 10,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6253_x1ttzi5a.docx"
+      "content_competency_occurrences": 69,
+      "process_competency_occurrences": 98,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6253_x1ttzi5a.docx",
+      "source_sha256": "9dfd87b69cc27255ffe0669c0d476beef66692c20d28395d98e4466d7f3ffa34"
     },
     {
       "id": "SEK1_7-9_A",
       "file": "curricula/SEK1_7-9_A.json",
+      "validation": "curricula/SEK1_7-9_A.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 7/8/9 A",
       "school_type": "SEK1",
       "grades": [
@@ -94,11 +125,16 @@
       ],
       "variant": "A",
       "unit_count": 12,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6252_aubl9why.docx"
+      "content_competency_occurrences": 81,
+      "process_competency_occurrences": 101,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6252_aubl9why.docx",
+      "source_sha256": "d5409a15e13d062dceba21147b592301c67fe970f4ebe1240e5f921c1a50b8c0"
     },
     {
       "id": "SEK1_7-9_B",
       "file": "curricula/SEK1_7-9_B.json",
+      "validation": "curricula/SEK1_7-9_B.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 7/8/9 B",
       "school_type": "SEK1",
       "grades": [
@@ -108,11 +144,16 @@
       ],
       "variant": "B",
       "unit_count": 12,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6251_fizfqv06.docx"
+      "content_competency_occurrences": 108,
+      "process_competency_occurrences": 136,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6251_fizfqv06.docx",
+      "source_sha256": "dc1a6dc417cbca8d5ddd85caeba45d1e57848fce323ab2c4aef18a9eed7f3c89"
     },
     {
       "id": "SEK1_10_A",
       "file": "curricula/SEK1_10_A.json",
+      "validation": "curricula/SEK1_10_A.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 10 A",
       "school_type": "SEK1",
       "grades": [
@@ -120,11 +161,16 @@
       ],
       "variant": "A",
       "unit_count": 5,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6250_02lg8izo.docx"
+      "content_competency_occurrences": 22,
+      "process_competency_occurrences": 14,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6250_02lg8izo.docx",
+      "source_sha256": "8aed9a8aab1e97b025ee47ed5b46fbf5ab73736da85f5356920f05126688e819"
     },
     {
       "id": "SEK1_10_B",
       "file": "curricula/SEK1_10_B.json",
+      "validation": "curricula/SEK1_10_B.validation.json",
       "title": "KoKo Beispielcurriculum Sek.I 10 B",
       "school_type": "SEK1",
       "grades": [
@@ -132,11 +178,16 @@
       ],
       "variant": "B",
       "unit_count": 5,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6249_uies2jl5.docx"
+      "content_competency_occurrences": 33,
+      "process_competency_occurrences": 26,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6249_uies2jl5.docx",
+      "source_sha256": "c946fd65f3afa9d08d893a253da17110c655c44fd4a0ad3402cea34395b3d6a0"
     },
     {
       "id": "GYM_5-6_A",
       "file": "curricula/GYM_5-6_A.json",
+      "validation": "curricula/GYM_5-6_A.validation.json",
       "title": "KoKo Beispielcurriculum GYM 5/6 A",
       "school_type": "GYM",
       "grades": [
@@ -144,12 +195,17 @@
         6
       ],
       "variant": "A",
-      "unit_count": 7,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6248_ozokrfes.docx"
+      "unit_count": 8,
+      "content_competency_occurrences": 70,
+      "process_competency_occurrences": 61,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6248_ozokrfes.docx",
+      "source_sha256": "8cfc1e3bbf3264965ab569cd5376c71dc03926e06ee8739578ee3e4b5a89e62a"
     },
     {
       "id": "GYM_5-6_B",
       "file": "curricula/GYM_5-6_B.json",
+      "validation": "curricula/GYM_5-6_B.validation.json",
       "title": "KoKo Beispielcurriculum GYM 5/6 B",
       "school_type": "GYM",
       "grades": [
@@ -158,11 +214,16 @@
       ],
       "variant": "B",
       "unit_count": 10,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6246_vb4109dt.docx"
+      "content_competency_occurrences": 72,
+      "process_competency_occurrences": 94,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6246_vb4109dt.docx",
+      "source_sha256": "e5c96c57f48e4a2733bcb92067c2bd6334d27da113a766b739b903d8135ff56a"
     },
     {
       "id": "GYM_7-8_A",
       "file": "curricula/GYM_7-8_A.json",
+      "validation": "curricula/GYM_7-8_A.validation.json",
       "title": "KoKo Beispielcurriculum GYM 7/8 A",
       "school_type": "GYM",
       "grades": [
@@ -171,11 +232,16 @@
       ],
       "variant": "A",
       "unit_count": 5,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6247_o324kcmy.docx"
+      "content_competency_occurrences": 76,
+      "process_competency_occurrences": 50,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6247_o324kcmy.docx",
+      "source_sha256": "c3df4f11edf42c2aa03e342d2b5ebaa78675f249bbfebcfecfcd2341303932a2"
     },
     {
       "id": "GYM_7-8_B",
       "file": "curricula/GYM_7-8_B.json",
+      "validation": "curricula/GYM_7-8_B.validation.json",
       "title": "KoKo Beispielcurriculum GYM 7/8 B",
       "school_type": "GYM",
       "grades": [
@@ -184,11 +250,16 @@
       ],
       "variant": "B",
       "unit_count": 7,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6245_zua1q15j.docx"
+      "content_competency_occurrences": 93,
+      "process_competency_occurrences": 86,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6245_zua1q15j.docx",
+      "source_sha256": "19917d72e4eff06fdfe74e57d0d83c43885b87303ac0c7fd3873f799d770e814"
     },
     {
       "id": "GYM_9-10_A",
       "file": "curricula/GYM_9-10_A.json",
+      "validation": "curricula/GYM_9-10_A.validation.json",
       "title": "KoKo Beispielcurriculum GYM 9/10 A",
       "school_type": "GYM",
       "grades": [
@@ -197,11 +268,16 @@
       ],
       "variant": "A",
       "unit_count": 10,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6244_g7jq8ct8.docx"
+      "content_competency_occurrences": 82,
+      "process_competency_occurrences": 163,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6244_g7jq8ct8.docx",
+      "source_sha256": "95ec913efe34a6ba75fde8b8f24642d65b810c69ef92161b5bf3c0406b2bcbd4"
     },
     {
       "id": "GYM_9-10_B",
       "file": "curricula/GYM_9-10_B.json",
+      "validation": "curricula/GYM_9-10_B.validation.json",
       "title": "KoKo Beispielcurriculum GYM 9/10 B",
       "school_type": "GYM",
       "grades": [
@@ -210,7 +286,11 @@
       ],
       "variant": "B",
       "unit_count": 7,
-      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6243_y9ygav9k.docx"
+      "content_competency_occurrences": 70,
+      "process_competency_occurrences": 111,
+      "complete": true,
+      "source_url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6243_y9ygav9k.docx",
+      "source_sha256": "76884744ccd2bd2d59178179c76c533c2a003f5a140a9ed8f80a077cdcc69455"
     }
   ]
 }
