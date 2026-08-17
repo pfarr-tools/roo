@@ -1,0 +1,18 @@
+@import "bootstrap/scss/bootstrap";
+
+:root {
+    --roo-sidebar-width: 18rem;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.btn,
+.form-control,
+.form-select {
+    &:focus-visible {
+        outline: 3px solid rgba(var(--bs-primary-rgb), .3);
+        outline-offset: 2px;
+    }
+}

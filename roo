@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+COMMAND="${1:-help}"
+shift || true
+
+case "$COMMAND" in
+  bootstrap)
+    exec ./scripts/bootstrap.sh "$@"
+    ;;
+  up)
+    docker compose up -d "$@"
+    ;;
+  down)
+    docker compose down "$@"
+    ;;
+  restart)
+    docker compose restart "$@"
+    ;;
+  status|ps)
+    docker compose ps "$@"
+    ;;
+  logs)
+    docker compose logs -f "$@"
+    ;;
+  shell)
+    exec docker compose exec app bash "$@"
+    ;;
+  artisan)
+    exec docker compose exec app php artisan "$@"
+    ;;
+  composer)
+    exec docker compose exec app composer "$@"
+    ;;
+  npm)
+    exec docker compose run --rm vite npm "$@"
+    ;;
+  pint)
+    exec docker compose exec app ./vendor/bin/pint "$@"
+    ;;
+  test)
+    docker compose exec -e APP_KEY='base64:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=' app php artisan test "$@"
+    ;;
+  fresh)
+    docker compose exec app php artisan migrate:fresh --seed "$@"
+    ;;
+  *)
+    cat <<'EOF'
+Roo-Entwicklungshelfer
+
+Verwendung:
+  ./roo bootstrap
+  ./roo up
+  ./roo down
+  ./roo restart
+  ./roo status
+  ./roo logs [dienst]
+  ./roo shell
+  ./roo artisan <befehl>
+  ./roo composer <befehl>
+  ./roo npm <befehl>
+  ./roo pint
+  ./roo test
+  ./roo fresh
+EOF
+    ;;
+esac

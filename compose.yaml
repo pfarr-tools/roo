@@ -1,0 +1,191 @@
+name: roo
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: development
+  working_dir: /var/www/html
+  env_file:
+    - .env
+  volumes:
+    - ./src:/var/www/html
+    - composer_cache:/tmp/composer-cache
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    object-storage:
+      condition: service_started
+  networks:
+    - roo
+
+services:
+  app:
+    <<: *app
+    command: php-fpm
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - ./src:/var/www/html:ro
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - roo
+
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: node
+    working_dir: /app
+    env_file:
+      - .env
+    command: sh -lc "if [ -f package.json ]; then npm run dev -- --host 0.0.0.0; else sleep infinity; fi"
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    volumes:
+      - ./src:/app
+      - node_modules:/app/node_modules
+    networks:
+      - roo
+
+  horizon:
+    <<: *app
+    command: sh -lc "until [ -f artisan ]; do sleep 2; done; php artisan horizon"
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  scheduler:
+    <<: *app
+    command: sh -lc "until [ -f artisan ]; do sleep 2; done; php artisan schedule:work"
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-roo}
+      POSTGRES_USER: ${DB_USERNAME:-roo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-roo}
+    ports:
+      - "${FORWARD_DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-roo} -d ${DB_DATABASE:-roo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - roo
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - roo
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-roo-development-master-key}
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "${FORWARD_MEILISEARCH_PORT:-7700}:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health | grep -q available"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - roo
+
+  object-storage:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-roo}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-roo-development-secret}
+    ports:
+      - "${FORWARD_S3_PORT:-9000}:9000"
+      - "${FORWARD_S3_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - object_storage_data:/data
+    networks:
+      - roo
+
+  create-buckets:
+    image: minio/mc:latest
+    depends_on:
+      - object-storage
+    env_file:
+      - .env
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set roo http://object-storage:9000
+      \"$${AWS_ACCESS_KEY_ID:-roo}\" \"$${AWS_SECRET_ACCESS_KEY:-roo-development-secret}\"; do
+        sleep 2;
+      done;
+      mc mb --ignore-existing roo/$${AWS_BUCKET:-roo-documents};
+      mc mb --ignore-existing roo/roo-generated;
+      mc mb --ignore-existing roo/roo-imports;
+      mc mb --ignore-existing roo/roo-exports;
+      mc mb --ignore-existing roo/roo-temporary;
+      exit 0;
+      "
+    networks:
+      - roo
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_MAILPIT_PORT:-8025}:8025"
+    networks:
+      - roo
+
+networks:
+  roo:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+  object_storage_data:
+  composer_cache:
+  node_modules:
+  caddy_data:
+  caddy_config:
