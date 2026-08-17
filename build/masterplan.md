@@ -18,8 +18,8 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 
 Fortschritt: `[~]` Bootstrap, Docker-Healthchecks, Laravel/Inertia/Vue/
 Bootstrap-Basis, deutsche Authentifizierung, Testgrundlage, eine Docker-
-basierte CI-Prüfung und ein ausführbarer Queue-Nachweis sind umgesetzt. Offen
-sind noch ein Storage-Roundtrip und ein Suchindex-Test.
+basierte CI-Prüfung, ein ausführbarer Queue-Nachweis und ein privater
+Storage-Roundtrip sind umgesetzt. Offen ist noch ein Suchindex-Test.
 
 ### Ziel
 
