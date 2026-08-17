@@ -1,0 +1,430 @@
+{
+  "schema_version": "2.0.0",
+  "type": "education_plan",
+  "metadata": {
+    "country": "DE",
+    "state": "BW",
+    "subject": "Evangelische Religionslehre",
+    "school_types": [
+      "Gymnasium"
+    ],
+    "plan_code": "DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV(V3.0)",
+    "version": "V3.0",
+    "version_date": "2026-05-21",
+    "title": "Gymnasium - Evangelische Religionslehre – Überarbeitete Fassung vom 21. Mai 2026 (V3.0)",
+    "source_url": "https://www.bildungsplaene-bw.de/,Lde/DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV(V3.0)",
+    "conversion": {
+      "status": "structure_only",
+      "complete": false,
+      "reason": "Die offizielle V3.0-Hauptseite war im Extraktionszugang wiederholt nicht vollständig abrufbar (Timeout). Es wurden bewusst keine Inhalte aus der älteren V1-Fassung übernommen.",
+      "verified_scope": [
+        "Metadaten",
+        "Fassungsdatum",
+        "Stufenstruktur",
+        "Bereichsstruktur"
+      ]
+    }
+  },
+  "guiding_principles": [],
+  "process_competencies": [],
+  "stages": [
+    {
+      "id": "3.1",
+      "label": "Klassen 5/6",
+      "grades": [
+        5,
+        6
+      ],
+      "course": null,
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.1.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.3",
+          "title": "Bibel",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.4",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.5",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.6",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.1.7",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    },
+    {
+      "id": "3.2",
+      "label": "Klassen 7/8",
+      "grades": [
+        7,
+        8
+      ],
+      "course": null,
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.2.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.3",
+          "title": "Bibel",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.4",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.5",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.6",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.2.7",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    },
+    {
+      "id": "3.3",
+      "label": "Klassen 9/10",
+      "grades": [
+        9,
+        10
+      ],
+      "course": null,
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.3.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.3",
+          "title": "Bibel",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.4",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.5",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.6",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.3.7",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    },
+    {
+      "id": "3.4",
+      "label": "Klasse 11",
+      "grades": [
+        11
+      ],
+      "course": null,
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.4.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.3",
+          "title": "Bibel",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.4",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.5",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.6",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.4.7",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    },
+    {
+      "id": "3.5",
+      "label": "Klassen 12/13 (Basisfach)",
+      "grades": [
+        12,
+        13
+      ],
+      "course": {
+        "id": "basic",
+        "label": "Basisfach"
+      },
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.5.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.5.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.5.3",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.5.4",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.5.5",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.5.6",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    },
+    {
+      "id": "3.6",
+      "label": "Klassen 12/13 (Leistungsfach)",
+      "grades": [
+        12,
+        13
+      ],
+      "course": {
+        "id": "advanced",
+        "label": "Leistungsfach"
+      },
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.6.1",
+          "title": "Mensch",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.6.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.6.3",
+          "title": "Gott",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.6.4",
+          "title": "Jesus Christus",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.6.5",
+          "title": "Kirche",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        },
+        {
+          "id": "3.6.6",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "",
+          "competencies": [],
+          "notes": {},
+          "source_raw": ""
+        }
+      ]
+    }
+  ],
+  "supplementary_content_raw": ""
+}

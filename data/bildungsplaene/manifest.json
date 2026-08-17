@@ -1,0 +1,36 @@
+{
+  "package": "bildungsplaene-bw-rev-roo",
+  "schema_version": "2.0.0",
+  "created": "2026-08-17",
+  "subject": "Evangelische Religionslehre",
+  "plans": [
+    {
+      "file": "plans/BP2016BW_ALLG_GS_REV.json",
+      "plan_code": "BP2016BW_ALLG_GS_REV",
+      "complete": true,
+      "source": "official PDF export"
+    },
+    {
+      "file": "plans/BP2016BW_ALLG_SEK1_REV.json",
+      "plan_code": "BP2016BW_ALLG_SEK1_REV",
+      "complete": true,
+      "source": "official PDF export"
+    },
+    {
+      "file": "plans/DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV_V3.0.json",
+      "plan_code": "DE_BW_BILDUNGSPLAENE_GEN2X_BPBW_ALLG_GYM_REV(V3.0)",
+      "complete": false,
+      "source": "official page/index; structure only"
+    },
+    {
+      "file": "plans/BP2016BW_ALLG_GMSO_REV.json",
+      "plan_code": "BP2016BW_ALLG_GMSO_REV",
+      "complete": true,
+      "source": "official PDF export"
+    }
+  ],
+  "notes": [
+    "Domains are data and are not constrained to a fixed set of names.",
+    "The Gymnasium V3.0 file is intentionally not populated with V1 content."
+  ]
+}

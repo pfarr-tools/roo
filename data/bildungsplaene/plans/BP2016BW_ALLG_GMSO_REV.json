@@ -1,0 +1,1978 @@
+{
+  "schema_version": "2.0.0",
+  "type": "education_plan",
+  "metadata": {
+    "country": "DE",
+    "state": "BW",
+    "subject": "Evangelische Religionslehre",
+    "school_types": [
+      "Gemeinschaftsschule Oberstufe"
+    ],
+    "plan_code": "BP2016BW_ALLG_GMSO_REV",
+    "version": "2016",
+    "title": "Bildungsplan der Oberstufe an Gemeinschaftsschulen - Evangelische Religionslehre",
+    "source_url": "https://www.bildungsplaene-bw.de/,Lde/BP2016BW_ALLG_GMSO_REV"
+  },
+  "guiding_principles": [],
+  "process_competencies": [
+    {
+      "id": "2.1",
+      "title": "Wahrnehmungs- und Darstellungsfähigkeit",
+      "introduction": "Die Schülerinnen und Schüler nehmen religiös bedeutsame Phänomene wahr und beschreiben sie.",
+      "competencies": [
+        {
+          "id": "2.1.1",
+          "number": 1,
+          "text": "Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen"
+        },
+        {
+          "id": "2.1.2",
+          "number": 2,
+          "text": "religiöse Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben"
+        },
+        {
+          "id": "2.1.3",
+          "number": 3,
+          "text": "grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten wiedererkennen und sie einordnen"
+        },
+        {
+          "id": "2.1.4",
+          "number": 4,
+          "text": "in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren"
+        },
+        {
+          "id": "2.1.5",
+          "number": 5,
+          "text": "die Rezeption religiöser Motive in Medien erkennen"
+        }
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Deutungsfähigkeit",
+      "introduction": "Die Schülerinnen und Schüler verstehen und deuten religiös bedeutsame Sprache und Zeugnisse.",
+      "competencies": [
+        {
+          "id": "2.2.1",
+          "number": 1,
+          "text": "religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen"
+        },
+        {
+          "id": "2.2.2",
+          "number": 2,
+          "text": "religiöse Motive und Elemente in medialen Ausdrucksformen deuten"
+        },
+        {
+          "id": "2.2.3",
+          "number": 3,
+          "text": "Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen"
+        },
+        {
+          "id": "2.2.4",
+          "number": 4,
+          "text": "den Geltungsanspruch biblischer und theologischerTexte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen"
+        }
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Urteilsfähigkeit",
+      "introduction": "Die Schülerinnen und Schüler urteilen in religiösen und ethischen Fragen begründet.",
+      "competencies": [
+        {
+          "id": "2.3.1",
+          "number": 1,
+          "text": "deskriptive und normative Aussagen unterscheiden und sich mit ihrem Anspruch auseinandersetzen"
+        },
+        {
+          "id": "2.3.2",
+          "number": 2,
+          "text": "Zweifel und Kritik an Religion erörtern"
+        },
+        {
+          "id": "2.3.3",
+          "number": 3,
+          "text": "ambivalente Aspekte der Religion und ihrer Praxis erläutern"
+        },
+        {
+          "id": "2.3.4",
+          "number": 4,
+          "text": "Grundzüge von Argumentationsmodellen, insbesondere theologischen, miteinander vergleichen Prozessbezogene Kompetenzen"
+        },
+        {
+          "id": "2.3.5",
+          "number": 5,
+          "text": "im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten"
+        },
+        {
+          "id": "2.3.6",
+          "number": 6,
+          "text": "Modelle ethischer Urteilsbildung bewerten und sie beispielhaft anwenden"
+        }
+      ]
+    },
+    {
+      "id": "2.4",
+      "title": "Dialogfähigkeit",
+      "introduction": "Die Schülerinnen und Schüler nehmen am religiösen Dialog argumentierend teil.",
+      "competencies": [
+        {
+          "id": "2.4.1",
+          "number": 1,
+          "text": "sich auf die Perspektive eines anderen einlassen und sie in Bezug zum eigenen Standpunkt setzen"
+        },
+        {
+          "id": "2.4.2",
+          "number": 2,
+          "text": "Gemeinsamkeiten und Unterschiede religiöser und nichtreligiöser Überzeugungen benennen und sie im Hinblick auf mögliche Dialogpartner kommunizieren"
+        },
+        {
+          "id": "2.4.3",
+          "number": 3,
+          "text": "sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nicht- religiösen Überzeugungen auseinandersetzen"
+        },
+        {
+          "id": "2.4.4",
+          "number": 4,
+          "text": "Kriterien für einen konstruktiven interreligiösen Diskurs benennen"
+        }
+      ]
+    },
+    {
+      "id": "2.5",
+      "title": "Gestaltungsfähigkeit",
+      "introduction": "Die Schülerinnen und Schüler verwenden religiös bedeutsame Ausdrucks- und Gestaltungsformen reflektiert.",
+      "competencies": [
+        {
+          "id": "2.5.1",
+          "number": 1,
+          "text": "sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren"
+        },
+        {
+          "id": "2.5.2",
+          "number": 2,
+          "text": "religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren"
+        },
+        {
+          "id": "2.5.3",
+          "number": 3,
+          "text": "angemessenes Verhalten in religiös bedeutsamen Situationen reflektieren"
+        },
+        {
+          "id": "2.5.4",
+          "number": 4,
+          "text": "typische Sprachformen der Bibel und des christlichen Glaubens transformieren Hinweise Mit diesen fünf Kompetenzen religiöser Bildung wird an die Vorgaben angeknüpft, wie sie in den Texten der Evangelischen Kirche in Deutschland und der Kultusministerkonferenz (KMK) ausge wiesen sind: Evangelische Kirche in Deutschland (EKD): Kompetenzen und Standards für den Evangelischen Re ligionsunterricht in der Sekundarstufe I. Ein Orientierungsrahmen (EKD-Texte 111, Dezember 2010). Kerncurriculum für das Fach Evangelische Religionslehre in der gymnasialen Oberstufe. Themen und Inhalte für die Entwicklung von Kompetenzen religiöser Bildung (EKD-Texte 109, April 2010). Einheitliche Prüfungsanforderungen in der Abiturprüfung (EPA) für die Fächer Evangelische Reli gionslehre und Katholische Religionslehre (KMK 2006). 6 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "3.3",
+      "label": "Klasse 11",
+      "grades": [
+        11
+      ],
+      "course": null,
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.3.1",
+          "title": "Mensch",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit Fragen des Menschseins auseinander.",
+          "competencies": [
+            {
+              "id": "3.3.1.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "persönlichen und gesellschaftlichen Umgang mit Sterben,Tod undTrauer analysieren (zum Beispiel Hospiz,Trauerprozesse, Bestattungskultur)"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 1",
+                "2.5 Gestaltungsfähigkeit 1",
+                "3.3.2 Welt und Verantwortung (4)",
+                "3.3.4 Gott (2)",
+                "BK 3.3.1 Bild (6), (7)",
+                "D 3.3.1.1 LiterarischeTexte (19), (5)",
+                "D 3.3.2.2 Funktion von Äußerungen (10)",
+                "ETH 3.2.1.3 Umgang mit Endlichkeit (3)"
+              ]
+            },
+            {
+              "id": "3.3.1.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Begründungen für Menschenwürde und Menschenrechte auseinandersetzen (zum Beispiel Ebenbild Gottes, Rechtfertigung, Naturrecht)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "3.3.2 Welt und Verantwortung (1)",
+                "D 3.3.2.2 Funktion von Äußerungen (10)"
+              ]
+            },
+            {
+              "id": "3.3.1.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "zu Antwortversuchen auf die Sinnfrage Stellung nehmen (zum Beispiel Erfolgsstreben, Beziehungen, Selbstverwirklichung, Altruismus, Gottes- und Menschenliebe, Konsum, Glück)"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 5",
+                "2.3 Urteilsfähigkeit 4",
+                "3.3.4 Gott (1)",
+                "BK 3.3.1 Bild (6), (7)",
+                "D 3.1.1.2 Sach- und Gebrauchstexte (2)",
+                "D 3.3.1.2 Sach- und Gebrauchstexte (13)",
+                "D 3.3.2.2 Funktion von Äußerungen (10)",
+                "ETH 3.2.1.2 Arbeit und Selbstbestimmung (3)",
+                "GR3 3.1.5 Antike Kultur (10)",
+                "MUS 3.3.1 Musik gestalten und erleben (7)"
+              ]
+            },
+            {
+              "id": "3.3.1.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität auseinandersetzen (zum Beispiel in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 5",
+                "3.3.1 Mensch (2)",
+                "3.3.2 Welt und Verantwortung (2)",
+                "BIO 3.2.2.3 Fortpflanzung und Entwicklung (5), (6)",
+                "BK 3.3.1 Bild (6)",
+                "ETH 3.2.1.1 Liebe und Sexualität (2), (3), (4)",
+                "ETH 3.2.1.3 Umgang mit Endlichkeit (3)",
+                "MUS 3.3.1 Musik gestalten und erleben (9)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1,26-28",
+              "1. Mose 3",
+              "Röm 1,16f"
+            ],
+            "terms": [
+              "Schöpfungsauftrag",
+              "Ebenbild Gottes",
+              "Sünde",
+              "Rechtfertigung",
+              "Verantwortung",
+              "Gleichberechtigung"
+            ]
+          },
+          "source_raw": "3.3.1 Mensch\nDie Schülerinnen und Schüler setzen sich mit Fragen des Menschseins auseinander.\n(1) persönlichen und gesellschaftlichen Umgang mit Sterben,Tod undTrauer analysieren (zum\nBeispiel Hospiz,Trauerprozesse, Bestattungskultur)\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 1\n2.5 Gestaltungsfähigkeit 1\n3.3.2 Welt und Verantwortung (4)\n3.3.4 Gott (2)\nBK 3.3.1 Bild (6), (7)\nD 3.3.1.1 LiterarischeTexte (19), (5)\nD 3.3.2.2 Funktion von Äußerungen (10)\nETH 3.2.1.3 Umgang mit Endlichkeit (3)\n(2) sich mit Begründungen für Menschenwürde und Menschenrechte auseinandersetzen\n(zum Beispiel Ebenbild Gottes, Rechtfertigung, Naturrecht)\n2.3 Urteilsfähigkeit 4\n3.3.2 Welt und Verantwortung (1)\nD 3.3.2.2 Funktion von Äußerungen (10)\n(3) zu Antwortversuchen auf die Sinnfrage Stellung nehmen (zum Beispiel Erfolgsstreben,\nBeziehungen, Selbstverwirklichung, Altruismus, Gottes- und Menschenliebe, Konsum, Glück)\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 5\n2.3 Urteilsfähigkeit 4\n3.3.4 Gott (1)\nBK 3.3.1 Bild (6), (7)\nD 3.1.1.2 Sach- und Gebrauchstexte (2)\nD 3.3.1.2 Sach- und Gebrauchstexte (13)\nD 3.3.2.2 Funktion von Äußerungen (10)\nETH 3.2.1.2 Arbeit und Selbstbestimmung (3)\nGR3 3.1.5 Antike Kultur (10)\nMUS 3.3.1 Musik gestalten und erleben (7)\n(4) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität auseinandersetzen (zum Beispiel\nin kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung)\n2.3 Urteilsfähigkeit 5\n3.3.1 Mensch (2)\n3.3.2 Welt und Verantwortung (2)\nBIO 3.2.2.3 Fortpflanzung und Entwicklung (5), (6)\nBK 3.3.1 Bild (6)\nETH 3.2.1.1 Liebe und Sexualität (2), (3), (4)\nETH 3.2.1.3 Umgang mit Endlichkeit (3)\nMUS 3.3.1 Musik gestalten und erleben (9)\n\nMögliche Bibeltexte: 1. Mose 1,26-28; 1. Mose 3; Röm 1,16f\nMögliche Fachbegriffe: Schöpfungsauftrag; Ebenbild Gottes; Sünde; Rechtfertigung;\nVerantwortung; Gleichberechtigung"
+        },
+        {
+          "id": "3.3.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "Die Schülerinnen und Schüler stellen Grundzüge christlicher und philosophischer Ethik dar. Sie ver- gleichen unterschiedliche Zugänge zur Wirklichkeit.",
+          "competencies": [
+            {
+              "id": "3.3.2.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Konsequenzen ethischer Ansätze anhand der Frage der Selbstbestimmung des Menschen aufzeigen (zum Beispiel aus dem Bereich Suizid, Sterbehilfe,Transplantationsmedizin)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "3.3.1 Mensch (1)",
+                "3.3.4 Gott (1)",
+                "ETH 3.2.1.3 Umgang mit Endlichkeit (1), (2)"
+              ]
+            },
+            {
+              "id": "3.3.2.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "das Verhältnis von Zuspruch und Anspruch als Grundzug christlicher Ethik anhand biblischer Texte (zum Beispiel 2. Mose 20,1-17; Mt 5-7; Lk 10,25-37; Joh 8,1-11; Gal 3,26-28) entfalten"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.3.1 Mensch (1), (2)",
+                "3.3.5 Jesus Christus (1)"
+              ]
+            },
+            {
+              "id": "3.3.2.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "anhand von Fallbeispielen utilitaristische Ethik und Pflichtethik vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 6",
+                "2.4 Dialogfähigkeit 1",
+                "ETH 3.2.6.2 Vernunft, Vertrag, Gefühl, Nutzen (*) (1), (4), (5)"
+              ]
+            },
+            {
+              "id": "3.3.2.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "unterschiedliche Deutungen der Wirklichkeit (zum Beispiel lebensweltlich, religiös, natur- wissenschaftlich) anhand von Beispielen (zum BeispielTod und Sterben, Krankheit) darstellen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 3",
+                "3.3.4 Gott (2)",
+                "BK 3.3.1 Bild (1), (6)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 5-7",
+              "Lk 7,17-49",
+              "Joh 9,1-7"
+            ],
+            "terms": [
+              "Bergpredigt",
+              "soziale Gerechtigkeit",
+              "Friedensethik",
+              "Mediation",
+              "Strafvollzug",
+              "Suizid",
+              "Sterbehilfe",
+              "Transplantationsmedizin",
+              "Utilitarismus",
+              "Pflichtethik",
+              "Rechtfertigung 8 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+            ]
+          },
+          "source_raw": "3.3.2 Welt und Verantwortung\nDie Schülerinnen und Schüler stellen Grundzüge christlicher und philosophischer Ethik dar. Sie vergleichen unterschiedliche Zugänge zur Wirklichkeit.\n(1) Konsequenzen ethischer Ansätze anhand der Frage der Selbstbestimmung des Menschen\naufzeigen (zum Beispiel aus dem Bereich Suizid, Sterbehilfe,Transplantationsmedizin)\n2.3 Urteilsfähigkeit 4\n3.3.1 Mensch (1)\n3.3.4 Gott (1)\nETH 3.2.1.3 Umgang mit Endlichkeit (1), (2)\n(2) das Verhältnis von Zuspruch und Anspruch als Grundzug christlicher Ethik anhand biblischer\nTexte (zum Beispiel 2. Mose 20,1-17; Mt 5-7; Lk 10,25-37; Joh 8,1-11; Gal 3,26-28) entfalten\n2.2 Deutungsfähigkeit 3\n3.3.1 Mensch (1), (2)\n3.3.5 Jesus Christus (1)\n(3) anhand von Fallbeispielen utilitaristische Ethik und Pflichtethik vergleichen\n2.3 Urteilsfähigkeit 6\n2.4 Dialogfähigkeit 1\nETH 3.2.6.2 Vernunft, Vertrag, Gefühl, Nutzen (*) (1), (4), (5)\n(4) unterschiedliche Deutungen der Wirklichkeit (zum Beispiel lebensweltlich, religiös, naturwissenschaftlich) anhand von Beispielen (zum BeispielTod und Sterben, Krankheit) darstellen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 3\n3.3.4 Gott (2)\nBK 3.3.1 Bild (1), (6)\nMögliche Bibeltexte: Mt 5-7; Lk 7,17-49; Joh 9,1-7\nMögliche Fachbegriffe: Bergpredigt; soziale Gerechtigkeit; Friedensethik; Mediation; Strafvollzug;\nSuizid; Sterbehilfe;Transplantationsmedizin; Utilitarismus; Pflichtethik; Rechtfertigung\n\n8 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+        },
+        {
+          "id": "3.3.3",
+          "title": "Bibel",
+          "introduction": "Die Schülerinnen und Schüler interpretieren Bibeltexte methodisch differenziert. Sie stellen die Bedeutung und Wirkungsgeschichte einzelner biblischer Texte dar.",
+          "competencies": [
+            {
+              "id": "3.3.3.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Aspekten des Verständnisses biblischerTexte auseinandersetzen (zum Beispiel Historizität und Aktualität, Wahrheit, Widersprüche)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.3.2 Welt und Verantwortung (4)",
+                "3.3.5 Jesus Christus (1), (2)",
+                "BK 3.3.1 Bild (6)"
+              ]
+            },
+            {
+              "id": "3.3.3.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "die Entstehung biblischerTexte aus historisch-kritischer Perspektive exemplarisch erläutern"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.3.5 Jesus Christus (1), (2)"
+              ]
+            },
+            {
+              "id": "3.3.3.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Bibeltexte (zum Beispiel Hiob, Bergpredigt) hinsichtlich ihrer existenziellen Bedeutung interpretieren"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.5 Gestaltungsfähigkeit 4",
+                "3.3.1 Mensch (3), (4)",
+                "3.3.2 Welt und Verantwortung (2)",
+                "3.3.4 Gott (1)",
+                "3.3.5 Jesus Christus (1), (2)",
+                "BK 3.3.1 Bild (1), (6)"
+              ]
+            },
+            {
+              "id": "3.3.3.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit der Bedeutung der heiligen Schriften in den monotheistischen Religionen (Wahrheitsanspruch und zum Beispiel Übersetzung, Interpretation, Alltagsgebrauch) auseinandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.4 Dialogfähigkeit 3",
+                "3.3.1 Mensch (1)",
+                "RALE 3.1.6 Andere Religionen und Weltanschauungen (2)",
+                "RJUED 3.3.2 TORA (2)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1-3 (in Auszügen)",
+              "Hiob (in Auszügen)",
+              "Mt 5-7",
+              "Mk 16",
+              "1. Kor (in Auszügen)"
+            ],
+            "terms": [
+              "Hermeneutik",
+              "historisch-kritische Methode",
+              "Verbalinspiration",
+              "Fundamentalismus",
+              "Mythos",
+              "Textkritik",
+              "Bergpredigt",
+              "Wahrheitsanspruch",
+              "Halacha",
+              "Talmud"
+            ]
+          },
+          "source_raw": "3.3.3 Bibel\nDie Schülerinnen und Schüler interpretieren Bibeltexte methodisch differenziert. Sie stellen die\nBedeutung und Wirkungsgeschichte einzelner biblischer Texte dar.\n(1) sich mit Aspekten des Verständnisses biblischerTexte auseinandersetzen (zum Beispiel\nHistorizität und Aktualität, Wahrheit, Widersprüche)\n2.2 Deutungsfähigkeit 3\n3.3.2 Welt und Verantwortung (4)\n3.3.5 Jesus Christus (1), (2)\nBK 3.3.1 Bild (6)\n(2) die Entstehung biblischerTexte aus historisch-kritischer Perspektive exemplarisch erläutern\n2.2 Deutungsfähigkeit 3\n3.3.5 Jesus Christus (1), (2)\n(3) Bibeltexte (zum Beispiel Hiob, Bergpredigt) hinsichtlich ihrer existenziellen Bedeutung\ninterpretieren\n2.2 Deutungsfähigkeit 4\n2.5 Gestaltungsfähigkeit 4\n3.3.1 Mensch (3), (4)\n3.3.2 Welt und Verantwortung (2)\n3.3.4 Gott (1)\n3.3.5 Jesus Christus (1), (2)\nBK 3.3.1 Bild (1), (6)\n(4) sich mit der Bedeutung der heiligen Schriften in den monotheistischen Religionen\n(Wahrheitsanspruch und zum Beispiel Übersetzung, Interpretation, Alltagsgebrauch)\nauseinandersetzen\n2.4 Dialogfähigkeit 3\n3.3.1 Mensch (1)\nRALE 3.1.6 Andere Religionen und Weltanschauungen (2)\nRJUED 3.3.2 TORA (2)\nMögliche Bibeltexte: 1. Mose 1-3 (in Auszügen); Hiob (in Auszügen); Mt 5-7; Mk 16;\n1. Kor (in Auszügen)\nMögliche Fachbegriffe: Hermeneutik; historisch-kritische Methode; Verbalinspiration;\nFundamentalismus; Mythos;Textkritik; Bergpredigt; Wahrheitsanspruch; Halacha;Talmud"
+        },
+        {
+          "id": "3.3.4",
+          "title": "Gott",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit Formen von Glauben und Zweifel an Gott auseinan- der. Sie nehmen dazu einen begründeten Standpunkt ein.",
+          "competencies": [
+            {
+              "id": "3.3.4.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "existenzielle Herausforderungen (zum Beispiel Erfolg, Glück, Sinn, Krisen, Krankheit, Verlust, Tod) zu Fragen nach Zufall, Schicksal und Wirken Gottes in Beziehung setzen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 1",
+                "2.3 Urteilsfähigkeit 2",
+                "3.1.1 Mensch (3)",
+                "GR3 3.1.5 Antike Kultur (13)"
+              ]
+            },
+            {
+              "id": "3.3.4.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 2",
+                "3.3.7 Religionen und Weltanschauungen (1)",
+                "D 3.3.1.2 Sach- und Gebrauchstexte (11)"
+              ]
+            },
+            {
+              "id": "3.3.4.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Gottesvorstellungen einer fernöstlichen Religion mit biblischen vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "3.3.1 Mensch (1)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Ps 73",
+              "Ps 103",
+              "Hiob 1-2",
+              "10,1-8",
+              "38",
+              "Joh 20, 24-29"
+            ],
+            "terms": [
+              "Glaube",
+              "Zweifel",
+              "Theodizee",
+              "Trinität",
+              "Prädestination",
+              "Polytheismus",
+              "Monotheismus",
+              "Erleuchtung",
+              "Karma",
+              "Deva",
+              "Erlösung",
+              "Kontingenz",
+              "Transzendenz",
+              "Immanenz 10 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+            ]
+          },
+          "source_raw": "3.3.4 Gott\nDie Schülerinnen und Schüler setzen sich mit Formen von Glauben und Zweifel an Gott auseinander. Sie nehmen dazu einen begründeten Standpunkt ein.\n(1) existenzielle Herausforderungen (zum Beispiel Erfolg, Glück, Sinn, Krisen, Krankheit, Verlust,\nTod) zu Fragen nach Zufall, Schicksal und Wirken Gottes in Beziehung setzen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 1\n2.3 Urteilsfähigkeit 2\n3.1.1 Mensch (3)\nGR3 3.1.5 Antike Kultur (13)\n(2) sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen\n2.3 Urteilsfähigkeit 2\n3.3.7 Religionen und Weltanschauungen (1)\nD 3.3.1.2 Sach- und Gebrauchstexte (11)\n(3) Gottesvorstellungen einer fernöstlichen Religion mit biblischen vergleichen\n2.3 Urteilsfähigkeit 4\n3.3.1 Mensch (1)\nMögliche Bibeltexte: Ps 73; Ps 103; Hiob 1-2; 10,1-8; 38; Joh 20, 24-29\nMögliche Fachbegriffe: Glaube; Zweifel;Theodizee;Trinität; Prädestination; Polytheismus;\nMonotheismus; Erleuchtung; Karma; Deva; Erlösung; Kontingenz;Transzendenz; Immanenz\n\n10 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+        },
+        {
+          "id": "3.3.5",
+          "title": "Jesus Christus",
+          "introduction": "Die Schülerinnen und Schüler erläutern Inhalte der Verkündigung Jesu Christi. Sie beschreiben die Bedeutung von Tod und Auferstehung Jesu Christi für den christlichen Glauben und vergleichen sie mit Reinkarnationsvorstellungen.",
+          "competencies": [
+            {
+              "id": "3.3.5.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Anstößigkeit und Aktualität der Bergpredigt erläutern (zum Beispiel neue Gerechtigkeit, Feindesliebe, Gewaltverzicht, Besitz, Stellung zurThora)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "3.3.2 Welt und Verantwortung (2)",
+                "D 3.3.1.2 Sach- und Gebrauchstexte (13)"
+              ]
+            },
+            {
+              "id": "3.3.5.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "die Bedeutung desTodes und der Auferstehung Jesu Christi für christliche Hoffnung beschreiben"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 2, 3",
+                "3.3.1 Mensch (1)",
+                "D 3.3.2.2 Funktion von Äußerungen (9)"
+              ]
+            },
+            {
+              "id": "3.3.5.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "christliches Verständnis vonTod und Auferstehung mit anderen religiösen und philosophischen Vorstellungen vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.4 Dialogfähigkeit 3",
+                "3.3.1 Mensch (1)",
+                "3.3.4 Gott (3)",
+                "3.3.7 Religionen und Weltanschauungen (2)",
+                "BK 3.3.1 Bild (6)",
+                "GR3 3.2.2.6 Philosophie (6)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 5-7",
+              "Mk 14-16",
+              "Lk 6,6-49",
+              "1. Kor 15",
+              "1.Thess 4,1-5"
+            ],
+            "terms": [
+              "Feindesliebe",
+              "Gewaltverzicht",
+              "Seligpreisungen",
+              "Antithesen",
+              "Armut, Reinkarnation",
+              "Leib und Seele",
+              "Platonismus",
+              "Auferstehung",
+              "neue Gerechtigkeit",
+              "Thora"
+            ]
+          },
+          "source_raw": "3.3.5 Jesus Christus\nDie Schülerinnen und Schüler erläutern Inhalte der Verkündigung Jesu Christi. Sie beschreiben die\nBedeutung von Tod und Auferstehung Jesu Christi für den christlichen Glauben und vergleichen\nsie mit Reinkarnationsvorstellungen.\n(1) Anstößigkeit und Aktualität der Bergpredigt erläutern (zum Beispiel neue Gerechtigkeit,\nFeindesliebe, Gewaltverzicht, Besitz, Stellung zurThora)\n2.2 Deutungsfähigkeit 4\n3.3.2 Welt und Verantwortung (2)\nD 3.3.1.2 Sach- und Gebrauchstexte (13)\n(2) die Bedeutung desTodes und der Auferstehung Jesu Christi für christliche Hoffnung\nbeschreiben\n2.2 Deutungsfähigkeit 2, 3\n3.3.1 Mensch (1)\nD 3.3.2.2 Funktion von Äußerungen (9)\n(3) christliches Verständnis vonTod und Auferstehung mit anderen religiösen und\nphilosophischen Vorstellungen vergleichen\n2.4 Dialogfähigkeit 3\n3.3.1 Mensch (1)\n3.3.4 Gott (3)\n3.3.7 Religionen und Weltanschauungen (2)\nBK 3.3.1 Bild (6)\nGR3 3.2.2.6 Philosophie (6)\nMögliche Bibeltexte: Mt 5-7; Mk 14-16; Lk 6,6-49; 1. Kor 15; 1.Thess 4,1-5\nMögliche Fachbegriffe: Feindesliebe; Gewaltverzicht; Seligpreisungen; Antithesen; Armut,\nReinkarnation; Leib und Seele; Platonismus; Auferstehung; neue Gerechtigkeit;Thora"
+        },
+        {
+          "id": "3.3.6",
+          "title": "Kirche und Kirchen",
+          "introduction": "Die Schülerinnen und Schüler stellen thematische Längsschnitte anhand ausgewählter Stationen der Kirchengeschichte dar. Sie erläutern historische Erscheinungsformen von Kirche unter ausge- wählten Fragestellungen.",
+          "competencies": [
+            {
+              "id": "3.3.6.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "das Verhältnis von Kirche und Judentum an ausgewählten Stationen darstellen (Drittes Reich und zum Beispiel Kreuzzüge, die große Pest, Reformation, Aufklärung, Kaiserreich, Kirche und Juden nach Auschwitz)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 3",
+                "G 3.3.1 Nationalsozialismus und Zweiter Weltkrieg – Zerstörung der Demokratie und Verbrechen gegen die Menschlichkeit (1), (3), (7)"
+              ]
+            },
+            {
+              "id": "3.3.6.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "die Haltung von Christen gegenüber dem Staat in autoritären Regimen untersuchen (zum Beispiel Bekennende Kirche und Deutsche Christen zur Zeit des Nationalsozialismus, Verfolgung und Unterdrückung von Christen weltweit)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 3",
+                "3.3.2 Welt und Verantwortung (2)",
+                "G 3.3.1 Nationalsozialismus und Zweiter Weltkrieg – Zerstörung der Demokratie und Verbrechen gegen die Menschlichkeit (7)"
+              ]
+            },
+            {
+              "id": "3.3.6.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Kennzeichen und historische Wurzeln unterschiedlicher Kirchen und Denominationen erläutern (zum Beispiel Orthodoxie, Anglikanische Kirche, Freikirchen, Pfingstbewegung)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "3.3.5 Jesus Christus (1)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mk 12,13-17",
+              "Röm 13,1",
+              "1. Kor 12",
+              "Apg 2",
+              "Apg 15"
+            ],
+            "terms": [
+              "Kreuzzüge",
+              "die große Pest",
+              "Reformation",
+              "Aufklärung",
+              "Kaiserreich",
+              "Deutsche Christen",
+              "Bekennende Kirche",
+              "Pfarrernotbund",
+              "Anpassung",
+              "Widerstand",
+              "Gleich schaltung",
+              "Barmer theologische Erklärung",
+              "Kirche und Juden nach Auschwitz",
+              "Shoah",
+              "Friedensethik",
+              "Ökumenische Bewegung",
+              "Staatskirchen",
+              "Taufverständnis",
+              "Charisma",
+              "Amts verständnis",
+              "Kirchensteuer",
+              "Orthodoxie",
+              "Ikonostase",
+              "Liturgie",
+              "Anglikanische Kirche",
+              "Pfingstkirchen"
+            ],
+            "persons": [
+              "Dietrich Bonhoeffer",
+              "Karl Barth 12 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+            ]
+          },
+          "source_raw": "3.3.6 Kirche und Kirchen\nDie Schülerinnen und Schüler stellen thematische Längsschnitte anhand ausgewählter Stationen\nder Kirchengeschichte dar. Sie erläutern historische Erscheinungsformen von Kirche unter ausgewählten Fragestellungen.\n(1) das Verhältnis von Kirche und Judentum an ausgewählten Stationen darstellen (Drittes Reich\nund zum Beispiel Kreuzzüge, die große Pest, Reformation, Aufklärung, Kaiserreich, Kirche und\nJuden nach Auschwitz)\n2.3 Urteilsfähigkeit 3\nG 3.3.1 Nationalsozialismus und Zweiter Weltkrieg – Zerstörung der Demokratie und Verbrechen gegen die\nMenschlichkeit (1), (3), (7)\n(2) die Haltung von Christen gegenüber dem Staat in autoritären Regimen untersuchen (zum\nBeispiel Bekennende Kirche und Deutsche Christen zur Zeit des Nationalsozialismus, Verfolgung\nund Unterdrückung von Christen weltweit)\n2.3 Urteilsfähigkeit 3\n3.3.2 Welt und Verantwortung (2)\nG 3.3.1 Nationalsozialismus und Zweiter Weltkrieg – Zerstörung der Demokratie und Verbrechen gegen die\nMenschlichkeit (7)\n(3) Kennzeichen und historische Wurzeln unterschiedlicher Kirchen und Denominationen\nerläutern (zum Beispiel Orthodoxie, Anglikanische Kirche, Freikirchen, Pfingstbewegung)\n2.3 Urteilsfähigkeit 4\n3.3.5 Jesus Christus (1)\nMögliche Bibeltexte: Mk 12,13-17; Röm 13,1; 1. Kor 12; Apg 2; Apg 15\nMögliche Fachbegriffe: Kreuzzüge; die große Pest; Reformation; Aufklärung; Kaiserreich;\nDeutsche Christen; Bekennende Kirche; Pfarrernotbund; Anpassung; Widerstand; Gleich\nschaltung; Barmer theologische Erklärung; Kirche und Juden nach Auschwitz; Shoah;\nFriedensethik; Ökumenische Bewegung; Staatskirchen;Taufverständnis; Charisma; Amts\nverständnis; Kirchensteuer; Orthodoxie; Ikonostase; Liturgie; Anglikanische Kirche; Pfingstkirchen\nMögliche Personen: Dietrich Bonhoeffer; Karl Barth\n\n12 Standards für inhaltsbezogene Kompetenzen – Klasse 11"
+        },
+        {
+          "id": "3.3.7",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "Die Schülerinnen und Schüler erläutern religiöse Praxis und Vorstellungen einer fernöstlichen Reli- gion und nehmen dazu einen begründeten Standpunkt ein. Sie zeigen ambivalente Wirkungen von Religionen und anderen Weltdeutungen auf.",
+          "competencies": [
+            {
+              "id": "3.3.7.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Ausprägungen religiöser Praxis und Vorstellungen einer fernöstlichen Religion erläutern und mit christlichen Erlösungsvorstellungen vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 3",
+                "2.4 Dialogfähigkeit 2",
+                "3.3.4 Gott (1)"
+              ]
+            },
+            {
+              "id": "3.3.7.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Ursachen und Folgen fundamentalistischer Überzeugungen in einer Religion auseinandersetzen (zum Beispiel im Christentum, im Judentum, im Islam)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 3",
+                "3.3.5 Jesus Christus (3)"
+              ]
+            },
+            {
+              "id": "3.3.7.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit Erscheinungsformen von Religion (zum Beispiel Polytheismus, Animismus, Monotheismus,Transzendenz und Immanenz) auseinandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.5 Gestaltungsfähigkeit 2",
+                "3.3.6 Kirche und Kirchen (1)",
+                "ETH 3.2.5.1 Ethisch-moralische Werte und Glaubensgrundsätze (3), (4)",
+                "ETH 3.2.5.2 Erscheinungsformen und Bedeutung des Religiösen (*) (1), (2)",
+                "RJUED 3.3.6 HAOLAM (3)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 7,12"
+            ],
+            "terms": [
+              "Sekte",
+              "interreligiöser Dialog",
+              "Fundamentalismus",
+              "Monotheismus",
+              "Poly theismus",
+              "Animismus",
+              "Buddhismus",
+              "Hinduismus",
+              "Karma",
+              "Dharma",
+              "Moksha",
+              "Nirvana",
+              "Deva",
+              "Upanishaden",
+              "Veden",
+              "Ramayana",
+              "Puja",
+              "Opfer",
+              "Reinkarnation",
+              "Kastenwesen",
+              "Theravada",
+              "Mahayana",
+              "Hinayana",
+              "vier edle Wahrheiten",
+              "achtfacher Pfad",
+              "Transzendenz",
+              "Immanenz"
+            ],
+            "persons": [
+              "Siddhartha Gautama",
+              "Dalai Lama 3.4 Klassen 12/13 (zweistündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.3.7 Religionen und Weltanschauungen\nDie Schülerinnen und Schüler erläutern religiöse Praxis und Vorstellungen einer fernöstlichen Religion und nehmen dazu einen begründeten Standpunkt ein. Sie zeigen ambivalente Wirkungen von\nReligionen und anderen Weltdeutungen auf.\n(1) Ausprägungen religiöser Praxis und Vorstellungen einer fernöstlichen Religion erläutern und\nmit christlichen Erlösungsvorstellungen vergleichen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 3\n2.4 Dialogfähigkeit 2\n3.3.4 Gott (1)\n(2) sich mit Ursachen und Folgen fundamentalistischer Überzeugungen in einer Religion\nauseinandersetzen (zum Beispiel im Christentum, im Judentum, im Islam)\n2.3 Urteilsfähigkeit 3\n3.3.5 Jesus Christus (3)\n(3) sich mit Erscheinungsformen von Religion (zum Beispiel Polytheismus, Animismus,\nMonotheismus,Transzendenz und Immanenz) auseinandersetzen\n2.5 Gestaltungsfähigkeit 2\n3.3.6 Kirche und Kirchen (1)\nETH 3.2.5.1 Ethisch-moralische Werte und Glaubensgrundsätze (3), (4)\nETH 3.2.5.2 Erscheinungsformen und Bedeutung des Religiösen (*) (1), (2)\nRJUED 3.3.6 HAOLAM (3)\nMögliche Bibeltexte: Mt 7,12\nMögliche Fachbegriffe: Sekte; interreligiöser Dialog; Fundamentalismus; Monotheismus;\nPoly\ntheismus; Animismus; Buddhismus; Hinduismus; Karma; Dharma; Moksha; Nirvana; Deva;\nUpanishaden; Veden; Ramayana; Puja; Opfer; Reinkarnation; Kastenwesen;Theravada;\nMahayana; Hinayana; vier edle Wahrheiten; achtfacher Pfad;Transzendenz; Immanenz\nMögliche Personen: Siddhartha Gautama; Dalai Lama\n\n3.4 Klassen 12/13 (zweistündiger Kurs)"
+        }
+      ]
+    },
+    {
+      "id": "3.4",
+      "label": "Klassen 12/13 (Basisfach)",
+      "grades": [
+        12,
+        13
+      ],
+      "course": {
+        "id": "basic",
+        "label": "Basisfach"
+      },
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.4.1",
+          "title": "Mensch",
+          "introduction": "Die Schülerinnen und Schüler entfalten Aspekte des christlichen Menschenbildes und eines wei- teren anthropologischen Entwurfs und setzen sie zu aktuellen Fragestellungen in Beziehung.",
+          "competencies": [
+            {
+              "id": "3.4.1.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Aspekte des biblischen Menschenbildes (zum Beispiel Gottesebenbildlichkeit, Leben in Beziehung, Arbeit, Sünde und Schuld, Endlichkeit, Hoffnung, Gewalt, Erlösung) mit denen eines weiteren anthropologischen Konzepts (zum Beispiel Platon, Aristoteles, I. Kant,Th. Hobbes, J.-J. Rousseau, S. Freud, M. Buber, H. Arendt, A. Gehlen,Th. Adorno, P . Singer) vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.4.2 Welt und Verantwortung (2)",
+                "BK 3.4.1 Bild (6)",
+                "D 3.4.1.2 Sach- und Gebrauchstexte (2)",
+                "D 3.4.2.1 Struktur von Äußerungen (5)",
+                "ETH 3.3.1.2 Freiheit und Anthropologie (1)",
+                "GR3 3.2.2.6 Philosophie (6), (7)",
+                "WI 3.1.4 Arbeitsmärkte (3)"
+              ]
+            },
+            {
+              "id": "3.4.1.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "das Verständnis von Freiheit und Verantwortung in christlicher Perspektive (Geschöpflichkeit, Rechtfertigung) zu einer anderen Sichtweise (zum Beispiel I. Kant, S. Freud, A. Camus, G. Roth) in Beziehung setzen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 4",
+                "3.4.2 Welt und Verantwortung (2), (3)",
+                "D 3.4.2.1 Struktur von Äußerungen (5)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1-11",
+              "Ps 8, Ps 139,1-18",
+              "Jes 43,1",
+              "Mk 1,9-11",
+              "Lk 15,11-32",
+              "Joh 7,53-8,11",
+              "Röm 3,21-28",
+              "Röm 7,15-20",
+              "1. Kor 9,19",
+              "1. Kor 12,4-11",
+              "Gal 3,26-28",
+              "Gal 5,1.13-15"
+            ],
+            "terms": [
+              "Anthropologie",
+              "Humanismus",
+              "Freiheit eines Christenmenschen",
+              "Recht fertigung",
+              "Menschenwürde",
+              "Heteronomie",
+              "Autonomie",
+              "Determinismus",
+              "Hedonismus, Geschöpf lichkeit, Segen",
+              "Ebenbild Gottes",
+              "Sünde",
+              "Vergebung",
+              "simul iustus et peccator",
+              "Gnade",
+              "Erlösung",
+              "Gewissen",
+              "Person",
+              "Individualität",
+              "Philosophie",
+              "Theologie",
+              "Ästhetik",
+              "Ökonomie",
+              "Psychologie",
+              "Naturwissenschaft 14 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.4.1 Mensch\nDie Schülerinnen und Schüler entfalten Aspekte des christlichen Menschenbildes und eines weiteren anthropologischen Entwurfs und setzen sie zu aktuellen Fragestellungen in Beziehung.\n(1) Aspekte des biblischen Menschenbildes (zum Beispiel Gottesebenbildlichkeit, Leben in\nBeziehung, Arbeit, Sünde und Schuld, Endlichkeit, Hoffnung, Gewalt, Erlösung) mit denen eines\nweiteren anthropologischen Konzepts (zum Beispiel Platon, Aristoteles, I. Kant,Th. Hobbes,\nJ.-J. Rousseau, S. Freud, M. Buber, H. Arendt, A. Gehlen,Th. Adorno, P\n. Singer) vergleichen\n2.3 Urteilsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.4.2 Welt und Verantwortung (2)\nBK 3.4.1 Bild (6)\nD 3.4.1.2 Sach- und Gebrauchstexte (2)\nD 3.4.2.1 Struktur von Äußerungen (5)\nETH 3.3.1.2 Freiheit und Anthropologie (1)\nGR3 3.2.2.6 Philosophie (6), (7)\nWI 3.1.4 Arbeitsmärkte (3)\n(2) das Verständnis von Freiheit und Verantwortung in christlicher Perspektive (Geschöpflichkeit,\nRechtfertigung) zu einer anderen Sichtweise (zum Beispiel I. Kant, S. Freud, A. Camus, G. Roth)\nin Beziehung setzen\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 4\n3.4.2 Welt und Verantwortung (2), (3)\nD 3.4.2.1 Struktur von Äußerungen (5)\nMögliche Bibeltexte: 1. Mose 1-11; Ps 8, Ps 139,1-18; Jes 43,1; Mk 1,9-11; Lk 15,11-32;\nJoh 7,53-8,11; Röm 3,21-28; Röm 7,15-20; 1. Kor 9,19; 1. Kor 12,4-11; Gal 3,26-28; Gal 5,1.13-15\nMögliche Fachbegriffe: Anthropologie; Humanismus; Freiheit eines Christenmenschen; Recht\nfertigung; Menschenwürde; Heteronomie; Autonomie; Determinismus; Hedonismus, Geschöpf\nlichkeit, Segen; Ebenbild Gottes; Sünde; Vergebung; simul iustus et peccator; Gnade; Erlösung;\nGewissen; Person; Individualität; Philosophie;Theologie; Ästhetik; Ökonomie; Psychologie;\nNaturwissenschaft\n\n14 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+        },
+        {
+          "id": "3.4.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit ethischen Fragestellungen und unterschiedlichen Zugängen zur Wirklichkeit auseinander. Sie legen biblische Gerechtigkeitsvorstellungen und ethi- sche Argumentationsmodelle dar.",
+          "competencies": [
+            {
+              "id": "3.4.2.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "unterschiedliche Zugänge zur Wirklichkeit und ihre Konsequenzen für das Gespräch zwischen christlichem Glauben und Naturwissenschaft aufzeigen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.4.3 Gott (1)",
+                "GR3 3.2.2.6 Philosophie (1)",
+                "PH 3.4.6 Quantenphysik (2)"
+              ]
+            },
+            {
+              "id": "3.4.2.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "anhand eines ethischen Konfliktfeldes (zum Beispiel Krieg und Frieden, Ökonomisierung, Globalisierung, Medienethik) biblische Gerechtigkeitsvorstellungen entfalten"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 5",
+                "3.4.1 Mensch (1), (2)",
+                "BIO 3.4.6 Evolution und Ökologie (5)",
+                "BK 3.4.1 Bild (6)",
+                "ETH 3.3.4.1 Verantwortungsethik (5), (6)",
+                "ETH 3.3.4.2 Angewandte Ethik (1)",
+                "GK 3.2.2.2 PolitischeTeilhabe (4)",
+                "WI 3.1.4 Arbeitsmärkte (3), (5)"
+              ]
+            },
+            {
+              "id": "3.4.2.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "zwei ethische Argumentationsmodelle erörtern (zum Beispiel Pflichtethik, Gesinnungsethik, Verantwortungsethik, utilitaristische Ethik)"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 1, 6",
+                "3.4.1 Mensch (1)",
+                "ETH 3.3.3.1 Tugendethik",
+                "ETH 3.3.3.2 Utilitarismus",
+                "ETH 3.3.3.3 Pflichtethik",
+                "ETH 3.3.5.1 Grundlagen philosophischer Ethik (1), (2)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1-2",
+              "1. Mose 12,1-3",
+              "2. Mose 20,1-17",
+              "2. Mose 22,20-26",
+              "2. Mose 23,10-12",
+              "Ps 104",
+              "Jes 2,1-5",
+              "Jes 11,1-9",
+              "Am in Auszügen",
+              "Mt 5-7 in Auszügen",
+              "Mt 20,1-16",
+              "Mt 22,36-40",
+              "Mt 25, 31-46",
+              "Lk 10, 25-37",
+              "Lk 14,12-14.15-24",
+              "Joh 20,24-29"
+            ],
+            "terms": [
+              "Zedakah",
+              "Verteilungsgerechtigkeit",
+              "Teilhabegerechtigkeit",
+              "Leistungs gerechtigkeit",
+              "Nachhaltigkeit",
+              "Gerechter Krieg",
+              "Menschenwürde",
+              "Menschenrechte",
+              "große Trans formation",
+              "deontologische Ethik",
+              "teleologische Ethik",
+              "Pflichtethik",
+              "Gesinnungsethik",
+              "Verantwortungs ethik",
+              "utilitaristische Ethik",
+              "fides qua creditur – fides quae creditur",
+              "Hermeneutik",
+              "Wahrheit und Wirklichkeit",
+              "Komplementarität",
+              "Konstruktivismus",
+              "messianisches Friedensreich",
+              "Reich Gottes",
+              "Apokalyptik",
+              "Eschatologie",
+              "Utopie",
+              "Neurobiologie",
+              "Medienethik Personen: Aristoteles",
+              "Max Weber",
+              "John Rawls",
+              "Michael Sandel",
+              "Martha Nussbaum"
+            ]
+          },
+          "source_raw": "3.4.2 Welt und Verantwortung\nDie Schülerinnen und Schüler setzen sich mit ethischen Fragestellungen und unterschiedlichen\nZugängen zur Wirklichkeit auseinander. Sie legen biblische Gerechtigkeitsvorstellungen und ethische Argumentationsmodelle dar.\n(1) unterschiedliche Zugänge zur Wirklichkeit und ihre Konsequenzen für das Gespräch zwischen\nchristlichem Glauben und Naturwissenschaft aufzeigen\n2.2 Deutungsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.4.3 Gott (1)\nGR3 3.2.2.6 Philosophie (1)\nPH 3.4.6 Quantenphysik (2)\n(2) anhand eines ethischen Konfliktfeldes (zum Beispiel Krieg und Frieden, Ökonomisierung,\nGlobalisierung, Medienethik) biblische Gerechtigkeitsvorstellungen entfalten\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 4\n2.3 Urteilsfähigkeit 5\n3.4.1 Mensch (1), (2)\nBIO 3.4.6 Evolution und Ökologie (5)\nBK 3.4.1 Bild (6)\nETH 3.3.4.1 Verantwortungsethik (5), (6)\nETH 3.3.4.2 Angewandte Ethik (1)\nGK 3.2.2.2 PolitischeTeilhabe (4)\nWI 3.1.4 Arbeitsmärkte (3), (5)\n(3) zwei ethische Argumentationsmodelle erörtern (zum Beispiel Pflichtethik, Gesinnungsethik,\nVerantwortungsethik, utilitaristische Ethik)\n2.3 Urteilsfähigkeit 1, 6\n3.4.1 Mensch (1)\nETH 3.3.3.1 Tugendethik\nETH 3.3.3.2 Utilitarismus\nETH 3.3.3.3 Pflichtethik\nETH 3.3.5.1 Grundlagen philosophischer Ethik (1), (2)\nMögliche Bibeltexte: 1. Mose 1-2; 1. Mose 12,1-3; 2. Mose 20,1-17; 2. Mose 22,20-26;\n2. Mose 23,10-12; Ps 104; Jes 2,1-5; Jes 11,1-9; Am in Auszügen; Mt 5-7 in Auszügen;\nMt 20,1-16; Mt 22,36-40; Mt 25, 31-46; Lk 10, 25-37; Lk 14,12-14.15-24; Joh 20,24-29\nMögliche Fachbegriffe: Zedakah; Verteilungsgerechtigkeit;Teilhabegerechtigkeit; Leistungs\ngerechtigkeit; Nachhaltigkeit; Gerechter Krieg; Menschenwürde; Menschenrechte; große\nTrans\nformation; deontologische Ethik; teleologische Ethik; Pflichtethik; Gesinnungsethik;\nVerantwortungs\nethik; utilitaristische Ethik; fides qua creditur – fides quae creditur; Hermeneutik;\nWahrheit und Wirklichkeit; Komplementarität; Konstruktivismus; messianisches Friedensreich;\nReich Gottes; Apokalyptik; Eschatologie; Utopie; Neurobiologie; Medienethik\nPersonen: Aristoteles; Max Weber; John Rawls; Michael Sandel; Martha Nussbaum"
+        },
+        {
+          "id": "3.4.3",
+          "title": "Gott",
+          "introduction": "Die Schülerinnen und Schüler stellen Grundaussagen des christlichen Glaubens an Gott dar und setzen sich im Horizont ausgewählter theologischer und philosophischer Fragestellungen damit auseinander.",
+          "competencies": [
+            {
+              "id": "3.4.3.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "unterschiedliche Zugänge zur Gottesfrage (zum Beispiel Erfahrung, Bibel, Gottesbeweise, Mystik,Theodizee) darstellen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 1, 2",
+                "3.4.2 Welt und Verantwortung (1)"
+              ]
+            },
+            {
+              "id": "3.4.3.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "biblische und theologische Aussagen über Gott erläutern (zum Beispiel Gott in Christus, Trinität, Gottes Wirken in der Geschichte, Epiphanien, Ich-Bin-Worte Jesu)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.4.1 Mensch (2)",
+                "3.4.4 Jesus Christus (2)"
+              ]
+            },
+            {
+              "id": "3.4.3.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "zu einer religionskritischen Konzeption aus Philosophie, Psychologie oder Naturwissenschaft (zum Beispiel D. Diderot, J. O. de La Mettrie, L. Feuerbach, K. Marx, F . Nietzsche, S. Freud, R. Dawkins, K. Hendrikse, M. Onfray) theologisch begründet Stellung nehmen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.5.5 Kirche und Kirchen (2)",
+                "BIO 3.5.5 Evolution und Ökologie (8), (9)",
+                "BK 3.4.1 Bild (6)",
+                "D 3.4.1.2 Sach- und Gebrauchstexte (3)",
+                "D 3.4.2.1 Struktur von Äußerungen (17)",
+                "ETH 3.3.5.2 Religion und Religionskritik (1), (3), (4)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "2. Mose 3,1-15",
+              "2. Mose 20,2-4",
+              "1. Kön 19, 1-13",
+              "Hiob (in Auszügen)",
+              "Ps 22",
+              "Ps 104",
+              "Mt 6,5-15",
+              "Mk 14-16 (in Auszügen)",
+              "Joh 1,18",
+              "Joh 19 (in Auszügen)",
+              "Apg 2 (in Auszügen)",
+              "Röm 8,31-39",
+              "Phil 2,13",
+              "1. Joh 4, 7-21"
+            ],
+            "terms": [
+              "JHWH",
+              "Bilderverbot",
+              "Verborgener Gott",
+              "Deismus",
+              "Theismus",
+              "Gottes beweise",
+              "Religionskritik",
+              "theoretischer und praktischer Atheismus",
+              "Materialismus",
+              "Agnostizismus",
+              "Projektionsthese",
+              "Opium des Volkes",
+              "Gott ist tot",
+              "Theodizee",
+              "Gott der Philosophen",
+              "Fundamen talismus",
+              "Säkularität",
+              "Mystik",
+              "Trinität",
+              "Gottes Wirken in der Geschichte",
+              "Epiphanie",
+              "Ich-bin-Worte 16 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.4.3 Gott\nDie Schülerinnen und Schüler stellen Grundaussagen des christlichen Glaubens an Gott dar und\nsetzen sich im Horizont ausgewählter theologischer und philosophischer Fragestellungen damit\nauseinander.\n(1) unterschiedliche Zugänge zur Gottesfrage (zum Beispiel Erfahrung, Bibel, Gottesbeweise,\nMystik,Theodizee) darstellen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 1, 2\n3.4.2 Welt und Verantwortung (1)\n(2) biblische und theologische Aussagen über Gott erläutern (zum Beispiel Gott in Christus,\nTrinität, Gottes Wirken in der Geschichte, Epiphanien, Ich-Bin-Worte Jesu)\n2.2 Deutungsfähigkeit 3\n3.4.1 Mensch (2)\n3.4.4 Jesus Christus (2)\n(3) zu einer religionskritischen Konzeption aus Philosophie, Psychologie oder Naturwissenschaft\n(zum Beispiel D. Diderot, J. O. de La Mettrie, L. Feuerbach, K. Marx, F\n. Nietzsche, S. Freud,\nR. Dawkins, K. Hendrikse, M. Onfray) theologisch begründet Stellung nehmen\n2.3 Urteilsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.5.5 Kirche und Kirchen (2)\nBIO 3.5.5 Evolution und Ökologie (8), (9)\nBK 3.4.1 Bild (6)\nD 3.4.1.2 Sach- und Gebrauchstexte (3)\nD 3.4.2.1 Struktur von Äußerungen (17)\nETH 3.3.5.2 Religion und Religionskritik (1), (3), (4)\nMögliche Bibeltexte: 2. Mose 3,1-15; 2. Mose 20,2-4; 1. Kön 19, 1-13; Hiob (in Auszügen); Ps 22;\nPs 104; Mt 6,5-15; Mk 14-16 (in Auszügen); Joh 1,18; Joh 19 (in Auszügen); Apg 2 (in Auszügen);\nRöm 8,31-39; Phil 2,13; 1. Joh 4, 7-21\nMögliche Fachbegriffe: JHWH; Bilderverbot; Verborgener Gott; Deismus;Theismus; Gottes\nbeweise; Religionskritik; theoretischer und praktischer Atheismus; Materialismus; Agnostizismus;\nProjektionsthese; Opium des Volkes; Gott ist tot;Theodizee; Gott der Philosophen; Fundamen\ntalismus; Säkularität; Mystik;Trinität; Gottes Wirken in der Geschichte; Epiphanie; Ich-bin-Worte\n\n16 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+        },
+        {
+          "id": "3.4.4",
+          "title": "Jesus Christus",
+          "introduction": "Die Schülerinnen und Schüler zeigen ausgehend von biblischen Überlieferungen die Bedeutung Jesu Christi auf.",
+          "competencies": [
+            {
+              "id": "3.4.4.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "historische und theologische Sichtweisen auf Leben und Wirken Jesu erläutern"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.4.3 Gott (2)"
+              ]
+            },
+            {
+              "id": "3.4.4.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit der Bedeutung von Passion und Auferstehung Jesu für den christlichen Glauben aus einandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 5",
+                "3.4.3 Gott (2)",
+                "BK 3.4.1 Bild (6)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 5,1-48",
+              "Mt 22,36-40",
+              "Mk 1,9-15",
+              "Mk 2,1-12",
+              "Mk 4,35-41",
+              "Mk 8,27-30",
+              "Mk 8,31-33",
+              "Evangelientexte zur Passion in Auswahl",
+              "Lk 24,13-35",
+              "1. Kor 15,1-11",
+              "Phil 2,5-11"
+            ],
+            "terms": [
+              "Historischer Jesus",
+              "kerygmatischer Christus, außerbiblische Quellen zu Jesus",
+              "Hoheitstitel",
+              "Sohn Gottes",
+              "Menschensohn",
+              "der HERR",
+              "Messias",
+              "Evangelium",
+              "Passion",
+              "Auferstehung",
+              "Auferweckung",
+              "Kreuzestheologie",
+              "Apostolikum"
+            ]
+          },
+          "source_raw": "3.4.4 Jesus Christus\nDie Schülerinnen und Schüler zeigen ausgehend von biblischen Überlieferungen die Bedeutung\nJesu Christi auf.\n(1) historische und theologische Sichtweisen auf Leben und Wirken Jesu erläutern\n2.2 Deutungsfähigkeit 3\n3.4.3 Gott (2)\n(2) sich mit der Bedeutung von Passion und Auferstehung Jesu für den christlichen Glauben aus\neinandersetzen\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 5\n3.4.3 Gott (2)\nBK 3.4.1 Bild (6)\nMögliche Bibeltexte: Mt 5,1-48; Mt 22,36-40; Mk 1,9-15; Mk 2,1-12; Mk 4,35-41; Mk 8,27-30;\nMk 8,31-33; Evangelientexte zur Passion in Auswahl; Lk 24,13-35; 1. Kor 15,1-11; Phil 2,5-11\nMögliche Fachbegriffe: Historischer Jesus; kerygmatischer Christus, außerbiblische Quellen zu\nJesus; Hoheitstitel; Sohn Gottes; Menschensohn; der HERR; Messias; Evangelium; Passion;\nAuferstehung; Auferweckung; Kreuzestheologie; Apostolikum"
+        },
+        {
+          "id": "3.4.5",
+          "title": "Kirche und Kirchen",
+          "introduction": "Die Schülerinnen und Schüler erläutern Grundzüge evangelischen Kirchenverständnisses und nehmen zu ausgewählten historischen Erscheinungsformen der Kirche begründet Stellung.",
+          "competencies": [
+            {
+              "id": "3.4.5.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "eine wiederkehrende Herausforderung für die Kirche (zum Beispiel Frage nach Macht, Verhältnis zum Staat, Armut und Reichtum, Krieg und Frieden, Mission) anhand kirchen- geschichtlicher Stationen untersuchen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 3",
+                "3.4.2 Welt und Verantwortung (2)",
+                "G 3.4.3 Diktaturen im 20. Jahrhundert als Gegenentwürfe zur parlamentarischen Demokratie (11.2, zweistündig) (1)"
+              ]
+            },
+            {
+              "id": "3.4.5.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Rolle und Bedeutung der Kirchen in der pluralen Gesellschaft anhand ihres Auftrags überprüfen (zum Beispiel gesellschaftliches und politisches Engagement, Subsidiarität, Ökumene, Religiosität, Bildung)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 3",
+                "3.4.2 Welt und Verantwortung (1)",
+                "BK 3.4.1 Bild (6)",
+                "GK 3.2.2.1 Grundlagen des politischen Systems (1), (2)",
+                "RRK 3.4.5 Kirche (2)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 18,20",
+              "Mt 28,16-20",
+              "Mk 12,13-17",
+              "Apg 2,37-47",
+              "Apg 5,29",
+              "Röm 13,1-7",
+              "1. Kor 12,12-31 Mögliche Referenztexte: Augsburger Bekenntnis, Artikel 7 und 8",
+              "BarmerTheologische Erklärung, These 4 und 5"
+            ],
+            "terms": [
+              "Gemeinschaft der Glaubenden",
+              "Heilige",
+              "Priestertum aller Gläubigen",
+              "Staatskirche",
+              "Volkskirche",
+              "Freikirche",
+              "Bischof",
+              "Papst",
+              "EKD-Denkschriften",
+              "Religionsunterricht",
+              "Militärseelsorge",
+              "Option für die Armen",
+              "Ökumene",
+              "positive und negative Religionsfreiheit",
+              "Subsidiarität",
+              "Diakonie",
+              "egalitär",
+              "charismatisch",
+              "hierarchisch",
+              "synodal",
+              "Kirchenräume 18 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.4.5 Kirche und Kirchen\nDie Schülerinnen und Schüler erläutern Grundzüge evangelischen Kirchenverständnisses und\nnehmen zu ausgewählten historischen Erscheinungsformen der Kirche begründet Stellung.\n(1) eine wiederkehrende Herausforderung für die Kirche (zum Beispiel Frage nach Macht,\nVerhältnis zum Staat, Armut und Reichtum, Krieg und Frieden, Mission) anhand kirchengeschichtlicher Stationen untersuchen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 4\n2.3 Urteilsfähigkeit 3\n3.4.2 Welt und Verantwortung (2)\nG 3.4.3 Diktaturen im 20. Jahrhundert als Gegenentwürfe zur parlamentarischen Demokratie\n(11.2, zweistündig) (1)\n(2) Rolle und Bedeutung der Kirchen in der pluralen Gesellschaft anhand ihres Auftrags\nüberprüfen (zum Beispiel gesellschaftliches und politisches Engagement, Subsidiarität,\nÖkumene, Religiosität, Bildung)\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 3\n3.4.2 Welt und Verantwortung (1)\nBK 3.4.1 Bild (6)\nGK 3.2.2.1 Grundlagen des politischen Systems (1), (2)\nRRK 3.4.5 Kirche (2)\nMögliche Bibeltexte: Mt 18,20; Mt 28,16-20; Mk 12,13-17; Apg 2,37-47; Apg 5,29; Röm 13,1-7;\n1. Kor 12,12-31\nMögliche Referenztexte: Augsburger Bekenntnis, Artikel 7 und 8; BarmerTheologische Erklärung,\nThese 4 und 5\nMögliche Fachbegriffe: Gemeinschaft der Glaubenden; Heilige; Priestertum aller Gläubigen;\nStaatskirche; Volkskirche; Freikirche; Bischof; Papst; EKD-Denkschriften; Religionsunterricht;\nMilitärseelsorge; Option für die Armen; Ökumene; positive und negative Religionsfreiheit;\nSubsidiarität; Diakonie; egalitär; charismatisch; hierarchisch; synodal; Kirchenräume\n\n18 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (zweistündiger Kurs)"
+        },
+        {
+          "id": "3.4.6",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit unterschiedlichen Religionen und Weltanschauun- gen unter ausgewählten Fragestellungen auseinander.",
+          "competencies": [
+            {
+              "id": "3.4.6.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit lebensförderlichen und destruktiven Wirkungen von Religion und nichtreligiösen Weltdeutungen auseinandersetzen (zum Beispiel Freiheit versus Abhängigkeit,Toleranz versus Absolutheitsanspruch, Frieden versus Gewalt, Laizismus versus Gottesstaat)"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 2",
+                "2.3 Urteilsfähigkeit 3",
+                "3.4.2 Welt und Verantwortung (1)",
+                "WI 3.1.4 Arbeitsmärkte (1), (3)"
+              ]
+            },
+            {
+              "id": "3.4.6.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Kriterien für einen konstruktiven Umgang mit der Wahrheitsfrage zwischen Menschen unter schiedlicher Religionen und Weltanschauungen formulieren"
+                }
+              ],
+              "references_raw": [
+                "2.4 Dialogfähigkeit 1, 4",
+                "3.4.2 Welt und Verantwortung (1)",
+                "ETH 3.3.5.2 Religion und Religionskritik (5)",
+                "RALE 3.1.6 Andere Religionen und Weltanschauungen (5)",
+                "RJUED 3.4.6 HAOLAM (1), (2)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "2. Mose 20,1ff",
+              "Jes 2,1-5",
+              "Mt 28,18-20",
+              "Mk 8,35",
+              "Joh 8,31-32",
+              "Joh 14,6"
+            ],
+            "terms": [
+              "Inklusivismus",
+              "Exklusivismus",
+              "Konvivenz",
+              "Pluralismus",
+              "positioneller Pluralismus",
+              "Toleranz",
+              "Dschihad",
+              "Heiliger Krieg",
+              "Mission",
+              "Konfessionslosigkeit",
+              "funktionaler, substantieller und phänomenologischer Religionsbegriff",
+              "Absolutheitsanspruch",
+              "Laizismus",
+              "Gottesstaat",
+              "Projekt Weltethos 3.5 Klassen 12/13 (vierstündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.4.6 Religionen und Weltanschauungen\nDie Schülerinnen und Schüler setzen sich mit unterschiedlichen Religionen und Weltanschauungen unter ausgewählten Fragestellungen auseinander.\n(1) sich mit lebensförderlichen und destruktiven Wirkungen von Religion und nichtreligiösen\nWeltdeutungen auseinandersetzen (zum Beispiel Freiheit versus Abhängigkeit,Toleranz versus\nAbsolutheitsanspruch, Frieden versus Gewalt, Laizismus versus Gottesstaat)\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 2\n2.3 Urteilsfähigkeit 3\n3.4.2 Welt und Verantwortung (1)\nWI 3.1.4 Arbeitsmärkte (1), (3)\n(2) Kriterien für einen konstruktiven Umgang mit der Wahrheitsfrage zwischen Menschen unter\nschiedlicher Religionen und Weltanschauungen formulieren\n2.4 Dialogfähigkeit 1, 4\n3.4.2 Welt und Verantwortung (1)\nETH 3.3.5.2 Religion und Religionskritik (5)\nRALE 3.1.6 Andere Religionen und Weltanschauungen (5)\nRJUED 3.4.6 HAOLAM (1), (2)\nMögliche Bibeltexte: 2. Mose 20,1ff; Jes 2,1-5; Mt 28,18-20; Mk 8,35; Joh 8,31-32; Joh 14,6\nMögliche Fachbegriffe: Inklusivismus; Exklusivismus; Konvivenz; Pluralismus; positioneller\nPluralismus;Toleranz; Dschihad; Heiliger Krieg; Mission; Konfessionslosigkeit; funktionaler,\nsubstantieller und phänomenologischer Religionsbegriff; Absolutheitsanspruch; Laizismus;\nGottesstaat; Projekt Weltethos\n\n3.5 Klassen 12/13 (vierstündiger Kurs)"
+        }
+      ]
+    },
+    {
+      "id": "3.5",
+      "label": "Klassen 12/13 (Leistungsfach)",
+      "grades": [
+        12,
+        13
+      ],
+      "course": {
+        "id": "advanced",
+        "label": "Leistungsfach"
+      },
+      "levels": [],
+      "domains": [
+        {
+          "id": "3.5.1",
+          "title": "Mensch",
+          "introduction": "Die Schülerinnen und Schüler entfalten Aspekte des christlichen Menschenbildes und eines wei- teren anthropologischen Entwurfs und setzen sie zu aktuellen Fragestellungen in Beziehung.",
+          "competencies": [
+            {
+              "id": "3.5.1.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Aspekte des biblischen Menschenbildes (zum Beispiel Gottesebenbildlichkeit, Leben in Be- ziehung, Arbeit, Sünde und Schuld, Endlichkeit, Hoffnung, Gewalt, Erlösung) mit denen eines weiteren anthropologischen Konzepts (zum Beispiel Platon, Aristoteles, I. Kant,Th. Hobbes, J.-J. Rousseau, S. Freud, M. Buber, H. Arendt, A. Gehlen,Th. Adorno, P . Singer) vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.5.2 Welt und Verantwortung (2)",
+                "BK 3.4.1 Bild (6)",
+                "D 3.4.1.2 Sach- und Gebrauchstexte (2)",
+                "D 3.4.2.1 Struktur von Äußerungen (5)",
+                "ETH 3.4.1.2 Freiheit und Anthropologie",
+                "GR3 3.2.1 Wortschatz – Satzlehre – Formenlehre (9)",
+                "GR3 3.2.2.6 Philosophie (7)",
+                "WI 3.1.4 Arbeitsmärkte (1), (3)"
+              ]
+            },
+            {
+              "id": "3.5.1.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "das Verständnis von Freiheit und Verantwortung in christlicher Perspektive (Geschöpflichkeit, Rechtfertigung) zu einer anderen Sichtweise (zum Beispiel I. Kant, S. Freud, A. Camus, G. Roth) in Beziehung setzen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 4",
+                "3.5.1 Mensch (2)",
+                "3.5.2 Welt und Verantwortung (2), (3)",
+                "D 3.4.2.1 Struktur von Äußerungen (5)",
+                "ETH 3.4.1.2 Freiheit und Anthropologie"
+              ]
+            },
+            {
+              "id": "3.5.1.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Konsequenzen verschiedener Zugänge zur Wirklichkeit (Theologie und zum Beispiel Philoso phie, Psychologie, Naturwissenschaft, Ästhetik, Ökonomie) für die Deutung menschlicher Erfah rung aufzeigen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.5.2 Welt und Verantwortung (1)",
+                "BK 3.4.1 Bild (6)",
+                "BK 3.4.4.1 Medien (1)",
+                "WI 3.1.1 Grundlagen der Ökonomie (1)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1-11",
+              "Ps 8",
+              "Ps 139,1-18",
+              "Jes 43,1",
+              "Mk 1,9-11",
+              "Lk 15,11-32",
+              "Joh 7,53-8,11",
+              "Röm 3,21-28",
+              "Röm 7,15-20",
+              "1. Kor 9,19",
+              "1. Kor 12,4-11",
+              "Gal 3,26-28",
+              "Gal 5,1.13-15"
+            ],
+            "terms": [
+              "Anthropologie",
+              "Humanismus",
+              "Freiheit eines Christenmenschen",
+              "Recht fertigung",
+              "Menschenwürde",
+              "Heteronomie",
+              "Autonomie",
+              "Determinismus",
+              "Hedonismus, Geschöpf lichkeit",
+              "Segen",
+              "Ebenbild Gottes",
+              "Sünde",
+              "Vergebung",
+              "simul iustus et peccator",
+              "Gnade",
+              "Erlösung",
+              "Gewissen",
+              "Person",
+              "Individualität",
+              "Philosophie",
+              "Theologie",
+              "Ästhetik",
+              "Ökonomie",
+              "Psychologie",
+              "Naturwissenschaft 20 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.5.1 Mensch\nDie Schülerinnen und Schüler entfalten Aspekte des christlichen Menschenbildes und eines weiteren anthropologischen Entwurfs und setzen sie zu aktuellen Fragestellungen in Beziehung.\n(1) Aspekte des biblischen Menschenbildes (zum Beispiel Gottesebenbildlichkeit, Leben in Beziehung, Arbeit, Sünde und Schuld, Endlichkeit, Hoffnung, Gewalt, Erlösung) mit denen eines\nweiteren anthropologischen Konzepts (zum Beispiel Platon, Aristoteles, I. Kant,Th. Hobbes,\nJ.-J. Rousseau, S. Freud, M. Buber, H. Arendt, A. Gehlen,Th. Adorno, P\n. Singer) vergleichen\n2.3 Urteilsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.5.2 Welt und Verantwortung (2)\nBK 3.4.1 Bild (6)\nD 3.4.1.2 Sach- und Gebrauchstexte (2)\nD 3.4.2.1 Struktur von Äußerungen (5)\nETH 3.4.1.2 Freiheit und Anthropologie\nGR3 3.2.1 Wortschatz – Satzlehre – Formenlehre (9)\nGR3 3.2.2.6 Philosophie (7)\nWI 3.1.4 Arbeitsmärkte (1), (3)\n(2) das Verständnis von Freiheit und Verantwortung in christlicher Perspektive (Geschöpflichkeit,\nRechtfertigung) zu einer anderen Sichtweise (zum Beispiel I. Kant, S. Freud, A. Camus, G. Roth)\nin Beziehung setzen\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 4\n3.5.1 Mensch (2)\n3.5.2 Welt und Verantwortung (2), (3)\nD 3.4.2.1 Struktur von Äußerungen (5)\nETH 3.4.1.2 Freiheit und Anthropologie\n(3) Konsequenzen verschiedener Zugänge zur Wirklichkeit (Theologie und zum Beispiel Philoso\nphie, Psychologie, Naturwissenschaft, Ästhetik, Ökonomie) für die Deutung menschlicher Erfah\nrung aufzeigen\n2.2 Deutungsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.5.2 Welt und Verantwortung (1)\nBK 3.4.1 Bild (6)\nBK 3.4.4.1 Medien (1)\nWI 3.1.1 Grundlagen der Ökonomie (1)\nMögliche Bibeltexte: 1. Mose 1-11; Ps 8; Ps 139,1-18; Jes 43,1; Mk 1,9-11; Lk 15,11-32;\nJoh 7,53-8,11; Röm 3,21-28; Röm 7,15-20; 1. Kor 9,19; 1. Kor 12,4-11; Gal 3,26-28; Gal 5,1.13-15\nMögliche Fachbegriffe: Anthropologie; Humanismus; Freiheit eines Christenmenschen; Recht\nfertigung; Menschenwürde; Heteronomie; Autonomie; Determinismus; Hedonismus, Geschöpf\nlichkeit; Segen; Ebenbild Gottes; Sünde; Vergebung; simul iustus et peccator; Gnade; Erlösung;\nGewissen; Person; Individualität; Philosophie;Theologie; Ästhetik; Ökonomie; Psychologie;\nNaturwissenschaft\n\n20 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+        },
+        {
+          "id": "3.5.2",
+          "title": "Welt und Verantwortung",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit ethischen Fragestellungen und unterschiedlichen Zugängen zur Wirklichkeit auseinander. Sie legen biblische Gerechtigkeitsvorstellungen und ethi- sche Argumentationsmodelle dar.",
+          "competencies": [
+            {
+              "id": "3.5.2.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit unterschiedlichen Zugängen zur Wirklichkeit auseinandersetzen und eine christliche Perspektive erläutern"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.5.1 Mensch (3)",
+                "3.5.3 Gott (1)",
+                "BIO 3.4.5 Reproduktionsbiologie (2)"
+              ]
+            },
+            {
+              "id": "3.5.2.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "anhand eines ethischen Konfliktfeldes (zum Beispiel Krieg und Frieden, Ökonomisierung, Globalisierung) biblische Gerechtigkeitsvorstellungen entfalten"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 5",
+                "3.5.1 Mensch (2)",
+                "3.5.5 Kirche und Kirchen (1)",
+                "ETH 3.3.2.2 Gerechtigkeit und Recht (1), (2), (3)",
+                "GK 3.2.2.2 PolitischeTeilhabe (4)",
+                "WI 3.1.3 Globale Gütermärkte (1), (5)"
+              ]
+            },
+            {
+              "id": "3.5.2.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "zwei ethische Argumentationsmodelle (zum Beispiel deontologische und teleologische Ethik) überprüfen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 1, 6",
+                "3.5.1 Mensch (1), (2)",
+                "ETH 3.3.5.1 Grundlagen philosophischer Ethik (1), (2)",
+                "GR3 3.2.2.6 Philosophie (8)"
+              ]
+            },
+            {
+              "id": "3.5.2.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit säkularen (zum Beispiel Utopie, Vision, Zukunftsszenario, alternative Wirtschafts- und Lebensform, GroßeTransformation) und biblisch-theologischen Zukunftsmodellen (zum Beispiel messianisches Friedensreich, Reich Gottes, Apokalyptik) auseinandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 5",
+                "3.5.3 Gott (3)",
+                "3.5.4 Jesus Christus (3)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "1. Mose 1-2",
+              "1. Mose 12,1-3",
+              "2. Mose 20,1-17",
+              "2. Mose 22,20-26",
+              "2. Mose 23,10-12",
+              "Ps 104",
+              "Jes 2,1-5",
+              "Jes 11,1-9",
+              "Am in Auszügen",
+              "Mt 5-7 (in Auszügen)",
+              "Mt 20,1-16",
+              "Mt 22,36-40",
+              "Mt 25, 31-46",
+              "Lk 10, 25-37",
+              "Lk 14,12-14.15-24",
+              "Joh 20,24-29"
+            ],
+            "terms": [
+              "Zedakah",
+              "Verteilungsgerechtigkeit",
+              "Teilhabegerechtigkeit",
+              "Leistungsgerech tigkeit",
+              "Nachhaltigkeit",
+              "Globalisierung",
+              "Gerechter Krieg",
+              "Menschenwürde",
+              "Menschenrechte",
+              "GroßeTransformation",
+              "deontologische Ethik",
+              "teleologische Ethik",
+              "Pflichtethik",
+              "Gesinnungsethik",
+              "Verantwortungsethik",
+              "utilitaristische Ethik",
+              "fides qua creditur – fides quae creditur",
+              "Hermeneutik",
+              "Wahrheit und Wirklichkeit",
+              "Komplementarität",
+              "Konstruktivismus",
+              "messianisches Friedensreich",
+              "Reich Gottes",
+              "Apokalyptik",
+              "Eschatologie",
+              "Utopie",
+              "Neurobiologie",
+              "Medienethik"
+            ],
+            "persons": [
+              "Aristoteles",
+              "Max Weber",
+              "John Rawls",
+              "Michael Sandel",
+              "Martha Nussbaum"
+            ]
+          },
+          "source_raw": "3.5.2 Welt und Verantwortung\nDie Schülerinnen und Schüler setzen sich mit ethischen Fragestellungen und unterschiedlichen\nZugängen zur Wirklichkeit auseinander. Sie legen biblische Gerechtigkeitsvorstellungen und ethische Argumentationsmodelle dar.\n(1) sich mit unterschiedlichen Zugängen zur Wirklichkeit auseinandersetzen und eine christliche\nPerspektive erläutern\n2.2 Deutungsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.5.1 Mensch (3)\n3.5.3 Gott (1)\nBIO 3.4.5 Reproduktionsbiologie (2)\n(2) anhand eines ethischen Konfliktfeldes (zum Beispiel Krieg und Frieden, Ökonomisierung,\nGlobalisierung) biblische Gerechtigkeitsvorstellungen entfalten\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 4\n2.3 Urteilsfähigkeit 5\n3.5.1 Mensch (2)\n3.5.5 Kirche und Kirchen (1)\nETH 3.3.2.2 Gerechtigkeit und Recht (1), (2), (3)\nGK 3.2.2.2 PolitischeTeilhabe (4)\nWI 3.1.3 Globale Gütermärkte (1), (5)\n(3) zwei ethische Argumentationsmodelle (zum Beispiel deontologische und teleologische Ethik)\nüberprüfen\n2.3 Urteilsfähigkeit 1, 6\n3.5.1 Mensch (1), (2)\nETH 3.3.5.1 Grundlagen philosophischer Ethik (1), (2)\nGR3 3.2.2.6 Philosophie (8)\n(4) sich mit säkularen (zum Beispiel Utopie, Vision, Zukunftsszenario, alternative Wirtschafts- und\nLebensform, GroßeTransformation) und biblisch-theologischen Zukunftsmodellen (zum Beispiel\nmessianisches Friedensreich, Reich Gottes, Apokalyptik) auseinandersetzen\n2.3 Urteilsfähigkeit 5\n3.5.3 Gott (3)\n3.5.4 Jesus Christus (3)\nMögliche Bibeltexte: 1. Mose 1-2; 1. Mose 12,1-3; 2. Mose 20,1-17; 2. Mose 22,20-26;\n2. Mose 23,10-12; Ps 104; Jes 2,1-5; Jes 11,1-9; Am in Auszügen; Mt 5-7 (in Auszügen);\nMt 20,1-16; Mt 22,36-40; Mt 25, 31-46; Lk 10, 25-37; Lk 14,12-14.15-24; Joh 20,24-29\nMögliche Fachbegriffe: Zedakah; Verteilungsgerechtigkeit;Teilhabegerechtigkeit; Leistungsgerech\ntigkeit; Nachhaltigkeit; Globalisierung; Gerechter Krieg; Menschenwürde; Menschenrechte;\nGroßeTransformation; deontologische Ethik; teleologische Ethik; Pflichtethik; Gesinnungsethik;\nVerantwortungsethik; utilitaristische Ethik; fides qua creditur – fides quae creditur; Hermeneutik;\nWahrheit und Wirklichkeit; Komplementarität; Konstruktivismus; messianisches Friedensreich;\nReich Gottes; Apokalyptik; Eschatologie; Utopie; Neurobiologie; Medienethik\nMögliche Personen: Aristoteles; Max Weber; John Rawls; Michael Sandel; Martha Nussbaum"
+        },
+        {
+          "id": "3.5.3",
+          "title": "Gott",
+          "introduction": "Die Schülerinnen und Schüler stellen Grundaussagen des christlichen Glaubens an Gott dar und setzen sich im Horizont ausgewählter theologischer und philosophischer Fragestellungen damit auseinander.",
+          "competencies": [
+            {
+              "id": "3.5.3.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "unterschiedliche Zugänge zur Gottesfrage (zum Beispiel Erfahrung, Bibel, Gottesbeweise, Mystik) darstellen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 1, 2",
+                "3.5.2 Welt und Verantwortung (1)"
+              ]
+            },
+            {
+              "id": "3.5.3.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "biblische und theologische Aussagen über Gott erläutern (zum Beispiel Gott in Christus, Trinität, Gottes Wirken in der Geschichte, Epiphanien, Ich-Bin-Worte Jesu)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.5.4 Jesus Christus (2)",
+                "3.5.5 Kirche und Kirchen (2)",
+                "3.5.6 Religionen und Weltanschauungen (3)",
+                "BK 3.4.1 Bild (6)"
+              ]
+            },
+            {
+              "id": "3.5.3.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "zu einer religionskritischen Konzeption aus Philosophie, Psychologie oder Naturwissenschaft (zum Beispiel D. Diderot, J. O. de La Mettrie, L. Feuerbach, K. Marx, F . Nietzsche, S. Freud, R. Dawkins, K. Hendrikse, M. Onfray) theologisch begründet Stellung nehmen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "2.4 Dialogfähigkeit 3",
+                "3.5.2 Welt und Verantwortung (4)",
+                "3.5.3 Gott (1)",
+                "BIO 3.5.5 Evolution und Ökologie (8), (9)",
+                "D 3.4.1.2 Sach- und Gebrauchstexte (3)",
+                "D 3.4.2.1 Struktur von Äußerungen (17)",
+                "ETH 3.4.5.2 Religion und Religionskritik (3), (4), (5)"
+              ]
+            },
+            {
+              "id": "3.5.3.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Erfahrungen von Leid und Ungerechtigkeit als Herausforderung für den Glauben an Gott erörtern (zum Beispiel Hiob, G. W. Leibniz, Voltaire, G. Büchner, A. Camus, H. Jonas)"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 1",
+                "2.3 Urteilsfähigkeit 4",
+                "3.5.4 Jesus Christus (2)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "2. Mose 3,1-15",
+              "2. Mose 20,2-4",
+              "1. Kön 19,1-13",
+              "Hiob in Auszügen",
+              "Ps 22",
+              "Ps 104",
+              "Mt 6,5-15",
+              "Mk 14-16 in Auszügen",
+              "Joh 1,18",
+              "Joh 19 in Auszügen",
+              "Apg 2 in Auszügen",
+              "Röm 8,31-39",
+              "Phil 2,13",
+              "1. Joh 4, 7-21"
+            ],
+            "terms": [
+              "JHWH",
+              "Bilderverbot",
+              "Verborgener Gott",
+              "Deismus",
+              "Theismus",
+              "Gottesbeweise",
+              "Religionskritik",
+              "theoretischer und praktischer Atheismus",
+              "Materialismus",
+              "Agnostizismus",
+              "Projektionsthese",
+              "Opium des Volkes",
+              "Gott ist tot",
+              "Theodizee",
+              "Gott der Philosophen",
+              "Fundamen talismus",
+              "Säkularität",
+              "Mystik",
+              "Trinität",
+              "Gottes Wirken in der Geschichte",
+              "Epiphanie",
+              "Ich-bin-Worte 22 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.5.3 Gott\nDie Schülerinnen und Schüler stellen Grundaussagen des christlichen Glaubens an Gott dar und\nsetzen sich im Horizont ausgewählter theologischer und philosophischer Fragestellungen damit\nauseinander.\n(1) unterschiedliche Zugänge zur Gottesfrage (zum Beispiel Erfahrung, Bibel, Gottesbeweise,\nMystik) darstellen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 1, 2\n3.5.2 Welt und Verantwortung (1)\n(2) biblische und theologische Aussagen über Gott erläutern (zum Beispiel Gott in Christus,\nTrinität, Gottes Wirken in der Geschichte, Epiphanien, Ich-Bin-Worte Jesu)\n2.2 Deutungsfähigkeit 3\n3.5.4 Jesus Christus (2)\n3.5.5 Kirche und Kirchen (2)\n3.5.6 Religionen und Weltanschauungen (3)\nBK 3.4.1 Bild (6)\n(3) zu einer religionskritischen Konzeption aus Philosophie, Psychologie oder Naturwissenschaft\n(zum Beispiel D. Diderot, J. O. de La Mettrie, L. Feuerbach, K. Marx, F\n. Nietzsche, S. Freud,\nR. Dawkins, K. Hendrikse, M. Onfray) theologisch begründet Stellung nehmen\n2.3 Urteilsfähigkeit 4\n2.4 Dialogfähigkeit 3\n3.5.2 Welt und Verantwortung (4)\n3.5.3 Gott (1)\nBIO 3.5.5 Evolution und Ökologie (8), (9)\nD 3.4.1.2 Sach- und Gebrauchstexte (3)\nD 3.4.2.1 Struktur von Äußerungen (17)\nETH 3.4.5.2 Religion und Religionskritik (3), (4), (5)\n(4) Erfahrungen von Leid und Ungerechtigkeit als Herausforderung für den Glauben an Gott\nerörtern (zum Beispiel Hiob, G. W. Leibniz, Voltaire, G. Büchner, A. Camus, H. Jonas)\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 1\n2.3 Urteilsfähigkeit 4\n3.5.4 Jesus Christus (2)\nMögliche Bibeltexte: 2. Mose 3,1-15; 2. Mose 20,2-4; 1. Kön 19,1-13; Hiob in Auszügen; Ps 22;\nPs 104; Mt 6,5-15; Mk 14-16 in Auszügen; Joh 1,18; Joh 19 in Auszügen; Apg 2 in Auszügen;\nRöm 8,31-39; Phil 2,13; 1. Joh 4, 7-21\nMögliche Fachbegriffe: JHWH; Bilderverbot; Verborgener Gott; Deismus;Theismus; Gottesbeweise; Religionskritik; theoretischer und praktischer Atheismus; Materialismus; Agnostizismus;\nProjektionsthese; Opium des Volkes; Gott ist tot;Theodizee; Gott der Philosophen; Fundamen\ntalismus; Säkularität; Mystik;Trinität; Gottes Wirken in der Geschichte; Epiphanie; Ich-bin-Worte\n\n22 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+        },
+        {
+          "id": "3.5.4",
+          "title": "Jesus Christus",
+          "introduction": "Die Schülerinnen und Schüler zeigen ausgehend von biblischen Überlieferungen die Bedeutung Jesu Christi auf.",
+          "competencies": [
+            {
+              "id": "3.5.4.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "historische und theologische Sichtweisen auf Leben und Wirken Jesu erläutern"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 3",
+                "3.5.3 Gott (2)"
+              ]
+            },
+            {
+              "id": "3.5.4.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit der Bedeutung von Passion und Auferstehung Jesu für den christlichen Glauben aus einandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 5",
+                "3.5.2 Welt und Verantwortung (4)",
+                "3.5.3 Gott (2)",
+                "BK 3.4.1 Bild (6)"
+              ]
+            },
+            {
+              "id": "3.5.4.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit der Rezeption der Gestalt und Botschaft Jesu Christi (zum Beispiel in Kunst, Musik Geschichte, Literatur, anderen Religionen) auseinandersetzen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 4, 5",
+                "2.2 Deutungsfähigkeit 2",
+                "3.5.3 Gott (2)",
+                "BK 3.4.1 Bild (6)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 5,1-48",
+              "Mt 22,36-40",
+              "Mk 1,9-15",
+              "Mk 2,1-12",
+              "Mk 4,35-41",
+              "Mk 8,27-30",
+              "Mk 8,31-33",
+              "Evangelientexte zur Passion in Auswahl",
+              "Lk 24,13-35",
+              "1. Kor 15,1-11",
+              "Phil 2,5-11"
+            ],
+            "terms": [
+              "Historischer Jesus",
+              "kerygmatischer Christus, außerbiblische Quellen zu Jesus",
+              "Hoheitstitel",
+              "Sohn Gottes",
+              "Menschensohn",
+              "der HERR",
+              "Messias",
+              "Evangelium",
+              "Passion",
+              "Auferstehung",
+              "Auferweckung",
+              "Kreuzestheologie",
+              "Apostolikum"
+            ]
+          },
+          "source_raw": "3.5.4 Jesus Christus\nDie Schülerinnen und Schüler zeigen ausgehend von biblischen Überlieferungen die Bedeutung\nJesu Christi auf.\n(1) historische und theologische Sichtweisen auf Leben und Wirken Jesu erläutern\n2.2 Deutungsfähigkeit 3\n3.5.3 Gott (2)\n(2) sich mit der Bedeutung von Passion und Auferstehung Jesu für den christlichen Glauben aus\neinandersetzen\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 5\n3.5.2 Welt und Verantwortung (4)\n3.5.3 Gott (2)\nBK 3.4.1 Bild (6)\n(3) sich mit der Rezeption der Gestalt und Botschaft Jesu Christi (zum Beispiel in Kunst, Musik\nGeschichte, Literatur, anderen Religionen) auseinandersetzen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 4, 5\n2.2 Deutungsfähigkeit 2\n3.5.3 Gott (2)\nBK 3.4.1 Bild (6)\nMögliche Bibeltexte: Mt 5,1-48; Mt 22,36-40; Mk 1,9-15; Mk 2,1-12; Mk 4,35-41; Mk 8,27-30;\nMk 8,31-33; Evangelientexte zur Passion in Auswahl; Lk 24,13-35; 1. Kor 15,1-11; Phil 2,5-11\nMögliche Fachbegriffe: Historischer Jesus; kerygmatischer Christus, außerbiblische Quellen zu\nJesus; Hoheitstitel; Sohn Gottes; Menschensohn; der HERR; Messias; Evangelium; Passion;\nAuferstehung; Auferweckung; Kreuzestheologie; Apostolikum"
+        },
+        {
+          "id": "3.5.5",
+          "title": "Kirche und Kirchen",
+          "introduction": "Die Schülerinnen und Schüler erläutern Grundzüge evangelischen Kirchenverständnisses und neh- men zu ausgewählten historischen Erscheinungsformen der Kirche begründet Stellung.",
+          "competencies": [
+            {
+              "id": "3.5.5.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "eine wiederkehrende Herausforderung für die Kirche (zum Beispiel Frage nach Macht, Verhältnis zum Staat, Armut und Reichtum, Krieg und Frieden, Mission) anhand kirchen- geschichtlicher Stationen untersuchen"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 3",
+                "3.5.2 Welt und Verantwortung (2)"
+              ]
+            },
+            {
+              "id": "3.5.5.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Rolle und Bedeutung der Kirchen in der pluralen Gesellschaft anhand ihres Auftrags überprüfen (zum Beispiel gesellschaftliches und politisches Engagement, Subsidiarität, Ökumene, Religiosität, Bildung)"
+                }
+              ],
+              "references_raw": [
+                "2.2 Deutungsfähigkeit 4",
+                "2.3 Urteilsfähigkeit 3",
+                "BK 3.4.1 Bild (6)",
+                "G 3.4.3 Diktaturen im 20. Jahrhundert als Gegenentwürfe zur parlamentarischen Demokratie (11.2, zweistündig) (1)",
+                "GK 3.2.2.1 Grundlagen des politischen Systems (1), (2)",
+                "RRK 3.5.5 Kirche (3)"
+              ]
+            },
+            {
+              "id": "3.5.5.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Perspektiven einer zukunftsfähigen Kirche (zum Beispiel Spiritualität und Mystik, Eintreten für Gerechtigkeit und Barmherzigkeit, Lebensbegleitung, Gemeinschaft, Mitverantwortung, Widerstand) entwickeln"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 5",
+                "2.5 Gestaltungsfähigkeit 2",
+                "3.5.2 Welt und Verantwortung (4)"
+              ]
+            },
+            {
+              "id": "3.5.5.4",
+              "number": 4,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "unterschiedliche Kirchenverständnisse (zum Beispiel charismatisch, hierarchisch, egalitär, synodal) untersuchen"
+                }
+              ],
+              "references_raw": [
+                "2.3 Urteilsfähigkeit 4",
+                "3.5.3 Gott (1)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "Mt 18,20",
+              "Mt 28,16-20",
+              "Mk 12,13-17",
+              "Apg 2,37-47",
+              "Apg 5,29",
+              "Röm 13,1-7",
+              "1. Kor 12,12-31 Mögliche Referenztexte: Augsburger Bekenntnis, Artikel 7 und 8",
+              "BarmerTheologische Erklärung, These 4 und 5"
+            ],
+            "terms": [
+              "Gemeinschaft der Glaubenden",
+              "Heilige",
+              "Priestertum aller Gläubigen",
+              "Staatskirche",
+              "Volkskirche",
+              "Freikirche",
+              "Bischof",
+              "Papst",
+              "EKD-Denkschriften",
+              "Religionsunterricht",
+              "Militärseelsorge",
+              "Option für die Armen",
+              "Ökumene",
+              "positive und negative Religionsfreiheit",
+              "Subsidiarität",
+              "Diakonie",
+              "egalitär",
+              "charismatisch",
+              "hierarchisch",
+              "synodal",
+              "Kirchenräume 24 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+            ]
+          },
+          "source_raw": "3.5.5 Kirche und Kirchen\nDie Schülerinnen und Schüler erläutern Grundzüge evangelischen Kirchenverständnisses und nehmen zu ausgewählten historischen Erscheinungsformen der Kirche begründet Stellung.\n(1) eine wiederkehrende Herausforderung für die Kirche (zum Beispiel Frage nach Macht,\nVerhältnis zum Staat, Armut und Reichtum, Krieg und Frieden, Mission) anhand kirchengeschichtlicher Stationen untersuchen\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 4\n2.3 Urteilsfähigkeit 3\n3.5.2 Welt und Verantwortung (2)\n(2) Rolle und Bedeutung der Kirchen in der pluralen Gesellschaft anhand ihres Auftrags\nüberprüfen (zum Beispiel gesellschaftliches und politisches Engagement, Subsidiarität,\nÖkumene, Religiosität, Bildung)\n2.2 Deutungsfähigkeit 4\n2.3 Urteilsfähigkeit 3\nBK 3.4.1 Bild (6)\nG 3.4.3 Diktaturen im 20. Jahrhundert als Gegenentwürfe zur parlamentarischen Demokratie\n(11.2, zweistündig) (1)\nGK 3.2.2.1 Grundlagen des politischen Systems (1), (2)\nRRK 3.5.5 Kirche (3)\n(3) Perspektiven einer zukunftsfähigen Kirche (zum Beispiel Spiritualität und Mystik, Eintreten für\nGerechtigkeit und Barmherzigkeit, Lebensbegleitung, Gemeinschaft, Mitverantwortung,\nWiderstand) entwickeln\n2.3 Urteilsfähigkeit 5\n2.5 Gestaltungsfähigkeit 2\n3.5.2 Welt und Verantwortung (4)\n(4) unterschiedliche Kirchenverständnisse (zum Beispiel charismatisch, hierarchisch, egalitär,\nsynodal) untersuchen\n2.3 Urteilsfähigkeit 4\n3.5.3 Gott (1)\nMögliche Bibeltexte: Mt 18,20; Mt 28,16-20; Mk 12,13-17; Apg 2,37-47; Apg 5,29; Röm 13,1-7;\n1. Kor 12,12-31\nMögliche Referenztexte: Augsburger Bekenntnis, Artikel 7 und 8; BarmerTheologische Erklärung,\nThese 4 und 5\nMögliche Fachbegriffe: Gemeinschaft der Glaubenden; Heilige; Priestertum aller Gläubigen;\nStaatskirche; Volkskirche; Freikirche; Bischof; Papst; EKD-Denkschriften; Religionsunterricht;\nMilitärseelsorge; Option für die Armen; Ökumene; positive und negative Religionsfreiheit;\nSubsidiarität; Diakonie; egalitär; charismatisch; hierarchisch; synodal; Kirchenräume\n\n24 Standards für inhaltsbezogene Kompetenzen – Klassen 12/13 (vierstündiger Kurs)"
+        },
+        {
+          "id": "3.5.6",
+          "title": "Religionen und Weltanschauungen",
+          "introduction": "Die Schülerinnen und Schüler setzen sich mit unterschiedlichen Religionen und Weltanschauun- gen unter ausgewählten Fragestellungen auseinander.",
+          "competencies": [
+            {
+              "id": "3.5.6.1",
+              "number": 1,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "sich mit lebensförderlichen und destruktiven Wirkungen von Religion und nichtreligiösen Weltdeutungen auseinandersetzen (zum Beispiel Freiheit versus Abhängigkeit,Toleranz versus Absolutheitsanspruch, Frieden versus Gewalt, Laizismus versus Gottesstaat)"
+                }
+              ],
+              "references_raw": [
+                "2.1 Wahrnehmungs- und Darstellungsfähigkeit 2",
+                "2.3 Urteilsfähigkeit 3",
+                "3.5.2 Welt und Verantwortung (1)"
+              ]
+            },
+            {
+              "id": "3.5.6.2",
+              "number": 2,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "Kriterien für einen konstruktiven Umgang mit der Wahrheitsfrage zwischen Menschen unterschiedlicher Religionen und Weltanschauungen formulieren"
+                }
+              ],
+              "references_raw": [
+                "2.4 Dialogfähigkeit 1, 4",
+                "3.5.1 Mensch (3)",
+                "RJUED 3.4.6 HAOLAM (1), (2)"
+              ]
+            },
+            {
+              "id": "3.5.6.3",
+              "number": 3,
+              "variants": [
+                {
+                  "level": null,
+                  "text": "die trinitarische Gottesvorstellung mit dem jüdischen und islamischen Monotheismus vergleichen"
+                }
+              ],
+              "references_raw": [
+                "2.4 Dialogfähigkeit 2, 3",
+                "3.5.3 Gott (2)",
+                "RJUED 3.4.1 HASCHEM (1), (2), (3)"
+              ]
+            }
+          ],
+          "notes": {
+            "bible_passages": [
+              "2. Mose 20,1ff",
+              "Mt 28,18-20",
+              "Mk 8,35",
+              "Joh 8,31-32",
+              "Joh 14,6"
+            ],
+            "terms": [
+              "Inklusivismus",
+              "Exklusivismus",
+              "Konvivenz",
+              "Pluralismus",
+              "positioneller Pluralismus",
+              "Toleranz",
+              "Dschihad",
+              "Mission",
+              "Konfessionslosigkeit",
+              "funktionaler, substantieller und phänomenologischer Religionsbegriff",
+              "Absolutheitsanspruch",
+              "Laizismus",
+              "Gottesstaat",
+              "Projekt Weltethos"
+            ]
+          },
+          "source_raw": "3.5.6 Religionen und Weltanschauungen\nDie Schülerinnen und Schüler setzen sich mit unterschiedlichen Religionen und Weltanschauungen unter ausgewählten Fragestellungen auseinander.\n(1) sich mit lebensförderlichen und destruktiven Wirkungen von Religion und nichtreligiösen\nWeltdeutungen auseinandersetzen (zum Beispiel Freiheit versus Abhängigkeit,Toleranz versus\nAbsolutheitsanspruch, Frieden versus Gewalt, Laizismus versus Gottesstaat)\n2.1 Wahrnehmungs- und Darstellungsfähigkeit 2\n2.3 Urteilsfähigkeit 3\n3.5.2 Welt und Verantwortung (1)\n(2) Kriterien für einen konstruktiven Umgang mit der Wahrheitsfrage zwischen Menschen\nunterschiedlicher Religionen und Weltanschauungen formulieren\n2.4 Dialogfähigkeit 1, 4\n3.5.1 Mensch (3)\nRJUED 3.4.6 HAOLAM (1), (2)\n(3) die trinitarische Gottesvorstellung mit dem jüdischen und islamischen Monotheismus\nvergleichen\n2.4 Dialogfähigkeit 2, 3\n3.5.3 Gott (2)\nRJUED 3.4.1 HASCHEM (1), (2), (3)\nMögliche Bibeltexte: 2. Mose 20,1ff; Mt 28,18-20; Mk 8,35; Joh 8,31-32; Joh 14,6\nMögliche Fachbegriffe: Inklusivismus; Exklusivismus; Konvivenz; Pluralismus; positioneller\nPluralismus;Toleranz; Dschihad; Mission; Konfessionslosigkeit; funktionaler, substantieller\nund phänomenologischer Religionsbegriff; Absolutheitsanspruch; Laizismus; Gottesstaat;\nProjekt Weltethos"
+        }
+      ]
+    }
+  ],
+  "supplementary_content_raw": "Operatoren\n4. Operatoren\nOperatoren des Bildungsplans Evangelische Religionslehre\nIm Fach Evangelische Religionslehre werden in weitgehender Übereinstimmung mit den „Einheitlichen Prüfungsanforderungen in der Abiturprüfung Evangelische Religionslehre“ (Beschluss der\nKultusministerkonferenz vom 01.12.1989 i. d. F\n. vom 16.11.2006, S.8–9) folgende Operatoren verwendet:\n1. Die EPA-Liste nennt Operatoren, mit deren Hilfe\n• Reproduktionsleistungen (AFB I),\n• Reorganisations- und Transferleistungen (AFB II), sowie\n• Leistungen der Problemlösung und Urteilsbildung (AFB III)\nermöglicht werden.\n2. Die EPA-Liste benennt Tätigkeiten, die zum Lösen von Prüfungsaufgaben erforderlich sind. Ein\ngroßer Teil dieser Operatoren kann zur Formulierung von Kompetenzen im Rahmen von Bildungs\nplänen herangezogen werden.\nOperatoren Beschreibung AFB\nanalysieren unter gezielter Fragestellung Elemente, Strukturmerkmale und\nZusammenhänge systema\ntisch interpretieren und darstellen\nII\nanwenden einen bekannten Sachverhalt oder eine bekann\nte Methode auf\netwas Neues beziehen\nII\naufzeigen den Gedankengang oder die Hauptaussage einesTextes oder einer\nPosition mit eigenen Worten darlegen\nI\nbegründen Aussagen durch Argumente stützen II\nbelegen Aussagen durchTextstellen oder bekannte Sachverhalte stützen II\nbenennen ausgewählte Elemente, Aspekte, Merkmale, Begriffe, Personen etc.\nunkommentiert angeben\nI\nbeschreiben die Merkmale eines Bildes oder eines anderen Materials mit\nWorten in Einzelheiten schildern\nI\nbeurteilen zu einem Sachverhalt unter Verwendung von Fachwissen und\nFachmethoden sich begründet positionieren (Sach- beziehungsweise Werturteil)\nIII\nbewerten zu einem Sachverhalt unter Verwendung von Fachwissen und\nFachmethoden sich begründet positionieren (Sach- beziehungsweise Werturteil)\nIII\ndarstellen den Gedankengang oder die Hauptaussage einesTextes oder einer\nPosition mit eigenen Worten darlegen\nI\n\n26 Operatoren\nOperatoren Beschreibung AFB\neine Erwiderung\nformulieren aus\nder Sicht von ...\neine unbekannte Position, Argumentation oderTheorie aus der\nPerspektive einer bekannten Position beleuchten oder in Frage\nstellen und ein begründetes Urteil abgeben\nIII\neinen begründeten Standpunkt\neinnehmen\nzu einem Sachverhalt unter Verwendung von Fachwissen und\nFachmethoden sich begründet positionieren (Sach- beziehungsweise Werturteil)\nIII\neinordnen einen bekannten oder erkannten Sachverhalt in einen neuen oder\nanderen Zusammenhang stel\nlen oder die Position eines Verfassers\nbezüglich einer bestimmten Religion, Konfession, Denkrichtung\netc. unter Verweis aufTextstellen und in Verbindung mit Vorwissen\nbestimmen\nII\nentfalten einen Sachverhalt, eineThese etc. gegebenenfalls mit zusätzlichen\nInformationen und Beispielen nachvollziehbar veranschaulichen\nII\nentwerfen sich textbezogen mit einer Fragestellung kreativ auseinandersetzen\nIII\nerklären einen Sachverhalt, eineThese etc. gegebenenfalls mit zusätzlichen\nInformationen und Beispielen nachvollziehbar veranschaulichen\nII\nerläutern einen Sachverhalt, eineThese etc. gegebenenfalls mit zusätzlichen\nInformationen und Beispielen nachvollziehbar veranschaulichen\nII\nerörtern die Vielschichtigkeit eines Beurteilungsproblems erkennen und\ndarstellen, dazuThesen erfassen beziehungsweise aufstellen,\nArgumente formulieren, nachvollziehbare Zusammenhänge her\nstellen und dabei eine begründete Schlussfolgerung erarbeiten\n(dialektische Erörterung)\nIII\nformulieren den Gedankengang oder die Hauptaussage einesTextes oder einer\nPosition mit eigenen Worten darlegen\nI\ngestalten sich textbezogen mit einer Fragestellung kreativ auseinandersetzen\nIII\nherausarbeiten aus Aussagen einesTextes einen Sachverhalt oder eine Position\nerkennen und darstellen\nII\nin Beziehung\nsetzen\nZusammenhänge unter vorgegebenen oder selbst gewählten\nGesichtspunkten begründet herstellen\nII\ninterpretieren einenText oder ein anderes Material (zum Beispiel Bild, Karikatur,\nTondokument, Film) sachgemäß analysieren und auf der Basis\nmethodisch reflektierten Deutens zu einer schlüssigen Gesamtauslegung gelangen\nIII\nKonsequenzen\naufzeigen\nSchlussfolgerungen ziehen, Perspektiven, Modelle, Handlungs\nmöglichkeiten, Konzepte u.a. entfalten\nIII\nnachweisen Aussagen durchTextstellen oder bekannte Sachverhalte stützen II\n\nOperatoren\nOperatoren Beschreibung AFB\nnennen ausgewählte Elemente, Aspekte, Merkmale, Begriffe, Personen etc.\nunkommentiert angeben\nI\nPerspektiven\nentwickeln\nSchlussfolgerungen ziehen, Perspektiven, Modelle, Handlungs\nmöglichkeiten, Konzepte unter anderem entfalten\nIII\nprüfen,\nüberprüfen\neine Meinung, Aussage,These, Argumentation nachvollziehen,\nkritisch befragen und auf der Grundlage erworbener Fachkenntnisse begründet beurteilen\nIII\nrecherchieren einen Sachverhalt (mediengestützt) ermitteln I\nsich auseinandersetzen mit ...\nein begründetes eigenes Urteil zu einer Position oder einem\ndargestellten Sachverhalt entwi\nckeln\nIII\nskizzieren einen bekannten oder erkannten Sachverhalt oder Gedankengang\nin seinen Grundzügen aus\ndrücken\nI\nStellung nehmen zu einem Sachverhalt unter Verwendung von Fachwissen und\nFachmethoden sich begründet positionieren (Sach- beziehungsweise Werturteil)\nIII\nStellung nehmen\naus der Sicht\nvon ...\neine unbekannte Position, Argumentation oderTheorie aus der\nPerspektive einer bekannten Position beleuchten oder in Frage\nstellen und ein begründetes Urteil abgeben\nIII\nüberprüfen,\nprüfen\neine Meinung, Aussage,These, Argumentation nachvollziehen,\nkritisch befragen und auf der Grundlage erworbener Fachkenntnisse begründet beurteilen\nIII\nuntersuchen unter gezielter Fragestellung Elemente, Strukturmerkmale und\nZusammenhänge systematisch interpretieren und darstellen\nII\nvergleichen nach vorgegebenen oder selbst gewählten Gesichtspunkten\nGemeinsamkeiten, Ähnlichkeiten und Unterschiede ermitteln und\ndarstellen\nII\nwiedergeben einen bekannten oder erkannten Sachverhalt oder den Inhalt eines\nTextes unter Verwendung der Fachsprache mit eigenen Worten\nausdrücken\nI\nzuordnen einen bekannten oder erkannten Sachverhalt in einen neuen oder\nanderen Zusammenhang stellen oder die Position eines Verfassers\nbezüglich einer bestimmten Religion, Konfession, Denkrichtung\netc. unter Verweis aufTextstellen und in Verbindung mit Vorwissen\nbestimmen\nII\nzusammenfassen die Kernaussagen einesTextes komprimiert und strukturiert\ndarlegen\nI\n\n28 Anhang\n5. Anhang\n5.1 Verweise\nDas Verweissystem im Bildungsplan 2016 unterscheidet zwischen vier verschiedenen Verweisarten.\nDiese werden durch unterschiedliche Symbole gekennzeichnet:\nSymbol Erläuterung\nVerweis auf die prozessbezogenen Kompetenzen\nVerweis auf andere Standards für inhaltsbezogene Kompetenzen desselben Fachplans\nVerweis auf andere Fächer\nVerweis auf Leitperspektiven\nDie vier verschiedenen Verweisarten\nDie Darstellungen der Verweise weichen im Web und in der Druckfassung voneinander ab.\nDarstellung der Verweise auf der Online-Plattform\nVerweise auf Teilkompetenzen werden unterhalb der jeweiligenTeilkompetenz als anklickbare Sym\nbole dargestellt. Nach einem Mausklick auf das jeweilige Symbol werden die Verweise im Browser\n\ndetaillierter dargestellt (dies wird in der Abbildung nicht veranschaulicht):\n(3) sowohl individuelle als auch gesellschaftliche Dilemmasituationen (Ge\nfangenendilemma, Trittbrettfahrersituation) erklären und das Verhalten\nder Akteure in diesen Situationen bewerten\nDarstellung der Verweise in der Webansicht (Beispiel aus Wirtschaft 3.1.1 „Grundlagen der Ökonomie“)\nDarstellung der Verweise in der Druckfassung\nIn der Druckfassung und in der PDF-Ansicht werden sämtliche Verweise direkt unterhalb der jewei\nligenTeilkompetenz dargestellt. Bei Verweisen auf andere Fächer ist zusätzlich das Fächerkürzel\ndargestellt (im Beispiel „ETH“ für „Ethik“):\n(3) sowohl individuelle als auch gesellschaftliche Dilemmasituationen (Gefangenendilemma,\nTrittbrettfahrersituation) erklären und das Verhalten der Akteure in diesen Situationen bewerten\n2.2 Urteilskompetenz 1\n2.4 Methodenkompetenz 8\n3.1.3 Globale Gütermärkte (5)\nETH 3.3.2.1 Grundlagen des Zusammenlebens\nBNE Werte und Normen in Entscheidungssituationen\nBTV Wertorientiertes Handeln\nDarstellung der Verweise in der Druckansicht (Beispiel aus Wirtschaft 3.1.1 „Grundlagen der Ökonomie“)\n\nAnhang\nGültigkeitsbereich der Verweise\nSind Verweise nur durch eine gestrichelte Linie von den darüber stehenden Kompetenzbeschrei\nbungen getrennt, beziehen sie sich unmittelbar auf diese.\nStehen Verweise in der letzten Zeile eines Kompetenzbereichs und sind durch eine durchgezogene\nLinie von diesem getrennt, so beziehen sie sich auf den gesamten Kompetenzbereich.\nDie Schülerinnen und Schüler können Die Verweise gelten für...\n(1) die Sichtweisen von Betroffenen und Beteiligten in Konfliktsituationen\nherausarbeiten und bewerten (zum Beispiel Elternhaus, Schule, soziale\nNetzwerke)\n...dieTeilkompetenz (1)\n(2) Erklärungsansätze für Gewalt anhand von Beispielsituationen herausarbei\nten und beurteilen\n(3) selbstständig Strategien zu gewaltfreien und verantwortungsbewussten\nKonfliktlösungen entwickeln und überprüfen (zum Beispiel Kompromiss,\nMediation, Konsens)\n...dieTeilkompetenzen (2) und (3)\n...alleTeilkompetenzen derTabelle\nGültigkeitsbereich von Verweisen (Beispiel aus Ethik 3.1.2.2 „\nVerantwortung im Umgang mit Konflikten und Gewalt“)\n5.2 Abkürzungen\nLeitperspektiven\nAllgemeine Leitperspektiven\nBNE Bildung für nachhaltige Entwicklung\nBTV Bildung fürToleranz und Akzeptanz von Vielfalt\nPG Prävention und Gesundheitsförderung\nThemenspezifische Leitperspektiven\nBO Berufliche Orientierung\nMB Medienbildung\nVB Verbraucherbildung\n\n30 Anhang\nFächerliste\nAbkürzung Fach\nBIO Biologie\nBK Bildende Kunst\nBKPROFIL Bildende Kunst – Profilfach\nCH Chemie\nD Deutsch\nE Englisch\nETH Ethik\nF Französisch\nG Geschichte\nGEO Geographie\nGK Gemeinschaftskunde\nLUT Literatur undTheater\nM Mathematik\nMUS Musik\nMUSPROFIL Musik – Profilfach\nNWT Naturwissenschaft undTechnik (NwT) – Profilfach\nPH Physik\nRAK Altkatholische Religionslehre\nRALE Alevitische Religionslehre\nREV Evangelische Religionslehre\nRISL Islamische Religionslehre sunnitischer Prägung\nRJUED Jüdische Religionslehre\nRRK Katholische Religionslehre\nRSYR Syrisch-Orthodoxe Religionslehre\nSPA3 Spanisch als dritte Fremdsprache – Profilfach\nSPO Sport\nSPOPROFIL Sport – Profilfach\nWBS Wirtschaft / Berufs- und Studienorientierung (WBS)\nWI Wirtschaft\n\nAnhang\n5.3 Geschlechtergerechte Sprache\nIm Bildungsplan 2016 wird in der Regel durchgängig die weibliche Form neben der männlichen\nverwendet; wo immer möglich, werden Paarformulierungen wie „Lehrerinnen und Lehrer“ oder\nneutrale Formen wie „Lehrkräfte“, „Studierende“ gebraucht.\nAusnahmen von diesen Regeln finden sich bei\n• Überschriften,Tabellen, Grafiken, wenn dies aus layouttechnischen Gründen (Platzmangel) erfor\nderlich ist,\n• Funktions- oder Rollenbezeichnungen beziehungsweise Begriffen mit Nähe zu formalen und juris\ntischen Texten oder domänenspezifischen Fachbegriffen (zum Beispiel „Marktteilnehmer“,\n„Erwerbstätiger“, „Auftraggeber“, „(Ver‑)Käufer“, „Konsument“, „Anbieter“, „Verbraucher“,\n„Arbeit\nnehmer“, „Arbeitgeber“, „Bürger“, „Bürgermeister“),\n• massiver Beeinträchtigung der Lesbarkeit.\nSelbstverständlich sind auch in all diesen Fällen Personen jeglichen Geschlechts gemeint.\n5.4 Besondere Schriftauszeichnungen\nKlammern und Verbindlichkeit von Beispielen\nIm Fachplan sind einige Begriffe in Klammern gesetzt.\nSteht vor den Begriffen in Klammern „zum Beispiel“, so dienen die Begriffe lediglich einer genaue\nren Klärung und Einordnung.\nBegriffe in Klammern ohne „zum Beispiel“ sind ein verbindlicherTeil der Kompetenzformulierung.\nSteht in Klammern ein „unter anderem“, so sind die in der Klammer aufgeführten Aspekte verbind\nlich zu unterrichten und noch weitere Beispiele der eigenen Wahl darüber hinaus.\nGestrichelte Unterstreichungen in Fachplänen der Oberstufe\nder Gemeinschaftsschule\nIn den prozessbezogenen Kompetenzen:\nDie gekennzeichneten Stellen sind in der Oberstufe (Klassen 11–13) zu verorten.\nIn den inhaltsbezogenen Kompetenzen:\nDie gekennzeichneten Stellen reichen über das E-Niveau des gemeinsamen Bildungsplans für die\nSekundarstufe I hinaus und sind explizit erst in der Klasse 11 zu verorten.\n\nfür Ihre Notizen\n\nImpressum\nKultus und Unterricht Amtsblatt des Ministeriums für Kultus, Jugend und Sport Baden-Württemberg\nAusgabe C Bildungsplanplanhefte\nHerausgeber Ministerium für Kultus, Jugend und Sport Baden-Württemberg, Postfach 103442, 70029 Stuttgart\nin Zusammenarbeit mit dem Landesinstitut für Schulentwicklung, Heilbronner Str. 172, 70191 Stuttgart\nInternet www.bildungsplaene-bw.de\nVerlag und Vertrieb Neckar-Verlag GmbH, Villingen-Schwenningen\nUrheberrecht Die fotomechanische oder anderweitig technisch mögliche Reproduktion des Satzes beziehungsweise der Satzordnung\nfür kommerzielle Zwecke nur mit Genehmigung des Herausgebers.\nBildnachweis Robert Thiele, Stuttgart\nGestaltung Ilona Hirth Grafik Design GmbH, Karlsruhe\nDruck Konrad Triltsch Print und digitale Medien GmbH, Ochsenfurt\nSoweit die vorliegende Publikation Nachdrucke enthält, wurden dafür nach bestem Wissen und Gewissen Lizenzen\neingeholt. Die Urheberrechte der Copyrightinhaber werden ausdrücklich anerkannt. Sollten dennoch in einzelnen\nFällen Urheberrechte nicht berücksichtigt worden sein, wenden Sie sich bitte an den Herausgeber.\nAlle eingesetzten beziehungsweise verarbeiteten Rohstoffe und Materialien entsprechen den zum Zeitpunkt der\nAngebotsabgabe gültigen Normen beziehungsweise geltenden Bestimmungen und Gesetzen der Bundesrepublik\nDeutschland. Der Herausgeber hat bei seinen Leistungen sowie bei Zulieferungen Dritter im Rahmen der wirtschaftlichen und technischen Möglichkeiten umweltfreundliche Verfahren und Erzeugnisse bevorzugt eingesetzt.\nJuni 2016\nBezugsbedingungen Die Lieferung der unregelmäßig erscheinenden Bildungsplanplanhefte erfolgt automatisch nach einem festgelegten\nSchlüssel. Der Bezug der Ausgabe C des Amtsblattes ist verpflichtend, wenn die betreffende Schule im Verteiler\n(abgedruckt auf der zweiten Umschlagseite) vorgesehen ist (Verwaltungsvorschrift vom 22. Mai 2008, K.u.U. S. 141).\nDie Bildungsplanplanhefte werden gesondert in Rechnung gestellt.\nDie einzelnen Reihen können zusätzlich abonniert werden. Abbestellungen nur halbjährlich zum 30. Juni und\n31. Dezember eines jeden Jahres schriftlich acht Wochen vorher bei der Neckar-Verlag GmbH, Postfach 1820,\n78008 Villingen-Schwenningen."
+}
