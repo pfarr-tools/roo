@@ -46,6 +46,8 @@ Ein Curriculum kann auf mehrere Bildungspläne verweisen. Bindings sind nicht au
 Jede Unterrichtseinheit besitzt:
 
 - `id`, `number`, `title`
+- `year`: optionale konkrete Jahrgangszuordnung der UE. Sie wird von Roo beim
+  Import übernommen und kann in der Anwendung korrigiert werden.
 - `hours`: soweit aus der Vorlage eindeutig extrahierbar
 - `preparation_questions[]`
 - `shared_plan[]`

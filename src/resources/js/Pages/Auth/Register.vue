@@ -1,4 +1,5 @@
 <script setup>
+import AppShell from '../../Components/Ui/AppShell.vue'
 import { useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
 
@@ -10,7 +11,8 @@ function submit() {
 </script>
 
 <template>
-    <main class="container py-5">
+    <AppShell :authenticated="false">
+    <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <h1 class="h2 mb-2">{{ de.register }}</h1>
@@ -29,5 +31,6 @@ function submit() {
                 <p class="mt-3">{{ de.existingAccount }} <a href="/login">{{ de.login }}</a></p>
             </div>
         </div>
-    </main>
+    </div>
+    </AppShell>
 </template>

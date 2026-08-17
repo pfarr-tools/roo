@@ -52,8 +52,7 @@ it('includes school year slugs for the school overview links', function () {
         'timezone' => 'Europe/Berlin',
     ]);
 
-    $this->actingAs($user)->get('/schulen')->assertSuccessful()->assertInertia(fn ($page) =>
-        $page->where('schools.0.school_years.0.slug', '202627')
+    $this->actingAs($user)->get('/schulen')->assertSuccessful()->assertInertia(fn ($page) => $page->where('schools.0.school_years.0.slug', '202627')
     );
 });
 

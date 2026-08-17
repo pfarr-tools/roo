@@ -44,7 +44,7 @@
     {
       "id": "ue-01",
       "number": 1,
-      "title": "Du bist einmalig – w ir sind eine Gemeinschaft",
+      "title": "Du bist einmalig – wir sind eine Gemeinschaft",
       "hours": 6,
       "preparation_questions": [
         "Was macht den Menschen zum Menschen? Was macht eine Gemeinschaft stark? Welche Haltung nehme ich den Kindern gegenüber ein ? Wie gehe ich mit Unterschieden um? Wie reagiere ich auf Diskriminierung?"
@@ -111,7 +111,7 @@
       ],
       "raw_rows": [
         [
-          "UE 1 Du bist einmalig – w ir sind eine Gemeinschaft (ca. 6 h)"
+          "UE 1 Du bist einmalig – wir sind eine Gemeinschaft (ca. 6 h)"
         ],
         [
           "Fragen für das Vorbereitungsteam Was macht den Menschen zum Menschen? Was macht eine Gemeinschaft stark? Welche Haltung nehme ich den Kindern gegenüber ein ? Wie gehe ich mit Unterschieden um? Wie reagiere ich auf Diskriminierung?"
@@ -968,7 +968,7 @@
     {
       "id": "ue-10",
       "number": 10,
-      "title": "D ie Bibel e rzählt von Gottes Liebe",
+      "title": "Die Bibel erzählt von Gottes Liebe",
       "hours": 8,
       "preparation_questions": [
         "Welchen Stellenwert hat die Bibel in meinem Leben? Welche Relevanz hat für mich der wörtliche Bibeltext? Was ist der Vorteil vo n freie m Erzählen biblischer Geschichten? Wie gehe ich mit schwierigen Bibeltexten um? Ist Gottes Liebe in allen biblischen Texten gleich sichtbar?"
@@ -1014,7 +1014,7 @@
       "process_competencies": [],
       "raw_rows": [
         [
-          "UE 10 D ie Bibel e rzählt von Gottes Liebe (ca. 8 Std.)"
+          "UE 10 Die Bibel erzählt von Gottes Liebe (ca. 8 Std.)"
         ],
         [
           "Fragen für das Vorbereitungsteam Welchen Stellenwert hat die Bibel in meinem Leben? Welche Relevanz hat für mich der wörtliche Bibeltext? Was ist der Vorteil vo n freie m Erzählen biblischer Geschichten? Wie gehe ich mit schwierigen Bibeltexten um? Ist Gottes Liebe in allen biblischen Texten gleich sichtbar?"
@@ -1045,9 +1045,9 @@
       ]
     },
     {
-      "id": "ue-01",
-      "number": 1,
-      "title": "1 Heilige und Vorbilder – wie Menschen die Botschaft Jesu im Glauben leben",
+      "id": "ue-11",
+      "number": 11,
+      "title": "Heilige und Vorbilder – wie Menschen die Botschaft Jesu im Glauben leben",
       "hours": 8,
       "preparation_questions": [
         "Was ist mir heilig? Was ist Heiligkeit? Sind Vorbilder immer hilfreich? Welche Vorbilder wünsche ich den Schülerinnen und Schülern? Was ist mir wichtiger: Orientierung an Vorbildern oder an Werten? Wie vorbildlich muss ein Vorbild sein?"
@@ -1090,7 +1090,7 @@
       ],
       "raw_rows": [
         [
-          "UE 1 1 Heilige und Vorbilder – wie Menschen die Botschaft Jesu im Glauben leben (ca. 8 Std.)"
+          "UE 11 Heilige und Vorbilder – wie Menschen die Botschaft Jesu im Glauben leben (ca. 8 Std.)"
         ],
         [
           "Fragen für das Vorbereitungsteam Was ist mir heilig? Was ist Heiligkeit? Sind Vorbilder immer hilfreich? Welche Vorbilder wünsche ich den Schülerinnen und Schülern? Was ist mir wichtiger: Orientierung an Vorbildern oder an Werten? Wie vorbildlich muss ein Vorbild sein?"
@@ -1221,9 +1221,9 @@
       ]
     },
     {
-      "id": "ue-01",
-      "number": 1,
-      "title": "3 Wir erkunden Kirchen",
+      "id": "ue-13",
+      "number": 13,
+      "title": "Wir erkunden Kirchen",
       "hours": 6,
       "preparation_questions": [
         "Welcher Platz in der Kirche ist mir besonders wichtig? Wie geht es mir in Gotteshäusern anderer Konfessionen und Religionen? Welcher Stil und welche Gestalt des Kirchen raum s entspr e ch en meinem Glaubensverständnis? Was dürfte für mich in einem Kirchenraum nicht fehlen?"
@@ -1306,7 +1306,7 @@
       ],
       "raw_rows": [
         [
-          "UE 1 3 Wir erkunden Kirchen (ca. 6 Std.)"
+          "UE 13 Wir erkunden Kirchen (ca. 6 Std.)"
         ],
         [
           "Fragen für das Vorbereitungsteam Welcher Platz in der Kirche ist mir besonders wichtig? Wie geht es mir in Gotteshäusern anderer Konfessionen und Religionen? Welcher Stil und welche Gestalt des Kirchen raum s entspr e ch en meinem Glaubensverständnis? Was dürfte für mich in einem Kirchenraum nicht fehlen?"

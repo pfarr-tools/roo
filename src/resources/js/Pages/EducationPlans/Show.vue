@@ -1,4 +1,5 @@
 <script setup>
+import AppShell from '../../Components/Ui/AppShell.vue'
 import CompetenceList from '../../Components/EducationPlans/CompetenceList.vue'
 import de from '../../i18n/de'
 
@@ -25,7 +26,8 @@ function goToComparison(event) { window.location.href = event.target.value ? com
 </script>
 
 <template>
-    <main class="container py-4">
+    <AppShell>
+    <div class="container py-4">
         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
             <div>
                 <a href="/bildungsplaene" class="text-decoration-none">{{ de.educationPlans }}</a>
@@ -129,5 +131,6 @@ function goToComparison(event) { window.location.href = event.target.value ? com
                 </section>
             </section>
         </div>
-    </main>
+    </div>
+    </AppShell>
 </template>

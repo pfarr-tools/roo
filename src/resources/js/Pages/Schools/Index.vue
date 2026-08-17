@@ -1,4 +1,5 @@
 <script setup>
+import AppShell from '../../Components/Ui/AppShell.vue'
 import { reactive, ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
@@ -14,7 +15,8 @@ function createYear() { yearForm.post('/schuljahre', { onSuccess: () => { yearFo
 </script>
 
 <template>
-    <main class="container py-4">
+    <AppShell>
+    <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div><a href="/dashboard" class="text-decoration-none">{{ de.dashboard }}</a><h1 class="h2 mt-2">{{ de.schools }}</h1></div>
             <div class="d-flex gap-2"><button class="btn btn-outline-primary" @click="showYearForm = !showYearForm">{{ de.addSchoolYear }}</button><button class="btn btn-primary" @click="showSchoolForm = !showSchoolForm">{{ de.addSchool }}</button></div>
@@ -28,5 +30,6 @@ function createYear() { yearForm.post('/schuljahre', { onSuccess: () => { yearFo
         </form>
         <div v-if="!props.schools.length" class="alert alert-info">{{ de.noSchools }}</div>
         <div v-for="school in props.schools" :key="school.id" class="card mb-3"><div class="card-body"><h2 class="h5 mb-1">{{ school.name }}</h2><span class="text-muted">{{ [school.short_name, school.city].filter(Boolean).join(' · ') }}</span><div class="mt-3"><span v-if="!school.school_years.length" class="text-muted">{{ de.noSchoolYears }}</span><a v-for="year in school.school_years" :key="year.id" class="btn btn-sm btn-outline-secondary me-2" :href="`/schuljahre/${year.slug}`">{{ year.name }}</a></div></div></div>
-    </main>
+    </div>
+    </AppShell>
 </template>

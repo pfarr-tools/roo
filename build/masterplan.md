@@ -135,6 +135,11 @@ Bildungspläne dürfen nicht als ein einziger JSON-Block gespeichert werden.
 
 ## Phase 3 – Curricula
 
+Fortschritt: `[~]` Importmodell, relationale Curriculumdaten und eine
+bearbeitbare Arbeitsoberfläche für eigene Curricula sind umgesetzt. Die
+Zuordnung zu Schulen, Curriculumvergleich und weitere Fassungsfunktionen
+folgen im nächsten Schnitt.
+
 ### Ziel
 
 Curricula ordnen Jahrgängen Themen und Kompetenzen zu und können an mehreren

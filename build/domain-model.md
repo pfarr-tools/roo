@@ -41,6 +41,15 @@ Curriculum
        └── CurriculumTopic
             └── Competence (n:m)
 
+CurriculumTopic
+  ├── CurriculumTopicCompetency (offene Referenzen, konfessionell oder prozessbezogen)
+  ├── CurriculumTopicProfile (offene konfessionelle Perspektive)
+  └── year (Jahrgangszuordnung einer konkreten Curriculumfassung)
+
+CurriculumVersion
+  ├── CurriculumEducationPlanBinding (optional aufgelöst oder nur mit plan_code)
+  └── CurriculumImportRun
+
 TeachingGroup
   ├── Student (n:m über zeitliche Mitgliedschaft)
   ├── TimetableSlot
@@ -145,6 +154,66 @@ Kompetenztexte, hierarchische Detailansicht, Fassungsvergleich und die Anzeige
 der Importläufe. Der Vergleich arbeitet mit den stabilen externen
 Kompetenzkennungen und kennzeichnet hinzugekommene, entfernte, geänderte und
 unveränderte Einträge.
+
+### Curriculumimport und eigene Curricula (Phase 3)
+
+Die Dateien unter `data/curricula/curricula` werden über
+`curricula:import <Datei|Verzeichnis>` importiert. Jede Quelle wird als
+`Curriculum` mit einer `CurriculumVersion` gespeichert. Unterrichtseinheiten
+werden relational als `CurriculumTopic` geführt; die vollständige JSON-Quelle
+bleibt in `raw_payload` erhalten. Dadurch können Parser später verbessert
+werden, ohne die Originalquelle erneut zu beschaffen.
+
+Die Felder `denominations`, `shared_plan.type`, Schularten und Rollen von
+Bildungsplanbindungen bleiben offene Strings. Kompetenzreferenzen speichern
+ihre erkannte Kennung, Anzeigeform und den unveränderten Referenztext. Eine
+Binding darf zunächst nur `plan_code` besitzen; wird der zugehörige
+Bildungsplan später importiert, kann `education_plan_id` ergänzt werden.
+
+Ein eigenes Curriculum wird aus einer oder mehreren importierten Fassungen
+abgeleitet. Die Einheiten, Kompetenzreferenzen und Perspektiven werden beim
+Anlegen kopiert (Copy-on-use), `derived_from_id` dokumentiert die Herkunft.
+Die Jahrgangszuordnung liegt an der kopierten `CurriculumTopic` und kann in
+der Curriculumansicht per Drag-and-drop oder per Auswahlfeld geändert werden.
+Nicht zugeordnete Einheiten bleiben sichtbar. Das ist bewusst keine Änderung
+an der Quellvorlage.
+
+Eine vorhandene `units[].year`-Angabe im JSON-Quellformat wird beim Import als
+Startzuordnung übernommen. Dadurch können redaktionell gepflegte
+Jahrgangsverteilungen zwischen Quelle und Datenbank ausgetauscht werden.
+
+Die Bearbeitungsansicht verwendet `Curriculum.grades` als Metadaten für die
+Jahrgangsspalten und blendet nicht relevante Jahrgänge aus. Beim Anlegen eines
+eigenen Curriculums wird diese Liste, sofern nicht ausdrücklich angegeben, aus
+der Vereinigungsmenge der ausgewählten Quellcurricula abgeleitet. Fehlen auch
+dort Jahrgangsmetadaten, bleibt als Fallback die allgemeine Auswahl der Klassen
+1 bis 10 sichtbar.
+
+Eigene Curriculumfassungen sind direkt bearbeitbar. Die Metadaten Titel,
+Schulart und Jahrgänge sowie je UE Titel, Zeitbedarf, Notizen und
+Vorbereitungsfragen werden strukturiert gespeichert. Vorlagenfassungen bleiben
+inhaltlich nicht editierbar; die Jahrgangszuordnung darf jedoch auch an einer
+importierten Fassung korrigiert werden. Diese Korrektur bleibt bei einem
+erneuten Import anhand der stabilen UE-Kennung erhalten.
+
+Kopierte UEs behalten über `source_curriculum_version_id` ihre Herkunft. Die
+Ansicht gruppiert nicht zugeordnete UEs dadurch nach Quellcurriculum; neu
+angelegte UEs besitzen keine Quellreferenz und erscheinen unter „Eigene UE“.
+Eine eigene UE kann direkt mit Titel, Klasse, Zeitbedarf und Notizen angelegt
+und anschließend wie jede andere eigene UE bearbeitet werden.
+
+Beim Ableiten aus einer Quelle wird eine automatische Jahrgangszuordnung nur
+dann vorgenommen, wenn die Quelle genau einen Jahrgang in `metadata.grades`
+angibt. Quellen mit einem Bereich wie 5/6 oder 7/8/9 enthalten in der
+vorliegenden Austauschstruktur keine verlässliche UE-spezifische Zuordnung;
+ihre kopierten UEs bleiben deshalb zunächst offen. Zahlenpräfixe in einzelnen
+Titeln werden nicht als Jahrgang interpretiert, weil sie in den Quellen nicht
+konsistent und teilweise außerhalb des Metadatenbereichs sind.
+
+Die erste Phase-3-Datenbankmigration umfasst außerdem zeitlich erweiterbare
+`curriculum_school_assignments` für die spätere Schule-zu-Curriculum-
+Zuordnung. Die UI dafür folgt im nächsten vertikalen Schritt, sobald Schulen
+und Unterrichtsgruppen das Curriculum fachlich benötigen.
 
 ### Beobachtung vs. Bewertung
 

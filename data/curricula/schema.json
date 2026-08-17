@@ -79,6 +79,14 @@
           "number": {
             "type": "integer"
           },
+          "year": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 13
+          },
           "title": {
             "type": "string"
           },

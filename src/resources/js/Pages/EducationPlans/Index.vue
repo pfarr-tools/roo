@@ -1,4 +1,5 @@
 <script setup>
+import AppShell from '../../Components/Ui/AppShell.vue'
 import de from '../../i18n/de'
 
 const props = defineProps({ educationPlans: Array, search: String })
@@ -11,7 +12,8 @@ function formatDate(value) {
 </script>
 
 <template>
-    <main class="container py-4">
+    <AppShell>
+    <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <a href="/dashboard" class="text-decoration-none">{{ de.dashboard }}</a>
@@ -65,5 +67,6 @@ function formatDate(value) {
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+    </AppShell>
 </template>
