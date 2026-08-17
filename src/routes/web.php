@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');
     Route::get('/bildungsplaene/{educationPlan}', [EducationPlanController::class, 'show'])->name('education-plans.show');
     Route::get('/curricula', [CurriculumController::class, 'index'])->name('curricula.index');
+    Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');

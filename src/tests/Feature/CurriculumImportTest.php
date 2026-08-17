@@ -21,6 +21,14 @@ it('imports every curriculum from the provided package', function () {
     expect(Curriculum::count())->toBe(16);
 });
 
+it('compares two visible curricula', function () {
+    $first = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'))['curriculum'];
+    $second = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_3-4_A.json'))['curriculum'];
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/curricula/vergleichen?left='.$first->id.'&right='.$second->id)->assertSuccessful()->assertInertia(fn ($page) => $page->where('left.id', $first->id)->where('right.id', $second->id)->has('left.topics')->has('right.topics'));
+});
+
 it('creates and edits an own curriculum without changing the source', function () {
     $imported = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
     $user = User::factory()->create();

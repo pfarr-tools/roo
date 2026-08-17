@@ -35,6 +35,15 @@ class CurriculumController extends Controller
         return Inertia::render('Curricula/Create', ['sources' => $sources, 'schoolTypes' => $this->schoolTypeOptions()]);
     }
 
+    public function compare(Request $request): Response
+    {
+        $available = Curriculum::query()->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->orderBy('title')->get(['id', 'title', 'school_type', 'grades']);
+        $selectedIds = collect([$request->integer('left'), $request->integer('right')])->filter()->unique()->values();
+        $selected = Curriculum::with(['versions' => fn ($query) => $query->latest('id'), 'versions.topics' => fn ($query) => $query->withCount('competencies')->orderByRaw('year is null desc')->orderBy('year')->orderBy('position')])->whereIn('id', $selectedIds)->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get()->keyBy('id');
+
+        return Inertia::render('Curricula/Compare', ['curricula' => $available, 'left' => $this->comparisonData($selected->get($selectedIds->get(0))), 'right' => $this->comparisonData($selected->get($selectedIds->get(1))), 'selected' => ['left' => $selectedIds->get(0), 'right' => $selectedIds->get(1)]]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'school_type' => ['nullable', 'string', 'max:50'], 'grades' => ['nullable', 'array'], 'grades.*' => ['integer', 'min:1', 'max:13'], 'denominations' => ['nullable', 'array'], 'denominations.*' => ['string', 'max:50'], 'source_version_ids' => ['nullable', 'array'], 'source_version_ids.*' => ['integer', 'exists:curriculum_versions,id']]);
@@ -250,5 +259,15 @@ class CurriculumController extends Controller
     private function ensureVisible(Curriculum $curriculum): void
     {
         abort_unless($curriculum->organization_id === null || $curriculum->organization_id === auth()->user()->organization_id, 404);
+    }
+
+    private function comparisonData(?Curriculum $curriculum): ?array
+    {
+        if (! $curriculum) {
+            return null;
+        }
+        $version = $curriculum->versions->first();
+
+        return ['id' => $curriculum->id, 'title' => $curriculum->title, 'school_type' => $curriculum->school_type, 'grades' => $curriculum->grades, 'topics' => $version?->topics->map(fn ($topic) => ['number' => $topic->number, 'title' => $topic->title, 'year' => $topic->year, 'hours' => $topic->hours, 'competencies_count' => $topic->competencies_count])->values()->all() ?? []];
     }
 }

@@ -136,9 +136,9 @@ Bildungspläne dürfen nicht als ein einziger JSON-Block gespeichert werden.
 ## Phase 3 – Curricula
 
 Fortschritt: `[~]` Importmodell, relationale Curriculumdaten, eine
-bearbeitbare Arbeitsoberfläche für eigene Curricula und die
-Curriculum-Schulzuordnung sind umgesetzt. Curriculumvergleich und weitere
-Fassungsfunktionen folgen im nächsten Schnitt.
+bearbeitbare Arbeitsoberfläche für eigene Curricula, die
+Curriculum-Schulzuordnung und ein read-only Curriculumvergleich sind
+umgesetzt. Weitere Fassungsfunktionen folgen im nächsten Schnitt.
 
 ### Ziel
 
@@ -164,7 +164,8 @@ Schulen verwendet werden.
 - KoKo-Hinweise evangelisch/katholisch/gemeinsam
 - n:m-Zuordnung zu Schulen mit Gültigkeitszeitraum
 - Curriculum kopieren
-- Curriculum-Vergleich
+- Curriculum-Vergleich: zwei sichtbare Curricula mit Einheiten, Jahrgängen,
+  Zeitbedarf und Kompetenzanzahl gegenüberstellen
 
 ---
 
