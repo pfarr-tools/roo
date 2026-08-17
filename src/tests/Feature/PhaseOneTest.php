@@ -40,6 +40,23 @@ it('does not expose another organizations schools', function () {
     $this->actingAs($user)->get('/schuljahre/fremdjahr')->assertNotFound();
 });
 
+it('includes school year slugs for the school overview links', function () {
+    $user = phaseOneUser();
+    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+    SchoolYear::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'name' => '2026/27',
+        'starts_on' => '2026-09-01',
+        'ends_on' => '2027-07-31',
+        'timezone' => 'Europe/Berlin',
+    ]);
+
+    $this->actingAs($user)->get('/schulen')->assertSuccessful()->assertInertia(fn ($page) =>
+        $page->where('schools.0.school_years.0.slug', '202627')
+    );
+});
+
 it('creates calendar days and keeps local exceptions after importing BW holidays', function () {
     Http::fake([
         'https://ferien-api.de/api/v1/holidays/BW/2026' => Http::response([['slug' => 'osterferien-2026-BW', 'name' => 'osterferien', 'start' => '2026-03-29T22:00', 'end' => '2026-04-10T22:00']]),

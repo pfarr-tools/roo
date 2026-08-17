@@ -15,7 +15,7 @@ class SchoolController extends Controller
         $this->authorize('viewAny', School::class);
 
         return Inertia::render('Schools/Index', [
-            'schools' => School::query()->where('organization_id', auth()->user()->organization_id)->with('schoolYears:id,school_id,name,starts_on,ends_on')->withCount('schoolYears')->orderBy('name')->get(),
+            'schools' => School::query()->where('organization_id', auth()->user()->organization_id)->with('schoolYears:id,school_id,name,slug,starts_on,ends_on')->withCount('schoolYears')->orderBy('name')->get(),
         ]);
     }
 
