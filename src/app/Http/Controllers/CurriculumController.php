@@ -22,6 +22,7 @@ class CurriculumController extends Controller
         $curricula = Curriculum::with(['versions' => fn ($q) => $q->withCount('topics')])
             ->where(fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))
             ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('title', 'like', "%{$search}%")->orWhere('external_identifier', 'like', "%{$search}%")))
+            ->orderByRaw('organization_id is null asc')
             ->orderBy('title')->get();
 
         return Inertia::render('Curricula/Index', ['curricula' => $curricula, 'search' => $search]);
@@ -31,7 +32,7 @@ class CurriculumController extends Controller
     {
         $sources = CurriculumVersion::with(['curriculum:id,title,school_type,grades,variant'])->withCount('topics')->where('is_editable', false)->whereHas('curriculum', fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->orderBy('id')->get();
 
-        return Inertia::render('Curricula/Create', ['sources' => $sources]);
+        return Inertia::render('Curricula/Create', ['sources' => $sources, 'schoolTypes' => $this->schoolTypeOptions()]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -77,7 +78,7 @@ class CurriculumController extends Controller
         $this->ensureVisible($curriculum);
         $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.competencies.educationPlanCompetency', 'topics.sourceVersion.curriculum'])->firstOrFail();
 
-        return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions()]);
+        return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions(), 'schoolTypes' => $this->schoolTypeOptions()]);
     }
 
     public function storeTopic(Request $request, Curriculum $curriculum): RedirectResponse
@@ -182,7 +183,7 @@ class CurriculumController extends Controller
             'competencies.*.display' => ['nullable', 'string', 'max:255'],
             'competencies.*.raw_text' => ['nullable', 'string', 'max:10000'],
         ]);
-        abort_unless($topic->version->is_editable || collect($data['competencies'] ?? [])->every(fn (array $competency): bool => $competency['competency_kind'] === 'process'), 403);
+        abort_unless($topic->version->is_editable, 403);
         $planVersionIds = EducationPlanVersion::whereIn('education_plan_id', $topic->version->bindings()->whereNotNull('education_plan_id')->pluck('education_plan_id'))->pluck('id');
         $topic->competencies()->delete();
         foreach ($data['competencies'] ?? [] as $position => $competency) {
@@ -211,6 +212,21 @@ class CurriculumController extends Controller
                     'competencies' => $version?->competenceAreas->flatMap(fn ($area) => $area->competencies->map(fn ($competency) => ['id' => $competency->id, 'external_identifier' => $competency->external_identifier, 'number' => $competency->number, 'text' => $competency->text ?: $competency->variants->pluck('text')->filter()->implode(' / '), 'variants' => $competency->variants->map(fn ($variant) => ['level' => $variant->level?->external_identifier, 'text' => $variant->text])->values()->all(), 'area' => $area->title]))->values()->all() ?? [],
                 ];
             })->values()->all();
+    }
+
+    private function schoolTypeOptions(): array
+    {
+        $curriculumTypes = Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))
+            ->pluck('school_type');
+        $planTypes = EducationPlan::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))
+            ->pluck('external_identifier')
+            ->map(function (string $identifier): ?string {
+                $parts = explode('_', preg_replace('/\([^)]*\)$/', '', $identifier));
+
+                return count($parts) >= 2 ? $parts[count($parts) - 2] : null;
+            });
+
+        return $curriculumTypes->merge($planTypes)->filter()->unique()->sort()->values()->all();
     }
 
     private function resolveTopicCompetencies(CurriculumVersion $version): void

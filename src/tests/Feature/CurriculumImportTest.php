@@ -136,7 +136,7 @@ it('allows selecting a Bildungsplan binding and resolves matching competencies',
     $topic = $imported['version']->topics()->firstOrFail();
     $this->actingAs($user)->put("/curricula/{$imported['curriculum']->id}/themen/{$topic->id}/kompetenzen", [
         'competencies' => [['denomination' => 'catholic', 'competency_kind' => 'process', 'external_identifier' => '2.1.1']],
-    ])->assertRedirect();
+    ])->assertForbidden();
     $this->actingAs($user)->put("/curricula/{$imported['curriculum']->id}/themen/{$topic->id}/kompetenzen", [
         'competencies' => [['denomination' => 'evangelical', 'competency_kind' => 'content', 'external_identifier' => '2.2.4']],
     ])->assertForbidden();
