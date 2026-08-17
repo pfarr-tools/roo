@@ -1,0 +1,669 @@
+{
+  "schema_version": "1.0.0",
+  "type": "confessional_cooperative_curriculum",
+  "metadata": {
+    "title": "KoKo Beispielcurriculum GYM 7/8 A",
+    "country": "DE",
+    "state": "BW",
+    "school_type": "GYM",
+    "grades": [
+      7,
+      8
+    ],
+    "variant": "A",
+    "cooperation_model": "confessional_cooperative",
+    "denominations": [
+      "evangelical",
+      "catholic"
+    ],
+    "source": {
+      "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6247_o324kcmy.docx",
+      "format": "docx"
+    },
+    "conversion": {
+      "complete": true,
+      "method": "OOXML table extraction",
+      "unit_count": 5
+    }
+  },
+  "education_plan_bindings": [
+    {
+      "role": "denominational_basis",
+      "denomination": "evangelical",
+      "subject": "Evangelische Religionslehre",
+      "plan_code": null
+    },
+    {
+      "role": "denominational_basis",
+      "denomination": "catholic",
+      "subject": "Katholische Religionslehre",
+      "plan_code": null
+    }
+  ],
+  "units": [
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "Evangelisch er Glaube hat eine Geschichte",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Bedeutung hat für mich meine Konfession? Wie frei und gleichzeitig gebunden erlebe ich mich selbst? Welche Bedeutung hat für mich das Lesen der Bibel? Inwiefern lassen sich die Kirche n am Anspruch Jesu und seiner Worte messen?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3 (1) die Bedeutung der Bibel für reform a torisches Selbstverständnis erläutern 3.2.4 (1) Konsequenzen aus der reformator i schen Betonung des gnädigen Gottes (zum Beispiel … Kritik am Ablass) entfalten 3.2.4 (3) an Beispielen Folgen des christlichen Glaubens an Gott (zum Beispiel Luther, Katharina von Bora) untersuchen 3.2.5 (2) Begründungen christlicher Freiheit (zum Beispiel … Paulus, L u ther) darstellen 3.2.6 (1) Anliegen der Reformation (zum Beispiel Schriftverständnis, Priestertum aller Gläubigen, Sakr a mentsverständnis, Kirchenverstän d nis) an ausgewählten Stationen ihrer Geschichte erläutern 3.2.6 (2) lokalgeschichtliche Aspekte der Reformation aufzeigen",
+              "references": [
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3 (1)"
+                },
+                {
+                  "id": "3.2.4.1",
+                  "display": "3.2.4 (1)"
+                },
+                {
+                  "id": "3.2.4.3",
+                  "display": "3.2.4 (3)"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5 (2)"
+                },
+                {
+                  "id": "3.2.6.1",
+                  "display": "3.2.6 (1)"
+                },
+                {
+                  "id": "3.2.6.2",
+                  "display": "3.2.6 (2)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1 Evangelisch er Glaube hat eine Geschichte"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welche Bedeutung hat für mich meine Konfession? Wie frei und gleichzeitig gebunden erlebe ich mich selbst? Welche Bedeutung hat für mich das Lesen der Bibel? Inwiefern lassen sich die Kirche n am Anspruch Jesu und seiner Worte messen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen k a tholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3 (1) die Bedeutung der Bibel für reform a torisches Selbstverständnis erläutern 3.2.4 (1) Konsequenzen aus der reformator i schen Betonung des gnädigen Gottes (zum Beispiel … Kritik am Ablass) entfalten 3.2.4 (3) an Beispielen Folgen des christlichen Glaubens an Gott (zum Beispiel Luther, Katharina von Bora) untersuchen 3.2.5 (2) Begründungen christlicher Freiheit (zum Beispiel … Paulus, L u ther) darstellen 3.2.6 (1) Anliegen der Reformation (zum Beispiel Schriftverständnis, Priestertum aller Gläubigen, Sakr a mentsverständnis, Kirchenverstän d nis) an ausgewählten Stationen ihrer Geschichte erläutern 3.2.6 (2) lokalgeschichtliche Aspekte der Reformation aufzeigen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.6 (1) an einem regionalen Be i spiel die Bedeutung des Klosterl e bens für die Entwicklung der europä i schen Kultur herausarbeiten 3.2.6 (2) das Anliegen des Reform a tors Martin Luther mit einem weit e ren innerkirchlichen Reformansatz vergleichen (zum Beispiel Franz von Assisi, Johannes XXIII.) 3.2.6 (3) anhand eines Beispiels he r ausarbeiten, wie das Wachsen der jungen Kirche als Wirken des Heiligen Geistes verstanden werden kann (zum Beispiel Pfingsthymnus GL 342; Pfingstsequenz GL 344; Apg 2,1-13; Apg 2,37-47; Lieder) 3.2.3 (2) erläutern, wie Menschen eigene Befreiungserfahrungen auf die Exodusüberlieferung beziehen (zum Beispiel Gospels, Montagsd e monstrationen, aktuelle Befreiung s bewegungen) 3.2.5 (6) an einer Biografie analysi e ren, welche Konsequenzen der A n spruch Jesu für ein Leben haben kann (zum Beispiel an der Biografie von Sophie Scholl oder Willi Graf, Oscar Romero, Erwin Kräutler, Ruth Pfau, an Biografien von „ local heroes “)"
+        ],
+        [
+          "Gottes Geist führt Menschen auf den Weg in die Freiheit und wirkt in der Kirche",
+          "Reformen in der Kirche im Geist der Freiheit",
+          "Das reformatorische Freiheitsve r ständnis gründet im Glauben an den gnädigen Gott"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben, zum Leben historischer Personen und zur gesellsc haftlichen Wirklichkeit setzen 2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entd e c ken und (…) darstellen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen e r schließen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-02",
+      "number": 2,
+      "title": "Wer bin ich?",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Personen haben dazu beitragen , meine Persönlichkeit auszubilden? Welchen Beitrag lieferte dazu mein christlicher Glaube? Meine Konfession? Wo stößt christliche Freiheit an ihre Grenzen? Welche Bedeutun g haben Vergebung und Versöhnung in meinem Leben?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1 (1) sich mit Fragen nach Ident i tät, Selbstbild, Fremdwahrnehmung und Rollenzuschreibung im sozialen Zusammenleben (zum Beispiel Fam i lie, Peergroup, soziale Netzwerke) auseinandersetzen 3.2.1 (2) die Bedeutung von Vorbi l dern und Idolen erklären und auf ihre mögliche Ambivalenz hin unters u chen 3.2.1 (3) Hintergründe krisenhafter Situationen (zum Beispiel Versagen s angst, Leistungsdruck, Trennung, Liebeskummer, Sucht) und Strategien zur deren Bewältigung entfalten 3.2.3 (1) die Bedeutung der Bibel für reformatorisches Selbstverständnis erläutern 3.2.4 (1) Konsequenzen aus der r e formatorischen Betonung des gnäd i gen Gottes (zum Beispiel Mensche n bild, Erlösung, Kritik am Ablass) en t falten 3.2.5 (4) die Bedeutung Jesu Christi für evangelischen Glauben entfalten",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1 (1)"
+                },
+                {
+                  "id": "3.2.1.2",
+                  "display": "3.2.1 (2)"
+                },
+                {
+                  "id": "3.2.1.3",
+                  "display": "3.2.1 (3)"
+                },
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3 (1)"
+                },
+                {
+                  "id": "3.2.4.1",
+                  "display": "3.2.4 (1)"
+                },
+                {
+                  "id": "3.2.5.4",
+                  "display": "3.2.5 (4)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 2 Wer bin ich?"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welche Personen haben dazu beitragen , meine Persönlichkeit auszubilden? Welchen Beitrag lieferte dazu mein christlicher Glaube? Meine Konfession? Wo stößt christliche Freiheit an ihre Grenzen? Welche Bedeutun g haben Vergebung und Versöhnung in meinem Leben?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen k a tholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.1 (1) sich mit Fragen nach Ident i tät, Selbstbild, Fremdwahrnehmung und Rollenzuschreibung im sozialen Zusammenleben (zum Beispiel Fam i lie, Peergroup, soziale Netzwerke) auseinandersetzen 3.2.1 (2) die Bedeutung von Vorbi l dern und Idolen erklären und auf ihre mögliche Ambivalenz hin unters u chen 3.2.1 (3) Hintergründe krisenhafter Situationen (zum Beispiel Versagen s angst, Leistungsdruck, Trennung, Liebeskummer, Sucht) und Strategien zur deren Bewältigung entfalten 3.2.3 (1) die Bedeutung der Bibel für reformatorisches Selbstverständnis erläutern 3.2.4 (1) Konsequenzen aus der r e formatorischen Betonung des gnäd i gen Gottes (zum Beispiel Mensche n bild, Erlösung, Kritik am Ablass) en t falten 3.2.5 (4) die Bedeutung Jesu Christi für evangelischen Glauben entfalten",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1 (1) an Beispielen aus ihrer L e benswelt darstellen, dass die Ause i nandersetzung mit Werten und No r men, Autorität und Gehorsam zur Mündigkeit beiträgt 3.2.1 (2) zeigen, dass zum Erwac h senwerden ein verantwortlicher U m gang mit Freiheit gehört 3.2.1 (3) an biblischen Texten erlä u tern, dass Menschen nach christl i cher Auffassung zur Freiheit und Ve r antwortung gegenüber Gott und den Mitmenschen berufen sind (zum Beispiel Ex 20,2.15.16; Lk 10,25-27) 3.2.1 (4) ausgehend von Lk 19,1-10 herausarbeiten, was es heißt, schu l dig zu werden, und was nach christl i cher Auffassung zur Vergebung g e hört 3.2.1 (5) erläutern, wie Prozesse von Vergebung und Versöhnung gestaltet werden können (Streitkultur und Kultur der Versöhnung, Sakrament der Buße und Versöhnung) 3.2.1 (6) sich vor dem Hintergrund der christlichen Auffassung von Fre i heit, Verantwortung und Schuld mit Erwartungen und Anforderungen, die an sie gestellt werden, auseinande r setzen (zum Beispiel vonseiten der Peergroup, der Medien)"
+        ],
+        [
+          "Menschsein im Spannungsfeld von Freiheit und Verantwortung",
+          "Glaube als von Gott geschenkte Identität",
+          "Evangelische r Glaube gründet in der befreienden Erfahrung der Liebe Gottes"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben, zum Leben historischer Personen und zur gesellschaftlichen Wirklichkeit setzen 2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren 2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen e r schließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-03",
+      "number": 3,
+      "title": "Verantwortung tragen – gerecht handeln",
+      "hours": null,
+      "preparation_questions": [
+        "Nach welchen Kriterien treffe ich ethisch bedeutsame Entscheidungen? Was bedeutet für mich gerecht und verantwortlich zu leben? Welche Bedeutung könnte dies für unser Leben an der Schule haben?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler kö n nen 3.2.2 (1) Kriterien für gerechtes Handeln (zum Beispiel Thora, Go l dene Regel, jedem nach seiner Leistung, jedem das Gleiche, jedem nach seinem Bedarf) an Beispielen (zum Beispiel Kleidung, Ernährung, Leistung, Besitz) überprüfen 3.2.2 (2) anhand von Fallbeispielen die Aufgabe des Gewissens anal y sieren 3.2.2 (3) Ursachen von Konflikten analysieren und Perspektiven für konstruktive Lösungen aufzeigen 3.2.3 (2) Zusammenhänge zw i schen prophetischem Wirken und Gerechtigkeit aufzeigen 3.2.4 (3) an Beispielen Folgen des christlichen Glaubens an Gott (zum Beispiel Franz von Assisi … Frie d rich von Bodelschwingh, Albert Schweitzer, Martin Luther King, Elisabeth von Thadden, Desmond Tutu, local heroes ) untersuchen 3.2.5 (1) Hoffnungsaspekte neute s tamentlicher Wundererzählungen und Gleichnisse herausarbeiten 3.2.6 (3) sich mit einem kirchlichen Handlungsfeld auseinandersetzen (zum Beispiel … Flüchtlingsarbeit … Diakonie in lokalen Kontexten …)",
+              "references": [
+                {
+                  "id": "3.2.2.1",
+                  "display": "3.2.2 (1)"
+                },
+                {
+                  "id": "3.2.2.2",
+                  "display": "3.2.2 (2)"
+                },
+                {
+                  "id": "3.2.2.3",
+                  "display": "3.2.2 (3)"
+                },
+                {
+                  "id": "3.2.3.2",
+                  "display": "3.2.3 (2)"
+                },
+                {
+                  "id": "3.2.4.3",
+                  "display": "3.2.4 (3)"
+                },
+                {
+                  "id": "3.2.5.1",
+                  "display": "3.2.5 (1)"
+                },
+                {
+                  "id": "3.2.6.3",
+                  "display": "3.2.6 (3)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler kö n nen 3.2.2 (1) an einem regionalen Be i spiel entfalten, wie menschliches Handeln Natur und Umwelt schäd i gen kann und deshalb ethisch zu befragen ist 3.2.2 (2) ein gesellschaftliches Ph ä nomen, welches das Zusammenl e ben von Menschen gefährdet, als ethische Herausforderung erläutern (zum Beispiel Cybermobbing, Di s kriminierung, Extremismus, Arm und Reich) 3.2.2 (3) die Botschaft eines Pr o pheten (zum Beispiel Amos, Micha) unter Berücksichtigung des Dek a logs sachgemäß und aktualisierend erläutern 3.2.2 (4) an einem Beispiel herau s arbeiten, wie kirchliche Stellun g nahmen auf aktuelle ethische He r ausforderungen eingehen (zum Beispiel bei der Frage nach Gerec h tigkeit, nach dem Umgang mit Re s sourcen, mit Eigentum, mit Medien) 3.2.2 (6) sich am Modell des Fairen Handels mit christlich begründeter Verantwortung für die Eine Welt auseinandersetzen 3.2.3 (4) an biblischen Texten au f zeigen, dass sie irritieren, erstaunen und provozieren (zum Beispiel Lev 19,18; Mt 5,38-42; Mk 10,17-22; Lk 10,25-37) 3.2.3 (5) an einem Beispiel erlä u tern, dass biblische Texte einen Lebensbezug haben (zum Beispiel Mt 6,19-21; Mt 6,25-34) 3.2.5 (5) an einem Beispiel herau s arbeiten, dass das Reich Gottes schon hier und jetzt mit dem ko n kreten Verhalten von Menschen beginnt 3.2.6 (4) ausgehend vom Sakr a ment der Firmung erklären, dass mündiges Christsein bedeutet, in Kirche und Gesellschaft Verantwo r tung zu übernehmen 3.2.6 (5) aktuelle Beispiele für das Wirken der Kirche in unserer G e sellschaft erläutern (zum Beispiel 72-Stunden-Aktion, Jugendkirche, Freiwilliges Soziales Jahr) 3.2.6 (6) Elemente eines jugendg e mäßen Gottesdienstes entwerfen",
+              "references": [
+                {
+                  "id": "3.2.2.1",
+                  "display": "3.2.2 (1)"
+                },
+                {
+                  "id": "3.2.2.2",
+                  "display": "3.2.2 (2)"
+                },
+                {
+                  "id": "3.2.2.3",
+                  "display": "3.2.2 (3)"
+                },
+                {
+                  "id": "3.2.2.4",
+                  "display": "3.2.2 (4)"
+                },
+                {
+                  "id": "3.2.2.6",
+                  "display": "3.2.2 (6)"
+                },
+                {
+                  "id": "3.2.3.4",
+                  "display": "3.2.3 (4)"
+                },
+                {
+                  "id": "3.2.3.5",
+                  "display": "3.2.3 (5)"
+                },
+                {
+                  "id": "3.2.5.5",
+                  "display": "3.2.5 (5)"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6 (4)"
+                },
+                {
+                  "id": "3.2.6.5",
+                  "display": "3.2.6 (5)"
+                },
+                {
+                  "id": "3.2.6.6",
+                  "display": "3.2.6 (6)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.1.4",
+          "display": "2.1.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.7",
+          "display": "2.3.7"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 3 Verantwortung tragen – gerecht handeln"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Nach welchen Kriterien treffe ich ethisch bedeutsame Entscheidungen? Was bedeutet für mich gerecht und verantwortlich zu leben? Welche Bedeutung könnte dies für unser Leben an der Schule haben?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.2.2 (1) Kriterien für gerechtes Handeln (zum Beispiel Thora, Go l dene Regel, jedem nach seiner Leistung, jedem das Gleiche, jedem nach seinem Bedarf) an Beispielen (zum Beispiel Kleidung, Ernährung, Leistung, Besitz) überprüfen 3.2.2 (2) anhand von Fallbeispielen die Aufgabe des Gewissens anal y sieren 3.2.2 (3) Ursachen von Konflikten analysieren und Perspektiven für konstruktive Lösungen aufzeigen 3.2.3 (2) Zusammenhänge zw i schen prophetischem Wirken und Gerechtigkeit aufzeigen 3.2.4 (3) an Beispielen Folgen des christlichen Glaubens an Gott (zum Beispiel Franz von Assisi … Frie d rich von Bodelschwingh, Albert Schweitzer, Martin Luther King, Elisabeth von Thadden, Desmond Tutu, local heroes ) untersuchen 3.2.5 (1) Hoffnungsaspekte neute s tamentlicher Wundererzählungen und Gleichnisse herausarbeiten 3.2.6 (3) sich mit einem kirchlichen Handlungsfeld auseinandersetzen (zum Beispiel … Flüchtlingsarbeit … Diakonie in lokalen Kontexten …)",
+          "",
+          "Die Schülerinnen und Schüler kö n nen 3.2.2 (1) an einem regionalen Be i spiel entfalten, wie menschliches Handeln Natur und Umwelt schäd i gen kann und deshalb ethisch zu befragen ist 3.2.2 (2) ein gesellschaftliches Ph ä nomen, welches das Zusammenl e ben von Menschen gefährdet, als ethische Herausforderung erläutern (zum Beispiel Cybermobbing, Di s kriminierung, Extremismus, Arm und Reich) 3.2.2 (3) die Botschaft eines Pr o pheten (zum Beispiel Amos, Micha) unter Berücksichtigung des Dek a logs sachgemäß und aktualisierend erläutern 3.2.2 (4) an einem Beispiel herau s arbeiten, wie kirchliche Stellun g nahmen auf aktuelle ethische He r ausforderungen eingehen (zum Beispiel bei der Frage nach Gerec h tigkeit, nach dem Umgang mit Re s sourcen, mit Eigentum, mit Medien) 3.2.2 (6) sich am Modell des Fairen Handels mit christlich begründeter Verantwortung für die Eine Welt auseinandersetzen 3.2.3 (4) an biblischen Texten au f zeigen, dass sie irritieren, erstaunen und provozieren (zum Beispiel Lev 19,18; Mt 5,38-42; Mk 10,17-22; Lk 10,25-37) 3.2.3 (5) an einem Beispiel erlä u tern, dass biblische Texte einen Lebensbezug haben (zum Beispiel Mt 6,19-21; Mt 6,25-34) 3.2.5 (5) an einem Beispiel herau s arbeiten, dass das Reich Gottes schon hier und jetzt mit dem ko n kreten Verhalten von Menschen beginnt 3.2.6 (4) ausgehend vom Sakr a ment der Firmung erklären, dass mündiges Christsein bedeutet, in Kirche und Gesellschaft Verantwo r tung zu übernehmen 3.2.6 (5) aktuelle Beispiele für das Wirken der Kirche in unserer G e sellschaft erläutern (zum Beispiel 72-Stunden-Aktion, Jugendkirche, Freiwilliges Soziales Jahr) 3.2.6 (6) Elemente eines jugendg e mäßen Gottesdienstes entwerfen"
+        ],
+        [
+          "Die biblische Botschaft inspiriert zu s olidarische m und gerechte m Handeln",
+          "Handeln in Freiheit, Verantwo r tung und Gerechtigkeit",
+          "Christliches Handeln wird biblisch begründet und verantwortet"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.2.4 d en Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu (…) ethischen Fragen ei n nehmen und ihn argumentativ vertreten 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern (…) erkennen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angeme s sen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.7 Herausforderungen (…) sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen (…) begründet vertreten 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern"
+        ]
+      ]
+    },
+    {
+      "id": "ue-04",
+      "number": 4,
+      "title": "K leiner Grundkurs Christentum",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Gottesvorstellungen sind für meinen Glauben bestimmend ? Welche biblischen Texte sind für mich und mein Leben bedeutsam? Welchen Beitrag könnte christlicher Glauben für das Zusammenleben erbringen ?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.1.2 (2) die Relevanz biblischer We i sungen (zum Beispiel Dekalog, Goldene Regel, Doppelgebot der Liebe) für menschliches Zusammenleben entfa l ten ( Wdh . 5/6) 3.1.4 (2) Gottesvorstellungen in bibl i schen Texten (zum Beispiel Erzählu n gen, Bildworte …) zu menschlichen Fragen und Erfahrungen in Beziehung setzen ( Wdh . 5/6) 3.1.4 (3) unterschiedliche Formen der Hinwendung zu Gott (zum Beispiel Bitte, Dank, Lob, Klage) entfalten ( Wdh . 5/6) 3.2.4 (1) Konsequenzen aus der refo r matorischen Betonung des gnädigen Gottes (zum Beispiel Menschenbild, Erlösung, …) entfalten 3.1.5 (1) Stationen des Lebens und Wirkens Jesu wiedergeben und in B e ziehung zu Festen des Kirchenjahres setzen ( Wdh . 5/6) 3.2.5 (1) Hoffnungsaspekte neutest a mentlicher Wundererzählungen und Gleichnisse herausarbeiten 3.2.5 (2) Begründungen christlicher Freiheit (zum Beispiel verlorener Sohn, Paulus, Luther) darstellen 3.1.6 (2) Ursprung und Bedeutung des Sonntags entfalten ( Wdh . 5/6) 3.1.6 (3) Gemeinsamkeiten und B e sonderheiten der evangelischen und katholischen Kirche entfalten (zum Beispiel Kirchenraum, Glaubenspraxis, Gottesdienst, Sakramente, Gemeind e leben vor Ort, Ökumene) ( Wdh . 5/6)",
+              "references": [
+                {
+                  "id": "3.1.2.2",
+                  "display": "3.1.2 (2)"
+                },
+                {
+                  "id": "3.1.4.2",
+                  "display": "3.1.4 (2)"
+                },
+                {
+                  "id": "3.1.4.3",
+                  "display": "3.1.4 (3)"
+                },
+                {
+                  "id": "3.2.4.1",
+                  "display": "3.2.4 (1)"
+                },
+                {
+                  "id": "3.1.5.1",
+                  "display": "3.1.5 (1)"
+                },
+                {
+                  "id": "3.2.5.1",
+                  "display": "3.2.5 (1)"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5 (2)"
+                },
+                {
+                  "id": "3.1.6.2",
+                  "display": "3.1.6 (2)"
+                },
+                {
+                  "id": "3.1.6.3",
+                  "display": "3.1.6 (3)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.4.6",
+          "display": "2.4.6"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 4 K leiner Grundkurs Christentum"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welche Gottesvorstellungen sind für meinen Glauben bestimmend ? Welche biblischen Texte sind für mich und mein Leben bedeutsam? Welchen Beitrag könnte christlicher Glauben für das Zusammenleben erbringen ?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen kath o lisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.2 (2) die Relevanz biblischer We i sungen (zum Beispiel Dekalog, Goldene Regel, Doppelgebot der Liebe) für menschliches Zusammenleben entfa l ten ( Wdh . 5/6) 3.1.4 (2) Gottesvorstellungen in bibl i schen Texten (zum Beispiel Erzählu n gen, Bildworte …) zu menschlichen Fragen und Erfahrungen in Beziehung setzen ( Wdh . 5/6) 3.1.4 (3) unterschiedliche Formen der Hinwendung zu Gott (zum Beispiel Bitte, Dank, Lob, Klage) entfalten ( Wdh . 5/6) 3.2.4 (1) Konsequenzen aus der refo r matorischen Betonung des gnädigen Gottes (zum Beispiel Menschenbild, Erlösung, …) entfalten 3.1.5 (1) Stationen des Lebens und Wirkens Jesu wiedergeben und in B e ziehung zu Festen des Kirchenjahres setzen ( Wdh . 5/6) 3.2.5 (1) Hoffnungsaspekte neutest a mentlicher Wundererzählungen und Gleichnisse herausarbeiten 3.2.5 (2) Begründungen christlicher Freiheit (zum Beispiel verlorener Sohn, Paulus, Luther) darstellen 3.1.6 (2) Ursprung und Bedeutung des Sonntags entfalten ( Wdh . 5/6) 3.1.6 (3) Gemeinsamkeiten und B e sonderheiten der evangelischen und katholischen Kirche entfalten (zum Beispiel Kirchenraum, Glaubenspraxis, Gottesdienst, Sakramente, Gemeind e leben vor Ort, Ökumene) ( Wdh . 5/6)",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3 (1) an Beispielen (zum Beispiel in Werbung, Musik, Bildender Kunst, Film, Literatur) zeigen, wie biblische Texte oder Motive aufgegriffen we r den ( Wdh . 5/6) 3.2.2 (5) ausgehend von Erfahrungen begründen, dass Wahrhaftigkeit sich auf die eigene Persönlichkeit und das menschliche Zusammenleben auswirkt 3.2.3 (6) den Sinngehalt biblischer Texte in neuen Formen darstellen 3.2.4 (1) unterschiedliche Weisen ch a rakterisieren, wie Menschen sich Gott vorstellen (zum Beispiel bildhaft, ab s trakt, personal, apersonal ) ( Wdh 5/6) 3.2.4 (2) herausarbeiten, wie sich die persönliche Entwicklung sowie positive und negative Erfahrungen (zum Be i spiel Anerkennung, Gemeinschaft, Krankheit, Einsamkeit) auf Vorstellu n gen von Gott auswirken können 3.2.4 (3) Vorstellungen von Gott, die von Propheten und von Jesus überli e fert sind, erläutern (zum Beispiel Jes 43,1-7; Hos 11,1-9; Mt 6,5-15) ( Wdh 5/6) 3.2.4 (4) erläutern, dass Gewalta n wendung im Namen Gottes der chris t lichen Vorstellung von Gott w ide r spricht 3.2.5 (1) untersuchen, welche Vorste l lungen von Jesus in der Alltags- und Jugendkultur zu finden sind (zum Be i spiel in der Popmusik, im Sport) ( W d h . 5/6) 3.2.5 (2) erklären, wie Jesusvorstellu n gen Jugendlicher beeinflusst werden (zum Beispiel durch Personen, durch Religionsunterricht, durch Medien wie Kinderbibeln oder Jesusfilme) 3.2.5 (3) ausgehend von Mk 12,28-34 erläutern, dass Jesus im jüdischen Glauben verwurzelt war 3.2.5 (4) an Beispielen herausarbeiten, dass Jesus zum Umdenken und zu ve r ändertem Handeln herausforderte (zum Beispiel Mt 5,21-26; Mt 6,9-13; Mt 9,9-13; Mk 1,14f.; Lk 10,25-37; Joh 7,53-8,11) 3.2.6 (3) anhand eines Beispiels he r ausarbeiten, wie das Wachsen der jungen Kirche als Wirken des Heiligen Geistes verstanden werden kann (zum Beispiel Pfingsthymnus GL 342; Pfingstsequenz GL 344; Apg 2,1-13; Apg 2,37-47; Lieder)"
+        ],
+        [
+          "Das christliche Gottesbild wird im A l ten Testament und vor allem im De n ken und Handeln Jesu greifbar. Ein wichtiger Markstein des Begreifens des Jesus-Geschehens ist das Pfingsterei g nis, in dem zugleich der universale („ökumenische“) Anspruch des jesua n ischen Handelns ersichtlich wird.",
+          "Gottesbilder, die grundlegend sind für das Christentum",
+          "Die Merkmale evangelischen Glaubens Vertrauens auf Gott, Gründung auf die biblischen Überlieferungen, die zentr a le Bedeutung Jesu Christi und die Hof f nung auf Gottes Gnade."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.3 grundlegende religiöse Ausdrucksformen wahrnehmen, sie in verschiedenen Kontexten wiedererkennen und sie einordnen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen Fragen einnehmen und ihn argumentativ vertreten 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermö g lichen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschli e ßen 2.3.2 Gemeinsamkeiten von Konfessionen, Religionen und Weltanschauungen sowie deren Unterschiede aus der Perspe k tive des katholischen Glaubens analysieren 2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen 2.5.1 religiöse Rituale und Symbole in einer Weise transformieren, die ihren Überzeugungen entspricht"
+        ]
+      ]
+    },
+    {
+      "id": "ue-05",
+      "number": 5,
+      "title": "Der Glaube an Gott i n Judentum , Christentum und Islam",
+      "hours": null,
+      "preparation_questions": [
+        "Welches Gottesbild habe ich? Mit welchen Gottesbildern habe ich mich schon auseinandergesetzt? Welche Aspekte jüdischer und muslimischer Gottesbilder können auch für Christinnen und Christen bedeutsam sein?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.4 (2) Vorstellungen von Gott in Judentum, Christentum und Islam ve r gleichen 3.2. 7 (1) Wurzeln und Ausprägungen des Islam erläutern (zum Beispiel die Bedeutung Mohammeds, fünf Säulen, Glaubensgrundsätze, Koran, Imam, Schia, Sunna, Aleviten ) 3.2.5 (3) die Darstellung Jesu im Koran mit seiner Darstellung in der Bibel (zum Beispiel Geburtsgeschichte, Wunder, Verständnis als Prophet) vergleichen 3.2.3 (3) Unterschiede des Gebrauchs von Heiligen Schriften in den monoth e istischen Religionen (Christentum, J u dentum und Islam) entfalten 3.2.7 (2) Gemeinsamke i ten und Unte r schiede zwischen Christentum, Islam und Judentum erläutern (zum Beispiel Heilige Schriften, Gebäude, Übe r zeugunen , Feste, Bräuche) 3.2.7 (3) Kriterien für einen Dialog zw i schen Angehörigen verschiedener Rel i gio n en formulieren",
+              "references": [
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4 (2)"
+                },
+                {
+                  "id": "3.2.5.3",
+                  "display": "3.2.5 (3)"
+                },
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3 (3)"
+                },
+                {
+                  "id": "3.2.7.2",
+                  "display": "3.2.7 (2)"
+                },
+                {
+                  "id": "3.2.7.3",
+                  "display": "3.2.7 (3)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.5",
+          "display": "2.4.5"
+        },
+        {
+          "id": "2.4.6",
+          "display": "2.4.6"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 5 Der Glaube an Gott i n Judentum , Christentum und Islam"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welches Gottesbild habe ich? Mit welchen Gottesbildern habe ich mich schon auseinandergesetzt? Welche Aspekte jüdischer und muslimischer Gottesbilder können auch für Christinnen und Christen bedeutsam sein?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen kath o lisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.4 (2) Vorstellungen von Gott in Judentum, Christentum und Islam ve r gleichen 3.2. 7 (1) Wurzeln und Ausprägungen des Islam erläutern (zum Beispiel die Bedeutung Mohammeds, fünf Säulen, Glaubensgrundsätze, Koran, Imam, Schia, Sunna, Aleviten ) 3.2.5 (3) die Darstellung Jesu im Koran mit seiner Darstellung in der Bibel (zum Beispiel Geburtsgeschichte, Wunder, Verständnis als Prophet) vergleichen 3.2.3 (3) Unterschiede des Gebrauchs von Heiligen Schriften in den monoth e istischen Religionen (Christentum, J u dentum und Islam) entfalten 3.2.7 (2) Gemeinsamke i ten und Unte r schiede zwischen Christentum, Islam und Judentum erläutern (zum Beispiel Heilige Schriften, Gebäude, Übe r zeugunen , Feste, Bräuche) 3.2.7 (3) Kriterien für einen Dialog zw i schen Angehörigen verschiedener Rel i gio n en formulieren",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.7 (1) an einem Beispiel zeigen, wie Religion mit Sehnsüchten und Fragen des Menschen korrespondiert (zum Beispiel Naturreligion, Indigene Relig i on, Taoismus) 3.2.7 (2) die Heilsversprechen und Sinnangebote verschiedener religiöser Sondergemeinschaften oder welta n schaulicher Gruppen zum Beispiel aus deren Medienauftritt herausarbeiten 3.2.7 (3) wesentliche Glaubensauss a gen der abrahamitischen Religionen darstellen (zum Beispiel Vorstellungen von Gott, von der Bestimmung des Menschen, von Freiheit und Schicksal) 3.2.7 (4) an einem Beispiel erläutern, wie die abrahamitischen Religionen persönliche Identität und sinnstiftende Glaubensgemeinschaft ermöglichen 3.2.7 (5) zeigen, wie die individuelle Selbstentfaltung durch fundamentali s tische und durch totalitäre Strukturen in religiösen Strömungen und in Wel t anschauungen gefährdet sein kann 3.2.4 (5) erläutern, wie sich der Glaube an Gott auf die Einstellung zur eigenen Person, zum Mitmenschen und zur Natur auswirken kann 3.2.4 (6) prüfen, welche Konsequenzen der Glaube an Gott für die Lebenspraxis haben kann 3.2.7 (6) Voraussetzungen für einen gelingenden Dialog zwischen den abr a hamitischen Religionen erläutern (zum Beispiel Sachkenntnis, Perspektive n wechsel, Empathie)"
+        ],
+        [
+          "De n Glaube n an den einen persönl i chen Gott wird im Vergleich zu den anderen Weltreligionen ins Gespräch bringen.",
+          "Gespräch zwischen den Religionen",
+          "Kriterien für das Gespräch zwischen den Rel i gionen benennen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.3 grundlegende religiöse Ausdrucksformen wahrnehmen und sie in verschiedenen Kontexten wiedererkennen und sie einordnen 2.4.2 Gemeinsamkeiten und Unterschiede religiöser Überzeugungen benennen und sie im Hinblick auf mögliche Dialo g partner kommunizieren 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden 2.3.4 Zweifel und Kritik an Religion prüfen 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten 2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen 2.4.5 Gemeinsamkeiten und Unterschiede von religiösen und weltanschaulichen Überzeugungen benennen und im Dialog argumentativ verwenden 2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2049 @@
+{
+  "schema_version": "1.0.0",
+  "type": "confessional_cooperative_curriculum",
+  "metadata": {
+    "title": "KoKo Beispielcurriculum GS 3/4 B",
+    "country": "DE",
+    "state": "BW",
+    "school_type": "GS",
+    "grades": [
+      3,
+      4
+    ],
+    "variant": "B",
+    "cooperation_model": "confessional_cooperative",
+    "denominations": [
+      "evangelical",
+      "catholic"
+    ],
+    "source": {
+      "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6238_mww0jt10.docx",
+      "format": "docx"
+    },
+    "conversion": {
+      "complete": true,
+      "method": "OOXML table extraction",
+      "unit_count": 14
+    }
+  },
+  "education_plan_bindings": [
+    {
+      "role": "denominational_basis",
+      "denomination": "evangelical",
+      "subject": "Evangelische Religionslehre",
+      "plan_code": null
+    },
+    {
+      "role": "denominational_basis",
+      "denomination": "catholic",
+      "subject": "Katholische Religionslehre",
+      "plan_code": null
+    }
+  ],
+  "units": [
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "Unsere Kirchengemeinden vor Ort",
+      "hours": 8,
+      "preparation_questions": [
+        "Was ist für mich in der Kirchengemeinde wichtig? Welche Erfahrungen habe ich mit Ökumene? Was habe ich von der anderen Konfession gelernt? Sollten Schulgottesdienste in Kirchenräumen stattfinden? Welche Verbindungen gibt es zwischen Kirchengemeinden und Schule?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Glaube wird sichtbar"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.6(3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6(6) gelebte Ökumene beispie l haft darstellen (zum Beispiel ökum e nische Gottesdienste, Unterstü t zungsprojekte weltweit) 3.2.6(1) die Bedeutung von Symb o len (zum Beispiel Kreuz, Wasser, Brot, Weinstock, Taube, Fisch) und Handlungen (Taufe, Abendmahl, Segen) beschreiben 3.2.6(2) Kirchengemeinde(n) vor Ort erkunden und an Beispielen die Vie l falt von Gemeindeleben darstellen 3.2.6(5) Rituale, Andachten und (Schul-) Gottesdienste im Kirchenjahr beziehungsweise Feste und Feiern im Jahreskreis mitplanen und mitgesta l ten",
+              "references": [
+                {
+                  "id": "3.2.6.3",
+                  "display": "3.2.6(3)"
+                },
+                {
+                  "id": "3.2.6.6",
+                  "display": "3.2.6(6)"
+                },
+                {
+                  "id": "3.2.6.1",
+                  "display": "3.2.6(1)"
+                },
+                {
+                  "id": "3.2.6.2",
+                  "display": "3.2.6(2)"
+                },
+                {
+                  "id": "3.2.6.5",
+                  "display": "3.2.6(5)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Kirchenräume als Orte gelebter G e meinschaft"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.6 ( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 2 ) ein Beispiel für gelebte Ökumene beschreiben 3. 2.6( 3 ) am Beispiel des Sakraments der Eucharistie sowie des Sakr a ments der Buße und Versöhnung darstellen, dass Sakramente Zeichen der Zuwendung Gottes sind 3.2.6( 5 ) Angebote der Kircheng e meinden vor Ort und eigene Mitwi r kungsmöglichkeiten beschreiben (zum Beispiel Gottesdienst, Kinde r bibeltage, Kinderchor, Ministranti n nen und Ministranten, Sternsinger) 3.2.6( 6 ) religiös-spirituelle Angebote in der Schule reflektiert gestalten",
+              "references": [
+                {
+                  "id": "3.2.6.1",
+                  "display": "3.2.6 ( 1 )"
+                },
+                {
+                  "id": "3.2.6.2",
+                  "display": "3.2.6( 2 )"
+                },
+                {
+                  "id": "2.6.3",
+                  "display": "2.6( 3 )"
+                },
+                {
+                  "id": "3.2.6.5",
+                  "display": "3.2.6( 5 )"
+                },
+                {
+                  "id": "3.2.6.6",
+                  "display": "3.2.6( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Kirchenräume als Sakralräume im Veränderungsprozess"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.5.5",
+          "display": "2.5.5"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1 Unsere Kirchengemeinden vor Ort (8 h)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Was ist für mich in der Kirchengemeinde wichtig? Welche Erfahrungen habe ich mit Ökumene? Was habe ich von der anderen Konfession gelernt? Sollten Schulgottesdienste in Kirchenräumen stattfinden? Welche Verbindungen gibt es zwischen Kirchengemeinden und Schule?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.6 ( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 2 ) ein Beispiel für gelebte Ökumene beschreiben 3. 2.6( 3 ) am Beispiel des Sakraments der Eucharistie sowie des Sakr a ments der Buße und Versöhnung darstellen, dass Sakramente Zeichen der Zuwendung Gottes sind 3.2.6( 5 ) Angebote der Kircheng e meinden vor Ort und eigene Mitwi r kungsmöglichkeiten beschreiben (zum Beispiel Gottesdienst, Kinde r bibeltage, Kinderchor, Ministranti n nen und Ministranten, Sternsinger) 3.2.6( 6 ) religiös-spirituelle Angebote in der Schule reflektiert gestalten",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.6(3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6(6) gelebte Ökumene beispie l haft darstellen (zum Beispiel ökum e nische Gottesdienste, Unterstü t zungsprojekte weltweit) 3.2.6(1) die Bedeutung von Symb o len (zum Beispiel Kreuz, Wasser, Brot, Weinstock, Taube, Fisch) und Handlungen (Taufe, Abendmahl, Segen) beschreiben 3.2.6(2) Kirchengemeinde(n) vor Ort erkunden und an Beispielen die Vie l falt von Gemeindeleben darstellen 3.2.6(5) Rituale, Andachten und (Schul-) Gottesdienste im Kirchenjahr beziehungsweise Feste und Feiern im Jahreskreis mitplanen und mitgesta l ten"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Kirchenräume als Orte gelebter G e meinschaft",
+          "Glaube wird sichtbar",
+          "Kirchenräume als Sakralräume im Veränderungsprozess"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 Grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.4 .4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen 2.5.5 fachliche Kenntnisse medial und adressatenbezogen aufbereitet präsentieren 2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interko n fessioneller und interreligiöser Begegnungen 2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-02",
+      "number": 2,
+      "title": "Jesus wendet sich heilend den Menschen zu",
+      "hours": 6,
+      "preparation_questions": [
+        "Was verbinde ich mit Heil-Sein? Inwiefern kann die Begegnung mit Jesus das Leben verändern? Muss ich so wie Jesus werden? Was bedeuten Heilungserzählungen für Menschen mit Beeinträchtigungen?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Begegnungs- und Heilungsgeschic h ten"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3(1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.5(3) die verändernde Wirkung der Begegnung mit Jesus aufzeigen (zum Beispiel die Berufung des Levi, Mk 2,13-17; die Berufung des Petrus, Lk 5,1-11; der ungläubige Thomas, Joh 20,24-29; Bartimäus , Mk 10,46-52) 3.2.5(6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orienti e rung für das Zusammenleben entw i ckeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom Barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeutsame Persönlic h keiten)",
+              "references": [
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3(1)"
+                },
+                {
+                  "id": "3.2.5.3",
+                  "display": "3.2.5(3)"
+                },
+                {
+                  "id": "3.2.5.6",
+                  "display": "3.2.5(6)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die in der Bibel erzählten Begegnu n gen von Jesus mit Menschen verä n dern Lebenswege."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.5( 3 ) ausgehend von Begegnungs- und Heilungsgeschichten darstellen, wie Jesus Menschen Lebensmut schenkt ( Mk 2,1–12; Mk 10,46–52; Mk 2,13–17) 3.2.5( 5 ) zeigen, warum Menschen sich an Jesus orientieren und ihm nachfolgen (zum Beispiel den Ki n dern bekannte Heiligenlegenden, „ local heroes “)",
+              "references": [
+                {
+                  "id": "3.2.3.2",
+                  "display": "3.2.3( 2 )"
+                },
+                {
+                  "id": "3.2.5.3",
+                  "display": "3.2.5( 3 )"
+                },
+                {
+                  "id": "3.2.5.5",
+                  "display": "3.2.5( 5 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die Begegnung mit Jesus kann Me n schen Lebensmut und Orientierung geben und sie zur Nachfolge bew e gen ."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 2 Jesus wendet sich heilend den Menschen zu (6 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Was verbinde ich mit Heil-Sein? Inwiefern kann die Begegnung mit Jesus das Leben verändern? Muss ich so wie Jesus werden? Was bedeuten Heilungserzählungen für Menschen mit Beeinträchtigungen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.5( 3 ) ausgehend von Begegnungs- und Heilungsgeschichten darstellen, wie Jesus Menschen Lebensmut schenkt ( Mk 2,1–12; Mk 10,46–52; Mk 2,13–17) 3.2.5( 5 ) zeigen, warum Menschen sich an Jesus orientieren und ihm nachfolgen (zum Beispiel den Ki n dern bekannte Heiligenlegenden, „ local heroes “)",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3(1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.5(3) die verändernde Wirkung der Begegnung mit Jesus aufzeigen (zum Beispiel die Berufung des Levi, Mk 2,13-17; die Berufung des Petrus, Lk 5,1-11; der ungläubige Thomas, Joh 20,24-29; Bartimäus , Mk 10,46-52) 3.2.5(6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orienti e rung für das Zusammenleben entw i ckeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom Barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeutsame Persönlic h keiten)"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die in der Bibel erzählten Begegnu n gen von Jesus mit Menschen verä n dern Lebenswege.",
+          "Begegnungs- und Heilungsgeschic h ten",
+          "Die Begegnung mit Jesus kann Me n schen Lebensmut und Orientierung geben und sie zur Nachfolge bew e gen ."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.2.1 Grundformen religiöser Sprache ganzheitlich erschlie ßen (zum Beispiel Metapher, Symbol, Wunde rerzäh lung , Gleichnis, Legende , Gebet, Stille, Ritual, Musik, Bild) 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese e r schließen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltenswei sen beschreiben und erläutern 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltenswei sen anderer hineinversetzen und dadurch die eigene Pe r spektive erweitern 2.5.3 über menschliche Grundfragen angemessen spre chen 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehun g setzen zu eigenen Erfahrungen 2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begründen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-03",
+      "number": 3,
+      "title": "Warum wir Feste feiern: Weihnachtsfestkreis",
+      "hours": 6,
+      "preparation_questions": [
+        "Was macht Weihnachten für mich zu einem besonderen Fest? Was bedeutet es für mich, dass die Hirten die ersten Empfänger der Weihnachtsbotschaft sind? Wie deute ich die Erzählung von den Weisen nach Mt 2? Welchen Zusammenhang gibt es zwischen Weihnachtsbrauchtum und Weihnachtsgeschichte?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Advent und Weihnachten – biblische Bezüge, lebendiges Brauchtum und gemeinsame Feiern"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3(5) eine für sie bedeutsame Aussage eine s biblischen Textes gestaltend zum Ausdruck bringen und sich darüber au s tauschen 3.2.4(4) überlieferte und persönliche Ausdrucksformen des Glaubens mitg e stalten und sich darüber austauschen (zum Beispiel Vaterunser, andere Geb e te, Psalmverse , Lied, Tanz, Stille) 3.2.6(4) Die Bedeutung der Feste und Festzeiten (Advent und Weihnachten, Passion und Ostern, Himmelfahrt und Pfingsten, Reformationstag) erläutern und sie in das Kirchenjahr einordnen",
+              "references": [
+                {
+                  "id": "3.2.3.5",
+                  "display": "3.2.3(5)"
+                },
+                {
+                  "id": "3.2.4.4",
+                  "display": "3.2.4(4)"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6(4)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die Bedeutung biblischer Texte für das eigene Leben und das Kirche n jahr"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3 ( 5 ) aus biblischen Geschichten Anregungen für die eigene Lebensgesta l tung herausarbeiten 3.2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdiensten sowie in verantwortlichem Handeln gestalten 3.2.6( 4 ) Feste und Zeiten des Kirchenja h res (Advent und Weihnachten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf biblische Erzählungen, Legenden, Bilder oder Symbole beziehen",
+              "references": [
+                {
+                  "id": "3.2.3.5",
+                  "display": "3.2.3 ( 5 )"
+                },
+                {
+                  "id": "3.2.4.6",
+                  "display": "3.2.4( 6 )"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Entwicklung christliche n Braucht u m s auf dem Hintergrund der biblischen Weihnachtsgeschichten"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 3 Warum wir Feste feiern: Weihnachtsfestkreis (6h)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Was macht Weihnachten für mich zu einem besonderen Fest? Was bedeutet es für mich, dass die Hirten die ersten Empfänger der Weihnachtsbotschaft sind? Wie deute ich die Erzählung von den Weisen nach Mt 2? Welchen Zusammenhang gibt es zwischen Weihnachtsbrauchtum und Weihnachtsgeschichte?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3 ( 5 ) aus biblischen Geschichten Anregungen für die eigene Lebensgesta l tung herausarbeiten 3.2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdiensten sowie in verantwortlichem Handeln gestalten 3.2.6( 4 ) Feste und Zeiten des Kirchenja h res (Advent und Weihnachten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf biblische Erzählungen, Legenden, Bilder oder Symbole beziehen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3(5) eine für sie bedeutsame Aussage eine s biblischen Textes gestaltend zum Ausdruck bringen und sich darüber au s tauschen 3.2.4(4) überlieferte und persönliche Ausdrucksformen des Glaubens mitg e stalten und sich darüber austauschen (zum Beispiel Vaterunser, andere Geb e te, Psalmverse , Lied, Tanz, Stille) 3.2.6(4) Die Bedeutung der Feste und Festzeiten (Advent und Weihnachten, Passion und Ostern, Himmelfahrt und Pfingsten, Reformationstag) erläutern und sie in das Kirchenjahr einordnen"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die Bedeutung biblischer Texte für das eigene Leben und das Kirche n jahr",
+          "Advent und Weihnachten – biblische Bezüge, lebendiges Brauchtum und gemeinsame Feiern",
+          "Entwicklung christliche n Braucht u m s auf dem Hintergrund der biblischen Weihnachtsgeschichten"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese e r schließen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltenswei sen beschreiben und erläutern 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltenswei sen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.3 über menschliche Grundfragen angemessen spre chen 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren; 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen 2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impulse für ve r antwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-04",
+      "number": 4,
+      "title": "Gott ist immer da: Schuld – Vergebung – Dank",
+      "hours": 10,
+      "preparation_questions": [
+        "Wie zentral ist das Thema Schuld für mein Menschen- und Gottesbild? Warum ist der Mensch auf Erlösung angewiesen? Warum i st das Eingeständnis von Schuld so schwer? Wie erfahre ich Vergebung? „Wie auch wir vergeben unseren Schuldigern “ – wie geht es mir damit? Wie gehen die Kirchen mit Schuld um? Inwiefern leben die Kirchen die Nachfolge der unbedingten Annahme aller Menschen durch Gott?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Unbedingte Annahme durch Gott"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.1(4) Bedingungen für ein geli n gendes Miteinander erläutern 3.2.1(2) biblische (zum Beispiel Jakob und Esau, 1. Mose 25-35 in Ausz ü gen; Maria und Martha, Lk 10,38-41; Sturmstillung, Mk 4,35-41; Röm 12,15; Röm 8,38-39) und andere Texte zu m enschlichen Erfahrungen und Fra gen in Beziehung setzen 3.2.5(2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel G e thsemane, Mk 14,32-42) 3.2.5(4) beschreiben, wie vom Wirken Jesu und seinem Verhältnis zu Gott erzählt wird (Taufe Jesu, Mk 1,9-11 sowie zum Beispiel Passion, Ostern, Himmelfahrt, Lk 19-24 in Auszügen; Pfingsten, Apg 2,1-12) 3.2.4(4) überlieferte und persönliche Ausdrucksformen des Glaubens mi t gestalten und sich darüber austa u schen (zum Beispiel Vaterunser, andere Gebete, Psalmverse , Lied, Tanz, Stille)",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1(1)"
+                },
+                {
+                  "id": "3.2.1.4",
+                  "display": "3.2.1(4)"
+                },
+                {
+                  "id": "3.2.1.2",
+                  "display": "3.2.1(2)"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5(2)"
+                },
+                {
+                  "id": "3.2.5.4",
+                  "display": "3.2.5(4)"
+                },
+                {
+                  "id": "3.2.4.4",
+                  "display": "3.2.4(4)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die in Jesu Botschaft dargestellten Beispiele für die Liebe Gottes zeigen auf, wie Vergebung möglich wird."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(3) ausgehend von biblischen Geschichten zeigen, dass Gott Me n schen, die schuldig geworden sind, Versöhnung anbietet (Verlorener Sohn und zum Beispiel Noah, die Brüder Josefs, Jakob und Esau) 3.2.1 ( 4 ) an Beispielen aufzeigen, was es bedeutet, wenn Menschen zu gegenseitiger Vergebung aufgerufen sind (zum Beispiel Vergebungsbitte im Vaterunser) 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Vergebung, Neid) 3.2.5 ( 2 ) anhand biblischer Überlieferungen aufzeigen, dass Jesus Gott als seinen Vater anspricht ( Mt 6,7–13) und Gott Jesus seinen Sohn nennt ( Mt 3,13–16) 3 .2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdien s ten sowie in verantwortlichem Ha n deln gestalten 3.2.6 ( 3 ) am Beispiel des Sakraments der Eucharistie sowie des Sakr a ments der Buße und Versöhnung darstellen, dass Sakramente Zeichen der Zuwendung Gottes sind",
+              "references": [
+                {
+                  "id": "3.2.1.3",
+                  "display": "3.2.1(3)"
+                },
+                {
+                  "id": "3.2.1.4",
+                  "display": "3.2.1 ( 4 )"
+                },
+                {
+                  "id": "3.2.3.4",
+                  "display": "3.2.3( 4 )"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5 ( 2 )"
+                },
+                {
+                  "id": "2.4.6",
+                  "display": "2.4( 6 )"
+                },
+                {
+                  "id": "3.2.6.3",
+                  "display": "3.2.6 ( 3 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Einsicht in eigenes Versagen und Dankbarkeit für Ver geb ung eröffne n einen Zugang zu den Sakrament en der Versöhnung und der Eucharistie ."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 4 Gott ist immer da: Schuld – Vergebung – Dank (10 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Wie zentral ist das Thema Schuld für mein Menschen- und Gottesbild? Warum ist der Mensch auf Erlösung angewiesen? Warum i st das Eingeständnis von Schuld so schwer? Wie erfahre ich Vergebung? „Wie auch wir vergeben unseren Schuldigern “ – wie geht es mir damit? Wie gehen die Kirchen mit Schuld um? Inwiefern leben die Kirchen die Nachfolge der unbedingten Annahme aller Menschen durch Gott?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.1(3) ausgehend von biblischen Geschichten zeigen, dass Gott Me n schen, die schuldig geworden sind, Versöhnung anbietet (Verlorener Sohn und zum Beispiel Noah, die Brüder Josefs, Jakob und Esau) 3.2.1 ( 4 ) an Beispielen aufzeigen, was es bedeutet, wenn Menschen zu gegenseitiger Vergebung aufgerufen sind (zum Beispiel Vergebungsbitte im Vaterunser) 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Vergebung, Neid) 3.2.5 ( 2 ) anhand biblischer Überlieferungen aufzeigen, dass Jesus Gott als seinen Vater anspricht ( Mt 6,7–13) und Gott Jesus seinen Sohn nennt ( Mt 3,13–16) 3 .2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdien s ten sowie in verantwortlichem Ha n deln gestalten 3.2.6 ( 3 ) am Beispiel des Sakraments der Eucharistie sowie des Sakr a ments der Buße und Versöhnung darstellen, dass Sakramente Zeichen der Zuwendung Gottes sind",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.1(4) Bedingungen für ein geli n gendes Miteinander erläutern 3.2.1(2) biblische (zum Beispiel Jakob und Esau, 1. Mose 25-35 in Ausz ü gen; Maria und Martha, Lk 10,38-41; Sturmstillung, Mk 4,35-41; Röm 12,15; Röm 8,38-39) und andere Texte zu m enschlichen Erfahrungen und Fra gen in Beziehung setzen 3.2.5(2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel G e thsemane, Mk 14,32-42) 3.2.5(4) beschreiben, wie vom Wirken Jesu und seinem Verhältnis zu Gott erzählt wird (Taufe Jesu, Mk 1,9-11 sowie zum Beispiel Passion, Ostern, Himmelfahrt, Lk 19-24 in Auszügen; Pfingsten, Apg 2,1-12) 3.2.4(4) überlieferte und persönliche Ausdrucksformen des Glaubens mi t gestalten und sich darüber austa u schen (zum Beispiel Vaterunser, andere Gebete, Psalmverse , Lied, Tanz, Stille)"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die in Jesu Botschaft dargestellten Beispiele für die Liebe Gottes zeigen auf, wie Vergebung möglich wird.",
+          "Unbedingte Annahme durch Gott",
+          "Einsicht in eigenes Versagen und Dankbarkeit für Ver geb ung eröffne n einen Zugang zu den Sakrament en der Versöhnung und der Eucharistie ."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.2.1 Grundformen religiöser Sprache ganzheitlich erschlie ßen (zum Beispiel Metapher, Symbol, Wunde rerzäh lung , Gleichnis, Legende , Gebet, Stille, Ritual, Musik, Bild) 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese e r schließen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltenswei sen beschreiben und erläutern 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltenswei sen anderer hineinversetzen und dadurch die eigene Pe r spektive erweitern 2.5.3 über menschliche Grundfragen angemessen spre chen 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehun g setzen zu eigenen Erfahrungen 2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-05",
+      "number": 5,
+      "title": "Warum wir Feste feiern: Passion und Auferstehung",
+      "hours": 4,
+      "preparation_questions": [
+        "Wie gehe ich mit der Theodizeefrage um? Warum musste Jesus sterben? Welche Rolle spielt mein Glaube in Leiderfahrungen? Inwiefern ist Ostern das Fest der Hoffnung? Wie kann ich Leidenden angemessen von Gott erzählen?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Botschaft von Tod und Auferst e hung Jesu"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.5(1) Zeit und Umwelt Jesu beschreiben (zum Beispiel Sabbat, Synagoge, Pessach , Tempel, Lebensverhältnisse) 3.2.5(4) beschreiben, wie vom Wi r ken Jesu und seinem Verhältnis zu Gott erzählt wird (Taufe Jesu, Mk 1,9-11 sowie zum Beispiel Passion, Ostern, Himmelfahrt, Lk 19-24",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1(1)"
+                },
+                {
+                  "id": "3.2.5.1",
+                  "display": "3.2.5(1)"
+                },
+                {
+                  "id": "3.2.5.4",
+                  "display": "3.2.5(4)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "An der Taufe und der Auferweckung wird die besondere Beziehung Jesu zu Gott deutlich ."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3 .2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.5( 1 ) an Beispielen belegen, dass Jesus Jude war (zum Beispiel Sabbat, Pessach , Synagoge) 3.2.5( 6 ) an einem Beispiel beschre i ben, wie die Botschaft von Tod und Auferweckung Jesu ( Mk 14–16 in Auszügen; Lk 24,13–35) Menschen bis heute Hoffnung und Ermutigung schenken kann",
+              "references": [
+                {
+                  "id": "2.1.2",
+                  "display": "2.1 ( 2 )"
+                },
+                {
+                  "id": "3.2.5.1",
+                  "display": "3.2.5( 1 )"
+                },
+                {
+                  "id": "3.2.5.6",
+                  "display": "3.2.5( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Auferstehung Jesu als Grund christl i cher Hoffnung über Leid und Tod hinaus"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 5 Warum wir Feste feiern: Passion und Auferstehung (4 h)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Wie gehe ich mit der Theodizeefrage um? Warum musste Jesus sterben? Welche Rolle spielt mein Glaube in Leiderfahrungen? Inwiefern ist Ostern das Fest der Hoffnung? Wie kann ich Leidenden angemessen von Gott erzählen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3 .2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.5( 1 ) an Beispielen belegen, dass Jesus Jude war (zum Beispiel Sabbat, Pessach , Synagoge) 3.2.5( 6 ) an einem Beispiel beschre i ben, wie die Botschaft von Tod und Auferweckung Jesu ( Mk 14–16 in Auszügen; Lk 24,13–35) Menschen bis heute Hoffnung und Ermutigung schenken kann",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.5(1) Zeit und Umwelt Jesu beschreiben (zum Beispiel Sabbat, Synagoge, Pessach , Tempel, Lebensverhältnisse) 3.2.5(4) beschreiben, wie vom Wi r ken Jesu und seinem Verhältnis zu Gott erzählt wird (Taufe Jesu, Mk 1,9-11 sowie zum Beispiel Passion, Ostern, Himmelfahrt, Lk 19-24"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "An der Taufe und der Auferweckung wird die besondere Beziehung Jesu zu Gott deutlich .",
+          "Botschaft von Tod und Auferst e hung Jesu",
+          "Auferstehung Jesu als Grund christl i cher Hoffnung über Leid und Tod hinaus"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese e r schließen 2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Hand lungsmöglichkeiten prüfen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltenswei sen beschreiben und erläutern 2.5.3 über menschliche Grundfragen angemessen sprechen 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen De u tungen auseinandersetzen 2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-06",
+      "number": 6,
+      "title": "Die Bibel – ein Buch mit vielen Büchern",
+      "hours": 10,
+      "preparation_questions": [
+        "Welche Bedeutung haben die unterschiedlichen Textgattungen für die Auslegung der Bibel? Welchen Zugang habe ich zu biblischen Texten? Inwiefern kann die Bibel Antworten geben auf meine Lebensfragen? Wie gehe ich mit sperrigen Bibeltexten um? Welche konfessionellen Prägungen im Umgang mit der Bibel spielen für mich eine Rolle?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Bibel als Textsammlung menschl i cher Erfahrungen mit Gott"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3(1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.3(2) die Entstehung der Bibel in Grundzügen beschreiben (erzählen, aufschreiben, sammeln, weiterg e ben) 3.2.3(3) Erfahrungen und Fragen von Menschen der Bibel mit den eigenen und denen anderer in Beziehung setzen 3.2.3(5) eine für sie bedeutsame Aussage eines biblischen Textes gestaltend zum Ausdruck bringen und sich darüber austauschen",
+              "references": [
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3(1)"
+                },
+                {
+                  "id": "3.2.3.2",
+                  "display": "3.2.3(2)"
+                },
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3(3)"
+                },
+                {
+                  "id": "3.2.3.5",
+                  "display": "3.2.3(5)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die biblische Überlieferung als Spi e gel menschlicher Erfahrungen und Fragen und als Antwortmöglichkeit für heutige Fragen entdecken."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3 ( 1 ) aufzeigen, dass die Bibel eine Sammlung von Büchern ist 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Vergebung, Neid) 3.2.3( 6 ) eine für sie wichtige Aussage eines biblischen Textes kreativ g e stalten",
+              "references": [
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3 ( 1 )"
+                },
+                {
+                  "id": "3.2.3.2",
+                  "display": "3.2.3( 2 )"
+                },
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3( 3 )"
+                },
+                {
+                  "id": "3.2.3.4",
+                  "display": "3.2.3( 4 )"
+                },
+                {
+                  "id": "3.2.3.6",
+                  "display": "3.2.3( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die Bibel ist eine geschichtlich g e wachsene Sammlung, in der Me n schen ihre Erfahrungen mit Gott zum Ausdruck brachten und die bis heute Menschen Orientierungshilfe bietet."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 6 Die Bibel – ein Buch mit vielen Büchern (10 Stunden)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Welche Bedeutung haben die unterschiedlichen Textgattungen für die Auslegung der Bibel? Welchen Zugang habe ich zu biblischen Texten? Inwiefern kann die Bibel Antworten geben auf meine Lebensfragen? Wie gehe ich mit sperrigen Bibeltexten um? Welche konfessionellen Prägungen im Umgang mit der Bibel spielen für mich eine Rolle?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3 ( 1 ) aufzeigen, dass die Bibel eine Sammlung von Büchern ist 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Vergebung, Neid) 3.2.3( 6 ) eine für sie wichtige Aussage eines biblischen Textes kreativ g e stalten",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3(1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.3(2) die Entstehung der Bibel in Grundzügen beschreiben (erzählen, aufschreiben, sammeln, weiterg e ben) 3.2.3(3) Erfahrungen und Fragen von Menschen der Bibel mit den eigenen und denen anderer in Beziehung setzen 3.2.3(5) eine für sie bedeutsame Aussage eines biblischen Textes gestaltend zum Ausdruck bringen und sich darüber austauschen"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die biblische Überlieferung als Spi e gel menschlicher Erfahrungen und Fragen und als Antwortmöglichkeit für heutige Fragen entdecken.",
+          "Bibel als Textsammlung menschl i cher Erfahrungen mit Gott",
+          "Die Bibel ist eine geschichtlich g e wachsene Sammlung, in der Me n schen ihre Erfahrungen mit Gott zum Ausdruck brachten und die bis heute Menschen Orientierungshilfe bietet."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese erschließen 2 .2. 3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutun gen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehun g setzen zu eigenen Erfahrungen 2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlief e rung auseinandersetzen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-07",
+      "number": 7,
+      "title": "Gottesvorstellungen",
+      "hours": 10,
+      "preparation_questions": [
+        "Wie antworte ich, wenn Kinder fragen: W er ist Gott für dich? Welche Fragen möchte ich Gott gerne stellen? Woher weiß ich, wie Gott ist? Was stellt mein Gottesbild in Frage? Inwiefern ist Gottes Wirken auch heute noch erkennbar?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Von Gott sprechen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3(3) Erfahrungen und Fragen von Menschen der Bibel mit den eigenen und denen anderer in Beziehung setzen 3.2.4(1) biblische Metaphern von Gott (zum Beispiel Gott ist wie eine Mutter, ein Vater, eine Burg, ein Fels, Licht, Feuer, Liebe) mit eigenen Vo r stellungen vergleichen 3.2.4(2) die Vielfalt des Wirkens Gottes aufzeigen (Mose, 2. Mose 1-20 in Auszügen sowie zum Beispiel Jona, Jona 1-4; die Heilung der g e krümmten Frau, Lk 13,10-17; Pfing s ten, Apg 2,1-12) 3.2.4(3) vor dem Hintergrund he r ausfordernder Lebenssituationen (zum Beispiel Abschied, Streit, Ei n samkeit, Gewalt, Tod) Fragen nach und an Gott stellen und über mögl i che Antworten nachdenken",
+              "references": [
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3(3)"
+                },
+                {
+                  "id": "3.2.4.1",
+                  "display": "3.2.4(1)"
+                },
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4(2)"
+                },
+                {
+                  "id": "3.2.4.3",
+                  "display": "3.2.4(3)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die Vielfalt des Wirkens Gottes in der Bibel aufzeigen ."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler kö n nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.4( 1 ) eigene Gottesvorstellungen zu anderen Gottesvorstellungen in Beziehung setzen 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.4( 4 ) an einer biblischen Erzä h lung zeigen, wie Menschen Gott als stärkend oder auch fern erfahren können (zum Beispiel: Josef, David) 3.2.4 ( 5 ) vor dem Hintergrund he r ausfordernder Lebenssituationen Fragen nach und an Gott stellen",
+              "references": [
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3( 3 )"
+                },
+                {
+                  "id": "3.2.4.1",
+                  "display": "3.2.4( 1 )"
+                },
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4( 2 )"
+                },
+                {
+                  "id": "3.2.4.4",
+                  "display": "3.2.4( 4 )"
+                },
+                {
+                  "id": "3.2.4.5",
+                  "display": "3.2.4 ( 5 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Gott ist mehr oder anders als das, was Menschen in Sprache und Bi l dern ausdrücken können."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 7 Gottesvorstellungen (10 Stunden)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Wie antworte ich, wenn Kinder fragen: W er ist Gott für dich? Welche Fragen möchte ich Gott gerne stellen? Woher weiß ich, wie Gott ist? Was stellt mein Gottesbild in Frage? Inwiefern ist Gottes Wirken auch heute noch erkennbar?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.4( 1 ) eigene Gottesvorstellungen zu anderen Gottesvorstellungen in Beziehung setzen 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.4( 4 ) an einer biblischen Erzä h lung zeigen, wie Menschen Gott als stärkend oder auch fern erfahren können (zum Beispiel: Josef, David) 3.2.4 ( 5 ) vor dem Hintergrund he r ausfordernder Lebenssituationen Fragen nach und an Gott stellen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3(3) Erfahrungen und Fragen von Menschen der Bibel mit den eigenen und denen anderer in Beziehung setzen 3.2.4(1) biblische Metaphern von Gott (zum Beispiel Gott ist wie eine Mutter, ein Vater, eine Burg, ein Fels, Licht, Feuer, Liebe) mit eigenen Vo r stellungen vergleichen 3.2.4(2) die Vielfalt des Wirkens Gottes aufzeigen (Mose, 2. Mose 1-20 in Auszügen sowie zum Beispiel Jona, Jona 1-4; die Heilung der g e krümmten Frau, Lk 13,10-17; Pfing s ten, Apg 2,1-12) 3.2.4(3) vor dem Hintergrund he r ausfordernder Lebenssituationen (zum Beispiel Abschied, Streit, Ei n samkeit, Gewalt, Tod) Fragen nach und an Gott stellen und über mögl i che Antworten nachdenken"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die Vielfalt des Wirkens Gottes in der Bibel aufzeigen .",
+          "Von Gott sprechen",
+          "Gott ist mehr oder anders als das, was Menschen in Sprache und Bi l dern ausdrücken können."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.1 Grundformen religiöser Sprache ganzheitlich erschlie ßen (zum Beispiel Metapher, Symbol, Wundererzäh lung , Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild) 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überliefe rung in eigenen Worten wiedergeben und sich diese e r schließen 2.3.2 unterschiedliche Antworten und Handlungsmöglich keiten mit der biblisch-christlichen Überlieferung in Bezi e hung setzen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltenswei sen beschreiben und erläutern 2.5.3 über menschliche Grundfragen angemessen spre chen 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wir k lichkeit verweisen, erkennen und deuten 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen 2.3.2 aus menschlichen Erfahrungen wie Freundschaft, Enttäuschung, Streit oder der Erfahrung mit Trauer und Tod unterschiedliche Antwort- und Handlungsmöglichkeiten finden, diese miteinander vergleichen und auf Basis der biblisch-christlichen Überlieferung reflektieren"
+        ]
+      ]
+    },
+    {
+      "id": "ue-08",
+      "number": 8,
+      "title": "Miteinander leben lernen",
+      "hours": 12,
+      "preparation_questions": [
+        "Veran t wortung übernehmen – was heißt das für mich? Wie kann ich Nächstenliebe aus- und durchhalten? Wie kann Miteinander gut gelingen? Wie hängt mein Verhalten mit der gesamten Welt zusammen? Inwiefern i st es möglich Z usammenle ben zu lernen? Wie gehe ich mit herausfordernden Kindern um? Wie wichtig ist mir das Thema Diskriminierung?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Gemeinschaft verantwortungsb e wusst gestalten"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.1(3) eine veränderte Lebensde u tung durch die Erfahrung von Gottes Zuwendung darstellen und beschre i ben (Martin Luther sowie zum Be i spiel Gleichnis vom gütigen Vater, Lk 15,11-24; Menschen heute) 3.2.5 (2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel Gethsemane, Mk 14,32-42) 3.2.2(6) Beispiele aufzeigen, wie sich Menschen für Nachhaltigkeit, G e rechtigkeit und Frieden einsetzen können 3.2.2(4) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.5(5) an biblischen Zeugnissen aufzeigen, dass der Mensch als Ebenbild Gottes eine besondere Stellung in der Schöpfung hat und Verantwortung für sie übernimmt (1. Mose 1,27; 1. Mose 2,15)",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1(1)"
+                },
+                {
+                  "id": "3.2.1.3",
+                  "display": "3.2.1(3)"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5 (2)"
+                },
+                {
+                  "id": "3.2.2.6",
+                  "display": "3.2.2(6)"
+                },
+                {
+                  "id": "3.2.2.4",
+                  "display": "3.2.2(4)"
+                },
+                {
+                  "id": "3.2.5.5",
+                  "display": "3.2.5(5)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Biblische Texte leiten zu einem ve r antwortungsvollen Umgang mit dem Nächsten und der Mitwelt an."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1( 1 ) ausgehend von ihren Fähi g keiten und Grenzen Fragen an das Leben formulieren 3.2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.1( 3 ) ausgehend von biblischen Geschichten zeigen, dass Gott Me n schen, die schuldig geworden sind, Versöhnung anbietet (Verlorener Sohn und zum Beispiel Noah, die Brüder Josefs, Jakob und Esau) 3.2.1(5) ausgehend von der Gold e nen Regel und dem Gebot der Nächstenliebe zeigen, wie das Mite i nander gelingen kann ( Mt 7,12; Mt 22,34–40) 3.2.1 ( 4 ) an Beispielen aufzeigen, was es bedeutet, wenn Menschen zu gegenseitiger Vergebung aufgerufen sind (zum Beispiel Vergebungsbitte im Vaterunser) 3.2.1( 6 ) an Beispielen aufzeigen, wie sich Menschen lokal oder global für eine nachhaltige Entwicklung und eine friedliche und gerechte Welt einsetzen 3.2.2 ( 5 ) sich damit auseinanderse t zen, wie Kinder verantwortungsvoll mit anderen und der Umwelt umg e hen 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Ver gebung, Neid)",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1( 1 )"
+                },
+                {
+                  "id": "3.2.1.2",
+                  "display": "3.2.1 ( 2 )"
+                },
+                {
+                  "id": "3.2.1.3",
+                  "display": "3.2.1( 3 )"
+                },
+                {
+                  "id": "3.2.1.5",
+                  "display": "3.2.1(5)"
+                },
+                {
+                  "id": "3.2.1.4",
+                  "display": "3.2.1 ( 4 )"
+                },
+                {
+                  "id": "3.2.1.6",
+                  "display": "3.2.1( 6 )"
+                },
+                {
+                  "id": "3.2.2.5",
+                  "display": "3.2.2 ( 5 )"
+                },
+                {
+                  "id": "3.2.3.4",
+                  "display": "3.2.3( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Menschliches Miteinander ist ein Geschenk , mit dem Menschen ve r antwortungsvoll umgehen sollen ."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 8 Miteinander leben lernen (12 h)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Veran t wortung übernehmen – was heißt das für mich? Wie kann ich Nächstenliebe aus- und durchhalten? Wie kann Miteinander gut gelingen? Wie hängt mein Verhalten mit der gesamten Welt zusammen? Inwiefern i st es möglich Z usammenle ben zu lernen? Wie gehe ich mit herausfordernden Kindern um? Wie wichtig ist mir das Thema Diskriminierung?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.1( 1 ) ausgehend von ihren Fähi g keiten und Grenzen Fragen an das Leben formulieren 3.2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.1( 3 ) ausgehend von biblischen Geschichten zeigen, dass Gott Me n schen, die schuldig geworden sind, Versöhnung anbietet (Verlorener Sohn und zum Beispiel Noah, die Brüder Josefs, Jakob und Esau) 3.2.1(5) ausgehend von der Gold e nen Regel und dem Gebot der Nächstenliebe zeigen, wie das Mite i nander gelingen kann ( Mt 7,12; Mt 22,34–40) 3.2.1 ( 4 ) an Beispielen aufzeigen, was es bedeutet, wenn Menschen zu gegenseitiger Vergebung aufgerufen sind (zum Beispiel Vergebungsbitte im Vaterunser) 3.2.1( 6 ) an Beispielen aufzeigen, wie sich Menschen lokal oder global für eine nachhaltige Entwicklung und eine friedliche und gerechte Welt einsetzen 3.2.2 ( 5 ) sich damit auseinanderse t zen, wie Kinder verantwortungsvoll mit anderen und der Umwelt umg e hen 3.2.3( 4 ) eigene Erfahrungen zu menschlichen Grunderfahrungen, wie sie in der Bibel überliefert sind, in Beziehung setzen (zum Beispiel Befreiung, Ver gebung, Neid)",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.1(3) eine veränderte Lebensde u tung durch die Erfahrung von Gottes Zuwendung darstellen und beschre i ben (Martin Luther sowie zum Be i spiel Gleichnis vom gütigen Vater, Lk 15,11-24; Menschen heute) 3.2.5 (2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel Gethsemane, Mk 14,32-42) 3.2.2(6) Beispiele aufzeigen, wie sich Menschen für Nachhaltigkeit, G e rechtigkeit und Frieden einsetzen können 3.2.2(4) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.5(5) an biblischen Zeugnissen aufzeigen, dass der Mensch als Ebenbild Gottes eine besondere Stellung in der Schöpfung hat und Verantwortung für sie übernimmt (1. Mose 1,27; 1. Mose 2,15)"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Biblische Texte leiten zu einem ve r antwortungsvollen Umgang mit dem Nächsten und der Mitwelt an.",
+          "Gemeinschaft verantwortungsb e wusst gestalten",
+          "Menschliches Miteinander ist ein Geschenk , mit dem Menschen ve r antwortungsvoll umgehen sollen ."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmö g lichkeiten prüfen 2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Bezi e hung setzen 2.3.4 im Kontext des eigenen Lebensumfelds zu religiösen und ethischen Fragen einen Standpunkt einnehmen und argumentativ vertreten 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden 2.5.3 über menschliche Grundfragen angemessen sprechen 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen 2.3.2 aus menschlichen Erfahrungen wie Freundschaft, Enttäuschung, Streit oder der Erfahrung mit Trauer und Tod unterschiedliche Antwort- und Handlungsmöglichkeiten finden, diese miteinander vergleichen und auf Basis der biblisch-christlichen Überlieferung reflektieren 2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impulse für ve r antwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-09",
+      "number": 9,
+      "title": "Warum wir Feste feiern: Reformationstag , Allerheiligen und Allerseelen",
+      "hours": 4,
+      "preparation_questions": [
+        "Welche Erfahrungen habe ich mit den konfessionsspezifisch en F esten der jeweils anderen Konfession? Was kann ich von den Besonderheiten der anderen Konfession lernen? Was bedeutet „heilig“ aus evangelischer und aus katholischer Sicht? Und für mich? Welche religiöse Praxis im Blick auf die Verstorbenen scheint mir angemessen? Welche nicht?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Vorbilder in der Geschichte der Kirche(n)"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.5(6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orientierung für das Zusammenleben entwickeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeu t same Persönlichkeiten) 3.2.6(3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6(4) Die Bedeutung der Feste und Festzeiten (Advent und Wei h nachten, Passion und Ostern, Hi m melfahrt und Pfingsten, Reformat i onstag) erläutern und sie in das Ki r chenjahr einordnen",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1(1)"
+                },
+                {
+                  "id": "3.2.5.6",
+                  "display": "3.2.5(6)"
+                },
+                {
+                  "id": "3.2.6.3",
+                  "display": "3.2.6(3)"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6(4)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Reformationstag als Gedenktag an den Beginn der evangelischen Kirche"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3 .2.1( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdien s ten sowie in verantwortlichem Ha n deln gestalten 3.2.5( 5 ) zeigen, warum Menschen sich an Jesus orientieren und ihm nachfolgen (zum Beispiel den Ki n dern bekannte Heiligenlegenden, „ local heroes “) 3.2.6( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 4 ) Feste und Zeiten des Ki r chenjahres (Advent und Weihnac h ten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf bibl i sche Erzählungen, Legenden, Bilder oder Symbole beziehen",
+              "references": [
+                {
+                  "id": "2.1.2",
+                  "display": "2.1( 2 )"
+                },
+                {
+                  "id": "3.2.4.6",
+                  "display": "3.2.4( 6 )"
+                },
+                {
+                  "id": "3.2.5.5",
+                  "display": "3.2.5( 5 )"
+                },
+                {
+                  "id": "3.2.6.1",
+                  "display": "3.2.6( 1 )"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Allerheiligen und Allerseelen verwe i sen auf die Geborgenheit des menschlichen Lebens in d er Gege n wart Gottes."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.5.5",
+          "display": "2.5.5"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 9 Warum wir Feste feiern: Reformationstag , Allerheiligen und Allerseelen (4 h)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Welche Erfahrungen habe ich mit den konfessionsspezifisch en F esten der jeweils anderen Konfession? Was kann ich von den Besonderheiten der anderen Konfession lernen? Was bedeutet „heilig“ aus evangelischer und aus katholischer Sicht? Und für mich? Welche religiöse Praxis im Blick auf die Verstorbenen scheint mir angemessen? Welche nicht?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3 .2.1( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.4( 6 ) zeigen, wie Christinnen und Christen ihren Glauben in Gebeten, Liedern, Tanz, Stille und Gottesdien s ten sowie in verantwortlichem Ha n deln gestalten 3.2.5( 5 ) zeigen, warum Menschen sich an Jesus orientieren und ihm nachfolgen (zum Beispiel den Ki n dern bekannte Heiligenlegenden, „ local heroes “) 3.2.6( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 4 ) Feste und Zeiten des Ki r chenjahres (Advent und Weihnac h ten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf bibl i sche Erzählungen, Legenden, Bilder oder Symbole beziehen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.5(6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orientierung für das Zusammenleben entwickeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeu t same Persönlichkeiten) 3.2.6(3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6(4) Die Bedeutung der Feste und Festzeiten (Advent und Wei h nachten, Passion und Ostern, Hi m melfahrt und Pfingsten, Reformat i onstag) erläutern und sie in das Ki r chenjahr einordnen"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Reformationstag als Gedenktag an den Beginn der evangelischen Kirche",
+          "Vorbilder in der Geschichte der Kirche(n)",
+          "Allerheiligen und Allerseelen verwe i sen auf die Geborgenheit des menschlichen Lebens in d er Gege n wart Gottes."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild) 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese e r schließen 2.3.3 sich mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken 2.5.2 religiöse Ausdrucksformen reflektiert gestalten 2.5.5 fachliche Kenntnisse medial und adressatenbezogen aufbereitet präsentieren 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wir k lichkeit verweisen, erkennen und d euten 2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begründen 2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlieferung auseinande r setzen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-10",
+      "number": 10,
+      "title": "Gott spricht: „Ich bin da“ – zweifeln und vertrauen",
+      "hours": 8,
+      "preparation_questions": [
+        "Inwiefern gehören Zweifel und Glaube zusammen? Wie reagiere ich, wenn mir Gottes Handeln unbegreiflich bleibt? Was heißt Vertrauen für mich? Wie unterscheidet sich die Beziehung zu Gott von der Beziehung zu anderen Menschen? Wie lassen sich Erfahrungen der Abwesenheit Gottes im Nachhinein deuten?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Wird Gott in widersprüchlichen Lebenssituationen erfahren?"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3 .2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.2(4) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.4(2) die Vielfalt des Wirkens Gottes aufzeigen (Mose, 2. Mose 1-20 in Auszügen sowie zum Beispiel Jona, Jona 1-4; die Heilung der g e krümmten Frau, Lk 13,10-17; Pfing s ten, Apg 2,1-12) 3.2.4(3) vor dem Hintergrund he r ausfordernder Lebenssituationen (zum Beispiel Abschied, Streit, Ei n samkeit, Gewalt, Tod) Fragen nach und an Gott stellen und über mögl i che Antworten nachdenken",
+              "references": [
+                {
+                  "id": "2.1.1",
+                  "display": "2.1(1)"
+                },
+                {
+                  "id": "3.2.2.4",
+                  "display": "3.2.2(4)"
+                },
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4(2)"
+                },
+                {
+                  "id": "3.2.4.3",
+                  "display": "3.2.4(3)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Aus Jesu Worten Hilfestellungen für unser en Glauben und unser Handeln entwickeln ."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.4( 3 ) an einer biblischen Erzä h lung zeigen, wie Gott mit seinem Volk in Beziehung getreten ist (Mose und Mirjam) 3.2.4( 5 ) vor dem Hintergrund he r ausfordernder Lebenssituationen Fragen nach und an Gott stellen",
+              "references": [
+                {
+                  "id": "3.2.1.2",
+                  "display": "3.2.1 ( 2 )"
+                },
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4( 2 )"
+                },
+                {
+                  "id": "3.2.4.3",
+                  "display": "3.2.4( 3 )"
+                },
+                {
+                  "id": "3.2.4.5",
+                  "display": "3.2.4( 5 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die bleibende Zusage Gottes an den Menschen wird auch in Not und Leid sichtbar."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 10 Gott spricht: „Ich bin da“ – zweifeln und vertrauen (8 Stunden)"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Inwiefern gehören Zweifel und Glaube zusammen? Wie reagiere ich, wenn mir Gottes Handeln unbegreiflich bleibt? Was heißt Vertrauen für mich? Wie unterscheidet sich die Beziehung zu Gott von der Beziehung zu anderen Menschen? Wie lassen sich Erfahrungen der Abwesenheit Gottes im Nachhinein deuten?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.1 ( 2 ) miteinander über Grundfr a gen sprechen, die zum menschlichen Leben gehören 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.4( 3 ) an einer biblischen Erzä h lung zeigen, wie Gott mit seinem Volk in Beziehung getreten ist (Mose und Mirjam) 3.2.4( 5 ) vor dem Hintergrund he r ausfordernder Lebenssituationen Fragen nach und an Gott stellen",
+          "",
+          "Die Schülerinnen und Schüler können 3 .2.1(1) vom Umgang mit eigenen Erfahrungen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Vergebung erzählen 3.2.2(4) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.4(2) die Vielfalt des Wirkens Gottes aufzeigen (Mose, 2. Mose 1-20 in Auszügen sowie zum Beispiel Jona, Jona 1-4; die Heilung der g e krümmten Frau, Lk 13,10-17; Pfing s ten, Apg 2,1-12) 3.2.4(3) vor dem Hintergrund he r ausfordernder Lebenssituationen (zum Beispiel Abschied, Streit, Ei n samkeit, Gewalt, Tod) Fragen nach und an Gott stellen und über mögl i che Antworten nachdenken"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Aus Jesu Worten Hilfestellungen für unser en Glauben und unser Handeln entwickeln .",
+          "Wird Gott in widersprüchlichen Lebenssituationen erfahren?",
+          "Die bleibende Zusage Gottes an den Menschen wird auch in Not und Leid sichtbar."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese e r schließen 2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmö g lichkeiten prüfen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen 2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-11",
+      "number": 11,
+      "title": "Wir leben in der eine n Welt",
+      "hours": 12,
+      "preparation_questions": [
+        "Wie erleben wir globale Zusammenhänge? Wie gehe ich mit den unterschiedlichen Zugängen von Glauben und Naturwissenschaften um? Welche Beiträge kann ich realistisch zur Bewahrung der Schöpfung leisten? Was motiviert mich, mich für Nachhaltigkeit, Gerechtigkeit und Frieden einzusetzen? Wie kann ich die Welt verantwortungsvoll nachkommenden Generationen überlassen?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Die Schöpfung ein Geschenk an uns und eine Au f gabe für uns"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1(4) Bedingungen für ein geli n gendes Miteinander erläutern 3.2.2(1) unterschiedliche Lebensb e dingungen von Kindern in ihrer U m gebung und in der Welt darstellen 3.2.2(2) die Schöpfung in ihrer Vie l falt beschreiben und Gefährdungen aufzeigen 3.2.3(3) die Deutung der Welt als Schöpfung (1. Mose 1-2,4a; Ps 8) in Auseinande rsetzung mit anderen oder nicht religiösen Vorstellungen beschreiben 3.2.2(4 ) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.2(6) Beispiele aufzeigen, wie sich Menschen für Nachhaltigkeit, G e rechtigkeit und Frieden einsetzen können",
+              "references": [
+                {
+                  "id": "3.2.1.4",
+                  "display": "3.2.1(4)"
+                },
+                {
+                  "id": "3.2.2.1",
+                  "display": "3.2.2(1)"
+                },
+                {
+                  "id": "3.2.2.2",
+                  "display": "3.2.2(2)"
+                },
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3(3)"
+                },
+                {
+                  "id": "3.2.2.4",
+                  "display": "3.2.2(4 )"
+                },
+                {
+                  "id": "3.2.2.6",
+                  "display": "3.2.2(6)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Biblischer Schöpfungsglaube in Au s einandersetzung mit nichtreligiösen Deutungen der Welt"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1( 6 ) an Beispielen zeigen, wie Kinder mit ihren Fähigkeiten zu e i nem gelingenden Miteinander be i tragen können 3.2.2( 1 ) die Welt in ihrer Vielfalt und ihren Gefährdungen beschreiben 3.2.2( 2 ) an unterschiedlichen L e bensbedingungen von Kindern in ihrer Umgebung und in der Welt beschreiben, was gerecht ist und was ungerecht ist 3.2.2( 3 ) ausgehend von Gen 1,26 – 31 die besondere Verantwortung des Menschen in der Schöpfung b e schreiben 3.2.2( 4 ) darstellen, wie die Bibel Menschen zu verantwortungsvollem Handeln auffordert (zum Beispiel Ex 20,15; Ex 20,16; Lk 10,25– 37) 3.2.2( 5 ) sich damit auseinanderse t zen, wie Kinder verantwortungsb e wusst mit anderen und der Umwelt umgehen 3.2.2( 6 ) an Beispielen aufzeigen, wie sich Menschen lokal oder global für eine nachhaltige Entwicklung und eine friedliche und gerechte Welt einsetzen",
+              "references": [
+                {
+                  "id": "3.2.1.6",
+                  "display": "3.2.1( 6 )"
+                },
+                {
+                  "id": "3.2.2.1",
+                  "display": "3.2.2( 1 )"
+                },
+                {
+                  "id": "3.2.2.2",
+                  "display": "3.2.2( 2 )"
+                },
+                {
+                  "id": "3.2.2.3",
+                  "display": "3.2.2( 3 )"
+                },
+                {
+                  "id": "3.2.2.4",
+                  "display": "3.2.2( 4 )"
+                },
+                {
+                  "id": "3.2.2.5",
+                  "display": "3.2.2( 5 )"
+                },
+                {
+                  "id": "3.2.2.6",
+                  "display": "3.2.2( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Vom Schöpfungslied ausgehend wird die Verantwortung der Menschen füreinander und für die Mitgeschöpfe ebenso aufgezeigt wie die Missac h tung und Gefährdung der Schöpfung."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 11 Wir leben in der eine n Welt (12 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Wie erleben wir globale Zusammenhänge? Wie gehe ich mit den unterschiedlichen Zugängen von Glauben und Naturwissenschaften um? Welche Beiträge kann ich realistisch zur Bewahrung der Schöpfung leisten? Was motiviert mich, mich für Nachhaltigkeit, Gerechtigkeit und Frieden einzusetzen? Wie kann ich die Welt verantwortungsvoll nachkommenden Generationen überlassen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.1( 6 ) an Beispielen zeigen, wie Kinder mit ihren Fähigkeiten zu e i nem gelingenden Miteinander be i tragen können 3.2.2( 1 ) die Welt in ihrer Vielfalt und ihren Gefährdungen beschreiben 3.2.2( 2 ) an unterschiedlichen L e bensbedingungen von Kindern in ihrer Umgebung und in der Welt beschreiben, was gerecht ist und was ungerecht ist 3.2.2( 3 ) ausgehend von Gen 1,26 – 31 die besondere Verantwortung des Menschen in der Schöpfung b e schreiben 3.2.2( 4 ) darstellen, wie die Bibel Menschen zu verantwortungsvollem Handeln auffordert (zum Beispiel Ex 20,15; Ex 20,16; Lk 10,25– 37) 3.2.2( 5 ) sich damit auseinanderse t zen, wie Kinder verantwortungsb e wusst mit anderen und der Umwelt umgehen 3.2.2( 6 ) an Beispielen aufzeigen, wie sich Menschen lokal oder global für eine nachhaltige Entwicklung und eine friedliche und gerechte Welt einsetzen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1(4) Bedingungen für ein geli n gendes Miteinander erläutern 3.2.2(1) unterschiedliche Lebensb e dingungen von Kindern in ihrer U m gebung und in der Welt darstellen 3.2.2(2) die Schöpfung in ihrer Vie l falt beschreiben und Gefährdungen aufzeigen 3.2.3(3) die Deutung der Welt als Schöpfung (1. Mose 1-2,4a; Ps 8) in Auseinande rsetzung mit anderen oder nicht religiösen Vorstellungen beschreiben 3.2.2(4 ) aufzeigen, wie biblische Texte zu einem verantwortungsb e wussten Umgang mit anderen und der Welt anleiten (zum Beispiel Zehn Gebote in Auswahl, 2. Mose 20; Gebot der Nächstenliebe, Mk 12,31) 3.2.2(6) Beispiele aufzeigen, wie sich Menschen für Nachhaltigkeit, G e rechtigkeit und Frieden einsetzen können"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Biblischer Schöpfungsglaube in Au s einandersetzung mit nichtreligiösen Deutungen der Welt",
+          "Die Schöpfung ein Geschenk an uns und eine Au f gabe für uns",
+          "Vom Schöpfungslied ausgehend wird die Verantwortung der Menschen füreinander und für die Mitgeschöpfe ebenso aufgezeigt wie die Missac h tung und Gefährdung der Schöpfung."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild) 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese e r schließen 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Pe r spektive erweitern 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen De u tungen auseinandersetzen 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impulse für ve r antwortungsvolles Handeln entwickeln 2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-12",
+      "number": 12,
+      "title": "Warum wir Feste feiern: Pfingsten – Von Gottes Geist gestärkt",
+      "hours": 4,
+      "preparation_questions": [
+        "Welche Bedeutung hat für mich das Pfingstfest? Wie kann ich das Wirken des Geistes Gottes erfahren und darüber sprechen? Wie „geistvoll“ und „begeisternd“ erlebe ich die Kirche bzw. Kirchen? Wieviel Geist erlebe ich in meiner Gemeinde?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Pfingsten"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3 (1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.3 (4) die Sprache der biblischen Bildworte und Gleichnisse wahrne h men und deuten 3.2.6 (3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6 (6) gelebte Ökumene beispie l haft darstellen (zum Beispiel ökum e nische Gottesdienste, Unterstü t zungsprojekte weltweit) 3.2.6 (4) Die Bedeutung der Feste und Festzeiten (Advent und Wei h nachten, Passion und Ostern, Hi m melfahrt und Pfingsten, Reformat i onstag) erläutern und sie in das Ki r chenjahr einordnen",
+              "references": [
+                {
+                  "id": "3.2.3.1",
+                  "display": "3.2.3 (1)"
+                },
+                {
+                  "id": "3.2.3.4",
+                  "display": "3.2.3 (4)"
+                },
+                {
+                  "id": "3.2.6.3",
+                  "display": "3.2.6 (3)"
+                },
+                {
+                  "id": "3.2.6.6",
+                  "display": "3.2.6 (6)"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6 (4)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Pfingsten als Fest der Gabe des Heil i gen Geistes"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.6( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 2 ) ein Beispiel für gelebte Ökumene beschreiben 3.2.6( 4 ) Feste und Zeiten des Ki r chenjahres (Advent und Weihnac h ten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf bibl i sche Erzählungen, Legenden, Bilder oder Symbole beziehen",
+              "references": [
+                {
+                  "id": "3.2.3.2",
+                  "display": "3.2.3( 2 )"
+                },
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3( 3 )"
+                },
+                {
+                  "id": "3.2.6.1",
+                  "display": "3.2.6( 1 )"
+                },
+                {
+                  "id": "3.2.6.2",
+                  "display": "3.2.6( 2 )"
+                },
+                {
+                  "id": "3.2.6.4",
+                  "display": "3.2.6( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Das Pfingstgeschehen wird als der gemeinsame Anfangspunkt der Ki r che gedeutet ."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 12 Warum wir Feste feiern: Pfingsten – Von Gottes Geist gestärkt (4 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Welche Bedeutung hat für mich das Pfingstfest? Wie kann ich das Wirken des Geistes Gottes erfahren und darüber sprechen? Wie „geistvoll“ und „begeisternd“ erlebe ich die Kirche bzw. Kirchen? Wieviel Geist erlebe ich in meiner Gemeinde?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3( 2 ) bereits bekannte biblische Geschichten wiedergeben und dem Alten und Neuen Testament zuor d nen 3.2.3( 3 ) an je einem Beispiel aus dem Alten und Neuen Testament zeigen, wie Menschen ihre Erfahrungen mit Gott in sprachlichen Bildern ausdr ü cken 3.2.6( 1 ) aufzeigen, was die kathol i sche und evangelische Kirche verbi n det und unterscheidet (zum Beispiel Vaterunser, Kirchenraum, Feste und Feiern, Sakramente) 3.2.6( 2 ) ein Beispiel für gelebte Ökumene beschreiben 3.2.6( 4 ) Feste und Zeiten des Ki r chenjahres (Advent und Weihnac h ten, Passion und Ostern, Pfingsten, ausgewählte Heiligenfeste) auf bibl i sche Erzählungen, Legenden, Bilder oder Symbole beziehen",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3 (1) biblische Erzählungen wi e dergeben und dem Alten bezi e hungsweise Neuen Testament z u ordnen 3.2.3 (4) die Sprache der biblischen Bildworte und Gleichnisse wahrne h men und deuten 3.2.6 (3) Gemeinsamkeiten und B e sonderheiten der Konfessionen (zum Beispiel Kirchenraum, Feste im Ki r chenjahr, Rituale) beschreiben 3.2.6 (6) gelebte Ökumene beispie l haft darstellen (zum Beispiel ökum e nische Gottesdienste, Unterstü t zungsprojekte weltweit) 3.2.6 (4) Die Bedeutung der Feste und Festzeiten (Advent und Wei h nachten, Passion und Ostern, Hi m melfahrt und Pfingsten, Reformat i onstag) erläutern und sie in das Ki r chenjahr einordnen"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Pfingsten als Fest der Gabe des Heil i gen Geistes",
+          "Pfingsten",
+          "Das Pfingstgeschehen wird als der gemeinsame Anfangspunkt der Ki r che gedeutet ."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild) 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese e r schließen 2.5.3 über menschliche Grundfragen an gemessen sprechen 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen De u tungen auseinandersetzen 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wir k lichkeit verweisen, erkennen und deuten 2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-13",
+      "number": 13,
+      "title": "Jesu Botschaft vom Reich Gottes ( 6 h )",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Relevanz hat die Botschaft vom Reich Gottes für meinen Glauben? Inwiefern motiviert mich die Botschaft vom Reich Gottes? In welchem Verhältnis stehen Reich Gottes und Kirchen zueinander ? Welches Gleichnis und welche Begegnungsgeschichte ist mir persönlich am liebsten?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Jesu Botschaft vom Reich Gottes ist heute noch aktuell"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3(3) die verändernde Wirkung der Begegnung mit Jesus aufzeigen (zum Beispiel die Berufung des Levi, Mk 2,13-17; die Berufung des Petrus, Lk 5,1-11; der ungläubige Thomas, Joh 20,24-29; Bartimäus , Mk 10,46-52) 3.2.5(5) Jesu Botschaft vom Reich Gottes als Hoffnungsbilder gestalten (zum Beispiel das Gleichnis vom großen Gastmahl, Lk 14,15-24; Gleichnis vom Senfkorn, Mk 4,30-32) 3.2.5 (2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel G e thsemane, Mk 14,32-42) 3.2.5 (6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orientierung für das Zusammenleben entwickeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeu t same Persön lichkeiten)",
+              "references": [
+                {
+                  "id": "3.2.3.3",
+                  "display": "3.2.3(3)"
+                },
+                {
+                  "id": "3.2.5.5",
+                  "display": "3.2.5(5)"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5 (2)"
+                },
+                {
+                  "id": "3.2.5.6",
+                  "display": "3.2.5 (6)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Die Begegnung mit Jesus und seiner Botschaft verändert und befreit Me n schen ."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.3 ( 5 ) aus den biblischen Geschic h ten Anregungen für die eigene L e bensgestaltung herausarbeiten 3.2.3( 6 ) eine für sie wichtige Aussage eines biblischen Textes kreativ gestalten 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.5( 2 ) anhand biblischer Überlief e rungen aufzeigen, dass Jesus Gott als seinen Vater anspricht ( Mt 6,7–13) und Gott Jesus seinen Sohn nennt ( Mt 3,13–16) 3.2.5( 3 ) ausgehend von Begegnungs- und Heilungsgeschichten darstellen, wie Jesus Menschen Lebensmut schenkt ( Mk 2,1–12; Mk 10,46–52; Mk 2,13–17) 3.2.5( 4 ) beschreiben, wie Jesus in Gleichnissen vom Reich Gottes Me n schen Hoffnung schenkt (zum Be i spiel Lk 10,25–37; Mk 4,30–32; Lk 14,15–24; Mt 13,44)",
+              "references": [
+                {
+                  "id": "3.2.3.5",
+                  "display": "3.2.3 ( 5 )"
+                },
+                {
+                  "id": "3.2.3.6",
+                  "display": "3.2.3( 6 )"
+                },
+                {
+                  "id": "3.2.4.2",
+                  "display": "3.2.4( 2 )"
+                },
+                {
+                  "id": "3.2.5.2",
+                  "display": "3.2.5( 2 )"
+                },
+                {
+                  "id": "3.2.5.3",
+                  "display": "3.2.5( 3 )"
+                },
+                {
+                  "id": "3.2.5.4",
+                  "display": "3.2.5( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Jesus gibt Menschen Lebensmut und Hoffnung."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 13 Jesu Botschaft vom Reich Gottes ( 6 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Welche Relevanz hat die Botschaft vom Reich Gottes für meinen Glauben? Inwiefern motiviert mich die Botschaft vom Reich Gottes? In welchem Verhältnis stehen Reich Gottes und Kirchen zueinander ? Welches Gleichnis und welche Begegnungsgeschichte ist mir persönlich am liebsten?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.3 ( 5 ) aus den biblischen Geschic h ten Anregungen für die eigene L e bensgestaltung herausarbeiten 3.2.3( 6 ) eine für sie wichtige Aussage eines biblischen Textes kreativ gestalten 3.2.4( 2 ) biblische Bilder für Gott beschreiben (zum Beispiel Ps 62,8; Ps 84,12; Jes 49,14–16a; Lk 15,8f.) 3.2.5( 2 ) anhand biblischer Überlief e rungen aufzeigen, dass Jesus Gott als seinen Vater anspricht ( Mt 6,7–13) und Gott Jesus seinen Sohn nennt ( Mt 3,13–16) 3.2.5( 3 ) ausgehend von Begegnungs- und Heilungsgeschichten darstellen, wie Jesus Menschen Lebensmut schenkt ( Mk 2,1–12; Mk 10,46–52; Mk 2,13–17) 3.2.5( 4 ) beschreiben, wie Jesus in Gleichnissen vom Reich Gottes Me n schen Hoffnung schenkt (zum Be i spiel Lk 10,25–37; Mk 4,30–32; Lk 14,15–24; Mt 13,44)",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.3(3) die verändernde Wirkung der Begegnung mit Jesus aufzeigen (zum Beispiel die Berufung des Levi, Mk 2,13-17; die Berufung des Petrus, Lk 5,1-11; der ungläubige Thomas, Joh 20,24-29; Bartimäus , Mk 10,46-52) 3.2.5(5) Jesu Botschaft vom Reich Gottes als Hoffnungsbilder gestalten (zum Beispiel das Gleichnis vom großen Gastmahl, Lk 14,15-24; Gleichnis vom Senfkorn, Mk 4,30-32) 3.2.5 (2) Jesu Botschaft von Gott entfalten (Vaterunser, Mt 6,9-13; das Gleichnis vom gütigen Vater, Lk 15,11-32 sowie zum Beispiel G e thsemane, Mk 14,32-42) 3.2.5 (6) aus dem Handeln und Reden Jesu Christi Ermutigung und Orientierung für das Zusammenleben entwickeln (Doppelgebot der Liebe, Mk 12,28-34; Gleichnis vom barmherz i gen Samariter, Lk 10,25-37 sowie zum Beispiel Elisabeth von Thüringen und andere bedeu t same Persön lichkeiten)"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Die Begegnung mit Jesus und seiner Botschaft verändert und befreit Me n schen .",
+          "Jesu Botschaft vom Reich Gottes ist heute noch aktuell",
+          "Jesus gibt Menschen Lebensmut und Hoffnung."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleich nis, Legende, Gebet, Stille, Ri tual, Musik, Bild) 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese e r schließen 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hinein versetzen und dadurch die eigene Perspektive erweitern 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken 2.5.3 über menschliche Grundfragen angemessen sprechen 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen 2.3.2 aus menschlichen Erfahrungen wie Freundschaft, Enttäuschung, Streit oder der Erfahrung mit Trauer und Tod unterschiedliche Antwort- und Handlungsmöglichkeiten finden, diese miteinander vergleichen und auf Basis der biblisch-christlichen Überlieferung reflektieren 2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begründen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "4 Verschieden glauben – einander achten",
+      "hours": 10,
+      "preparation_questions": [
+        "Inwiefern spüre ich Gemeinsamkeiten mit jüdischen und muslimischen Gläubigen? Was würde ich gerne über die anderen Religionen wissen? Warum ist ein wertschätzender Umgang mit anderen Religionen wichtig? Welche Erfahrungen habe ich mit multireligiösen Feiern?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Religion(en) im Lebensumfeld wahrnehmen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.1 (1) vom Umgang mit eigenen Erfahru n gen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Verg e bung erzählen 3.2.7 (1) Ausdrucksformen gelebter Religion wahrnehmen und beschre i ben (zum Beispiel Räume, Riten, Feste) 3.2.7 (2) ausgewählte Aspekte einer Religion vergleichen (zum Beispiel Gege n stände, Kleidung, Speisen, Heiliges Buch, Feste, Gebetspraxis, Gotteshäuser/Versammlungsräume, Glaube an einen Gott) 3.2.7 (3) Begegnungssituationen (zum Beispiel gemeinsamer Besuch eines Gotteshauses/Versammlungs-raumes, Expertenbegegnung) mi t planen und mitgestalten",
+              "references": [
+                {
+                  "id": "3.2.1.1",
+                  "display": "3.2.1 (1)"
+                },
+                {
+                  "id": "3.2.7.1",
+                  "display": "3.2.7 (1)"
+                },
+                {
+                  "id": "3.2.7.2",
+                  "display": "3.2.7 (2)"
+                },
+                {
+                  "id": "3.2.7.3",
+                  "display": "3.2.7 (3)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Ausdrucksformen gelebter Religion im Lebensumfeld wahrnehmen und beschreiben"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.2.7( 1 ) religiöse Lebens- und Au s drucksformen im Judentum und im Islam beschreiben 3.2.7( 2 ) Gotteshäuser und Gebet s räume im Judentum und im Islam beschreiben 3.2.7( 3 ) Unterschiede zwischen J u dentum, Christentum und Islam beschreiben (zum Beispiel Feste, Kleidung, Speisen, Heiliges Buch, Aufnahme in die Glaubensgemei n schaft, Vorstellungen von Gott) 3.2.7 ( 4 ) Gemeinsamkeiten zwischen Judentum, Christentum und Islam darstellen (zum Beispiel gemeins a mer Ursprung, Glaube an einen Gott, Gebet) 3.2.7( 5 ) im Schulleben ein respek t volles Miteinander reflektiert gesta l ten (zum Beispiel gemeinsame G e staltung einer religiösen Feier, Schu l feste) 3.2.7( 6 ) zeigen, wie Kinder sich in Begegnungssituationen mit Angeh ö rigen anderer Religionen respektvoll verhalten können (zum Beispiel bei einem gemeinsamen Besuch eines Gotteshauses, bei einer Expertenb e fragung)",
+              "references": [
+                {
+                  "id": "3.2.7.1",
+                  "display": "3.2.7( 1 )"
+                },
+                {
+                  "id": "3.2.7.2",
+                  "display": "3.2.7( 2 )"
+                },
+                {
+                  "id": "3.2.7.3",
+                  "display": "3.2.7( 3 )"
+                },
+                {
+                  "id": "3.2.7.4",
+                  "display": "3.2.7 ( 4 )"
+                },
+                {
+                  "id": "3.2.7.5",
+                  "display": "3.2.7( 5 )"
+                },
+                {
+                  "id": "3.2.7.6",
+                  "display": "3.2.7( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "I nterreligiöse Begegnung ist für das Zusammenleben auch in der Schule wichtig."
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1 4 Verschieden glauben – einander achten (10 h )"
+        ],
+        [
+          "Fragen für das Vorbereitungsteam Inwiefern spüre ich Gemeinsamkeiten mit jüdischen und muslimischen Gläubigen? Was würde ich gerne über die anderen Religionen wissen? Warum ist ein wertschätzender Umgang mit anderen Religionen wichtig? Welche Erfahrungen habe ich mit multireligiösen Feiern?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Katholische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.2.7( 1 ) religiöse Lebens- und Au s drucksformen im Judentum und im Islam beschreiben 3.2.7( 2 ) Gotteshäuser und Gebet s räume im Judentum und im Islam beschreiben 3.2.7( 3 ) Unterschiede zwischen J u dentum, Christentum und Islam beschreiben (zum Beispiel Feste, Kleidung, Speisen, Heiliges Buch, Aufnahme in die Glaubensgemei n schaft, Vorstellungen von Gott) 3.2.7 ( 4 ) Gemeinsamkeiten zwischen Judentum, Christentum und Islam darstellen (zum Beispiel gemeins a mer Ursprung, Glaube an einen Gott, Gebet) 3.2.7( 5 ) im Schulleben ein respek t volles Miteinander reflektiert gesta l ten (zum Beispiel gemeinsame G e staltung einer religiösen Feier, Schu l feste) 3.2.7( 6 ) zeigen, wie Kinder sich in Begegnungssituationen mit Angeh ö rigen anderer Religionen respektvoll verhalten können (zum Beispiel bei einem gemeinsamen Besuch eines Gotteshauses, bei einer Expertenb e fragung)",
+          "",
+          "Die Schülerinnen und Schüler können 3.2.1 (1) vom Umgang mit eigenen Erfahru n gen von Freude und Glück, Gelingen und Scheitern, Leid und Tod, Schuld und Verg e bung erzählen 3.2.7 (1) Ausdrucksformen gelebter Religion wahrnehmen und beschre i ben (zum Beispiel Räume, Riten, Feste) 3.2.7 (2) ausgewählte Aspekte einer Religion vergleichen (zum Beispiel Gege n stände, Kleidung, Speisen, Heiliges Buch, Feste, Gebetspraxis, Gotteshäuser/Versammlungsräume, Glaube an einen Gott) 3.2.7 (3) Begegnungssituationen (zum Beispiel gemeinsamer Besuch eines Gotteshauses/Versammlungs-raumes, Expertenbegegnung) mi t planen und mitgestalten"
+        ],
+        [
+          "Evangelischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Katholischer Blickwinkel"
+        ],
+        [
+          "Ausdrucksformen gelebter Religion im Lebensumfeld wahrnehmen und beschreiben",
+          "Religion(en) im Lebensumfeld wahrnehmen",
+          "I nterreligiöse Begegnung ist für das Zusammenleben auch in der Schule wichtig."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.3.3 sich mit anderen religiösen und nich treligiösen Überzeugungen ausei nandersetzen 2.3.4 im Kontext des eigenen Lebensumfelds zu religiösen und et hischen Fra gen einen Standpunkt einnehmen und argumentativ vertreten 2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen 2.5.2 religiöse Ausdrucksformen reflektiert gestalten 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wir k lichkeit verweisen, erkennen und deuten 2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten 2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen 2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interko n fessioneller und interreligiöser Begegnungen"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+{
+  "schema_version": "1.0.0",
+  "type": "confessional_cooperative_curriculum",
+  "metadata": {
+    "title": "KoKo Beispielcurriculum Sek.I 10 B",
+    "country": "DE",
+    "state": "BW",
+    "school_type": "SEK1",
+    "grades": [
+      10
+    ],
+    "variant": "B",
+    "cooperation_model": "confessional_cooperative",
+    "denominations": [
+      "evangelical",
+      "catholic"
+    ],
+    "source": {
+      "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6249_uies2jl5.docx",
+      "format": "docx"
+    },
+    "conversion": {
+      "complete": true,
+      "method": "OOXML table extraction",
+      "unit_count": 5
+    }
+  },
+  "education_plan_bindings": [
+    {
+      "role": "denominational_basis",
+      "denomination": "evangelical",
+      "subject": "Evangelische Religionslehre",
+      "plan_code": null
+    },
+    {
+      "role": "denominational_basis",
+      "denomination": "catholic",
+      "subject": "Katholische Religionslehre",
+      "plan_code": null
+    }
+  ],
+  "units": [
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "In Gesellschaft und Welt verantwortlich handeln",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Verantwortung trägt die Gesellschaft zum Erhalt der Schöpfung, von Frieden und Gerechtigkeit? Wozu sind wir als Christenmenschen berufen? Welche Rolle spielen die Kirchen?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1(2) Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der biblischen Sichtweise des Menschen G / M aufzeigen E auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusammenleben entwickeln",
+              "references": [
+                {
+                  "id": "3.3.1.2",
+                  "display": "3.3.1(2)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1(6) ausgehend von christlichen Normen (z.B. Mt 7,12) und Werten (z.B. Gerechtigkeit und Freiheit) zeigen , wie verantwortliches Handeln zur Gestaltung einer solidarischen Gesellschaft beiträgt 3.3.3 (1) an einem Beispiel darstellen (M: erläutern; E: entfalten), das biblische Texte eine Glaubensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104) 3.3.3 (2) G, M, E an Beispielen zeigen, wie biblische Texte oder Motive aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur) 3.3.3 (5) an Beispielen G beschreiben / M erläutern / E begründen, dass biblische Texte auch heute Bedeutung haben können (z.B. Mt 25,31-40; 1Kor 12; 1Kor 13) 3.3.3 (6) an aktuellen Beispielen G beschreiben / M erläutern / E entfalten, wie ethische Forderungen der Bibel gesellschaftliche Wirklichkeit verändern können (z.B. Flüchtlingshilfe) 3.3.6 (5) aktuelle Beispiele für das Wirken der Kirche in unserer Welt G beschreiben / M darstellen / E erläutern (z.B. Welttag des Friedens, Woche für das Leben, Weltjugendtage) 3.3.6 (6) Möglichkeiten G beschreiben / M erläutern / E prüfen, wie Jugendliche am solidarischen Handeln der Kirche teilnehmen können (z.B. Compassion , Pflasterstube)",
+              "references": [
+                {
+                  "id": "3.3.1.6",
+                  "display": "3.3.1(6)"
+                },
+                {
+                  "id": "3.3.3.1",
+                  "display": "3.3.3 (1)"
+                },
+                {
+                  "id": "3.3.3.2",
+                  "display": "3.3.3 (2)"
+                },
+                {
+                  "id": "3.3.3.5",
+                  "display": "3.3.3 (5)"
+                },
+                {
+                  "id": "3.3.3.6",
+                  "display": "3.3.3 (6)"
+                },
+                {
+                  "id": "3.3.6.5",
+                  "display": "3.3.6 (5)"
+                },
+                {
+                  "id": "3.3.6.6",
+                  "display": "3.3.6 (6)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.4",
+          "display": "2.1.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.7",
+          "display": "2.3.7"
+        },
+        {
+          "id": "2.3.6",
+          "display": "2.3.6"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1: In Gesellschaft und Welt verantwortlich handeln"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welche Verantwortung trägt die Gesellschaft zum Erhalt der Schöpfung, von Frieden und Gerechtigkeit? Wozu sind wir als Christenmenschen berufen? Welche Rolle spielen die Kirchen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen katholisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen evangelisc h"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.3.1(6) ausgehend von christlichen Normen (z.B. Mt 7,12) und Werten (z.B. Gerechtigkeit und Freiheit) zeigen , wie verantwortliches Handeln zur Gestaltung einer solidarischen Gesellschaft beiträgt 3.3.3 (1) an einem Beispiel darstellen (M: erläutern; E: entfalten), das biblische Texte eine Glaubensperspektive voraussetzen (z.B. an Ex 3,1-22; Ps 18; Ps 104) 3.3.3 (2) G, M, E an Beispielen zeigen, wie biblische Texte oder Motive aufgegriffen werden (z.B. in Werbung, Musik, Bildender Kunst, Film, Literatur) 3.3.3 (5) an Beispielen G beschreiben / M erläutern / E begründen, dass biblische Texte auch heute Bedeutung haben können (z.B. Mt 25,31-40; 1Kor 12; 1Kor 13) 3.3.3 (6) an aktuellen Beispielen G beschreiben / M erläutern / E entfalten, wie ethische Forderungen der Bibel gesellschaftliche Wirklichkeit verändern können (z.B. Flüchtlingshilfe) 3.3.6 (5) aktuelle Beispiele für das Wirken der Kirche in unserer Welt G beschreiben / M darstellen / E erläutern (z.B. Welttag des Friedens, Woche für das Leben, Weltjugendtage) 3.3.6 (6) Möglichkeiten G beschreiben / M erläutern / E prüfen, wie Jugendliche am solidarischen Handeln der Kirche teilnehmen können (z.B. Compassion , Pflasterstube)",
+          "Umsetzungsschritte: Die Welt in Gefahr? – Aktuelle Gefährdungen der Schöpfung, der Gerechtigkeit und/oder des Friedens in der Welt Die Bibel und ethisches Handeln (Dekalog, Goldene Regel, Propheten) Das christliche Menschenbild als grundlegende ethische Ressource (Menschenwürde, Solidarität, Nächstenliebe…) Aktuelle Beispiele für ethische Herausforderungen (Corona, Flüchtlingskrise, Klimawandel…) Solidarisches Handeln der Kirche, Partizipationsmöglichkeiten für Jugendliche ‚Weltethos‘ als Projekt für religionsübergreifende Verantwortung für Gerechtigkeit und Frieden",
+          "Die Schülerinnen und Schüler können 3.3.1(2) Konsequenzen (z. B. Menschenwürde, Opfer-Täter-Ausgleich, Diakonie, Inklusion) aus der biblischen Sichtweise des Menschen G / M aufzeigen E auf der Grundlage der biblischen Sichtweise des Menschen Perspektiven für ein gelingendes Zusammenleben entwickeln"
+        ],
+        [
+          "Evangelischer Blickwinkel Ein wirkmächtiger Ansatz christlicher Ethik, die Bergpredigt, wird in ihrem heraufordernden Charakter untersucht und auf ethische Fragen der Gegenwart bezogen.",
+          "",
+          "3.3.2 (1) G den herausfordernden und zusprechenden Charakter der Bergpredigt für christliches Leben an Beispielen beschreiben. M den herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen / E sich mit de m herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseinandersetzen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten."
+        ]
+      ]
+    },
+    {
+      "id": "ue-02",
+      "number": 2,
+      "title": "Die Kirchen zwischen Anpassung, Versagen und Erneuerung",
+      "hours": null,
+      "preparation_questions": [
+        "Petrus und Paulus: Sind wir eine Kirche der Tradition und/oder Kirche der Freiheit? Wie konnten die Kirchen die Shoah zulassen? Wie verstehen wir Kirche heute?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.6 (1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M d arstellen / E untersuchen (z.B. NS-Zeit, Kirche in der DDR, Verfolgung und Unterdrückung von Christen weltweit)",
+              "references": [
+                {
+                  "id": "3.3.6.1",
+                  "display": "3.3.6 (1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten. 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1 (3) am Beispiel von Petrus zeigen, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z. B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22) M am Beispiel von Petrus darstell en, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z. B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22; Apg 9; Gal 5,13-26) E am Beispiel von Petrus oder Paulus darstellen, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z.B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22; Apg 9; Gal 5,13-26) 3.3.6 (1) an einem Beispiel G / M zeigen / E erläutern, dass die Kirche im Laufe der Geschichte unterschiedliche Lebens- und Ausdrucksformen entwickelt hat (z.B. Reformströmungen und Ordensgründungen; Kirchenbau und Musik) 3.3.6 (2) G / M / E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+              "references": [
+                {
+                  "id": "3.3.1.3",
+                  "display": "3.3.1 (3)"
+                },
+                {
+                  "id": "3.3.6.1",
+                  "display": "3.3.6 (1)"
+                },
+                {
+                  "id": "3.3.6.2",
+                  "display": "3.3.6 (2)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.3.6",
+          "display": "2.3.6"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 2 Die Kirchen zwischen Anpassung, Versagen und Erneuerung"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Petrus und Paulus: Sind wir eine Kirche der Tradition und/oder Kirche der Freiheit? Wie konnten die Kirchen die Shoah zulassen? Wie verstehen wir Kirche heute?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen katholisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.3.1 (3) am Beispiel von Petrus zeigen, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z. B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22) M am Beispiel von Petrus darstell en, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z. B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22; Apg 9; Gal 5,13-26) E am Beispiel von Petrus oder Paulus darstellen, welche Bedeutung Glaube, Freiheit und Vergebung für den Menschen haben können (z.B. Lk 22,31-34; Lk 22,54-62; Apg 4,1-22; Apg 9; Gal 5,13-26) 3.3.6 (1) an einem Beispiel G / M zeigen / E erläutern, dass die Kirche im Laufe der Geschichte unterschiedliche Lebens- und Ausdrucksformen entwickelt hat (z.B. Reformströmungen und Ordensgründungen; Kirchenbau und Musik) 3.3.6 (2) G / M / E ausgehend vom Unrecht der Shoah die Rolle der Katholischen Kirche in der Zeit des Nationalsozialismus herausarbeiten",
+          "Vertiefung zu UE 2 in den Klassen 7-9 Inhaltlicher Schwerpunkt in Kl. 10: Die Rolle der katholischen Kirche im Nationalsozialismus Umsetzungsschritte: Gottes Liebe befreit und bewirkt das Gute in uns Petrus und Paulus: Leben aus der Kraft der Liebe Gottes. „Der Herr ist der Geist; wo aber der Geist des Herrn ist, da ist Freiheit.“ (2. Kor 3,17) Standhaftigkeit auch in Bedrängnis - zwischen Gesetz und Glaube Das Versagen der Kirchen angesichts des Unrechts der Shoah Verhältnis von Staat und Kirche, Reichskonkordat 1933, katholischer Widerstand (Bischof Sproll; Bischof von Galen ...) Die Erneuerung der Kirchen nach 1945 Wo Kirche heute Gesicht zeigt/zeigen muss Nostra Aetate , Jüdisch-christlicher Dialog heute",
+          "Die Schülerinnen und Schüler können 3.3.6 (1) an einem Beispiel die Haltung von Christen gegenüber dem Staat in autoritären Regimen G beschreiben / M d arstellen / E untersuchen (z.B. NS-Zeit, Kirche in der DDR, Verfolgung und Unterdrückung von Christen weltweit)"
+        ],
+        [
+          "Evangelischer Blickwinkel: Christliche Praxis unter den Bedingungen einer säkularen Welt. Anhand von historischen Beispielen wird die Frage nach Haltungen von einzelnen Christen und der Kirche in möglichen Konfliktfeldern untersucht. Daraus können sich Handlungsmöglichkeiten im Engagement für Gerechtigkeit entwickeln.",
+          "",
+          "3.3.6 (2) das Verhältnis evangelischer Kirchen zu Staat und Gesellschaft (z.B. Religionsunterricht, Kirchenasyl, Kirchensteuer, Friedensfrage) G beschreiben / M erläutern / E sich auseinandersetzen]"
+        ],
+        [
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten. 2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden."
+        ]
+      ]
+    },
+    {
+      "id": "ue-03",
+      "number": 3,
+      "title": "Nach Gott suchen – von Gott reden",
+      "hours": null,
+      "preparation_questions": [
+        "Wer und wo ist Gott? Wie passt der Gott der Bibel zu meinen Gottesvorstellungen? Ist Gott auch in meinem Leben?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.4 (1) G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellen M zur Frage nach der Existenz Gottes einen begründeten Standpunkt einnehmen E sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen 3.3.7(1) G sich mit religiösen Gruppen aus dem regionalen Umfeld auseinandersetzen. M sich mit religiösen Gruppen (z. B. Psychogruppen, Esoterik) begründet auseinandersetzen E zu religiösen Gruppen (z. B. Psychogruppen, Esoterik) und Sondergemeinschaften einen begründeten Standpunkt einnehmen",
+              "references": [
+                {
+                  "id": "3.3.4.1",
+                  "display": "3.3.4 (1)"
+                },
+                {
+                  "id": "3.3.7.1",
+                  "display": "3.3.7(1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sach-verhalte ermöglichen 2.2.1 Grundformen religiöser Sprache erschließen 2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen. 2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben. 2.1.3 grundlegende religiöse Ausdrucks-formen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1 (2) G Situationen beschreiben, in denen Grundfragen des Lebens aufbrechen M Erfahrungen von Glück und Leid mit Grundfragen des Lebens in Beziehung setzen E Situationen von Glück und Leid als Erfahrungen charakterisieren, die Grundfragen des Lebens aufwerfen 3.3.4 (1) Erfahrungen und Überlegungen G beschreiben / M darstellen / E erläutern), die auf Gott als Geheimnis der Welt verweisen (z.B. Staunen, Kontingenzerfahrungen) 3.3.4 (2) G aufze i gen / M beschreiben inwiefern die E r fahrung von Leid und Tod die Frage nach Gott aufwirft E erläutern, inwiefern die Erfahrung von Leid und Tod die Frage nach Gott aufwirft (Aspekte der Theodizee) 3.3.3 (4) G zeigen / M erklären / E entfalten, inwiefern bildhafte Sprache in der Bibel Wahrheit zum Ausdruck bringt (z.B. Ex 3,1-15) (4) erklären, inwiefern bildhafte Sprache in der Bibel Wahrheit zum Ausdruck bringt 3.3.4 (6) zeigen (M: darstellen; E. erläutern), dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben 3.3.7.(4) G s kizzieren / M beschreiben / E erläutern , welche Gefährdungen von einer religiösen Sondergemeinschaft oder weltanschaulichen Gruppe ausgehen können",
+              "references": [
+                {
+                  "id": "3.3.1.2",
+                  "display": "3.3.1 (2)"
+                },
+                {
+                  "id": "3.3.4.1",
+                  "display": "3.3.4 (1)"
+                },
+                {
+                  "id": "3.3.4.2",
+                  "display": "3.3.4 (2)"
+                },
+                {
+                  "id": "3.3.3.4",
+                  "display": "3.3.3 (4)"
+                },
+                {
+                  "id": "3.3.4.6",
+                  "display": "3.3.4 (6)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 3 Nach Gott suchen – von Gott reden"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Wer und wo ist Gott? Wie passt der Gott der Bibel zu meinen Gottesvorstellungen? Ist Gott auch in meinem Leben?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen katholisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.3.1 (2) G Situationen beschreiben, in denen Grundfragen des Lebens aufbrechen M Erfahrungen von Glück und Leid mit Grundfragen des Lebens in Beziehung setzen E Situationen von Glück und Leid als Erfahrungen charakterisieren, die Grundfragen des Lebens aufwerfen 3.3.4 (1) Erfahrungen und Überlegungen G beschreiben / M darstellen / E erläutern), die auf Gott als Geheimnis der Welt verweisen (z.B. Staunen, Kontingenzerfahrungen) 3.3.4 (2) G aufze i gen / M beschreiben inwiefern die E r fahrung von Leid und Tod die Frage nach Gott aufwirft E erläutern, inwiefern die Erfahrung von Leid und Tod die Frage nach Gott aufwirft (Aspekte der Theodizee) 3.3.3 (4) G zeigen / M erklären / E entfalten, inwiefern bildhafte Sprache in der Bibel Wahrheit zum Ausdruck bringt (z.B. Ex 3,1-15) (4) erklären, inwiefern bildhafte Sprache in der Bibel Wahrheit zum Ausdruck bringt 3.3.4 (6) zeigen (M: darstellen; E. erläutern), dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben 3.3.7.(4) G s kizzieren / M beschreiben / E erläutern , welche Gefährdungen von einer religiösen Sondergemeinschaft oder weltanschaulichen Gruppe ausgehen können",
+          "Umsetzungsschritte: Auf der Suche nach Antworten auf die Grundfragen des Lebens: Wo komm ich her, warum bin ich, wohin gehe ich… Gottesglaube als mögliche Antwort Theodizee: Wenn es dich gibt, Gott, warum…? Von Gott reden: Die Bild- und Symbolsprache der Bibel Vom lieben Gott zur Liebe Gottes – Gottesbilder verändern sich Ich glaube an Gott – das (Apostolische) Glaubensbekenntnis und mein persönliches Credo",
+          "Die Schülerinnen und Schüler können 3.3.4 (1) G unterschiedliche Haltungen zu Gott (z. B. Glaube, Zweifel, Gleichgültigkeit, Bestreitung) darstellen M zur Frage nach der Existenz Gottes einen begründeten Standpunkt einnehmen E sich mit Argumenten für und gegen die Existenz Gottes auseinandersetzen 3.3.7(1) G sich mit religiösen Gruppen aus dem regionalen Umfeld auseinandersetzen. M sich mit religiösen Gruppen (z. B. Psychogruppen, Esoterik) begründet auseinandersetzen E zu religiösen Gruppen (z. B. Psychogruppen, Esoterik) und Sondergemeinschaften einen begründeten Standpunkt einnehmen"
+        ],
+        [
+          "Evangelischer Blickwinkel: Die Schülerinnen und Schüler lernen sich zu orientieren im Blick auf religiöse Gruppierungen und Gemeinschaften bis hin zu religiösen oder pseudoreligiösen Sondergemeinschaften.",
+          "",
+          "3.3.7(1) G sich mit religiösen Gruppen aus dem regionalen Umfeld auseinandersetzen. M sich mit religiösen Gruppen (z. B. Psychogruppen, Esoterik) begründet a useinandersetzen. E zu religiösen Gruppen (z. B. Psychogruppen, Esoterik) und Sondergemeinschaften einen begründeten Standpunkt einnehmen."
+        ],
+        [
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sach-verhalte ermöglichen 2.2.1 Grundformen religiöser Sprache erschließen 2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen. 2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben. 2.1.3 grundlegende religiöse Ausdrucks-formen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen."
+        ]
+      ]
+    },
+    {
+      "id": "ue-04",
+      "number": 4,
+      "title": "„Mit Leib und Seele“ – Freundschaft, Liebe, Sexualität II",
+      "hours": null,
+      "preparation_questions": [
+        "Was bedeutet die „Ehe eine von Gott gestiftete Partnerschaft in Liebe zwischen Mann und Frau“? Die Eheschließung als Bund fürs Leben? Warum ist heiraten für viele Paare wichtig? Staatliche und kirchliche Trauung – welche Bedeutung haben sie?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen",
+              "references": [
+                {
+                  "id": "3.3.1.1",
+                  "display": "3.3.1(1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.1 deskriptive und normative Aussagen unterscheiden und sich mit deren Anspruch auseinandersetzen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen. 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.3.1 (1) eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in Beziehung setzen (z.B. Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit) 3.3.2 (5) eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (M: beurteilen; E: sich auseinandersetzen)(z.B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)",
+              "references": [
+                {
+                  "id": "3.3.1.1",
+                  "display": "3.3.1 (1)"
+                },
+                {
+                  "id": "3.3.2.5",
+                  "display": "3.3.2 (5)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.7",
+          "display": "2.3.7"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 4 „Mit Leib und Seele“ – Freundschaft, Liebe, Sexualität II"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Was bedeutet die „Ehe eine von Gott gestiftete Partnerschaft in Liebe zwischen Mann und Frau“? Die Eheschließung als Bund fürs Leben? Warum ist heiraten für viele Paare wichtig? Staatliche und kirchliche Trauung – welche Bedeutung haben sie?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen katholisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.3.1 (1) eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in Beziehung setzen (z.B. Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Familie, Beruf und Ehrenamt, Erholung und Freizeit) 3.3.2 (5) eine kirchliche Position zu einer individualethischen und zu einer sozialethischen Fragestellung prüfen (M: beurteilen; E: sich auseinandersetzen)(z.B. Schwangerschaftsabbruch, Krankheit, Sterbehilfe; Krieg und Frieden, Gerechtigkeit)",
+          "Vertiefungsbaustein zu UE 8 und UE 10 in den Klassen 7-9 Umsetzungsschritte: Individualethische Konfliktsituationen: Zwischen Kirchenlehre und individueller Gewissensentscheidung, z.B. Schwangerschaftsabbruch, Pränatale Diagnostik Das Ehesakrament in der Katholischen Kirche: Die gegenseitige Liebe von Mann und Frau als ein Bild der unverbrüchlichen, absoluten Liebe, mit der Gott den Menschen liebt. Die Ehe aus evangelischem Verständnis: Eine Liebe, die unter dem Segen Gottes steht. Ist ein Schwangerschaftsabbruch ethisch und moralisch vertretbar?",
+          "Die Schülerinnen und Schüler können 3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen"
+        ],
+        [
+          "Evangelischer Blickwinkel Nicht nur in den Medien findet sich viel über veränderte Lebensformen. Den Schülerinnen und Schüler stellt sich die Frage danach, welche Vorstellungen von Beziehungen sie haben und wie sie selbst leben möchten. Dazu werden die vielfältigen Lebensformen in medialer Darstellung herausgesucht und Traumvorstellungen mit der Wirklichkeit verglichen.",
+          "",
+          "3.3.1(1) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität (z.B. in kultureller Bedingtheit, gesellschaftlichem Wandel, medialer Darstellung, biblischer Deutung) auseinandersetzen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.1 deskriptive und normative Aussagen unterscheiden und sich mit deren Anspruch auseinandersetzen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen. 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten."
+        ]
+      ]
+    },
+    {
+      "id": "ue-05",
+      "number": 5,
+      "title": "„Dein Reich komme“ – Jesu zentrale Botschaft (II)",
+      "hours": null,
+      "preparation_questions": [
+        "Welche Vorstellungen von Jesus werden in Kunst, Werbung, Medien ... transportiert? Was kann man von Jesus Christus wissen – was kann man an Jesus Christus glauben Was lernen wir aus Gleichnissen und Wundern über die Menschlichkeit im Reich Gottes?"
+      ],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können G verschiedene Sichtweisen auf Jesus (z. B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) beschreiben M verschiedene Aussagen über Jesus (z. B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) miteinander vergleichen E einen begründeten Standpunkt zu Aussagen über Jesus (z. B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen 3.3.3 (1) G die Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) beschreiben M die Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) erläutern E zur Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) kritisch Stellung nehmen",
+              "references": [
+                {
+                  "id": "3.3.3.1",
+                  "display": "3.3.3 (1)"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen."
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3 .3.3 (2) G/M/E: an Beispielen zeigen , wie biblische Texte oder Motive aufgegriffen werden (z. B. in Werbung, Musik, Bildender Kunst, Film, Literatur) 3.3.5 (2) eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Überlieferung G vergleichen / M in Beziehung setzen E Jesusdeutungen in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Übe rlieferung in Beziehung setzen 3.3.5 (3) an Gleichnissen und Wundererzählungen G aufzeigen / M beschreiben / E herausarbeite n ), welche Lebensperspektive die Reich-Gottes-Botschaft enthält (z. B. Mt 25,14-30; Mk 7,31-37; Lk 14,15-24; Joh 6,1-15) 3.3.5 (5) an Beispielen aus der Bergpredigt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren, wie die Botschaft Jesu zum Perspektivenwechsel herausfordert 3.3.6 (3) an biblischen Beispielen G aufzeigen / M erläutern / E herausarbeiten welche Bedeutung der Dienst am Nächsten hat (zum Beispiel Lk 10,25–37; Joh 13,1–17)",
+              "references": [
+                {
+                  "id": "3.3.2",
+                  "display": "3.3 (2)"
+                },
+                {
+                  "id": "3.3.5.2",
+                  "display": "3.3.5 (2)"
+                },
+                {
+                  "id": "3.3.5.3",
+                  "display": "3.3.5 (3)"
+                },
+                {
+                  "id": "3.3.5.5",
+                  "display": "3.3.5 (5)"
+                },
+                {
+                  "id": "3.3.6.3",
+                  "display": "3.3.6 (3)"
+                }
+              ]
+            }
+          ],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 5 „Dein Reich komme“ – Jesu zentrale Botschaft (II)"
+        ],
+        [
+          "Impulsfragen für das Vorbereitungsteam: Welche Vorstellungen von Jesus werden in Kunst, Werbung, Medien ... transportiert? Was kann man von Jesus Christus wissen – was kann man an Jesus Christus glauben Was lernen wir aus Gleichnissen und Wundern über die Menschlichkeit im Reich Gottes?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen katholisch",
+          "Didaktische Fragen und inhaltliche Umsetzungsschritte",
+          "Inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3 .3.3 (2) G/M/E: an Beispielen zeigen , wie biblische Texte oder Motive aufgegriffen werden (z. B. in Werbung, Musik, Bildender Kunst, Film, Literatur) 3.3.5 (2) eine Jesusdeutung in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Überlieferung G vergleichen / M in Beziehung setzen E Jesusdeutungen in der Kunst (Bildende Kunst, Musik, Literatur und Film) mit biblischer Übe rlieferung in Beziehung setzen 3.3.5 (3) an Gleichnissen und Wundererzählungen G aufzeigen / M beschreiben / E herausarbeite n ), welche Lebensperspektive die Reich-Gottes-Botschaft enthält (z. B. Mt 25,14-30; Mk 7,31-37; Lk 14,15-24; Joh 6,1-15) 3.3.5 (5) an Beispielen aus der Bergpredigt (Mt 5-7) G aufzeigen / M beschreiben / E analysieren, wie die Botschaft Jesu zum Perspektivenwechsel herausfordert 3.3.6 (3) an biblischen Beispielen G aufzeigen / M erläutern / E herausarbeiten welche Bedeutung der Dienst am Nächsten hat (zum Beispiel Lk 10,25–37; Joh 13,1–17)",
+          "Vertiefungsbaustein zu UE 7 und UE 11 in den Klassen 7-9 Umsetzungsschritte: Vorstellungen der SuS von Jesus Von Jesus von Nazareth zum auferstandenen Christus Die Botschaft Jesu vom Reich Gottes als eine Perspektive für und auf gelingendes Leben Frohe Botschaft als Zuspruch und Anspruch zugleich Barmherzigkeit – Versöhnung – Nächstenliebe – Bewahrung der Schöpfung: Mitgestalter werden im Reich Gottes hier und heute",
+          "Die Schülerinnen und Schüler können G verschiedene Sichtweisen auf Jesus (z. B. Jesus Christus, Sohn Gottes, Messias, Herr, Jesus im Koran) beschreiben M verschiedene Aussagen über Jesus (z. B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) miteinander vergleichen E einen begründeten Standpunkt zu Aussagen über Jesus (z. B. Jesus Christus, Sohn Gottes, Herr, Jesus im Koran) einnehmen 3.3.3 (1) G die Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) beschreiben M die Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) erläutern E zur Rezeption biblischer Texte und Motive in Medien (z. B. Musik, Bildende Kunst, Film, Werbung, Literatur) kritisch Stellung nehmen"
+        ],
+        [
+          "Evangelischer Blickwinkel Am Ende ihrer Schullaufbahn befassen sich die Schülerinnen und Schüler mit unterschiedlichen Vorstellungen von Jesus als Grundlage des evangelischen Glaubens („ solus Christus“).",
+          "",
+          "3.3.2(1) G den herausfordernden und zusprechenden Charakter der Bergpredigt für christliches Leben an Beispielen beschreiben M den herausfordernden und zusprechenden Charakter der Bergpredigt zu Fragen christlicher Lebensgestaltung (z. B. Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) in Beziehung setzen E sich mit dem herausfordernden und zusprechenden Charakter der Bergpredigt (z. B. im Hinblick auf Gebet, Gewalt, Macht, Geld, Besitz, Sexualität, Verzicht, Sorge) auseinandersetzen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen aus beiden Fachplänen : 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen 2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen."
+        ]
+      ]
+    }
+  ]
+}

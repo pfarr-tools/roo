@@ -1,0 +1,755 @@
+{
+  "schema_version": "1.0.0",
+  "type": "confessional_cooperative_curriculum",
+  "metadata": {
+    "title": "KoKo Beispielcurriculum GYM 9/10 B",
+    "country": "DE",
+    "state": "BW",
+    "school_type": "GYM",
+    "grades": [
+      9,
+      10
+    ],
+    "variant": "B",
+    "cooperation_model": "confessional_cooperative",
+    "denominations": [
+      "evangelical",
+      "catholic"
+    ],
+    "source": {
+      "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6243_y9ygav9k.docx",
+      "format": "docx"
+    },
+    "conversion": {
+      "complete": true,
+      "method": "OOXML table extraction",
+      "unit_count": 7
+    }
+  },
+  "education_plan_bindings": [
+    {
+      "role": "denominational_basis",
+      "denomination": "evangelical",
+      "subject": "Evangelische Religionslehre",
+      "plan_code": null
+    },
+    {
+      "role": "denominational_basis",
+      "denomination": "catholic",
+      "subject": "Katholische Religionslehre",
+      "plan_code": null
+    }
+  ],
+  "units": [
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "Wege in eine neue Wirklichkeit – die Bergpredigt",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1 Wege in eine neue Wirklichkeit – die Bergpredigt"
+        ],
+        [
+          "Leitend für diese Unterrichtseinheit ist die Frage, in welcher Weise heute die Botschaft der Bergpredigt Impulse für individuelle und gesellschaftliche Veränderungen geben kann. Ausgehend von der ersten didaktischen Ebene des Wahrnehmens und Darstellens werden zunächst aktuelle und überlieferte Jesus-Bilder thematisiert. Im Zentrum steht jedoch die Auseinandersetzung mit der Botschaft Jesu, wie sie in der Bergpredigt zum Ausdruck kommt. Dabei r ückt vor allem auch der in Jesu Botschaft angelegte Perspektivenwechsel, durch den eine Veränderung von Indiv i duum und Gesellschaft (z. B. Feindesliebe; Gewaltverzicht) angestoßen wird, in den Fokus."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen k a tholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.5 (1) sich mit Jesusvorstellungen in der Alltags- und Jugendkultur au s einandersetzen, die von Klischees geprägt werden (zum Beispiel in der Popmusik, im Sport) 3.3.5 (2) Jesusdeutungen in der Kunst (Bildende Kunst, Musik, Liter a tur und Film) mit biblischer Überli e ferung in Beziehung setzen 3.3.5 (5) an Beispielen aus der Ber g predigt analysieren, wie die Bo t schaft Jesu zum Perspektivenwec h sel herausfordert 3.3.3 (5) an Beispielen erläutern, dass biblische Texte gesellschaftsp o litische Relevanz haben (zum Beispiel Mi 3,1–12; Mi 6,8; Lk 1,46–55; Mt 5–7 ) 3.3.5 (6) überprüfen, ob die Ber g predigt für die politische Gestaltung einer Gesellschaft hilfreich sein kann",
+          "Didaktische Fragen und Anregu n gen: Einstieg: Darstellungen Jesu zw i schen Klischee und Kunst insbeso n dere auf die herausfordernde Bo t schaft Jesu Die Bergpredigt – neue Perspektiven auf gelingendes Leben Zuspruch und Anspruch Mit der Bergpredigt Gesellschaft verändern?",
+          "Die Schülerinnen und Schüler kö n nen 3.3.5 (1) Anstößigkeit und Aktualität der Bergpredigt erläutern (zum Be i spiel neue Gerechtigkeit, Feindesli e be, Gewaltverzicht, Besitz, Stellung zur Thora) 3.3.3 (3) Bibeltexte (zum Beispiel Hiob, Bergpredigt) hinsichtlich ihrer existenziellen Bedeutung interpr e tieren 3.3.2 (2) das Verhältnis von Zuspruch und Anspruch als Grundzug christlicher Ethik anhand biblischer Texte (zum Beispiel 2. Mose 20,1-17; Mt 5-7; Lk 10,25-37; Joh 8,1-11; Gal 3,26-28) entfalten"
+        ],
+        [
+          "Das Verhältnis von Zuspruch und Anspruch als Grundzug christlicher Ethik am Beispiel der Bergpredigt",
+          "Individuelle und gesellschaftliche Relevanz der Bergpredigt",
+          "Die Bergpredigt – eine realisierbare Provokation, unsere Gesellschaft heute zu gestalten ?"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen en t decken und [...] darstellen 2.2.4 . biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und arg u mentativ vertreten 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.5.4 typische Sprachformen der Bibel und des christlichen Glaubens transformieren"
+        ]
+      ]
+    },
+    {
+      "id": "ue-02",
+      "number": 2,
+      "title": "Karma, Wiedergeburt und Nirwana – fernöstliche Religionen",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.4.5",
+          "display": "2.4.5"
+        },
+        {
+          "id": "2.4.6",
+          "display": "2.4.6"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 2 Karma, Wiedergeburt und Nirwana – fernöstliche Religionen"
+        ],
+        [
+          "Die Unterrichtseinheit dient der Auseinandersetzung mit fernöstlichen Religionen. Auf der Basis von Sachkenntnis und dem Wissen über Unterschiede und Gemeinsamkeiten sollen die Schülerinnen und Schüler die Fähigkeit zum Perspektivenwechsel, zu gegenseitiger Achtung, zur Toleranz und zum Dialog erwerben. Der Fachplan Evangelische Religionslehre sieht nur die Beschäftigung mit einer fernöstlichen Religion vor. Der Katholische Fachplan zielt auf die Auseinandersetzung mit dem Hinduismus und dem Buddhismus."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen k a tholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.7 (1) herausarbeiten, wie die Weltreligion des Hinduismus im U m feld und in den Medien sichtbar wird 3.3.7 (2) herausarbeiten, wie die Weltreligion des Buddhismus im Umfeld und in den Medien sichtbar wird 3.3.7 (3) Aspekte aus hinduistischen Lehren erläutern (Göttervielfalt, Kastenwesen und religiöser Alltag, Reinkarnation, Brahman, Atman) 3.3.7 (4) Aspekte aus buddhistischen Lehren erläutern (Weg des Siddhar t ha Gautama, Legende von den vier Ausfahrten, Karma und Reinkarnat i on, Meditation und Erleuchtung, vier edle Wahrheiten, achtfacher Pfad) 3.3.7 (5) an einem Beispiel aufze i gen, welche Anfragen sich aus der Auseinandersetzung mit anderen Weltreligionen an das Christentum stellen (zum Beispiel Gottesbild, Erlösungsvorstellungen, Mensche n bild) Falls diese Unterrichtseinheit in Kla s se 10 unterrichtet wird: 3.3.7 (6) am Beispiel des Weltethos entfalten, dass die Verständigung der Weltreligionen auf gemeinsame ethische Normen eine Chance für den Weltfrieden eröffnet",
+          "Didaktische Fragen und Anregu n gen: Hinduismus und Buddhismus – eine Recherche Aspekte des Hinduismus Aspekte des Buddhismus Als Christen angefragt und auskunftsfähig Leibliche Auferstehung oder Rei n karnation?",
+          "Die Schülerinnen und Schüler kö n nen 3.3.4 (3) Gottesvorstellungen einer fernöstlichen Religion mit biblischen vergleichen 3.3.7 (1) Ausprägungen religiöser Praxis und Vorstellungen einer fer n östlichen Religion erläutern und mit christlichen Erlösungsvorstellungen vergleichen 3.3.5 (3) christliches Verständnis von Tod und Auferstehung mit anderen religiösen und philosophischen Vo r stellungen vergleichen"
+        ],
+        [
+          "Vergleich von christlichen Gottesvo r stellungen sowie der christlichen Auferstehungshoffnung mit d en Erl ö sungsvorstellungen einer fernöstl i chen Religion",
+          "Zentrale Aspekte aus Hinduismus und Buddhismus im Vergleich mit christlichen Vorstellungen",
+          "Auf der Grundlage der Auseinande r setzung mit zentralen Aspekten aus Hinduismus und Buddhismus sollen Anfragen geprüft werden, die sich aus dem Vergleich fernöstlicher R e inkarnationsvorstellungen mit dem christlichen Auferstehungsglauben ergeben."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1. 3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.3.2 Gemeinsamkeiten von Konfessionen, Religionen und Weltanschauungen sowie deren Unterschiede aus der Perspektive des katholischen Glaubens analysieren 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und arg u mentativ vertreten 2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern 2.4.5 Gemeinsamkeiten und Unterschiede von religiösen und weltanschaulichen Überzeugungen benennen und im Dialog argumentativ verwenden 2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überze u gungen im Dialog argumentativ auseinandersetzen 2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in ve r schiedenen Kontexten wiedererkennen und sie einordnen 2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.3.4 Grundzüge von Argumentationsmodellen, insbesondere theologischen, miteinander vergleichen 2.4.2 Gemeinsamkeiten und Unterschiede religiöser und nichtreligiöser Überzeugungen benennen und sie im Hi n blick auf mögliche Dialogpartner kommunizieren 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-03",
+      "number": 3,
+      "title": "Mit Leib und Seele – Liebe, Partnerschaft, Sexualität",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 3 Mit Leib und Seele – Liebe, Partnerschaft, Sexualität"
+        ],
+        [
+          "Ziel dieser Unterrichtseinheit ist es, Schülerinnen und Schüler n Orientierung zu ermöglichen und Perspektiven au f zuzeigen, mit Partnerschaft und Sexualität verantwortlich umzugehen. Die den Konfessionen gemeinsamen bibl i schen Grundlagen werden im katholischen Fachplan durch lehramtliche Aussagen ergänzt."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen k a tholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.1 (1) eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in B e ziehung setzen (zum Beispiel Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Fam i lie, Beruf und Ehrenamt, Erholung und Freizeit) 3.3.3 (6) den Sinngehalt biblischer Texte in neuen Formen darstellen 3.3.1 (2) Situationen von Glück und Leid als Erfahrungen charakterisi e ren, die Grundfragen des Lebens aufwerfen 3.3.1 (5) erläutern, dass die christl i che Sicht von der Würde und Unve r fügbarkeit des Menschen in beso n derer Weise herausfordert (zum Beispiel Leben in Beziehung; Schutz am Anfang und Ende des Lebens; Umgang mit Kranken und mit Me n schen mit Behinderungen; Umgang mit Heterogenität und Vielfalt) 3.3.2 (3) die lehramtliche Argume n tation zu einem ethischen Problem herausarbeiten (zum Beispiel Schwangerschaftsabbruch, Sterbehi l fe, Krieg als Mittel politischer Macht)",
+          "Didaktische Fragen und Anregu n gen: Liebe und Partnerschaft Biblische Zeugnisse z. B. Hohelied und 1Kor 13; Gen 2/1. Mose 2; Mt 18; Eph 4 Gelingende Partnerschaft Liebe und Sexualität – Verantwo r tung füreinander",
+          "Die Schülerinnen und Schüler kö n nen 3.3.1 (4) sich mit Ausprägungen von Liebe, Partnerschaft und Sexualität auseinandersetzen (zum Beispiel in kultureller Bedingtheit, gesellschaf t lichem Wandel, medialer Darste l lung, biblischer Deutung) 3.3.1 (2) sich mit Begründungen für Menschenwürde und Mensche n rechte auseinandersetzen (zum Be i spiel Ebenbild Gottes, Rechtfert i gung, Naturrecht)"
+        ],
+        [
+          "Biblische Perspektiven auf Liebe, Sexualität und Ehe sowie auf Menschrechte und Menschenwürde",
+          "Biblische und lehramtliche Impulse zu einer menschenwürdigen L e bensgestaltung",
+          "Ausgehend von anthropologischen Grundkonstanten, insbesondere der Menschenwürde, und lehramtlichen Aussagen sollen Schülerinnen und Schüler den verantwortlichen U m gang mit Liebe, Partnerschaft und Sexualität reflektieren und im Blick auf ethische Problemstellungen e i nen eigen Standpunkt begründet einnehmen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.4 Zweifel und Kritik an Religion prüfen 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und arg u mentativ vertreten 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen [...] begründet vertreten 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern 2.5.2 typische Sprachformen der Bibel theologisch reflektiert transformieren 2.5.4 über Fragen nach Sinn und Transzendenz angemessen sprechen 2.1.5 die Rezeption religiöser Motive in Medien erkennen 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.3.4 Grundzüge von Argumentationsmodellen, insbesondere theologischen, miteinander vergleichen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-04",
+      "number": 4,
+      "title": "Wie kann christlicher Glaube überzeugend gelebt werden?",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.1.4",
+          "display": "2.1.4"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.2.5",
+          "display": "2.2.5"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.7",
+          "display": "2.3.7"
+        },
+        {
+          "id": "2.3.8",
+          "display": "2.3.8"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 4 Wie kann christlicher Glaube überzeugend gelebt werden?"
+        ],
+        [
+          "Diese Unterrichtseinheit setzt an bei den konfessionellen Ausdrucksformen des christlichen Glaubens in unserer Gesellschaft. Dabei werden die evangelische und katholische Kirche als „ Gemeinschaft der Gläubigen“ in ihrer j e weiligen historischen Ausfaltung und ihrem theologischen Selbstverständnis akzentuiert, das sich in der Bedeutung der Eucharistie beziehungsweise in der Betonung der Heiligen Schrift zeigt. Die Frage nach der Glaubwürdigkeit der Kirchen in Geschichte und Gegenwart wird vor allem hinsichtlich des Verhältnisses zum Judentum thematisiert. Es empfiehlt sich, diese UE im Teamteaching oder in kürzeren Phasen des Lehrerwechsels zu unterrichten, da hier wesentliche konfessionelle Profile in den Blick kommen."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen katholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.6 (1) an Beispielen erläutern, wie der Glaube an Jesus Christus in M u sik, Architektur und Kunst immer neue Ausdrucksformen gefunden hat 3.3.6 (6) prüfen, inwiefern Elemente der Liturgie Erfahrungsräume des Glaubens eröffnen (zum Beispiel Gebet, Kirchenmusik, Gesang, Tanz, Stille) 3.3.6 (3) entfalten, welche Bede u tung die geschichtlich gewachsene Eucharistiefeier für die Gemeinschaft der Katholischen Kirche hat 3.3.6 (4) an einem neutestamentl i chen Beispiel zeigen, wie eine G e meinde darum ringt, Glauben und Leben zu verbinden (zum Beispiel Gal; 1Kor) 3.3.6 (2) herausarbeiten, dass in der Zeit des Nationalsozialismus Chri s tinnen und Christen angesichts des Unrechts der Shoah versagt haben, sich aber auch von der Botschaft Jesu zu kritischer Stellungnahme und Widerstand herausfordern ließen (zum Beispiel Dietrich Bonhoeffer, Alfred Delp, Gertrud Luckner, Max Josef Metzger, Bischof Joannes Ba p tista Sproll) 3.3.6 (5) sich ausgehend von einer aktuellen Herausforderung mit der Frage auseinandersetzen, wie glaubwürdiges diakonisches Handeln der Kirche heute aussehen kann (zum Beispiel Integration von Flüch t lingen)",
+          "Didaktische Fragen und Anregu n gen: Kulturelle Ausdrucksformen und konfessionelle Entfaltungen des Glaubens Erfahrungsräume des Glaubens in der Liturgie? Eucharistiefeier – Mitte der Kathol i schen Kirche? Evangelische Kirche – Kirche des Wortes? Einheit von Glaube und Leben Zwischen Versagen und Treue zur Botschaft Jesu a. Antijudaismus: Der Umgang mit den älteren Geschwistern im Gla u ben b. Kirche im Nationalsozialismus Glaubwürdig durch den Einsatz für andere",
+          "Die Schülerinnen und Schüler kö n nen 3.3.6 (3) Kennzeichen und histor i sche Wurzeln unterschiedlicher Ki r chen und Denominationen erläutern (zum Beispiel Orthodoxie, Anglikan i sche Kirche, Freikirchen, Pfingstb e wegung) 3.3.6 (1) das Verhältnis von Kirche und Judentum an ausgewählten Stationen darstellen (Drittes Reich und zum Beispiel Kreuzzüge, die große Pest, Reformation, Aufklärung, Kaiserreich, Kirche und Juden nach Auschwitz) 3.3.6 (2) die Haltung von Christen gegenüber dem Staat in autoritären Regimen untersuchen (zum Beispiel Bekennende Kirche und Deutsche Christen zur Zeit des Nationalsozi a lismus, Verfolgung und Unterdr ü ckung von Christen weltweit)"
+        ],
+        [
+          "Die Vielfalt von Kirchen und Denom i nationen und ihr Wahrheitsanspruch. Exemplarisch: Das Verhältnis von Kirche und Judentum in seiner G e schichte darstellen",
+          "Kirche – Glaubwürdige Gemei n schaft en der an Christus Glaube n den ?",
+          "Die Schülerinnen und Schüler prüfen die Einheit von Glaube und Leben der Kirche, besonders im Blick auf die Zeit des Nationalsozialismus und heute."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftl i chen Handlungsfeldern erkennen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biographie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.8 Sach- und Werturteile unterscheiden 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen im Diskurs begründet vertreten 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern 2.5.1 religiöse Rituale und Symbole in einer Weise transformieren, die ihren Überzeugungen entspricht 2.5.3 Aspekten des christlichen Glaubens [...] kreativ Ausdruck verleihen 2.3.3 ambivalente Aspekte der Religion und ihrer Praxis erläutern. 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-05",
+      "number": 5,
+      "title": "Ethisch verantwortlich handeln",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.4",
+          "display": "2.1.4"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.2.6",
+          "display": "2.2.6"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.3.6",
+          "display": "2.3.6"
+        },
+        {
+          "id": "2.3.7",
+          "display": "2.3.7"
+        },
+        {
+          "id": "2.3.8",
+          "display": "2.3.8"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.5.5",
+          "display": "2.5.5"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 5 Ethisch verantwortlich handeln"
+        ],
+        [
+          "Die Schülerinnen und Schüler lernen Sc hritte ethischer Urteilsbildung, um über intuitives Urteilen hinaus zu refle k tierten und verantworteten Entscheidungen zu gelangen. Insbesondere die Unterscheidung von Verantwortungs- und Gesinnungsethik sowie von utilitaristischer und deontologischer Argumentationsweise dient dazu, die Kompl e xität ethischer Urteile zu entschlüsseln. Die Auseinandersetzung mit dem Thema wird theologisch durch den Bezug zum Gewissen als letzte Instanz der Entscheidungsfindung erweitert und durch die Frage nach dem Beitrag der bibl i schen Botschaft für heutige ethische Standards vertieft. Angesichts der Fülle interessanter und wichtiger Handlungsfelder bietet sich eine fächerverbindende Projektarbeit an, beispielsweise in Kooperation mit dem Fach Ethik oder auf der interreligiösen Ebene."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen k a tholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.2 (4) unter Berücksichtigung einer Dilemmasituation das Ve r ständnis des Gewissens als letzte Instanz erläutern (zum Beispiel nach John Henry Newman, GS, KatKK 1782) 3.3.1 (5) erläutern, dass die christl i che Sicht von der Würde und Unve r fügbarkeit des Menschen in beso n derer Weise herausfordert (zum Beispiel Leben in Beziehung, Schutz am Anfang und Ende des Lebens, Umgang mit Kranken und mit Me n schen mit Behinderungen, Umgang mit Heterogenität und Vielfalt) 3.3.1 (3) an der Verkündigung und der Person des Paulus erläutern, welche Bedeutung Glaube und Fre i heit für den Menschen haben kö n nen (zum Beispiel 1Kor 13; Gal 3,26–29; Gal 5,1–14) 3.3.2 (5) am Beispiel eines Konflikts Schritte ethischer Urteilsbildung erläutern und Handlungsoptionen unter Berücksichtigung der christl i chen Perspektive erörtern (zum Be i spiel verantworteter Umgang mit Sexualität, Schutz des Lebens, Mob i lität und Klimaschutz, Rüstungse x port und Wirtschaftswachstum) 3.3.2 (6) unterschiedliche Ansätze ethischer Urteilsbildung erläutern (zum Beispiel autonome Moral, k a tegorischer Imperativ, utilitarist i scher und deontologischer Ansatz) 3.3.2 (1) globale Auswirkungen menschlichen Handelns auf Natur und Umwelt als ethische Herausfo r derungen erläutern 3.3.2 (2) aus verschiedenen Perspe k tiven Phänomene und Entwicklu n gen untersuchen, die den gesel l schaftlichen Frieden gefährden und deshalb ethisch herausfordern (G e nerationenkonflikt, Schere zwischen Arm und Reich, mangelnde Teilhabe) 3.3.2 (3) die lehramtliche Argume n tation zu einem ethischen Problem herausarbeiten (zum Beispiel Schwangerschaftsabbruch, Sterbehi l fe, Krieg als Mittel politischer Macht)",
+          "Mögliche Schritte: Einstieg: Wie soll ich mich entsche i den? Arbeit mit Dilemmasituationen Leitfrage: Welche Bedeutung hat das Gewissen für das ethisch verantwortete Ha n deln des Menschen? Zum Beispiel nach • John Henry Newman • GS 16 • KatKK 1782 • Gewissensbindung und Gewi s sensbildung • Autonome Moral Beitrag der biblischen Botschaft: Das biblisch-christliche Mensche n bild als Grundlage ethischer Urteilsbi l dung Kulturelle Fortschritte in der Ethikg e schichte der Menschheit • System der Blutrache (Kollektive Schuld) • „Auge um Auge, Zahn um Zahn“ (Individuelle Schuld; Verhältnism ä ßigkeit) • Negativfassung der Goldenen R e gel • Positivfassung der Goldenen Regel Ethische Ansätze Grundlegende Argumentationssy s teme Deontologischer Ansatz: Kategorischer Imperativ (Kant); Menschenwürde; Menschenrechtsethos Utilitaristischer (teleologischer) Ansatz: Das größtmögliche Glück der größtmöglichen Zahl Unterscheidung von Verantwortungs- und Gesinnungsethik. Vgl. Ferdinand von Schirach: „Die Würde ist antastbar“ Konkrete Handlungsfelder, verpflichtend: Mangelnde Teilhabe, Schere zw i schen Arm und Reich, Generatione n konflikt Weitere mögliche ethische Han d lungsfelder: Lebensende–Sterbehilfe, Klimaschutz, Tierethik, Frieden Aufgaben für die Projektgruppen: Situationsanalyse: Recherchiert alle wichtigen Fakten zu dem gewählten Problemfeld. Interessensanalyse: Analysiert jeweils, welche Interessen und Interessenkonflikte (individuell, sozialökologisch) ins Spiel kommen Verhaltensalternativen: Tragt Möglichkeiten zusammen, um auf den Interessenskonflikt zu reagieren. Normenprüfung: Untersucht, welche Werte und welche Normen in den konkreten Handlungsfeldern relevant sind. Güterabwägung: Trefft auf der Basis der beiden Handlungsmaximen (Übelminimierungsregel und Übel- abwägungsregel ) und der Kriterien eine Entscheidung für eine verantwortete Handlungsoption. Präsentation: Stellt eure Arbeitse r gebnisse im Plenum dar und zeigt auf, welchen konkreten Beitrag J u gendliche im Kontext des Proble m feldes leisten können. Mögliche Aufträge zur Metakognit i on Überprüft, an welchen Stellen deo n tologische und/oder utilitaristische Argumente eure Entscheidung b e einflusst haben. Analysiert, warum ihr gegebenenfalls zu unterschiedlichen Urteilen g e langt seid.",
+          "Die Schülerinnen und Schüler kö n nen 3.3.1 (2) sich mit Begründungen für Menschenwürde und Mensche n rechte auseinandersetzen (zum Be i spiel Ebenbild Got tes, Rechtfert i gung, Naturrecht) 3.3.2 (2) das Verhältnis von Zuspruch und Anspruch als Grundzug christlicher Ethik anhand biblischer Texte (zum Beispiel 2. Mose 20,1-17; Mt 5-7; Lk 10,25-37; Joh 8,1-11; Gal 3,26-28) entfalten 3.3.2 (3) anhand von Fallbeispielen utilitaristische Ethik und Pflichtethik vergleichen 3.3.2 (1) Konsequenzen ethischer Ansätze anhand der Frage der Selbstbestimmung des Menschen aufzeigen (zum Beispiel aus dem Bereich Suizid, Sterbehilfe , Tran s plantationsmedizin)"
+        ],
+        [
+          "Grenzen der Selbstbestimmung des Menschen; Begründung und Entfaltung von eth i schen Ansätzen",
+          "Ethische Urteilsfähigkeit und Gewi s sen",
+          "In der Anwendung unterschiedlicher Ansätze ethischer Urteilsbildung auf gesellschaftliche und globale eth i sche Herausforderungen setzen sich die Schülerinnen und Schüler mit der Vorstellung des Gewissens als letzter Wahrheitsinstanz des Menschen auseinander."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftl i chen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft [...] erkennen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.2.6 Glaubensaussagen in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen und ihre Bedeutung aufweisen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und arg u mentativ vertreten 2.3.6 . Modelle ethischer Urteilsbildung kritisch beurteilen und beispielhaft anwenden 2.3.7 Herausforderungen beziehungsweise Antinomien sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen 2.3.8 Sach- und Werturteile unterscheiden 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen [...] begründet vertreten 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden 2.5.5 die Präsentation des eigenen Standpunkts und anderer Positionen medial und adressatenbezogen aufbereiten 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.3.4 Grundzüge von Argumentationsmodellen, insbesondere theologischen, miteinander vergleichen 2.3.6 Modelle ethischer Urteilsbildung bewerten und sie beispielhaft anwenden 2.4.1 sich auf die Perspektive eines anderen einlassen und sie in Bezug zum eigenen Standpunkt setzen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-06",
+      "number": 6,
+      "title": "Sprechen von Gott – Gottes Wort in Menschenwort",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.3",
+          "display": "2.3.3"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 6 Sprechen von Gott – Gottes Wort in Menschenwort"
+        ],
+        [
+          "Diese Unterrichtseinheit verdeutlicht die existenziell bedeutsame Auslegung biblischer Texte mithilfe exegetischer Methoden. Dies wird am Beispiel der „Rede von Gott“ verdeutlicht: Wie unterscheidet sich angemessene von mis s bräuchlicher (z. B. Fundamentalismus) Verwendung des Gottesnamens?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen katholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.3 (1) Beobachtungen, die sie am biblischen Text eigenständig g e macht haben, formulieren 3.3.3 (3) zeigen, zu welchen Erge b nissen ein methodengeleiteter U m gang mit biblischen Texten führen kann (zum Beispiel synoptischer Vergleich, Aspekte historisch-kritischer, sozialgeschichtlicher, ti e fenpsychologischer, feministischer Auslegung) 3.3.3 (2) unter Berücksichtigung der Gattung entfalten, wie biblische Texte unterschiedliche Dimensionen von Wahrheit zum Ausdruck bringen (zum Beispiel Gen 1,1–2,4a; Jona; Rut; Ps 139,1–18; Koh 3,1-15; Ausz ü ge aus dem Hld ; Mt 1-2; Mt 14,22–33par; Lk 1-2; Lk 24,13–35) 3.3.3 (4) erklären, dass die vier Evangelien keine historischen Jesu s biografien sind, sondern Glauben s zeugnisse und worin sie sich in ihren Jesusdeutungen unterscheiden 3.3.3 (6) den Sinngehalt biblischer Texte in neuen Formen darstellen 3.3.4 (3) ausgehend von Ex 20,4 und Ex 33,18-23 beschreiben, dass Gott unverfügbar ist und deshalb das Sprechen über Gott an Grenzen stößt 3.3.4 (4) den Unterschied zwischen dem Bekenntnis „Gott ist die Liebe“ (1Joh 4,7–15) und der Rede vom „lieben Gott“ erläutern 3.3.4 (2) die Funktionalisierung Go t tes und den Missbrauch des Gotte s begriffs an Beispielen aufzeigen",
+          "Didaktische Fragen und Anregu n gen: Erste Zugänge zu biblischen Texten Exegese methodengeleitet Biblische Sprache und heutige Spr a che Sprechen von Gott trotz Bilderve r bot? Der „liebe“ Gott, ein „zorniger“ Gott? Der Missbrauch des Namens Gottes",
+          "Die Schülerinnen und Schüler kö n nen 3.3.3 (1 ) sich mit Aspekten des Ve r ständnisses biblischer Texte ause i nandersetzen (zum Beispiel Historiz i tät und Aktualität, Wahrheit, Wide r sprüche) 3.3.3 (2) die Entstehung biblischer Texte aus historisch-kritischer Pe r spektive exemplarisch erläutern 3.3.3 (3 ) Bibeltexte (zum Beispiel Hiob, Bergpredigt) hinsichtlich ihrer existenziellen Bedeutung interpr e tieren 3.3.3 (4) sich mit der Bedeutung der heiligen Schriften in den monothei s tischen Religionen (Wahrheitsa n spruch und zum Beispiel Überse t zung, Interpretation, Alltagsg e brauch) auseinandersetzen 3.3.7 (2) sich mit Ursachen und Fo l gen fundamentalistischer Überze u gungen in einer Religion auseina n dersetzen (zum Beispiel im Christe n tum, im Judentum, im Islam)"
+        ],
+        [
+          "Bedeutung heiliger Schriften in den monotheistischen Religionen sowie Aspekte eines verantwortlichen Tex t verständnisses",
+          "Verantwortete Rede von Gott",
+          "Die Schülerinnen und Schüler setzen sich auf der Grundlage eines herm e neutischen Textverständnisses mit christlich verantworteter Gottesrede auseinander."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden 2.3.4 Zweifel und Kritik an Religion prüfen 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.5.2 typische Sprachformen der Bibel [...] transformieren 2.5.3 Aspekten des christlichen Glaubens [...] kreativ Ausdruck verleihen 2.5.4 über Fragen nach Sinn und Transzendenz angemessen sprechen 2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.3.2 Zweifel und Kritik an Religion erörtern 2.3.3 ambivalente Aspekte der Religion und ihrer Praxis erläutern 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen 2.5.4 typische Sprachformen der Bibel und des christlichen Glaubens transformieren"
+        ]
+      ]
+    },
+    {
+      "id": "ue-07",
+      "number": 7,
+      "title": "Trotz allem Sinn?",
+      "hours": null,
+      "preparation_questions": [],
+      "shared_plan": [],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": []
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": []
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.3.1",
+          "display": "2.3.1"
+        },
+        {
+          "id": "2.3.4",
+          "display": "2.3.4"
+        },
+        {
+          "id": "2.3.5",
+          "display": "2.3.5"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.4.3",
+          "display": "2.4.3"
+        },
+        {
+          "id": "2.4.4",
+          "display": "2.4.4"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.1.5",
+          "display": "2.1.5"
+        },
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.3.2",
+          "display": "2.3.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 7 Trotz allem Sinn?"
+        ],
+        [
+          "Die Schülerinnen und Schüler setzen sich mit der Frage nach dem Sinn des Lebens auseinander. Kontingenzerfa h rungen können die Gottesfrage eröffnen. Die eschatologischen Perspektive kann den Blick auf die Sinnhaftigkeit von Leid und Tod verändern."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen katholisch",
+          "Gemeinsamer Unterrichtsplan",
+          "inhaltsbezogene Kompetenzen evangelisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler kö n nen 3.3.1 (1) eigene Begabungen und Fähigkeiten mit der Frage nach einer sinnvollen Lebensgestaltung in B e ziehung setzen (zum Beispiel Freundschaft und Partnerschaft, Liebe und Sexualität, Ehe und Fam i lie, Beruf und Ehrenamt, Erholung und Freizeit) 3.3.1 (2) Situationen von Glück und Leid als Erfahrungen charakterisi e ren, die Grundfragen des Lebens aufwerfen 3.3.5 (3) aus Gleichnissen und Wu n dererzählungen herausarbeiten, welche Lebensperspektiven die Reich-Gottes-Botschaft Jesu enthält (zum Beispiel Mt 25,14–30; Mk 7,31–37; Lk 14,15–24; Joh 6,1–15) 3.3.4 (1) Erfahrungen und Überl e gungen erläutern, die auf Gott als Geheimnis der Welt verweisen (zum Beispiel Staunen, Kontingenzerfa h rungen, teleologische oder kosmol o gische Argumentation) 3.3.4 (5) untersuchen, wie die Frage nach Gottes Wirken in der Welt (zum Beispiel Gott und das Leid, Wirksa m keit des Bittgebets) zu Glaubenskr i sen führen kann und wie diese zur Mündigkeit im Glauben beitragen können 3.3.4 (6) erläutern, dass Glauben und Nichtglauben Optionen sind, die unterschiedliche Konsequenzen für das Leben haben 3.3.1 (4) erklären, wie christliche Bilder von der Hoffnung auf ein L e ben nach dem Tod heute verstanden werden können 3.3.1 (6) Konsequenzen aufzeigen, die sich aus der christlichen Hof f nung auf ein Leben nach dem Tod ergeben 3.3.5 (4) ausgehend von biblischen Texten entfalten, wie die Botschaft vom Tod und von der Auferweckung Jesu auf die Menschen seiner Zeit wirkte und bis heute wirkt (zum Be i spiel Mk 16,1–8; Lk 24,1–12; Lk 24,13–35; Apg 6,8–8,1a; 1Kor 1,18–31)",
+          "Didaktische Fragen und Anregu n gen: Zukunftsperspektiven Veränderte Perspektiven Anvertraute Talente Gott als Geheimnis der Welt? Glauben wider die Unverfügbarkeit Gottes? Gott oder nicht Gott – das ist hier die Frage Sinn über den Tod hinaus",
+          "Die Schülerinnen und Schüler kö n nen 3.3.1 (3) zu Antwortversuchen auf die Sinnfrage Stellung nehmen (zum Beispiel Erfolgsstreben, Beziehu n gen, Selbstverwirklichung, Altrui s mus, Gottes- und Menschenliebe, Konsum, Glück) 3.3.4 (2) sich mit Argumenten für und gegen die Existenz Gottes ause i nandersetzen 3.3.5 (2) die Bedeutung des Todes und der Auferstehung Jesu Christi für christliche Hoffnung beschreiben"
+        ],
+        [
+          "Die Sinnhaftigkeit des Lebens ang e sichts der Gottesfrage und der En d lichkeit menschlichen Lebens",
+          "Sinnvoll leben",
+          "Die Schülerinnen und Schüler stellen sich der Sinnfrage im Horizon t der Gottesfrage und der christ lichen Hoffnung auf ein Leben na ch dem Tod ."
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbk ) Die Schülerinnen und Schüler können 2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.1 Grundformen religiöser Sprache erschließen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen 2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen 2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einze l nen und für die Gesellschaft prüfen 2.3.4 Zweifel und Kritik an Religion prüfen 2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und arg u mentativ vertreten 2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen [...] begründet vertreten 2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären 2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern 2.5.4 über Fragen nach Sinn und Transzendenz angemessen sprechen 2.1.5 die Rezeption religiöser Motive in Medien erkennen 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.3.2 Zweifel und Kritik an Religion erörtern 2.3.4 Grundzüge von Argumentationsmodellen, insbesondere theologischen, miteinander vergleichen"
+        ]
+      ]
+    }
+  ]
+}

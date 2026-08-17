@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Roo Confessional Cooperative Curriculum",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "type",
+    "metadata",
+    "education_plan_bindings",
+    "units"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "type": {
+      "const": "confessional_cooperative_curriculum"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "title",
+        "school_type",
+        "grades",
+        "variant",
+        "source"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "school_type": {
+          "type": "string"
+        },
+        "grades": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "variant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "denominations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "education_plan_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "title",
+          "shared_plan",
+          "denominational_profiles",
+          "raw_rows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "hours": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "preparation_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shared_plan": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "denominational_profiles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "process_competencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "raw_rows": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

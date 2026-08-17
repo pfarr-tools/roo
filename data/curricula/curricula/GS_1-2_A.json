@@ -1,0 +1,1294 @@
+{
+  "schema_version": "1.0.0",
+  "type": "confessional_cooperative_curriculum",
+  "metadata": {
+    "title": "KoKo Beispielcurriculum GS 1/2 A",
+    "country": "DE",
+    "state": "BW",
+    "school_type": "GS",
+    "grades": [
+      1,
+      2
+    ],
+    "variant": "A",
+    "cooperation_model": "confessional_cooperative",
+    "denominations": [
+      "evangelical",
+      "catholic"
+    ],
+    "source": {
+      "url": "https://www.kirche-und-religionsunterricht.de/resources/ecics_6241_l9620myt.docx",
+      "format": "docx"
+    },
+    "conversion": {
+      "complete": true,
+      "method": "OOXML table extraction",
+      "unit_count": 17
+    }
+  },
+  "education_plan_bindings": [
+    {
+      "role": "denominational_basis",
+      "denomination": "evangelical",
+      "subject": "Evangelische Religionslehre",
+      "plan_code": null
+    },
+    {
+      "role": "denominational_basis",
+      "denomination": "catholic",
+      "subject": "Katholische Religionslehre",
+      "plan_code": null
+    }
+  ],
+  "units": [
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "Ich bin ich und du bist du – wir gehören zusammen",
+      "hours": 6,
+      "preparation_questions": [
+        "Was heißt das: „Ich bin gewollt und wichtig“? Was macht mich aus? Was lässt mich einmalig sein? Wie können wir gemeinsam Stille erleben? Wie kann man Gott erfahren? Wie können wir uns als zusammengehörig erleben? Wo erlebe ich, dass Gott da ist?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Die Religionsgruppe als G e meinschaft mit Ritualen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Jeden Menschen als Gottes geliebte G e schöpfe betrachte n"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.1.1 ( 1 ) beschreiben, was sie selbst und andere ausmacht ( zum Beispiel Aussehen, Fähigkeiten, soziales Umfeld, Gefühle, G e danken) 3.1.1 ( 2 ) von frohen und traurigen Erlebnissen erzählen (zum Beispiel von Freude und Leid, Streit und Versö h nung, Angst und Geborgenheit, Lob und Klage, Trauer und Trost) 3.1.1 ( 4 ) darstellen, dass aus biblischer Sicht alle Menschen mit ihren Eigenschaften und Erfahrungen vor Gott wertvoll und einmalig sind und sie ihre Erfahrungen vor Gott bri n gen können (Lob, Bitte, Dank, Klage) 3.1.4 ( 6 ) spirituelle Elemente wie Rituale, freie und überlieferte Gebete reflektiert gestalten",
+              "references": [
+                {
+                  "id": "3.1.1.1",
+                  "display": "3.1.1 ( 1 )"
+                },
+                {
+                  "id": "3.1.1.2",
+                  "display": "3.1.1 ( 2 )"
+                },
+                {
+                  "id": "3.1.1.4",
+                  "display": "3.1.1 ( 4 )"
+                },
+                {
+                  "id": "3.1.4.6",
+                  "display": "3.1.4 ( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "A uf Gottes Liebe antworten in spirituellen Elementen"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.5.2",
+          "display": "2.5.2"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 1: Ich bin ich und du bist du – wir gehören zusammen (6 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam : Was heißt das: „Ich bin gewollt und wichtig“? Was macht mich aus? Was lässt mich einmalig sein? Wie können wir gemeinsam Stille erleben? Wie kann man Gott erfahren? Wie können wir uns als zusammengehörig erleben? Wo erlebe ich, dass Gott da ist?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen e vangelisch",
+          "Gemeinsamer Unterricht s plan",
+          "Inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 1 ) beschreiben, was sie selbst und andere ausmacht 3.1.1 ( 2 ) von frohen und traurigen Erlebnissen erzä h len (z.B. Freude und Leid, Angst und Geborgenheit, Lob und Klage, Trauer und Trost ) 3.1.1 ( 3 ) beschreiben, dass für Gott jeder Mensch wertvoll, wichtig und einmalig ist (Das Gleichnis vom guten Hirten, Lk 15,1-7 sowie zum Beispiel Ps 139 in Auszügen; Jes 43,1) 3.1.4 ( 4 ) Formen mitgestalten, in denen Menschen sich an Gott wenden (zum Beispiel Vaterunser, andere Gebete, Psalmverse , Lied, Tanz, Stille)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.1 ( 1 ) beschreiben, was sie selbst und andere ausmacht ( zum Beispiel Aussehen, Fähigkeiten, soziales Umfeld, Gefühle, G e danken) 3.1.1 ( 2 ) von frohen und traurigen Erlebnissen erzählen (zum Beispiel von Freude und Leid, Streit und Versö h nung, Angst und Geborgenheit, Lob und Klage, Trauer und Trost) 3.1.1 ( 4 ) darstellen, dass aus biblischer Sicht alle Menschen mit ihren Eigenschaften und Erfahrungen vor Gott wertvoll und einmalig sind und sie ihre Erfahrungen vor Gott bri n gen können (Lob, Bitte, Dank, Klage) 3.1.4 ( 6 ) spirituelle Elemente wie Rituale, freie und überlieferte Gebete reflektiert gestalten"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "A uf Gottes Liebe antworten in spirituellen Elementen",
+          "Die Religionsgruppe als G e meinschaft mit Ritualen",
+          "Jeden Menschen als Gottes geliebte G e schöpfe betrachte n"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frag e stellungen in ihrem Leben begegnen. 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen. 2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten. 2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten. 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleic h nis, Legende, Gebet, Stille, Ritual, Musik, Bild) 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-02",
+      "number": 2,
+      "title": "Wie ist Gott?",
+      "hours": 6,
+      "preparation_questions": [
+        "Gott ist für mich, wie… Wie erzählt Jesus von Gott? Welche Bilder von Gott sind für mich wichtig? Woher kommen meine Gottesbilder? (z. B. Elternhaus, Gemeinde, Religionsunterricht , digitale Welten ) Entdecke ich in mein em Gott es bild konfessionelle Besonderheiten?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Bildern von Gott in biblischen Texten begegnen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Gott als guten Hirten des eigenen L e bens kennenlernen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.1.1 ( 4 ) darstellen, dass aus biblischer Sicht alle Menschen mit ihren Eige n schaften und Erfahrungen vor Gott wertvoll und einmalig sind und sie ihre Erfahrungen vor Gott bringen können (Lob, Bitte, Dank, Klage ) 3.1.4 ( 3 ) beschreiben, wie in der Bibel von Gott gesprochen wird (zum Be i spiel Ps 23; Ps 31,3; Lk 15,1–7) 3.1.3 ( 4 ) anhand von ausgewählten Texten aufzeigen, wie in der Bibel Erfahrungen von Menschen mit Gott erzählt werden",
+              "references": [
+                {
+                  "id": "3.1.1.4",
+                  "display": "3.1.1 ( 4 )"
+                },
+                {
+                  "id": "3.1.4.3",
+                  "display": "3.1.4 ( 3 )"
+                },
+                {
+                  "id": "3.1.3.4",
+                  "display": "3.1.3 ( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Erfahrungen von Men s che n mit Gott zum Ausdruck bringen"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.2.4",
+          "display": "2.2.4"
+        },
+        {
+          "id": "2.5.1",
+          "display": "2.5.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 2: Wie ist Gott? (ca. 6 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Gott ist für mich, wie… Wie erzählt Jesus von Gott? Welche Bilder von Gott sind für mich wichtig? Woher kommen meine Gottesbilder? (z. B. Elternhaus, Gemeinde, Religionsunterricht , digitale Welten ) Entdecke ich in mein em Gott es bild konfessionelle Besonderheiten?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen e vangelisch",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 3 ) beschreiben, dass für Gott jeder Mensch wertvoll, wichtig und einmalig ist (Das Gleichnis vom guten Hirten, Lk 15,1-7 sowie zum Beispiel Ps 139 in Auszügen; Jes 43,1) 3.1.3 ( 2 ) anhand ausgewählter Geschic h ten aufzeigen, wie diese von Gott, Jesus Christus und den Menschen erzählen 3.1.4 ( 3 ) Erfahrungen beschreiben, die Menschen der Bibel mit Gott machen . (Abraham und Sara, 1. Mose 12-21 in Auszügen; Ps 23 sowie zum Beispiel Josef, 1. Mose 37-50 in Auszügen)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.1 ( 4 ) darstellen, dass aus biblischer Sicht alle Menschen mit ihren Eige n schaften und Erfahrungen vor Gott wertvoll und einmalig sind und sie ihre Erfahrungen vor Gott bringen können (Lob, Bitte, Dank, Klage ) 3.1.4 ( 3 ) beschreiben, wie in der Bibel von Gott gesprochen wird (zum Be i spiel Ps 23; Ps 31,3; Lk 15,1–7) 3.1.3 ( 4 ) anhand von ausgewählten Texten aufzeigen, wie in der Bibel Erfahrungen von Menschen mit Gott erzählt werden"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Erfahrungen von Men s che n mit Gott zum Ausdruck bringen",
+          "Bildern von Gott in biblischen Texten begegnen",
+          "Gott als guten Hirten des eigenen L e bens kennenlernen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren. 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen. 2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Übe r lieferung auseinandersetzen. 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.5.3 über menschliche Grundfragen angemessen sprechen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-03",
+      "number": 3,
+      "title": "Handeln wie Martin von Tours",
+      "hours": 2,
+      "preparation_questions": [
+        "Was bedeutet „heilig“? Wie können Menschen als „Heilige“ bezeichnet werden? In welchem Sinne ist Martin von Tours „ heilig “ ? Was kann ich von Martin lernen? Wie wird die Liebe Gottes in der Welt sichtbar? Welches Brauchtum liegt mir besonders am Herzen?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Orientierung an Jesus Christus"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler können 3.1.6 ( 4 ) darstellen, wie Feste und Fes t zeiten im Kirchenjahr gefeiert werden und Brauchtum gelebt wird (Advent, Nikolaustag, Weihnachten, Heilige Drei Könige / Epiphanias, Passion, Ostern, Erntedank, Martinstag)",
+              "references": [
+                {
+                  "id": "3.1.6.4",
+                  "display": "3.1.6 ( 4 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "Kirchenjahr als Erinnerung an Gottes Handeln"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [
+            {
+              "raw": "Die Schülerinnen und Schüler kö n nen 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, Advent, Weihnac h ten, Fastenzeit, Passion, Ostern) 3.1.5 ( 5 ) sich mit dem Leben von Heiligen auseinandersetzen, die sich an Jesus Christus orientieren (zum Beispiel Hl. Martin, Hl. Nik o laus, Hl. Elisabeth, Hl. Franziskus und Hl. Klara) 3.1.5 ( 6 ) an einem Beispiel b e schreiben, wie sich das Verhalten in der Gemeinschaft verändern kann, wenn Menschen sich an der Botschaft Jesu orientieren",
+              "references": [
+                {
+                  "id": "3.1.6.5",
+                  "display": "3.1.6 ( 5 )"
+                },
+                {
+                  "id": "3.1.5.5",
+                  "display": "3.1.5 ( 5 )"
+                },
+                {
+                  "id": "3.1.5.6",
+                  "display": "3.1.5 ( 6 )"
+                }
+              ]
+            }
+          ],
+          "perspective": [
+            "An Vorbildern des Glaubens Orientierung für das eigene Leben finden"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        },
+        {
+          "id": "2.5.3",
+          "display": "2.5.3"
+        },
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.5.4",
+          "display": "2.5.4"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 3: Handeln wie Martin von Tours (ca. 2 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Was bedeutet „heilig“? Wie können Menschen als „Heilige“ bezeichnet werden? In welchem Sinne ist Martin von Tours „ heilig “ ? Was kann ich von Martin lernen? Wie wird die Liebe Gottes in der Welt sichtbar? Welches Brauchtum liegt mir besonders am Herzen?"
+        ],
+        [
+          "Inhaltsbezogene Kompetenzen Evangelische Religionslehre",
+          "Gemeinsamer Unterrichtsplan",
+          "Inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.6 ( 4 ) darstellen, wie Feste und Fes t zeiten im Kirchenjahr gefeiert werden und Brauchtum gelebt wird (Advent, Nikolaustag, Weihnachten, Heilige Drei Könige / Epiphanias, Passion, Ostern, Erntedank, Martinstag)",
+          "",
+          "Die Schülerinnen und Schüler kö n nen 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, Advent, Weihnac h ten, Fastenzeit, Passion, Ostern) 3.1.5 ( 5 ) sich mit dem Leben von Heiligen auseinandersetzen, die sich an Jesus Christus orientieren (zum Beispiel Hl. Martin, Hl. Nik o laus, Hl. Elisabeth, Hl. Franziskus und Hl. Klara) 3.1.5 ( 6 ) an einem Beispiel b e schreiben, wie sich das Verhalten in der Gemeinschaft verändern kann, wenn Menschen sich an der Botschaft Jesu orientieren"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "An Vorbildern des Glaubens Orientierung für das eigene Leben finden",
+          "Orientierung an Jesus Christus",
+          "Kirchenjahr als Erinnerung an Gottes Handeln"
+        ],
+        [
+          "Prozessbezogene Kompetenzen ( pbK ) Die Schülerinnen und Schüler können 2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen. 2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impulse für verantwo r tungsvolles Handeln entwickeln. 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-04",
+      "number": 4,
+      "title": "Advent und Weihnachten ( 6 h )",
+      "hours": null,
+      "preparation_questions": [
+        "Worauf warten wir im Advent? Wie bereiten wir uns vor? Warum feiern wir Weihnachten? Wie feiern wir Advent und Weihnachten? Was bedeutet mir die Weihnachtsgeschichte ?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Ausdrucksformen und biblische B e gründung en der Advents- und Wei h nachtszeit"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Advents- und Weihnachts zeit biblisch b e gründen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Den Glauben an die Menschwerdung Gottes ausdrücken"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 4 : Advent und Weihnachten ( 6 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Worauf warten wir im Advent? Wie bereiten wir uns vor? Warum feiern wir Weihnachten? Wie feiern wir Advent und Weihnachten? Was bedeutet mir die Weihnachtsgeschichte ?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen eva n gelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.6 ( 4 ) darstellen, wie Feste und Fes t zeiten im Kirchenjahr gefeiert werden und Brauchtum gelebt wird (Advent, Nikolaustag, Weihnachten, Heilige Drei Könige/ Epiphanias, Passion, Ostern, Erntedank, Martinstag). 3.1.6 ( 5 ) zu Festen und Festzeiten des Kirchenjahres (Advent, Weihnachten, Passion, Ostern) biblische Geschichten erzählen. 3.1.6 ( 6 ) religiöse Rituale im Unterricht beziehungsweise Feste und Feiern im Schuljahr mitgestalten.",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.5 ( 2 ) beschreiben, wie sich Jesus Christus in biblischen Geschichten zeigt (Verkünd i gung an Maria, Geburtsgeschichten, Einzug in Jerusalem, Letztes Abendmahl, Passion, der Auferstandene begegnet den Frauen). 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, Advent, Wei h nachten, Fastenzeit, Passion, Ostern)."
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Den Glauben an die Menschwerdung Gottes ausdrücken",
+          "Ausdrucksformen und biblische B e gründung en der Advents- und Wei h nachtszeit",
+          "Advents- und Weihnachts zeit biblisch b e gründen"
+        ],
+        [
+          "P rozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frageste l lungen in ihrem Leben begegnen. 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren. 2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten."
+        ],
+        [
+          "2.1.1 Spuren des Christentums in der persönlichen Lebenswelt entdecken 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
+        ]
+      ]
+    },
+    {
+      "id": "ue-05",
+      "number": 5,
+      "title": "Menschen begegnen Jesus",
+      "hours": 6,
+      "preparation_questions": [
+        "Wie k ann man Jesus heute noch „begegnen“ ? Was bedeutet Jesus Christus für mich? Was heißt „Jesus nachfolgen“ heute? Inwiefern geben mir biblische Geschichten Impulse für mein Leben ?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Jesus Christus ruft Men s chen in die Nachfolge"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Jesus ermutigt zum Leben"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Zuversicht für das Leben gewinnen"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.2.3",
+          "display": "2.2.3"
+        },
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 5 : Menschen begegnen Jesus (6 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Wie k ann man Jesus heute noch „begegnen“ ? Was bedeutet Jesus Christus für mich? Was heißt „Jesus nachfolgen“ heute? Inwiefern geben mir biblische Geschichten Impulse für mein Leben ?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen Erlebni s sen erzählen (z.B. von Freude und Leid, Angst und Geborgenheit, Lob und Klage, Trauer und Trost) 3.1.5 ( 3 ) darstellen , wie sich Menschen im Vertrauen auf Jesus mit ihm auf den Weg machen (Jüngerinnen und Jünger folgen Jesus, Lk 8,1–3 und Mk 1,16-20). 3.1.5 ( 5 ) verschiedene Ausdrucksformen für Zuwendung, Liebe und Vertrauen der Me n schen untereinander und Jesu Zuwendung zu den Menschen finden und darstellen (Heilung eines Gelähmten, Mk 2,1–12).",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen Erlebnissen und Erfahrungen erzählen (zum Beispiel Gebo r genheit und Angst, Freude und Leid , Vertrauen und Misstrauen, Tod und Trost). 3.1.5 ( 3 ) an Geschichten aufzeigen, wie Me n schen aus der Begegnung mit Jesus Zuversicht für ihr Leben schöpfen ( Mk 10,13–16; Lk 19,1–10, Lk 13,10–13; Mk 7,31–37). 3.1.5 ( 4 ) beschreiben, wie Jesus Menschen in seine Nachfolge gerufen hat ( Mk 1,16-20 oder Lk 5,1–11 und zum Beispiel Lk 8,1–3)"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Zuversicht für das Leben gewinnen",
+          "Jesus Christus ruft Men s chen in die Nachfolge",
+          "Jesus ermutigt zum Leben"
+        ],
+        [
+          "Prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren. 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe. 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.1 eigene Gedanken, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.2 sich in Gedanken, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern"
+        ]
+      ]
+    },
+    {
+      "id": "ue-06",
+      "number": 6,
+      "title": "Josef – Gott geht mit",
+      "hours": 10,
+      "preparation_questions": [
+        "Welche Bedeutung hat Gott in meinem L eben? Wo habe ich Gottes Begleitung in meinem Leben erfahren? Wie habe ich auf Erfahrungen mit Gott reagiert? Habe ich schon erlebt, dass „Gott auf krummen Linien gerade schreibt“?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Vertrauen auf Gott"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Erfahrungen von der verborgene n Begleitung Gottes im Leben"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Gott begleitet uns in den Höhen und Tiefen des Lebens"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.4.1",
+          "display": "2.4.1"
+        },
+        {
+          "id": "2.4.2",
+          "display": "2.4.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 6 : Josef – Gott geht mit (ca. 10 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Welche Bedeutung hat Gott in meinem L eben? Wo habe ich Gottes Begleitung in meinem Leben erfahren? Wie habe ich auf Erfahrungen mit Gott reagiert? Habe ich schon erlebt, dass „Gott auf krummen Linien gerade schreibt“?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 4 ) an biblischen Texten aufzeigen, wie Gott Menschen liebt, annimmt und begleitet (Josef, 1. Mose 37-50 in Auszügen sowie zum Beispiel Abraham und Sara, 1. Mose 12-21 in Auszügen; Ps 91,11-12; Ps 139,5) 3.1.3 ( 3 ) Erfahrungen von Menschen der Bibel mit Gott zu eigenen Erfahrungen und Fragen in Beziehung setzen 3.1.3 ( 4 ) eigene Gedanken, Gefühle und De u tungen biblischer Erzählungen kreativ zum Ausdruck bringen und sich darüber austa u schen",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.4 ( 1 ) Fragen nach und an Gott formuli e ren 3.1.4 ( 4 ) Erfahrungen beschreiben, die Me n schen der Bibel mit Gott machen (Abraham und Sara, Josef) 3.1.3 ( 3 ) biblische Geschichten nacherzählen. 3.1.3 ( 4 ) anhand von ausgewählten Texten aufzeigen, wie in der Bibel Erfahrungen von Menschen mit Gott erzählt werden 3.1.3 ( 5 ) eigene Gedanken, Fragen und De u tungen zu biblischen Erzählungen darstellen 3.1.3 (6) in der Bibel erzählte Erfahrungen von Menschen mit Gott und Jesus Christus zu eigenen Erfahrungen und Fragen in Bezi e hung setzen"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Gott begleitet uns in den Höhen und Tiefen des Lebens",
+          "Vertrauen auf Gott",
+          "Erfahrungen von der verborgene n Begleitung Gottes im Leben"
+        ],
+        [
+          "Prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2 .2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen. 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe. 2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Fig u ren, Vorbilder) hineinversetzen."
+        ],
+        [
+          "2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Beziehung setzen 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive e r weitern 2.5.3 über menschliche Grundfragen angemessen sprechen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-07",
+      "number": 7,
+      "title": "Freut euch, Jesus lebt!",
+      "hours": 5,
+      "preparation_questions": [
+        "Wa s bedeutet die Auferstehung Jesu für mich ? Welche Vorstellungen von einem Leben nach dem Tod habe ich? Wie feiern wir Ostern? Welche Bedeutung hat Ostern für meinen Alltag?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Das Osterfest und sein Br a uch tum"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Biblische Grundlagen des Osterfestes ke n nenle r nen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Biblische Grundlagen der Karwoche und des Osterfestes und das damit verbundene Brauchtum entdecken"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.2",
+          "display": "2.1.2"
+        },
+        {
+          "id": "2.2.2",
+          "display": "2.2.2"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 7 : Freut euch, Jesus lebt! (ca. 5 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Wa s bedeutet die Auferstehung Jesu für mich ? Welche Vorstellungen von einem Leben nach dem Tod habe ich? Wie feiern wir Ostern? Welche Bedeutung hat Ostern für meinen Alltag?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen eva n gelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.3 ( 4 ) eigene Gedanken, Gefühle und Deutungen biblischer Erzählungen kreativ zum Ausdruck bringen und sich darüber austauschen. 3.1.6 ( 4 ) darstellen, wie Feste und Fes t zeiten im Kirchenjahr gefeiert werden und Brauchtum gelebt wird (Advent, Nikolaustag, Weihnachten, Heilige Drei Könige/ Epiphanias, Passion, Ostern, Erntedank, Martinstag). 3.1.6 ( 5 ) zu Festen und Festzeiten des Kirchenjahres (Advent, Weihnachten, Passion, Ostern) biblische Geschichten erzählen.",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.3 ( 5 ) eigene Gedanken, Fragen und De u tungen zu biblischen Erzählungen darste l len. 3.1.5 ( 2 ) beschreiben, wie sich Jesus Christus in biblischen Geschichten zeigt (Verkünd i gung an Maria, Geburtsgeschichten, Einzug in Jerusalem, Letztes Abendmahl, Passion, der Auferstandene begegnet den Frauen). 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, Advent, Wei h nachten, Fastenzeit, Passion, Ostern). 3.1.6 ( 6 ) erläutern, wie Aspekte zentraler christlicher Feste in Gottesdienstformen, Ritualen und Brauchtum ihren Ausdruck finden können (zum Beispiel in gotte s dienstlichen Feiern in der Schule, Gesta l tung der Schulkultur)"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Biblische Grundlagen der Karwoche und des Osterfestes und das damit verbundene Brauchtum entdecken",
+          "Das Osterfest und sein Br a uch tum",
+          "Biblische Grundlagen des Osterfestes ke n nenle r nen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frageste l lungen in ihrem Leben begegnen 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen au s einandersetzen 2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten"
+        ],
+        [
+          "2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-08",
+      "number": 8,
+      "title": "Wohnt Gott in der Kirche?",
+      "hours": 8,
+      "preparation_questions": [
+        "Wo kann ich Gott erfahren? Was bedeutet Kirche für mich? Welche Erfahrungsräume eröffnen Kirchen? Welche Bedeutungen haben Kirchenräumen in der evangelische n und katholische n Tradition?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Kirchenräume mit kirchenraum-pädagogischen Elementen erkunden"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Kirche als Ort der Nähe Gottes und der feiernden Gemeinde kennenle r nen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Das Verständnis von Kirche als Sa k ralraum und Glaubensgemeinschaft kennenlernen"
+          ]
+        }
+      },
+      "process_competencies": [
+        {
+          "id": "2.1.1",
+          "display": "2.1.1"
+        },
+        {
+          "id": "2.1.3",
+          "display": "2.1.3"
+        },
+        {
+          "id": "2.2.1",
+          "display": "2.2.1"
+        }
+      ],
+      "raw_rows": [
+        [
+          "UE 8: Wohnt Gott in der Kirche? (ca. 8 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Wo kann ich Gott erfahren? Was bedeutet Kirche für mich? Welche Erfahrungsräume eröffnen Kirchen? Welche Bedeutungen haben Kirchenräumen in der evangelische n und katholische n Tradition?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen eva n gelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.6 ( 1 ) wahrnehmen und benennen, dass Menschen verschiedenen Ko n fessionen angehören können 3.1.6 ( 2 ) Kirchen vor Ort erkunden und wichtige Gegenstände (zum Beispiel Altar, Taufbecken, Kanzel, Orgel) benennen und beschreiben 3.1.6 ( 3 ) beschreiben, was Kirchen zu besonderen Orten macht",
+          "",
+          "Die Schülerinnen und Schüler kö n nen 3.1.6 ( 1 ) in Kirchen vor Ort wichtige Elemente beschreiben (zum Beispiel Kreuz, ewiges Licht, Tabernakel, Altar, Ambo, Weihwasserbecken, Osterkerze, Taufstein, Marienda r stellung, Orgel, Glocken, Kreuzweg). 3.1.6 ( 2 ) zeigen, dass Menschen verschiedenen Konfessionen ang e hören können. 3.1.6 ( 3 ) beschreiben, was die Sy m bole der Taufe bedeuten (zum Be i spiel Wasser, Licht). 3.1.6 ( 4 ) zeigen, wie in der Kathol i schen Kirche Gemeinschaft zum Ausdruck kommt (zum Beispiel E u charistiefeier, Gemeindeleben, soz i al-caritatives Handeln)"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Das Verständnis von Kirche als Sa k ralraum und Glaubensgemeinschaft kennenlernen",
+          "Kirchenräume mit kirchenraum-pädagogischen Elementen erkunden",
+          "Kirche als Ort der Nähe Gottes und der feiernden Gemeinde kennenle r nen"
+        ],
+        [
+          "Prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frag e stellungen in ihrem Leben begegnen. 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten. 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wirklichkeit verweisen, erkennen und deuten."
+        ],
+        [
+          "2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-09",
+      "number": 9,
+      "title": "Leben in Gottes Welt – Staunen, danken, Verantwortung übernehmen",
+      "hours": 8,
+      "preparation_questions": [
+        "Wo und wann habe ich über die Schönheit und Größe der Schöpfung gestaunt? An welchen Stellen zweif le ich an der Richtigkeit von Gottes Schöpfung? Was bedeutet für mich die Gottebenbildlichkeit des Menschen? Wie vereinbare ich naturwissenschaftliche Theorien mit meinem Glauben an den Schöpfer?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Über die Schöpfung staunen, für sie danken und Verantwortung übernehmen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Den Mensch en als geliebtes und veran t wortliches Geschöpf erkennen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Die Welt verstehen als eine gute Schö p fung Gottes und sich für die Bewahrung der Schöpfung einsetzen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 9 : Leben in Gottes Welt – Staunen, danken, Verantwortung übernehmen (ca. 8 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Wo und wann habe ich über die Schönheit und Größe der Schöpfung gestaunt? An welchen Stellen zweif le ich an der Richtigkeit von Gottes Schöpfung? Was bedeutet für mich die Gottebenbildlichkeit des Menschen? Wie vereinbare ich naturwissenschaftliche Theorien mit meinem Glauben an den Schöpfer?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen eva n gelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen k a tholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.2 ( 1 ) die Vielfalt und Schönheit der Welt sowie deren Gefährdung beschreiben 3.1.2 ( 2 ) darstellen, dass sie selbst und alle Lebewesen Teil der Welt sind und mite i nander in Beziehung stehen 3.1.2 ( 3 ) anhand biblischer Schöpfungste x te (Psalm 104 in Auszügen sowie zum Beispiel 1. Mose 1,1-2,4a) beschreiben, wie die Welt als Werk Gottes gedeutet wird 3.1.2 ( 4 ) aufzeigen, wie Menschen auf Gottes Schöpfung mit Freude, Lob und Dank antworten 3.1.2 ( 5 ) an Beispielen einen verantwo r tungsvollen Umgang mit Menschen, Tieren und Pflanzen aufzeigen 3.1.2 ( 6 ) Freude, Lob und Dank, aber auch Klage und Bitte in Bezug auf die Schöpfung ausdrücken und gestalten (zum Beispiel Erntedank )",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.2 ( 1 ) die Schönheit und Gefährdung der Welt an Beispielen aus ihrem Lebe n sumfeld beschreiben 3.1.2 ( 2 ) darstellen, dass sie selbst und alle Lebewesen Teil der Welt sind 3.1.2 ( 3 ) aufzeigen, wie Menschen ihre Freude, ihr Lob und ihren Dank für alles Lebendige zum Ausdruck bringen. 3.1.2 ( 4 ) beschreiben, wie im Schö p fungshymnus Gen 1,1–2,4a die Welt als Geschenk Gottes gedeutet wird 3.1.2 ( 5 ) Beispiele entwickeln, wie Kinder in ihrer Lebenswelt achtsam mit ihren Mitmenschen, der Natur und Tieren umgehen 3.1.2 ( 6 ) reflektieren, wie Menschen Freude, Lob und Dank, aber auch Klage und Bitte in Bezug auf die Schöpfung ausdrücken"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Die Welt verstehen als eine gute Schö p fung Gottes und sich für die Bewahrung der Schöpfung einsetzen",
+          "Über die Schöpfung staunen, für sie danken und Verantwortung übernehmen",
+          "Den Mensch en als geliebtes und veran t wortliches Geschöpf erkennen"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können"
+        ],
+        [
+          "2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen auseinandersetzen 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten 2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begrü n den"
+        ],
+        [
+          "2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschießen 2.4.4 im Kontext des eigenen Lebensumfeldes zu religiösen und ethischen Fragen einen Standpunkt einnehmen und arg u mentativ vertreten 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-10",
+      "number": 10,
+      "title": "Wer bist du, Gott?",
+      "hours": 6,
+      "preparation_questions": [
+        "Wie stelle ich mir Gott vor? Welche (biblisch erwähnten) Eigenschaften Gottes finde ich wichtig? Was lässt mich an Gott zweifeln? Wie bewerte ich Zweifel? Kann man Gott „begegnen“? Inwiefern ist mir Gott in meinem Leben begegnet?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Vorstellungen von Gott"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Gott als liebende n Gott erkennen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Antworten auf die Gottesfrage suchen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 10: Wer bist du, Gott? (ca. 6 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Wie stelle ich mir Gott vor? Welche (biblisch erwähnten) Eigenschaften Gottes finde ich wichtig? Was lässt mich an Gott zweifeln? Wie bewerte ich Zweifel? Kann man Gott „begegnen“? Inwiefern ist mir Gott in meinem Leben begegnet?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen kath o lisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen Erlebni s sen erzählen (zum Beispiel von Freude und Leid, Streit und Versöhnung, Angst und Geborgenheit, Lob und Klage, Trauer und Trost) 3.1.4 ( 1 ) ihre Vorstellungen von Gott zum Ausdruck bringen sowie ihre Fragen nach und an Gott formulieren 3.1.4 ( 2 ) unterschiedliche Vorstellungen von Gott mit ihren eigenen Vorstellungen ve r gleichen (z.B. Gott ist wie eine Mutter, ein Vater, ein Freund, ein Hirte, wie eine Hand, wie Licht)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen E r lebnissen und Erfahrungen erzählen (zum Beispiel Geborgenheit und Angst, Freude und Leid, Vertrauen und Mis s trauen, Tod und Trost) 3.1.4 ( 1 ) Fragen nach und an Gott fo r mulieren 3.1.4 ( 2 ) ihre Vorstellungen von Gott zum Beispiel in Worten, Bildern, Gebä r den oder Klängen zum Ausdruck bri n gen 3.1.4 ( 3 ) beschreiben, wie in der Bibel von Gott gesprochen wird (zum Beispiel Ps 23; 31,3; Lk 15,1–7)"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Antworten auf die Gottesfrage suchen",
+          "Vorstellungen von Gott",
+          "Gott als liebende n Gott erkennen"
+        ],
+        [
+          "prozessbezogene Kompetenzen evangelisch Die Schülerinnen und Schüler können 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen auseinandersetzen 2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wirklichkeit Verweisen, erkennen und deuten"
+        ],
+        [
+          "2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.5.3 über menschliche Grunderfahrungen angemessen sprechen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-11",
+      "number": 11,
+      "title": "Mit Gott kann ich reden",
+      "hours": 4,
+      "preparation_questions": [
+        "Welche Erfahrungen habe ich mit dem Beten gemacht? Wann und warum bete ich? Wie bringe ich meinen Glauben zum Ausdruck? Gibt es konfessionelle Unterschiede bezüglich der Ausdrucksformen der Gottesbeziehung?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Mit Gott kann man immer sprechen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Beten als Ausdruck der Gottesbeziehung erfahren"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Den Glauben an Gott zum Ausdruck bringen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 11 : Mit Gott kann ich reden (ca. 4 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Welche Erfahrungen habe ich mit dem Beten gemacht? Wann und warum bete ich? Wie bringe ich meinen Glauben zum Ausdruck? Gibt es konfessionelle Unterschiede bezüglich der Ausdrucksformen der Gottesbeziehung?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen kath o lisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.2 (6) Freude, Lob und Dank, aber auch Klage und Bitte in Bezug auf die Schöpfung ausdrücken und gestalten 3.1.4(4) Formen mitgestalten, in denen Menschen sich an Gott wenden (z.B. Vate r unser, andere Gebete, Psalmverse , Lied, Tanz, Stille)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.2(3) aufzeigen, wie Menschen ihre Freude, ihr Lob und ihren Dank für alles Lebendige zum Ausdruck bringen 3.1.4(5) zeigen, wie Christinnen und Christen ihren Glauben an Gott im V a terunser, in Riten und Liedern ausdr ü cken 3.1.4(6) spirituelle Elemente wie Rituale, freie und überlieferte Gebete reflektiert gestalten"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Den Glauben an Gott zum Ausdruck bringen",
+          "Mit Gott kann man immer sprechen",
+          "Beten als Ausdruck der Gottesbeziehung erfahren"
+        ],
+        [
+          "prozessbezogene Kompetenzen evangelisch Die Schülerinnen und Schüler können 2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe 2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten 2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken 2.5.3 über menschliche Grunderfahrungen angemessen sprechen"
+        ]
+      ]
+    },
+    {
+      "id": "ue-12",
+      "number": 12,
+      "title": "Wir treffen Bischof Nikolaus",
+      "hours": 2,
+      "preparation_questions": [
+        "Welche Vorbilder prägen mein Leben? Wo habe ich „Heiliges“ in meinem Leben erfahren ? Welche Menschen sind mir „heilig“? Was ist der Unterschied zwischen einem Heiligen und einem Idol? Beschreiben Sie die Bedeutung von Heilige n für den evangelischen / katholischen Glauben ."
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Nikolaus kennenlernen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Menschen als Vorbilder im Glauben und im Leben erfahren"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "An Vorbildern des Glaubens Orientierung fi n den"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 12 : Wir treffen Bischof Nikolaus (ca. 2 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Welche Vorbilder prägen mein Leben? Wo habe ich „Heiliges“ in meinem Leben erfahren ? Welche Menschen sind mir „heilig“? Was ist der Unterschied zwischen einem Heiligen und einem Idol? Beschreiben Sie die Bedeutung von Heilige n für den evangelischen / katholischen Glauben ."
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.6 ( 4 ) darstellen, wie Feste und Festzeiten im Kirchenjahr gefeiert werden und Brauc h tum gelebt wird (Advent, Nikolaustag, Wei h nachten, Heilige Drei Könige/Epiphanias, Pa s sion, Ostern, Erntedank, Martinstag).",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.5 ( 5 ) sich mit dem Leben von Heiligen au s einandersetzen, die sich an Jesus Christus orientieren (zum Beispiel Hl. Martin, Hl. Nik o laus, Hl. Elisabeth, Hl. Franziskus und Hl. Klara). 3.1.5 ( 6 ) an einem Beispiel beschreiben, wie sich das Verhalten in der Gemeinschaft verä n dern kann, wenn Menschen sich an der Bo t schaft Jesu orientieren. 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, Advent, Weihnac h ten, Fastenzeit, Passion, Ostern)."
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "An Vorbildern des Glaubens Orientierung fi n den",
+          "Nikolaus kennenlernen",
+          "Menschen als Vorbilder im Glauben und im Leben erfahren"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellu n gen in ihrem Leben begegnen 2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessioneller und interreligiöser Begegnungen. 2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-13",
+      "number": 13,
+      "title": "Gott kommt zu den Menschen",
+      "hours": 5,
+      "preparation_questions": [
+        "Was bedeutet mir Weihnachten? Wie feiere ich Weihnachten? (konfessionelle Unterschiede!) Was bedeutet die „Menschwerdung Gottes“? Gibt es (außer den Geschenken) eine Weihnachtsbotschaft für die Kinder?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Gott wird Mensch"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Gott wird Mensch für uns"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Die Menschwerdung Gottes feiern"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 13 : Gott kommt zu den Menschen (ca. 5 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Was bedeutet mir Weihnachten? Wie feiere ich Weihnachten? (konfessionelle Unterschiede!) Was bedeutet die „Menschwerdung Gottes“? Gibt es (außer den Geschenken) eine Weihnachtsbotschaft für die Kinder?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.6 ( 5 ) zu Festen und Festzeiten des Kirche n jahres (Advent, Weihnachten, Passion, Ostern) biblische Geschichten erzählen. 3.1.5 ( 4 ) beschreiben, wie von der göttlichen Herkunft Jesu Christi erzählt wird (z.B. G e burtserzählungen Lk 1–2 oder Mt 1,18–2,23).",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.6 ( 5 ) von wichtigen Festen und Zeiten im Kirchenjahr und ihrem Brauchtum erzählen (Erntedank, Heiligenfeste, A d vent, Weihnachten, Fastenzeit, Passion, Ostern). 3.1.6 ( 6 ) erläutern, wie Aspekte zentraler christlicher Feste in Gottesdienstformen, Ritualen und Brauchtum ihren Ausdruck finden können (zum Beispiel in gotte s dienstlichen Feiern in der Schule, Gesta l tung der Schulkultur)."
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Die Menschwerdung Gottes feiern",
+          "Gott wird Mensch",
+          "Gott wird Mensch für uns"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frageste l lungen in ihrem Leben begegnen. 2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren. 2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlief e rung auseinandersetzen. 2 .1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken 2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden"
+        ]
+      ]
+    },
+    {
+      "id": "ue-14",
+      "number": 14,
+      "title": "U nterwegs mit Jesus",
+      "hours": 12,
+      "preparation_questions": [
+        "Was bedeutet mir die Bibel? Welche Lieblingsgeschichten aus der Bibel habe ich ? Warum sprechen die Geschichte n mich an ? Was bedeutet mir Jesus Christus? Wozu ermutigen mich biblische Geschichten?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Leben und Wirken Jesu anhand von Kinderbibeln zeigen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Jesu wendet sich Men s chen zu"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "In biblischen Geschichten Jesus begegnen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 14: U nterwegs mit Jesus (ca. 12 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Was bedeutet mir die Bibel? Welche Lieblingsgeschichten aus der Bibel habe ich ? Warum sprechen die Geschichte n mich an ? Was bedeutet mir Jesus Christus? Wozu ermutigen mich biblische Geschichten?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.5 ( 1 ) die Lebensverhältnisse zur Zeit Jesu beschreiben (z.B. Alltag, Berufe, Tiere und Pflanzen, Römische Besatzung) 3.1.5 ( 2 ) aufzeigen, wie Jesus alle Menschen in die Liebe Gottes einschließt (Jesus segnet die Kinder, Mk 10,13-16; Zachäus, Lk 19,1-10 sowie zum Beispiel Das Scherflein der Witwe, Mk 12,41-44; Die Heilung eines Aussätzigen, Lk 5,12-16) 3.1.5 ( 5 ) verschiedene Ausdrucksformen für Zuwendung, Geborgenheit, Liebe und Vertra u en der Menschen untereinander und Jesu Z u wendung zu den Menschen finden und darste l len (Heilung eines Gelähmten, Mk 2,1-12)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.5 ( 1 ) die Lebenswelt der Menschen zur Zeit Jesu beschreiben. 3.1.5 ( 3 ) an Geschichten aufzeigen, wie Menschen aus der Begegnung mit Jesus Zuversicht für ihr Leben schöpfen ( Mk 10,13–16; Lk 19,1–10, Lk 13,10–13; Mk 7,31–37) 3.1.3 ( 6 ) in der Bibel erzählte Erfahrungen von Menschen mit Gott und Jesus Christus zu eigenen Erfahrungen und Fragen in Beziehung setzen 3.1.3 ( 1 ) Bibelausgaben in ihrer Vielfalt beschreiben 3.1.3 ( 2 ) beschreiben, warum für Christi n nen und Christen die Bibel die Heilige Schrift ist"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "In biblischen Geschichten Jesus begegnen",
+          "Leben und Wirken Jesu anhand von Kinderbibeln zeigen",
+          "Jesu wendet sich Men s chen zu"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.2 e igene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen ause i nandersetzen. 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten. 2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begründen."
+        ],
+        [
+          "2.2.3 zentrale Zeugnisse der biblisch–christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.2 sich in Gedanken, Gefühle, Sicht– und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.3 über menschliche Grundfragen angemessen sprechen 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
+        ]
+      ]
+    },
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "5 : Wie Abraham auf Gott vertrauen",
+      "hours": 8,
+      "preparation_questions": [
+        "Was heißt für mi ch V ertrauen? Welche Bedeutung spielt das Gottvertrauen in meinem Leben? Wie würde ich Segen umschreiben? Wo habe ich ihn in meinem Leben schon einmal erlebt? Was ist d as Besondere an „ Weg”-geschichten der Bibel ?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Entdecken, wie Abraham und Sara im Vertrauen auf Gott ihren Weg gehen"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Biblische Texte als Ausdruck der Erfahrung mit Gott entdecken"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Abraham als Urvater für das Verständnis von Glauben als Vertrauen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 1 5 : Wie Abraham auf Gott vertrauen (ca. 8 Stunden)"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Was heißt für mi ch V ertrauen? Welche Bedeutung spielt das Gottvertrauen in meinem Leben? Wie würde ich Segen umschreiben? Wo habe ich ihn in meinem Leben schon einmal erlebt? Was ist d as Besondere an „ Weg”-geschichten der Bibel ?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.4 ( 3 ) Erfahrungen beschreiben, die Me n schen der Bibel mit Gott machen (Abraham und Sara, 1. Mose 12–21 in Auszügen; Ps 23 sowie zum Beispiel Josef, Gen 37–50 in Au s zügen). 3.1.1 ( 4 ) an biblischen Texten aufzeigen, wie Gott Menschen liebt, annimmt und begleitet (Josef, 1. Mose 37–50 in Auszügen sowie zum Beispiel Abraham und Sara, 1. Mose 12–21 in Auszügen; Ps 91,11-12; Ps 139,5). 3.1.3 ( 1 ) biblischen Erzählungen zuhören und ausgewählte Geschichten nacherzählen",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.4 ( 4 ) Erfahrungen beschreiben, die Me n schen der Bibel mit Gott machen (Abraham und Sara, Josef). 3.1.3 ( 3 ) biblische Geschichten nacherzä h len. 3.1.3 ( 5 ) eigene Gedanken, Fragen und De u tungen zu biblischen Erzählungen darste l len. 3.1.3 ( 6 ) in der Bibel erzählte Erfahrungen von Menschen mit Gott und Jesus Christus zu eigenen Erfahrungen und Fragen in B e ziehung setzen."
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Abraham als Urvater für das Verständnis von Glauben als Vertrauen",
+          "Entdecken, wie Abraham und Sara im Vertrauen auf Gott ihren Weg gehen",
+          "Biblische Texte als Ausdruck der Erfahrung mit Gott entdecken"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten. 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen. 2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen. 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive e r weitern 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
+        ]
+      ]
+    },
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "6 : Was mich bewegt",
+      "hours": 6,
+      "preparation_questions": [
+        "Inwiefern bildet das christliche Menschenbild den Maßstab unseres Handelns als Christen? W o und wie w ird die Liebe Gottes in unserem / meinem Leben erfahrbar ? Wie kann ich die Einmaligkeit jedes Menschen angemessen w ürdig en? Wo wird im Unterricht und in der Schule sichtbar, dass jeder Mensch Würde hat?"
+      ],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "D ie von Gott jedem Me n schen zugesprochene Würde bedenken"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Erfahrung en mit Gott zur Sprache bringen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Gott es bedingungslos e Liebe als Grundlage für Selbst- und Nächstenliebe kennenlernen"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 1 6 : Was mich bewegt (ca. 6 h )"
+        ],
+        [
+          "Impulsfragen für das Gespräch im Vorbereitungsteam: Inwiefern bildet das christliche Menschenbild den Maßstab unseres Handelns als Christen? W o und wie w ird die Liebe Gottes in unserem / meinem Leben erfahrbar ? Wie kann ich die Einmaligkeit jedes Menschen angemessen w ürdig en? Wo wird im Unterricht und in der Schule sichtbar, dass jeder Mensch Würde hat?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen Erlebni s sen erzählen (z.B. Freude und Leid, Angst und Geborgenheit, Lob und Klage, Trauer und Trost). 3.1.1(3) beschreiben, dass für Gott jeder Mensch wertvoll, wichtig und einmalig ist (Das Gleichnis vom guten Hirten, Lk 15,1-7 sowie zum Beispiel Ps 139 in Auszügen; Jes 43,1) 3.1.1 ( 4 ) an biblischen Texten aufzeigen, wie Gott Me n schen liebt, annimmt und begleitet (Josef, 1. Mose 37–50 in Auszügen sowie zum Beispiel Abraham und Sara, 1.Mose 12–21 in Auszügen; Ps 91,11–12; Ps 139,5)",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.1 ( 2 ) von frohen und traurigen Erlebnissen und Erfahrungen erzählen (zum Beispiel G e borgenheit und Angst, Freude und Leid, Ve r trauen und Misstrauen, Tod und Trost). 3.1.1 ( 3 ) ausgehend von einem biblischen Text zeigen, wie Gott jeden Menschen als sein Geschöpf liebt, annimmt und begleitet (zum Beispiel Gen 1,26; Lk 19,1–10). 3.1.1 ( 5 ) zum Ausdruck bringen, wie Me n schen achtsam mit sich umgehen können (Selbstliebe). 3.1.1 ( 6 ) aufzeigen, wie Menschen anderen Menschen achtsam begegnen können (Nächstenliebe)"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Gott es bedingungslos e Liebe als Grundlage für Selbst- und Nächstenliebe kennenlernen",
+          "D ie von Gott jedem Me n schen zugesprochene Würde bedenken",
+          "Erfahrung en mit Gott zur Sprache bringen"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen auseinandersetzen. 2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen. 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe."
+        ],
+        [
+          "2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmöglic h keiten prüfen 2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Beziehung setzen 2.4.1 eigene Gedanken, Sicht- und Verhaltensweisen beschreiben und erläutern 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
+        ]
+      ]
+    },
+    {
+      "id": "ue-01",
+      "number": 1,
+      "title": "7 : Glaube hat viele Gesichter – was glaubst du?",
+      "hours": 8,
+      "preparation_questions": [],
+      "shared_plan": [
+        {
+          "type": "central_content",
+          "text": "Nichtchristlichen Religionen respektvoll begegn en"
+        }
+      ],
+      "denominational_profiles": {
+        "evangelical": {
+          "content_competencies": [],
+          "perspective": [
+            "Vo n ander e n Formen des Glaubens hören und miteinander leben lernen"
+          ]
+        },
+        "catholic": {
+          "content_competencies": [],
+          "perspective": [
+            "Durch das Kennenlernen anderer Religionen zu einem respektvollen Umgang anleiten"
+          ]
+        }
+      },
+      "process_competencies": [],
+      "raw_rows": [
+        [
+          "UE 1 7 : Glaube hat viele Gesichter – was glaubst du? (ca. 8 Stunden)"
+        ],
+        [
+          "Mögliche Impulse zur Unterrichtsgestaltung: Welche verschiedenen ( religiösen ) Weltanschauunge n nehme ich in meinem Umfeld wahr? Gibt es vor Ort Möglichkeiten der unmittelbaren Begegnung? Welche Ausdrucksformen des Glaubens anderer Religionen habe ich schon kennengelernt? Wie kann ein w ertschätzender und respektvoller Umgang miteinander gelingen?"
+        ],
+        [
+          "inhaltsbezogene Kompetenzen evangelisch",
+          "Umsetzung im Unterricht",
+          "inhaltsbezogene Kompetenzen katholisch"
+        ],
+        [
+          "Die Schülerinnen und Schüler können 3.1.7 ( 1 ) Ausdrucksformen gelebter Religion in ihrem Lebensumfeld (Familie, Schule, Medien) wahrnehmen und ihre Beobac h tungen beschreiben 3.1.7 ( 2 ) ausgewählte Aspekte einer Religion beschreiben (zum Beispiel Gegenstände, Feste, Gebetspraxis, Gotteshä u ser/Versammlungsräume) 3.1.7 ( 3 ) Menschen anderer Religionszug e hörigkeit und deren Glaubenspraxis bezi e hungsweise Menschen ohne Religionszug e hörigkeit respektvoll begegnen",
+          "",
+          "Die Schülerinnen und Schüler können 3.1.7 ( 1 ) Aspekte der eigenen Konfession beschreiben (zum Beispiel Kirchenraum, Feste, Gebet, Bekenntnis zu Jesus Christus) 3.1.7 ( 2 ) aufzeigen, wie Angehörige anderer Religionen ihren Glauben leben 3.1.7 ( 3 ) ein besonderes Fest oder den Ve r sammlungsort im Judentum oder Islam beschreiben 3.1.7 ( 4 ) ausgewählte Aspekte gelebten Glaubens im Judentum oder Islam beschre i ben (Gebet, Fest, Ritual) 3.1.7 ( 5 ) eine religiöse Feier gegebenenfalls mit Schülerinnen und Schülern anderer Religionen in der Schule reflektiert gestalten 3.1.7 ( 6 ) in Unterrichtssituationen zeigen, dass sie Angehörigen anderer Religionen respektvoll begegnen"
+        ],
+        [
+          "Katholischer Blickwinkel",
+          "Zentrale Inhalte",
+          "Evangelischer Blickwinkel"
+        ],
+        [
+          "Durch das Kennenlernen anderer Religionen zu einem respektvollen Umgang anleiten",
+          "Nichtchristlichen Religionen respektvoll begegn en",
+          "Vo n ander e n Formen des Glaubens hören und miteinander leben lernen"
+        ],
+        [
+          "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können 2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Frag e stellungen in ihrem Leben begegnen. 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu d e nen anderer Kinder in der Lerngruppe. 2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessi o neller und interreligiöser Begegnungen. 2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten. 2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben 2.3.3 sich mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen 2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwe n den 2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen 2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
+        ]
+      ]
+    }
+  ]
+}
