@@ -26,4 +26,9 @@ class SchoolPolicy
     {
         return $this->view($user, $school);
     }
+
+    public function delete(User $user, School $school): bool
+    {
+        return $this->view($user, $school);
+    }
 }

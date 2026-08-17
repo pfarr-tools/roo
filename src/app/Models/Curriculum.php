@@ -30,4 +30,9 @@ class Curriculum extends Model
     {
         return $this->hasManyThrough(CurriculumTopic::class, CurriculumVersion::class);
     }
+
+    public function schoolAssignments(): HasMany
+    {
+        return $this->hasMany(CurriculumSchoolAssignment::class);
+    }
 }

@@ -17,7 +17,7 @@ function submit() { form.post('/curricula') }
 
 <template>
     <AppShell>
-        <div class="container py-4">
+        <div class="container-full px-3 py-4">
             <a href="/curricula">{{ de.curricula }}</a>
             <h1 class="h2 mt-2">{{ de.createCurriculum }}</h1>
             <p class="text-muted">Wähle optional Vorlagen. Ohne Auswahl wird ein leeres Curriculum angelegt.</p>

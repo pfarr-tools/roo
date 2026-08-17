@@ -40,6 +40,7 @@ Curriculum
   └── CurriculumVersion
        └── CurriculumTopic
             └── Competence (n:m)
+  └── CurriculumSchoolAssignment (mandantenbezogen, zeitlich gültig)
 
 CurriculumTopic
   ├── CurriculumTopicCompetency (offene Referenzen, konfessionell oder prozessbezogen)
@@ -87,6 +88,13 @@ LessonOccurrence
 
 Ein Schuljahr beschreibt die Kalendergrenzen und Ausnahmen. Eine
 Unterrichtsgruppe ist immer eine konkrete Gruppe in genau diesem Schuljahr.
+
+Die erzeugten `SchoolYearDay`-Datensätze bilden für jeden Kalendertag den
+aktuellen Status, die Bezeichnung und optionale Notizen ab. Eine manuelle
+Bearbeitung wird zusätzlich als `CalendarException` gespeichert; dadurch
+bleiben Status, Bezeichnung und Notizen auch bei einer erneuten Generierung
+aus Ferien- und Kalenderdaten erhalten. Das Datum ist in der Tagesbearbeitung
+nicht veränderbar.
 
 ### Vorlage vs. Planung vs. Durchführung
 
@@ -233,6 +241,14 @@ vorliegenden Austauschstruktur keine verlässliche UE-spezifische Zuordnung;
 ihre kopierten UEs bleiben deshalb zunächst offen. Zahlenpräfixe in einzelnen
 Titeln werden nicht als Jahrgang interpretiert, weil sie in den Quellen nicht
 konsistent und teilweise außerhalb des Metadatenbereichs sind.
+
+### Curriculum und Schule
+
+`CurriculumSchoolAssignment` ordnet ein Curriculum einer Schule innerhalb der
+Organisation der angemeldeten Lehrkraft zu. Die Zuordnung kann mit `valid_from`
+und `valid_until`, Schulart, Jahrgängen und Notizen ergänzt werden. Ein global
+importiertes Curriculum kann dadurch organisationsbezogen verwendet werden,
+ohne die globale Vorlage zu verändern.
 
 Die erste Phase-3-Datenbankmigration umfasst außerdem zeitlich erweiterbare
 `curriculum_school_assignments` für die spätere Schule-zu-Curriculum-

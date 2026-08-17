@@ -27,7 +27,7 @@ function goToComparison(event) { window.location.href = event.target.value ? com
 
 <template>
     <AppShell>
-    <div class="container py-4">
+    <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
             <div>
                 <a href="/bildungsplaene" class="text-decoration-none">{{ de.educationPlans }}</a>

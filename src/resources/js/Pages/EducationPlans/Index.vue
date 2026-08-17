@@ -13,7 +13,7 @@ function formatDate(value) {
 
 <template>
     <AppShell>
-    <div class="container py-4">
+    <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <a href="/dashboard" class="text-decoration-none">{{ de.dashboard }}</a>

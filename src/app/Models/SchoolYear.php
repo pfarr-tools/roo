@@ -15,7 +15,7 @@ class SchoolYear extends Model
     {
         static::saving(function (SchoolYear $schoolYear): void {
             if ($schoolYear->isDirty('name') || ! $schoolYear->slug) {
-                $schoolYear->slug = Str::slug($schoolYear->name);
+                $schoolYear->slug = Str::slug(str_replace('/', '-', $schoolYear->name));
             }
         });
     }

@@ -13,6 +13,6 @@ class StoreCalendarExceptionRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['date' => ['required', 'date'], 'kind' => ['required', 'in:instruction,holiday,no_instruction'], 'label' => ['required', 'string', 'max:255'], 'change_reason' => ['nullable', 'string', 'max:1000']];
+        return ['date' => ['required', 'date'], 'kind' => ['required', 'in:instruction,holiday,no_instruction'], 'label' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string', 'max:10000'], 'change_reason' => ['nullable', 'string', 'max:1000']];
     }
 }

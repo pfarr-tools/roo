@@ -3,7 +3,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import de from '../../i18n/de'
 const props = defineProps({ curricula: Array, search: String })
 </script>
-<template><AppShell><div class="container py-4">
+<template><AppShell><div class="container-full px-3 py-4">
     <div class="d-flex justify-content-between align-items-start mb-4"><div><a href="/dashboard">{{ de.dashboard }}</a><h1 class="h2 mt-2">{{ de.curricula }}</h1><p class="text-muted">{{ de.curriculaIntro }}</p></div><a href="/curricula/neu" class="btn btn-primary">{{ de.createCurriculum }}</a></div>
     <form method="get" action="/curricula" class="input-group mb-4"><input name="q" :value="search" class="form-control" placeholder="Titel oder Kennung suchen"><button class="btn btn-outline-primary">{{ de.search }}</button></form>
     <div v-if="!curricula.length" class="alert alert-info">{{ de.noCurricula }}</div>
