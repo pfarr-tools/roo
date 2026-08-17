@@ -14,5 +14,6 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribut
             </form>
         </div>
         <div class="alert alert-primary" role="status">{{ de.dashboardIntro }}</div>
+        <a href="/schulen" class="btn btn-primary">{{ de.schools }}</a>
     </main>
 </template>

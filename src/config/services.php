@@ -2,6 +2,11 @@
 
 return [
 
+    'ferien_api' => [
+        'url' => env('FERIEN_API_URL', 'https://ferien-api.de'),
+        'default_state' => env('FERIEN_API_STATE', 'BW'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

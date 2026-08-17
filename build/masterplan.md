@@ -61,6 +61,9 @@ Laravel/Inertia-Anwendung.
 
 ## Phase 1 – Benutzer, Schulen und Schuljahre
 
+Fortschritt: `[~]` Schulen, Schuljahre und Kalenderdaten als erster vertikaler
+Schnitt umgesetzt; Ferien-API und lokale Überschreibungen integriert.
+
 ### Ziel
 
 Eine Lehrkraft kann Schulen und Schuljahre verwalten und Kalendertage
