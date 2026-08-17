@@ -6,7 +6,8 @@ ARG UID=1000
 ARG GID=1000
 
 ENV COMPOSER_HOME=/tmp/composer \
-    COMPOSER_CACHE_DIR=/tmp/composer-cache
+    COMPOSER_CACHE_DIR=/tmp/composer-cache \
+    XDG_CONFIG_HOME=/tmp/config
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -46,8 +47,8 @@ RUN chmod +x /usr/local/bin/php-fpm-healthcheck
 
 RUN groupmod -o -g "${GID}" www-data \
     && usermod -o -u "${UID}" -g www-data www-data \
-    && mkdir -p /var/www/html /tmp/composer /tmp/composer-cache \
-    && chown -R www-data:www-data /var/www/html /tmp/composer /tmp/composer-cache
+    && mkdir -p /var/www/html /tmp/composer /tmp/composer-cache /tmp/config \
+    && chown -R www-data:www-data /var/www/html /tmp/composer /tmp/composer-cache /tmp/config
 
 WORKDIR /var/www/html
 

@@ -30,7 +30,7 @@ case "$COMMAND" in
     exec docker compose exec app bash "$@"
     ;;
   artisan)
-    exec docker compose exec app php artisan "$@"
+    exec docker compose exec -e XDG_CONFIG_HOME=/tmp/config app php artisan "$@"
     ;;
   composer)
     exec docker compose exec app composer "$@"
