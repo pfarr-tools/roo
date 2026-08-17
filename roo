@@ -42,10 +42,21 @@ case "$COMMAND" in
     exec docker compose exec app ./vendor/bin/pint "$@"
     ;;
   test)
-    docker compose exec -e APP_KEY='base64:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=' app php artisan test "$@"
+    exec docker compose exec \
+      -e APP_ENV=testing \
+      -e DB_CONNECTION=sqlite \
+      -e DB_DATABASE=:memory: \
+      -e APP_KEY='base64:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=' \
+      app php artisan test "$@"
     ;;
   fresh)
-    docker compose exec app php artisan migrate:fresh --seed "$@"
+    if [[ "${1:-}" != "--force" ]]; then
+      echo "Abbruch: ./roo fresh löscht die normale lokale Datenbank."
+      echo "Nur bewusst ausführen mit: ./roo fresh --force"
+      exit 2
+    fi
+    shift
+    exec docker compose exec app php artisan migrate:fresh --seed --force "$@"
     ;;
   *)
     cat <<'EOF'
