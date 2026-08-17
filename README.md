@@ -1,45 +1,67 @@
 # Roo
 
-Roo ist eine deutschsprachige Webanwendung für die Planung, Durchführung,
-Dokumentation und Auswertung des Religionsunterrichts.
+<p align="center">
+  <img src="src/resources/images/branding/roo-logo.png" alt="Roo – Känguru mit Buch und Kreuz" width="420">
+</p>
 
-Der Name leitet sich von **RU** – Religionsunterricht – ab.
+Roo ist eine deutschsprachige Webanwendung für Lehrkräfte, die
+Religionsunterricht über ein komplettes Schuljahr hinweg planen, vorbereiten,
+durchführen, dokumentieren und auswerten möchten.
 
-## Status
+Der Name **Roo** leitet sich von **RU** – der gängigen Abkürzung für
+Religionsunterricht – ab. Das Känguru im Logo steht sinngemäß für Roo und
+begleitet die Anwendung als freundliches Markenzeichen.
 
-Dieses Repository ist zunächst ein **Docker-first-Basispaket** für die
-Initialisierung mit Codex. Das Laravel-Projekt wird reproduzierbar durch das
-Bootstrap-Skript erzeugt.
+## Ziel
 
-Verbindliche Vorgaben:
+Roo soll die tägliche Arbeit rund um den Religionsunterricht an einem Ort
+verbinden: von Schule und Schuljahr über Bildungspläne, Curricula und
+Unterrichtsgruppen bis zu Jahresplanung, Unterrichtseinheiten, Stunden,
+Materialien, Liedern, Beobachtungen und Bewertungen.
+
+Strukturierte Fachdaten sind dabei die Quelle der Wahrheit. Dateien wie PDF-,
+DOCX- oder Präsentationsexporte entstehen aus diesen Daten und ersetzen sie
+nicht. Wiederverwendbare Vorlagen und konkrete Verwendungen werden getrennt
+modelliert, damit historische Planungen nachvollziehbar bleiben.
+
+## Entwicklungsstand
+
+Das Projekt befindet sich im Aufbau und wird als modularer Laravel-Monolith
+entwickelt. Die technische Basis ist umgesetzt. Schulen, Schuljahre,
+Kalenderdaten, Bildungspläne und erste Curriculum-Funktionen werden derzeit in
+kleinen, testbaren Arbeitsschritten ausgebaut.
+
+Die fachliche Roadmap steht im [Masterplan](build/masterplan.md). Verbindliche
+Architektur- und Arbeitsregeln finden sich in:
 
 - [AGENTS.md](AGENTS.md)
-- [Masterplan](build/masterplan.md)
 - [Architektur](build/architecture.md)
 - [Domänenmodell](build/domain-model.md)
+- [Architekturentscheidungen](build/decisions/)
 
-## Stack
+## Technischer Stack
 
-- Laravel 13 / PHP 8.4
-- Vue 3 / Inertia.js 3
-- Bootstrap 5.3 / Sass / Bootstrap Icons
+- Laravel 13 und PHP 8.4
+- Vue 3 und Inertia.js 3
+- Bootstrap 5.3, Sass und Bootstrap Icons
 - PostgreSQL 17
 - Redis und Laravel Horizon
-- Meilisearch
-- S3-kompatibler lokaler Object Storage
-- Mailpit
+- Laravel Scout mit Meilisearch
+- S3-kompatibler Object Storage
+- Mailpit für die lokale Mail-Entwicklung
 - Docker Compose
+- Pest und Vitest
 
 ## Voraussetzungen
 
-Auf dem Host werden nur benötigt:
+Für die Entwicklungsumgebung werden auf dem Host nur benötigt:
 
-- Docker Engine
-- Docker Compose Plugin
+- Docker Engine mit Docker Compose Plugin
 - Git
 - Bash
 
-PHP, Composer, Node, PostgreSQL und Redis laufen ausschließlich in Containern.
+PHP, Composer, Node.js, PostgreSQL und Redis müssen nicht lokal installiert
+werden; sie laufen in den Containern.
 
 ## Schnellstart
 
@@ -49,7 +71,7 @@ cp .env.example .env
 ./roo up
 ```
 
-Danach:
+Anschließend sind die wichtigsten Dienste erreichbar:
 
 - Roo: <http://localhost:8080>
 - Vite: <http://localhost:5173>
@@ -57,14 +79,9 @@ Danach:
 - Meilisearch: <http://localhost:7700>
 - Object-Storage-Konsole: <http://localhost:9001>
 
-Beim ersten Bootstrap werden:
-
-1. das Laravel-Projekt in `src/` erzeugt,
-2. Inertia, Vue und Bootstrap installiert,
-3. Basis-Konfigurationen angelegt,
-4. der App-Key gesetzt,
-5. Migrationen ausgeführt,
-6. Storage-Buckets erzeugt.
+Der erste Bootstrap erzeugt die Laravel-Anwendung in `src/`, installiert die
+Frontend-Abhängigkeiten, richtet die Grundkonfiguration ein, setzt den
+App-Key, führt Migrationen aus und legt die benötigten Storage-Buckets an.
 
 ## Häufige Befehle
 
@@ -77,9 +94,6 @@ Beim ersten Bootstrap werden:
 ./roo shell
 ./roo artisan migrate
 ./roo artisan test
-./roo composer require vendor/package
-./roo npm install
-./roo npm run dev
 ./roo pint
 ./roo test
 ```
@@ -90,50 +104,32 @@ Beim ersten Bootstrap werden:
 .
 ├── AGENTS.md
 ├── README.md
+├── LICENSE
 ├── compose.yaml
 ├── Dockerfile
 ├── .env.example
-├── roo
-├── build/
-│   ├── masterplan.md
-│   ├── architecture.md
-│   ├── domain-model.md
-│   └── decisions/
-├── docker/
-│   ├── caddy/
-│   ├── php/
-│   └── postgres/
-├── scripts/
-└── src/                 Laravel-Anwendung; wird beim Bootstrap erzeugt
+├── roo                         Entwicklungsbefehle
+├── build/                      Masterplan, Architektur und ADRs
+├── data/                       Importdaten und Bildungspläne
+├── docker/                     Containerkonfiguration
+├── scripts/                    Hilfsskripte
+└── src/                        Laravel-Anwendung
 ```
 
-## Arbeitsweise mit Codex
+## Datenschutz
 
-Codex soll zuerst `AGENTS.md` und `build/masterplan.md` lesen.
+Schülerdaten, Beobachtungen und Bewertungen sind besonders schützenswert.
+Roo berücksichtigt deshalb von Beginn an Mandantenscopes, Policies, private
+Dateispeicher und den Verzicht auf Schülerdaten in Logs, Suchindizes und
+KI-Anfragen.
 
-Geeigneter erster Auftrag:
+## Mitentwicklung
 
-```text
-Lies AGENTS.md, build/masterplan.md und build/architecture.md.
-Führe Phase 0 aus. Prüfe zuerst das vorhandene Docker-Setup.
-Initialisiere anschließend Laravel 13 mit Inertia 3, Vue 3 und Bootstrap.
-Arbeite in kleinen Schritten, führe Tests aus und dokumentiere Abweichungen
-als ADR.
-```
-
-Danach:
-
-```text
-Implementiere aus Phase 1 den kleinsten vertikalen Schnitt:
-Eine angemeldete Lehrkraft kann eine Schule anlegen, bearbeiten und auflisten.
-Beachte Mandantenscope, Policies, deutsche UI, Tests und Bootstrap-Komponenten.
-```
-
-## Entwicklungsdaten
-
-Die Werte in `.env.example` sind ausschließlich für lokale Entwicklung.
-Produktionsgeheimnisse dürfen nicht eingecheckt werden.
+Arbeite in kleinen, abgeschlossenen vertikalen Schnitten. Lies vor größeren
+Änderungen `AGENTS.md`, den [Masterplan](build/masterplan.md) und die jeweils
+relevanten Architekturunterlagen. Änderungen sollen durch Tests abgesichert
+und fachliche Entscheidungen als ADR dokumentiert werden.
 
 ## Lizenz
 
-Noch festzulegen. Bis dahin ist keine Nutzungslizenz eingeräumt.
+Roo steht unter der [GNU General Public License Version 3](LICENSE).
