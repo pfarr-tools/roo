@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+#[Fillable(['education_plan_version_id', 'education_plan_stage_id', 'parent_id', 'kind', 'external_identifier', 'title', 'introduction', 'notes', 'source_raw', 'position'])]
+class EducationPlanCompetenceArea extends Model
+{
+    public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return ['notes' => 'array'];
+    }
+
+    public function competencies(): HasMany
+    {
+        return $this->hasMany(EducationPlanCompetency::class);
+    }
+}

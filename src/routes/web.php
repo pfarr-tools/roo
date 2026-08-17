@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolYearController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,8 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
+    Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');
+    Route::get('/bildungsplaene/{educationPlan}', [EducationPlanController::class, 'show'])->name('education-plans.show');
     Route::post('/schulen', [SchoolController::class, 'store'])->name('schools.store');
     Route::put('/schulen/{school}', [SchoolController::class, 'update'])->name('schools.update');
     Route::get('/schuljahre/{schoolYear}', [SchoolYearController::class, 'show'])->name('school-years.show');

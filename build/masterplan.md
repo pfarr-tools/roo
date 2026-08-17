@@ -99,6 +99,9 @@ strukturieren.
 
 ## Phase 2 – Bildungspläne und Kompetenzen
 
+Fortschritt: `[~]` Relationales Importmodell und JSON-Import für die vorhandenen
+Bildungsplan-Dateien umgesetzt; UI, Suche und Versionsvergleich folgen.
+
 ### Ziel
 
 Bildungspläne können versioniert importiert oder manuell erfasst werden.

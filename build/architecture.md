@@ -81,6 +81,13 @@ JSONB nur für:
 
 Keine Kerndomäne ausschließlich in JSONB speichern.
 
+Bildungsplanimporte folgen diesem Grundsatz: Planfassungen, Stufen,
+Kompetenzbereiche, Kompetenzen, Varianten und Verweise werden relational
+gespeichert. Die ursprüngliche JSON-Payload bleibt zusätzlich als
+versionsgebundener Audit-Snapshot erhalten. Ein unvollständiger Import wird
+über seinen Status bzw. `is_complete` sichtbar gemacht und nicht still als
+vollständige Fassung behandelt.
+
 ## IDs
 
 Standardentscheidung:

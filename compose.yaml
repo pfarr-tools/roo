@@ -10,6 +10,7 @@ x-app: &app
     - .env
   volumes:
     - ./src:/var/www/html
+    - ./data:/var/www/data:ro
     - composer_cache:/tmp/composer-cache
   depends_on:
     postgres:

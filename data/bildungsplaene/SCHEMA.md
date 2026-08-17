@@ -245,4 +245,4 @@ Für Roo sollten folgende Regeln gelten:
 
 ## 13. Aktuelle Dateien dieses Pakets
 
-Das Paket enthält vier Plan-Dateien. Grundschule, Sekundarstufe I und GMS-Oberstufe wurden aus den offiziellen PDF-Exporten extrahiert. Beim Gymnasium V3.0 konnte die offizielle Hauptseite im verwendeten Extraktionszugang nicht vollständig geladen werden; deshalb enthält diese Datei nur die verifizierte Struktur und ist ausdrücklich mit `metadata.conversion.complete = false` markiert. Die ältere V1-Fassung wurde **nicht** als Ersatz eingesetzt.
+Das Paket enthält fünf Plan-Dateien. Grundschule, Sekundarstufe I, die ältere Gymnasium-V1-Fassung und GMS-Oberstufe wurden aus den offiziellen PDF-Exporten extrahiert. Beim Gymnasium V3.0 konnte die offizielle Hauptseite im verwendeten Extraktionszugang nicht vollständig geladen werden; deshalb enthält diese Datei nur die verifizierte Struktur und ist ausdrücklich mit `metadata.conversion.complete = false` markiert. Die ältere V1-Fassung bleibt als eigene, klar gekennzeichnete Planfassung erhalten und wird nicht als Ersatz für V3.0 verwendet.

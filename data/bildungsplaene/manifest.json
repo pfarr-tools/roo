@@ -27,6 +27,12 @@
       "plan_code": "BP2016BW_ALLG_GMSO_REV",
       "complete": true,
       "source": "official PDF export"
+    },
+    {
+      "file": "plans/BP2016BW_ALLG_GYM_REV.json",
+      "plan_code": "BP2016BW_ALLG_GYM_REV",
+      "complete": true,
+      "source": "official PDF export"
     }
   ],
   "notes": [
