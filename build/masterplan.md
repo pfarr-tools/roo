@@ -17,9 +17,9 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 ## Phase 0 – Technische Basis
 
 Fortschritt: `[~]` Bootstrap, Docker-Healthchecks, Laravel/Inertia/Vue/
-Bootstrap-Basis, deutsche Authentifizierung, Testgrundlage und eine Docker-
-basierte CI-Prüfung sind umgesetzt. Offen sind noch ein expliziter
-Queue-Nachweis, ein Storage-Roundtrip und ein Suchindex-Test.
+Bootstrap-Basis, deutsche Authentifizierung, Testgrundlage, eine Docker-
+basierte CI-Prüfung und ein ausführbarer Queue-Nachweis sind umgesetzt. Offen
+sind noch ein Storage-Roundtrip und ein Suchindex-Test.
 
 ### Ziel
 
