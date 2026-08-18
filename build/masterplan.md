@@ -70,6 +70,12 @@ Laravel/Inertia-Anwendung.
 - Datei kann privat in S3-kompatiblen Storage geschrieben und gelesen werden.
 - Suchindex ist erreichbar.
 - Tests laufen vollständig in Docker.
+- Die Docker-/PostgreSQL-Entwicklungsdatenbank ist persistent und darf niemals
+  automatisch zurückgesetzt werden. Ein Reset, `migrate:fresh`, `db:wipe` oder
+  vergleichbare destruktive Vorgänge sind nur nach ausdrücklicher Anweisung
+  erlaubt.
+- Tests verwenden ausschließlich eine isolierte In-Memory- oder separate
+  Testdatenbank und niemals die Docker-Entwicklungsdatenbank.
 
 ---
 

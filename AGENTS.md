@@ -298,6 +298,14 @@ Temporäre Dateien erhalten Ablaufzeiten und werden regelmäßig bereinigt.
 
 ## 10. Tests
 
+- Tests dürfen niemals die Docker- bzw. PostgreSQL-Entwicklungsdatenbank
+  verwenden. Sie müssen ausschließlich eine isolierte In-Memory-Testdatenbank
+  oder eine ausdrücklich separate Testdatenbank verwenden.
+- Kein Testlauf darf `migrate:fresh`, `db:wipe` oder vergleichbare destruktive
+  Befehle gegen die Docker-Datenbank ausführen. Die normale Docker-Datenbank
+  darf nur nach ausdrücklicher Anweisung der Nutzerin bzw. des Nutzers
+  zurückgesetzt werden.
+
 Für jede fachliche Änderung:
 
 - mindestens ein aussagekräftiger Feature- oder Unit-Test,
