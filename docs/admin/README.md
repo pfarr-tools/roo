@@ -36,6 +36,7 @@ dann ist das Compose-Profil entsprechend anzupassen.
 
 ## Grundregel
 
-Produktionsbefehle werden auf dem Server aus dem Release-Verzeichnis und über
-`compose.production.yaml` ausgeführt. Das lokale `compose.yaml` bleibt der
+Produktionsbefehle werden auf dem Server aus dem Release-Verzeichnis über
+`./roo prod` ausgeführt. Der Wrapper verwendet dafür zentral
+`compose.production.yaml`; das lokale `compose.yaml` bleibt der
 Entwicklungsumgebung vorbehalten.

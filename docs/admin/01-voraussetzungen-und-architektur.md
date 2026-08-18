@@ -8,7 +8,8 @@ externem TLS-Reverse-Proxy. Die Anwendung besteht aus:
 
 | Bestandteil | Aufgabe | Produktionsanforderung |
 | --- | --- | --- |
-| Web-Proxy | TLS, Weiterleitung zu PHP-FPM, statische Dateien | einziger öffentlich erreichbarer Dienst |
+| Host-Reverse-Proxy | TLS und Weiterleitung zum lokalen Roo-Webdienst | einziger öffentlich erreichbarer Dienst |
+| Interner Webdienst | Caddy, statische Dateien und Weiterleitung zu PHP-FPM | nur auf `127.0.0.1:${APP_PORT}` veröffentlicht |
 | App | Laravel und Inertia | unveränderliches Release-Image |
 | Horizon | Redis-Queue und Hintergrundjobs | dauerhaft laufender Worker |
 | Scheduler | `schedule:work` | genau eine Instanz |
@@ -57,11 +58,16 @@ Vor einer Freigabe müssen folgende Eigenschaften des Produktionsprofils
 nachgewiesen sein:
 
 ```bash
-docker compose -f compose.production.yaml config
-docker compose -f compose.production.yaml ps
+./roo prod compose config
+./roo prod status
 ```
 
 Das Ergebnis darf keine Entwicklungskomponenten, keine Source-Bind-Mounts und
 keine ungeschützten Infrastrukturports enthalten. Das App-Image muss alle
 Composer- und npm-Abhängigkeiten sowie den mit `npm run build` erzeugten
 `public/build`-Ordner enthalten.
+
+Der interne Caddy erhält die öffentliche HTTPS-Information über den
+vorgeschalteten Proxy. `docker/caddy/Caddyfile.production` vertraut dafür
+privaten Proxy-Netzen und setzt `HTTPS=on` für PHP-FPM. Der Host-Reverse-Proxy
+muss `X-Forwarded-Proto` und `X-Forwarded-Host` weitergeben.

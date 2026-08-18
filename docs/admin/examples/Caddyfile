@@ -6,5 +6,8 @@ roo.example.org {
 
     # compose.production.yaml veröffentlicht Roo standardmäßig nur auf
     # 127.0.0.1:8080. Caddy läuft hier außerhalb von Docker auf dem Host.
-    reverse_proxy 127.0.0.1:8080
+    reverse_proxy 127.0.0.1:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
 }

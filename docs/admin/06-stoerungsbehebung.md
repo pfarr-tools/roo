@@ -3,8 +3,8 @@
 ## Anwendung liefert 502/503
 
 ```bash
-docker compose -f compose.production.yaml ps
-docker compose -f compose.production.yaml logs --tail=200 web app
+./roo prod status
+./roo prod logs --tail=200 web app
 ```
 
 Ist `app` nicht healthy, PHP-FPM-Fehler, fehlende Umgebungsvariablen,
@@ -18,16 +18,16 @@ Redis-Erreichbarkeit, `SESSION_DRIVER`, `REDIS_HOST`, Passwort, `APP_URL` und
 HTTPS-Proxy-Header prüfen. Danach den Cache kontrolliert leeren:
 
 ```bash
-docker compose -f compose.production.yaml exec app php artisan optimize:clear
-docker compose -f compose.production.yaml exec app php artisan config:cache
+./roo prod exec app php artisan optimize:clear
+./roo prod exec app php artisan config:cache
 ```
 
 ## Jobs bleiben liegen
 
 ```bash
-docker compose -f compose.production.yaml logs --tail=200 horizon
-docker compose -f compose.production.yaml exec app php artisan queue:failed
-docker compose -f compose.production.yaml exec app php artisan horizon:status
+./roo prod logs --tail=200 horizon
+./roo prod exec app php artisan queue:failed
+./roo prod exec app php artisan horizon:status
 ```
 
 Redis-Erreichbarkeit, Horizon-Prozess, Queue-Namen und Speichergrenzen prüfen.
@@ -40,6 +40,25 @@ Meilisearch-Erreichbarkeit und Schlüssel prüfen. PostgreSQL bleibt die Quelle 
 Wahrheit. Indexoperationen in einem Wartungsfenster und nach einem Backup der
 Anwendungskonfiguration durchführen. Keine Schülerdaten zum Beheben der Suche
 in einen Index aufnehmen.
+
+## Seite bleibt leer oder Assets werden als HTTP geladen
+
+Bei einem HTTPS-Aufruf müssen Stylesheets und JavaScript ebenfalls mit
+`https://` beginnen. `APP_URL` muss auf die öffentliche HTTPS-Adresse zeigen.
+Der Host-Reverse-Proxy muss `X-Forwarded-Proto: https` und
+`X-Forwarded-Host` weitergeben; der interne Produktions-Caddy ist für private
+Proxy-Netze konfiguriert. Nach Änderungen an `.env` oder der Proxy-Konfiguration
+die App-Konfiguration neu bauen und den Webdienst neu erzeugen:
+
+```bash
+./roo prod exec app php artisan optimize:clear
+./roo prod exec app php artisan config:cache
+./roo prod up web
+```
+
+Der direkte Roo-Webdienst ist standardmäßig nur unter `127.0.0.1:8080`
+erreichbar. Bei einem anderen `APP_PORT` muss das Ziel im Host-Caddyfile
+entsprechend angepasst werden.
 
 ## Datei-Upload oder Download schlägt fehl
 
@@ -63,4 +82,3 @@ Staging testen und erst dann produktiv wiederherstellen.
    Volume-Löschungen ausführen.
 5. Rollback oder Wiederherstellung zuerst in einer isolierten Umgebung prüfen.
 6. Nach Behebung Datenschutz-, Berechtigungs- und Queue-Prüfungen wiederholen.
-

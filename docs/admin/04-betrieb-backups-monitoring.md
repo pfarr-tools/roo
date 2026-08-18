@@ -13,10 +13,10 @@
 Beispiel:
 
 ```bash
-docker compose -f compose.production.yaml ps
-docker compose -f compose.production.yaml logs --since=1h app horizon scheduler web
-docker compose -f compose.production.yaml exec app php artisan about
-docker compose -f compose.production.yaml exec app php artisan queue:failed
+./roo prod status
+./roo prod logs --since=1h app horizon scheduler web
+./roo prod exec app php artisan about
+./roo prod exec app php artisan queue:failed
 ```
 
 Es gibt derzeit keinen fest verdrahteten öffentlichen Health-Endpunkt. Für
@@ -66,4 +66,3 @@ Container-Images, Docker Engine, Host-Kernel und TLS-Komponenten regelmäßig
 aktualisieren. Sicherheitsupdates zuerst in Staging testen. Alte Images und
 temporäre Exporte erst löschen, wenn das aktive Release und die
 Aufbewahrungsfristen geprüft sind.
-

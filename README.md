@@ -103,6 +103,22 @@ App-Key, führt Migrationen aus und legt die benötigten Storage-Buckets an.
 ./roo test
 ```
 
+Produktionsbefehle kapseln die Verwendung von `compose.production.yaml`:
+
+```bash
+./roo prod install
+./roo prod status
+./roo prod logs web
+./roo prod exec app php artisan about
+./roo prod compose config --quiet
+```
+
+Eine Produktionsinstallation baut ein unveränderliches Image, füllt leere oder
+fehlende `APP_KEY`- und `REDIS_PASSWORD`-Einträge automatisch, startet die
+persistenten Dienste und richtet die Anwendung ein. Bereits gesetzte
+Geheimnisse werden nicht überschrieben. Für den öffentlichen Zugriff wird ein TLS-Reverse-Proxy
+vor dem lokal auf `127.0.0.1:8080` gebundenen Roo-Webdienst benötigt.
+
 ## Projektstruktur
 
 ```text
@@ -114,7 +130,7 @@ App-Key, führt Migrationen aus und legt die benötigten Storage-Buckets an.
 ├── compose.production.yaml
 ├── Dockerfile
 ├── .env.example
-├── roo                         Entwicklungsbefehle
+├── roo                         Entwicklungs- und Produktionsbefehle
 ├── build/                      Masterplan, Architektur und ADRs
 ├── data/                       Importdaten und Bildungspläne
 ├── docker/                     Containerkonfiguration

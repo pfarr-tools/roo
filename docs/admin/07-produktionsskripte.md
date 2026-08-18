@@ -33,9 +33,10 @@ Standardoptionen wie `-d` bei `up` und `-f` bei `logs`.
 - Das aktuelle Release liegt beispielsweise unter `/opt/roo/current`.
 - `/opt/roo/current/.env` ist ein Symlink auf `/opt/roo/shared/.env`.
 - `.env` enthält mindestens `APP_ENV=production`, `APP_DEBUG=false`,
-  `APP_KEY`, Datenbank-, Redis-, Meilisearch-, Storage- und Mail-Zugangsdaten.
-- Das Produktionsprofil ist mit `docker compose -f compose.production.yaml
-  config --quiet` validiert.
+  Datenbank-, Meilisearch-, Storage- und Mail-Zugangsdaten. `APP_KEY` und
+  `REDIS_PASSWORD` werden bei leeren oder fehlenden Einträgen während
+  `./roo prod install` erzeugt.
+- Das Produktionsprofil ist mit `./roo prod compose config --quiet` validiert.
 - Der Docker-Account darf Images bauen und Container verwalten.
 
 Die Skripte geben keine Secrets aus. Die `.env` muss mit restriktiven
@@ -47,8 +48,7 @@ chmod 600 /opt/roo/shared/.env
 
 ## Erstinstallation
 
-Nach dem Erzeugen des Keys, dem Einrichten der `.env` und dem Checkout des
-freigegebenen Stands:
+Nach dem Einrichten der `.env` und dem Checkout des freigegebenen Stands:
 
 ```bash
 cd /opt/roo/current
@@ -57,7 +57,8 @@ cd /opt/roo/current
 
 Das Skript führt in dieser Reihenfolge aus:
 
-1. Docker-, Compose-, Produktions- und Konfigurationsprüfung
+1. Docker-, Compose-, Produktions- und Konfigurationsprüfung einschließlich
+   der Initialisierung leerer Secrets
 2. Build des Produktionsimages inklusive Frontend-Assets
 3. Start von PostgreSQL, Redis, Meilisearch und Object Storage
 4. Anlage der fünf benötigten Storage-Buckets
@@ -65,7 +66,9 @@ Das Skript führt in dieser Reihenfolge aus:
 6. Import aller Bildungspläne aus `data/bildungsplaene/plans`
 7. Import aller Curricula aus `data/curricula/curricula`
 8. Aufbau von Konfigurations-, Routen- und View-Cache
-9. Übertragung der statischen Dateien in das Caddy-Volume
+9. Übertragung der statischen Dateien als einmaliger privilegierter
+   Kopiervorgang in das Caddy-Volume; der laufende App-Container bleibt
+   unprivilegiert
 10. Start von App, Horizon, Scheduler und Webdienst
 
 Die Skriptdatei verwendet bewusst keine Seeder und keine destruktiven Befehle

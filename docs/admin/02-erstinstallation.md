@@ -12,11 +12,12 @@ Vor dem Skriptlauf müssen:
 - ein freigegebener Release-Checkout unter `/opt/roo/current` vorhanden sein,
 - `/opt/roo/current/.env` auf `/opt/roo/shared/.env` zeigen,
 - `APP_ENV=production` und `APP_DEBUG=false` gesetzt sein,
-- alle Produktionszugänge eingerichtet sein,
+- die Produktionszugänge eingerichtet sein; `APP_KEY` und `REDIS_PASSWORD`
+  dürfen leer sein und werden dann automatisch erzeugt,
 - die Verzeichnisse `data/bildungsplaene/plans` und
   `data/curricula/curricula` im Release vorhanden sein.
 
-Die Konfiguration und die Key-Erzeugung sind in
+Die Konfiguration und die Secret-Erzeugung sind in
 [Voraussetzungen und Zielarchitektur](01-voraussetzungen-und-architektur.md)
 beschrieben. Die `.env` muss mit `chmod 600` geschützt sein.
 
@@ -33,10 +34,12 @@ cd /opt/roo/current
 ./roo prod install
 ```
 
-Der Befehl prüft die Produktionskonfiguration, baut das Produktionsimage,
-startet die persistenten Dienste, legt die Storage-Buckets an, führt die
-Migrationen aus, importiert Bildungspläne und Curricula aus `data/`, baut die
-Laravel-Caches und startet App, Horizon, Scheduler und Webdienst.
+Der Befehl prüft die Produktionskonfiguration, erzeugt fehlende Secrets, baut
+das Produktionsimage, startet die persistenten Dienste, legt die
+Storage-Buckets an, führt die Migrationen aus, importiert Bildungspläne und
+Curricula aus `data/`, baut die Laravel-Caches, überträgt die statischen
+Dateien in ein vom Webdienst schreibgeschütztes Volume und startet App,
+Horizon, Scheduler und Webdienst.
 
 Das Installationsskript verwendet keine Seeder und keine destruktiven Befehle
 wie `migrate:fresh` oder `db:wipe`. Bei einem Fehler endet der Befehl mit einem
