@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLessonTemplateRequest;
+use App\Http\Requests\UploadUnitTemplateResourceRequest;
 use App\Models\LessonTemplate;
+use App\Models\ResourceReference;
 use App\Models\UnitTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -67,6 +70,26 @@ class LessonTemplateController extends Controller
         $lessonTemplate->delete();
 
         return to_route('lesson-templates.index')->with('success', 'Stunden-Vorlage wurde gelöscht.');
+    }
+
+    public function uploadResource(UploadUnitTemplateResourceRequest $request, LessonTemplate $lessonTemplate): RedirectResponse
+    {
+        $this->ensureVisible($lessonTemplate);
+        $file = $request->file('resource');
+        $path = $file->store('lesson-templates/'.$lessonTemplate->id, 'local');
+        $lessonTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+
+        return to_route('lesson-templates.index')->with('success', 'Anhang wurde hochgeladen.');
+    }
+
+    public function destroyResource(LessonTemplate $lessonTemplate, ResourceReference $resource): RedirectResponse
+    {
+        $this->ensureVisible($lessonTemplate);
+        abort_unless($resource->lesson_template_id === $lessonTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        Storage::disk('local')->delete($resource->storage_path);
+        $resource->delete();
+
+        return to_route('lesson-templates.index')->with('success', 'Anhang wurde gelöscht.');
     }
 
     private function ensureVisible(LessonTemplate $lessonTemplate): void

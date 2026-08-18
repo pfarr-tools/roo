@@ -40,4 +40,9 @@ class PhaseTemplate extends Model
     {
         return $this->belongsToMany(MaterialItem::class, 'phase_template_material_items')->withPivot('quantity');
     }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(ResourceReference::class);
+    }
 }

@@ -29,4 +29,9 @@ class LessonTemplate extends Model
     {
         return $this->hasMany(self::class, 'copied_from_id');
     }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(ResourceReference::class);
+    }
 }

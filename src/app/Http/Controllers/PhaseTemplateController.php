@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePhaseTemplateRequest;
+use App\Http\Requests\UploadUnitTemplateResourceRequest;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
+use App\Models\ResourceReference;
 use App\Models\SocialForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,6 +85,26 @@ class PhaseTemplateController extends Controller
         $phaseTemplate->delete();
 
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde gelöscht.');
+    }
+
+    public function uploadResource(UploadUnitTemplateResourceRequest $request, PhaseTemplate $phaseTemplate): RedirectResponse
+    {
+        $this->ensureVisible($phaseTemplate);
+        $file = $request->file('resource');
+        $path = $file->store('phase-templates/'.$phaseTemplate->id, 'local');
+        $phaseTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+
+        return to_route('phase-templates.index')->with('success', 'Anhang wurde hochgeladen.');
+    }
+
+    public function destroyResource(PhaseTemplate $phaseTemplate, ResourceReference $resource): RedirectResponse
+    {
+        $this->ensureVisible($phaseTemplate);
+        abort_unless($resource->phase_template_id === $phaseTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        Storage::disk('local')->delete($resource->storage_path);
+        $resource->delete();
+
+        return to_route('phase-templates.index')->with('success', 'Anhang wurde gelöscht.');
     }
 
     private function ensureVisible(PhaseTemplate $phaseTemplate): void

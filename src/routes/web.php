@@ -38,11 +38,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/stunden-vorlagen/{lessonTemplate}/kopieren', [LessonTemplateController::class, 'copy'])->name('lesson-templates.copy');
     Route::put('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'update'])->name('lesson-templates.update');
     Route::delete('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'destroy'])->name('lesson-templates.destroy');
+    Route::post('/stunden-vorlagen/{lessonTemplate}/anhaenge', [LessonTemplateController::class, 'uploadResource'])->name('lesson-templates.resources.store');
+    Route::delete('/stunden-vorlagen/{lessonTemplate}/anhaenge/{resource}', [LessonTemplateController::class, 'destroyResource'])->name('lesson-templates.resources.destroy');
     Route::get('/phasen-vorlagen', [PhaseTemplateController::class, 'index'])->name('phase-templates.index');
     Route::post('/phasen-vorlagen', [PhaseTemplateController::class, 'store'])->name('phase-templates.store');
     Route::post('/phasen-vorlagen/{phaseTemplate}/kopieren', [PhaseTemplateController::class, 'copy'])->name('phase-templates.copy');
     Route::put('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'update'])->name('phase-templates.update');
     Route::delete('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'destroy'])->name('phase-templates.destroy');
+    Route::post('/phasen-vorlagen/{phaseTemplate}/anhaenge', [PhaseTemplateController::class, 'uploadResource'])->name('phase-templates.resources.store');
+    Route::delete('/phasen-vorlagen/{phaseTemplate}/anhaenge/{resource}', [PhaseTemplateController::class, 'destroyResource'])->name('phase-templates.resources.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');

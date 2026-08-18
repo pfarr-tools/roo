@@ -272,6 +272,19 @@ it('uploads and deletes private resources for unit templates within the organiza
     Storage::disk('local')->assertMissing($resource->storage_path);
 });
 
+it('uploads private resources for lesson and phase templates', function () {
+    Storage::fake('local');
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'UE']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Stunde']);
+    $phaseTemplate = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Phase']);
+
+    $this->actingAs($user)->post("/stunden-vorlagen/{$lessonTemplate->id}/anhaenge", ['resource' => UploadedFile::fake()->create('stundenblatt.pdf', 10, 'application/pdf')])->assertRedirect();
+    $this->actingAs($user)->post("/phasen-vorlagen/{$phaseTemplate->id}/anhaenge", ['resource' => UploadedFile::fake()->create('karten.png', 10, 'image/png')])->assertRedirect();
+
+    expect($lessonTemplate->fresh()->resources)->toHaveCount(1)->and($phaseTemplate->fresh()->resources)->toHaveCount(1);
+});
+
 it('rejects phase templates using another organizations lesson template', function () {
     $user = phaseFiveUser();
     $otherUser = phaseFiveUser();
