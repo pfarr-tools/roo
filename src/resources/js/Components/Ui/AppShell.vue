@@ -14,7 +14,7 @@ const moduleGroups = [
     { title: labels.organization, items: [
         { label: labels.schools, icon: 'bi-building', url: '/schulen', enabled: true },
         { label: labels.teachingGroups, icon: 'bi-people', url: '/unterrichtsgruppen', enabled: true },
-        { label: labels.students, icon: 'bi-person-vcard', url: '/schuelerinnen', enabled: true },
+        { label: labels.students, icon: 'bi-person-vcard', url: '/schueler:innen', enabled: true },
     ] },
     { title: labels.content, items: [
         { label: labels.educationPlans, icon: 'bi-journal-text', url: '/bildungsplaene', enabled: true },

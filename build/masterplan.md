@@ -550,6 +550,7 @@ Die Oberfläche folgt auf Detailseiten einer festen Aktionslogik:
 
 - Die Topbar enthält nur die Seiten-Navigation und die zentrale Aktion für das
   Hauptobjekt.
+- Der Seitentitel steht im Inhaltsbereich, nicht zusätzlich in der Topbar.
 - Zurück bzw. Schließen wird als X-Symbol dargestellt und mit Tooltip sowie
   zugänglichem Label versehen.
 - „Änderungen speichern“ speichert das Hauptobjekt einschließlich seiner

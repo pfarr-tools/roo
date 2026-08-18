@@ -56,7 +56,7 @@ it('shows the organization-wide searchable and filterable student list', functio
     [$otherSchool] = phaseFourSchoolYear($otherUser);
     Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
-    $this->actingAs($user)->get('/schüler:innen?q=Anna&class_name=2a&sort=first_name&direction=desc')->assertSuccessful()->assertInertia(fn ($page) => $page
+    $this->actingAs($user)->get('/schueler:innen?q=Anna&class_name=2a&sort=first_name&direction=desc')->assertSuccessful()->assertInertia(fn ($page) => $page
         ->where('filters.q', 'Anna')
         ->where('filters.class_name', '2a')
         ->where('filters.sort', 'first_name')
@@ -99,11 +99,12 @@ it('exports only the organizations students with their school years', function (
     $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Exportgruppe']);
     $student = Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Export', 'class_name' => '2a']);
     $group->students()->attach($student->id);
+    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Nicht', 'last_name' => 'Export', 'class_name' => '3a']);
     $otherUser = phaseFourUser();
     [$otherSchool] = phaseFourSchoolYear($otherUser);
     Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
-    $response = $this->actingAs($user)->get('/schüler:innen/export');
+    $response = $this->actingAs($user)->get('/schueler:innen/export?class_name=2a');
     ob_start();
     $response->sendContent();
     $content = ob_get_clean();
@@ -111,7 +112,17 @@ it('exports only the organizations students with their school years', function (
     expect($response->getStatusCode())->toBe(200)
         ->and($response->headers->get('content-type'))->toBe('text/csv; charset=UTF-8')
         ->and($content)->toContain('Export;Anna;2a;"Schule Phase 4";2026/27')
+        ->and($content)->not->toContain('Nicht;Export;3a')
         ->and($content)->not->toContain('Fremd');
+});
+
+it('redirects the legacy student list path to the canonical path', function () {
+    $user = phaseFourUser();
+
+    $response = $this->actingAs($user)->get('/schuelerinnen');
+
+    expect($response->getStatusCode())->toBe(302)
+        ->and(urldecode($response->headers->get('Location')))->toEndWith('/schueler:innen');
 });
 
 it('requires at least one grade level when creating a teaching group', function () {
