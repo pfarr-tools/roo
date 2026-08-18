@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['organization_id', 'lesson_template_id', 'copied_from_id', 'title', 'duration_minutes', 'social_form', 'description', 'material', 'position', 'version', 'is_active'])]
+#[Fillable(['organization_id', 'lesson_template_id', 'copied_from_id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material', 'position', 'version', 'is_active'])]
 class PhaseTemplate extends Model
 {
     public function organization(): BelongsTo
@@ -18,6 +18,11 @@ class PhaseTemplate extends Model
     public function lessonTemplate(): BelongsTo
     {
         return $this->belongsTo(LessonTemplate::class);
+    }
+
+    public function socialForm(): BelongsTo
+    {
+        return $this->belongsTo(SocialForm::class);
     }
 
     public function copiedFrom(): BelongsTo

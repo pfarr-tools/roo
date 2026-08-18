@@ -3,6 +3,7 @@
 use App\Models\LessonTemplate;
 use App\Models\Organization;
 use App\Models\PhaseTemplate;
+use App\Models\SocialForm;
 use App\Models\UnitTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -156,7 +157,8 @@ it('creates, lists and versions phase templates for an organization lesson templ
     ])->assertRedirect('/phasen-vorlagen');
 
     $phaseTemplate = PhaseTemplate::firstOrFail();
-    expect($phaseTemplate->position)->toBe(1);
+    expect($phaseTemplate->position)->toBe(1)
+        ->and($phaseTemplate->socialForm->name)->toBe('Plenum');
 
     $this->actingAs($user)->put("/phasen-vorlagen/{$phaseTemplate->id}", [
         'lesson_template_id' => $lessonTemplate->id,
@@ -166,6 +168,7 @@ it('creates, lists and versions phase templates for an organization lesson templ
 
     expect($phaseTemplate->fresh()->title)->toBe('Überarbeiteter Einstieg')
         ->and($phaseTemplate->fresh()->version)->toBe(2);
+    expect(SocialForm::where('organization_id', $user->organization_id)->count())->toBe(1);
 
     $this->actingAs($user)->get('/phasen-vorlagen')
         ->assertSuccessful()
