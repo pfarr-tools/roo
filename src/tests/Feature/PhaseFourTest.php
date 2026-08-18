@@ -65,6 +65,55 @@ it('shows the organization-wide searchable and filterable student list', functio
         ->where('students.data.0.school.name', 'Schule Phase 4'));
 });
 
+it('indexes only the students minimal search fields and includes teaching groups', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'school_year_id' => $year->id,
+        'name' => 'Suchgruppe 2ab',
+    ]);
+    $student = Student::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'first_name' => 'Mina',
+        'last_name' => 'Beispiel',
+        'class_name' => '2a',
+        'notes' => 'Vertrauliche Beobachtung',
+    ]);
+    $group->students()->attach($student->id);
+    $searchable = $student->fresh()->toSearchableArray();
+
+    expect($searchable['teaching_groups'])->toContain('Suchgruppe 2ab')
+        ->and($searchable['search_text'])->toContain('Mina')
+        ->and($searchable['search_text'])->toContain('Beispiel')
+        ->and($searchable['search_text'])->toContain('2a')
+        ->and($searchable['search_text'])->toContain('Suchgruppe 2ab')
+        ->and($searchable)->not->toHaveKey('notes');
+});
+
+it('exports only the organizations students with their school years', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Exportgruppe']);
+    $student = Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Export', 'class_name' => '2a']);
+    $group->students()->attach($student->id);
+    $otherUser = phaseFourUser();
+    [$otherSchool] = phaseFourSchoolYear($otherUser);
+    Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
+
+    $response = $this->actingAs($user)->get('/schüler:innen/export');
+    ob_start();
+    $response->sendContent();
+    $content = ob_get_clean();
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($response->headers->get('content-type'))->toBe('text/csv; charset=UTF-8')
+        ->and($content)->toContain('Export;Anna;2a;"Schule Phase 4";2026/27')
+        ->and($content)->not->toContain('Fremd');
+});
+
 it('requires at least one grade level when creating a teaching group', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);

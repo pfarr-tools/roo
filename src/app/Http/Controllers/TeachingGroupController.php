@@ -84,6 +84,7 @@ class TeachingGroupController extends Controller
         $this->authorize('update', $teachingGroup);
         $data = $request->validated();
         abort_unless($data['school_id'] === $teachingGroup->school_id && $data['school_year_id'] === $teachingGroup->school_year_id, 422);
+        $nameChanged = $teachingGroup->name !== $data['name'];
         DB::transaction(function () use ($data, $teachingGroup): void {
             $teachingGroup->update(collect($data)->only(['name', 'notes'])->all());
             $teachingGroup->gradeLevels()->delete();
@@ -99,6 +100,9 @@ class TeachingGroupController extends Controller
                 }
             }
         });
+        if ($nameChanged) {
+            $teachingGroup->students()->get()->each->searchable();
+        }
 
         return back()->with('success', 'Unterrichtsgruppe wurde gespeichert.');
     }
@@ -121,6 +125,7 @@ class TeachingGroupController extends Controller
         DB::transaction(function () use ($data, $teachingGroup): void {
             $student = Student::create($data + ['organization_id' => $teachingGroup->organization_id]);
             $teachingGroup->students()->attach($student->id);
+            $student->searchable();
         });
 
         return back()->with('success', 'Schüler:in wurde angelegt und der Gruppe zugeordnet.');
@@ -183,6 +188,7 @@ class TeachingGroupController extends Controller
         abort_unless(Student::whereIn('id', $studentIds)->where('organization_id', $request->user()->organization_id)->where('school_id', $teachingGroup->school_id)->count() === $studentIds->count(), 422);
         $pivot = collect($data)->only(['starts_on', 'ends_on'])->all();
         $teachingGroup->students()->syncWithoutDetaching($studentIds->mapWithKeys(fn (int $studentId): array => [$studentId => $pivot])->all());
+        Student::whereIn('id', $studentIds)->get()->each->searchable();
 
         return back()->with('success', 'Schüler:in wurde der Gruppe zugeordnet.');
     }
@@ -191,6 +197,7 @@ class TeachingGroupController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $teachingGroup->students()->detach($student->id);
+        $student->searchable();
 
         return back()->with('success', 'Zuordnung wurde entfernt.');
     }
@@ -218,7 +225,9 @@ class TeachingGroupController extends Controller
     public function destroy(TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('delete', $teachingGroup);
+        $studentIds = $teachingGroup->students()->pluck('students.id');
         $teachingGroup->delete();
+        Student::whereIn('id', $studentIds)->get()->each->searchable();
 
         return to_route('teaching-groups.index')->with('success', 'Unterrichtsgruppe wurde gelöscht.');
     }

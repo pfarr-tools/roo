@@ -12,6 +12,11 @@ class StudentPolicy
         return $user->organization_id !== null;
     }
 
+    public function export(User $user): bool
+    {
+        return $this->viewAny($user);
+    }
+
     public function view(User $user, Student $student): bool
     {
         return $user->organization_id === $student->organization_id;

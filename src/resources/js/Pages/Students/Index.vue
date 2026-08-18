@@ -28,7 +28,7 @@ function sortLabel(column) {
 
 <template>
     <AppShell>
-        <template #toolbar><span class="fw-semibold">{{ de.students }}</span></template>
+        <template #toolbar><span class="fw-semibold">{{ de.students }}</span><a href="/schüler:innen/export" class="btn btn-sm btn-outline-primary">{{ de.exportStudents }}</a></template>
         <div class="container-full px-3 py-4">
             <a href="/dashboard" class="text-decoration-none">{{ de.dashboard }}</a>
             <div class="d-flex justify-content-between align-items-end gap-3 mt-2 mb-4"><div><h1 class="h2 mb-1">{{ de.students }}</h1><p class="text-muted mb-0">{{ de.studentsIntro }}</p></div><span class="badge text-bg-light">{{ students.total }} {{ de.studentCount }}</span></div>

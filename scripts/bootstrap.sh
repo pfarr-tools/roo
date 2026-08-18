@@ -78,6 +78,7 @@ fi
 
 echo "Führe Migrationen aus ..."
 docker compose run --rm app php artisan migrate --force
+docker compose run --rm app php artisan scout:sync-index-settings --driver=meilisearch
 
 echo "Starte Roo ..."
 docker compose up -d

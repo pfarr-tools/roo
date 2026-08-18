@@ -119,6 +119,7 @@ export default {
     teachingGroups: 'Unterrichtsgruppen',
     students: 'Schüler:innen',
     studentsIntro: 'Alle Schüler:innen deiner Schulen alphabetisch verwalten.',
+    exportStudents: 'CSV exportieren',
     searchStudents: 'Name, Klasse oder Schule suchen',
     filterBySchool: 'Nach Schule filtern',
     filterByClass: 'Nach Klasse filtern',

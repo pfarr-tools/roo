@@ -194,6 +194,8 @@ Reale Lerngruppen eines Schuljahres abbilden.
 
 - Klassen anlegen
 - Schüler:innen per CSV importieren und manuell anlegen, bearbeiten und löschen
+- organisationsgeschützter CSV-Export von Schüler:innen einschließlich Schule
+  und zugehöriger Schuljahre
 - zentrale Schüler:innenübersicht mit organisationsweiter Suche, Filtern,
   Sortierung und Pagination
 - Gruppe aus mehreren Klassen zusammensetzen
@@ -222,7 +224,18 @@ enthalten.
 
 - Policies und Mandantenscopes vollständig
 - Export- und Löschpfade vorbereiten
-- keine Indexierung von Schülerdaten in Meilisearch
+- minimierter Schülerindex in Meilisearch: Nachname, Vorname, tatsächliche
+  Klasse und zugehörige Unterrichtsgruppen; Notizen, Beobachtungen und
+  Bewertungen werden nicht indexiert
+- Der Index ist mandantengefiltert, intern zugriffsbeschränkt und muss bei
+  Änderungen oder Löschungen synchron zur relationalen Quelle aktualisiert
+  werden
+- Das ist eine Maßnahme zur Datenminimierung: Ein Suchindex ist eine zusätzliche,
+  dauerhaft gespeicherte Kopie außerhalb der relationalen Quelle. Bei einer
+  Fehlkonfiguration, einem zu weit gefassten Suchschlüssel, Logs/Backups oder
+  einem unvollständigen Löschlauf könnten Namen, Klassen und Suchfragmente
+  darüber zusätzlich zugänglich werden. Meilisearch würde die Daten nicht von
+  selbst veröffentlichen, aber die Angriffs- und Fehlerfläche vergrößern.
 - Schüler:innen-CSV erwartet `Vorname`, `Nachname` und `Klasse`; `Notizen` ist optional.
 - Mitgliedschaften können mit Beginn und Ende erfasst werden.
 
