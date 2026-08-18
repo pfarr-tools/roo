@@ -39,6 +39,11 @@ Architektur- und Arbeitsregeln finden sich in:
 - [Domänenmodell](build/domain-model.md)
 - [Architekturentscheidungen](build/decisions/)
 
+Für den produktiven Betrieb gibt es ein eigenes
+[Administrationshandbuch](docs/admin/README.md) mit Erstinstallation,
+Updates, Rollback, Backups, Datenschutz und Störungsbehebung. Das lokale
+`compose.yaml` ist ausschließlich für die Entwicklung vorgesehen.
+
 ## Technischer Stack
 
 - Laravel 13 und PHP 8.4
@@ -106,13 +111,14 @@ App-Key, führt Migrationen aus und legt die benötigten Storage-Buckets an.
 ├── README.md
 ├── LICENSE
 ├── compose.yaml
+├── compose.production.yaml
 ├── Dockerfile
 ├── .env.example
 ├── roo                         Entwicklungsbefehle
 ├── build/                      Masterplan, Architektur und ADRs
 ├── data/                       Importdaten und Bildungspläne
 ├── docker/                     Containerkonfiguration
-├── scripts/                    Hilfsskripte
+├── scripts/                    Entwicklungs- und Produktionsskripte
 └── src/                        Laravel-Anwendung
 ```
 

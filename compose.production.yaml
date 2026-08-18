@@ -1,0 +1,177 @@
+name: roo-production
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: production
+  working_dir: /var/www/html
+  env_file:
+    - .env
+  volumes:
+    - ./data:/var/www/data:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    meilisearch:
+      condition: service_healthy
+    object-storage:
+      condition: service_started
+  networks:
+    - backend
+
+services:
+  app:
+    <<: *app
+    command: php-fpm
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  public-assets:
+    <<: *app
+    command: sh -lc "cp -a /var/www/html/public/. /public/"
+    volumes:
+      - public_assets:/public
+    restart: "no"
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - backend
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - public_assets:/var/www/html/public:ro
+      - ./docker/caddy/Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+      public-assets:
+        condition: service_completed_successfully
+    networks:
+      - frontend
+      - backend
+
+  horizon:
+    <<: *app
+    command: php artisan horizon
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-roo}
+      POSTGRES_USER: ${DB_USERNAME:-roo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muss gesetzt sein}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: sh -lc 'redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD muss gesetzt sein}"'
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - backend
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?MEILISEARCH_KEY muss gesetzt sein}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health | grep -q available"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend
+
+  object-storage:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID muss gesetzt sein}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY muss gesetzt sein}
+    volumes:
+      - object_storage_data:/data
+    networks:
+      - backend
+
+  create-buckets:
+    image: minio/mc:latest
+    restart: "no"
+    env_file:
+      - .env
+    entrypoint: >-
+      /bin/sh -lc '
+      until mc alias set roo http://object-storage:9000
+      "$${AWS_ACCESS_KEY_ID}" "$${AWS_SECRET_ACCESS_KEY}"; do sleep 2; done;
+      mc mb --ignore-existing roo/$${AWS_BUCKET};
+      mc mb --ignore-existing roo/roo-generated;
+      mc mb --ignore-existing roo/roo-imports;
+      mc mb --ignore-existing roo/roo-exports;
+      mc mb --ignore-existing roo/roo-temporary;
+      '
+    depends_on:
+      object-storage:
+        condition: service_started
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+  object_storage_data:
+  public_assets:
+  caddy_data:
+  caddy_config:

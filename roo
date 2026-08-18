@@ -49,6 +49,42 @@ case "$COMMAND" in
       -e APP_KEY='base64:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=' \
       app php artisan test "$@"
     ;;
+  prod|production)
+    PROD_COMMAND="${1:-help}"
+    shift || true
+    case "$PROD_COMMAND" in
+      install)
+        exec "$ROOT/scripts/install-production.sh" "$@"
+        ;;
+      update)
+        exec "$ROOT/scripts/update-production.sh" "$@"
+        ;;
+      status|ps)
+        exec docker compose -f "$ROOT/compose.production.yaml" ps "$@"
+        ;;
+      logs)
+        exec docker compose -f "$ROOT/compose.production.yaml" logs -f "$@"
+        ;;
+      help)
+        cat <<'EOF'
+Produktionsbefehle
+
+Verwendung:
+  ./roo prod install
+  ./roo prod update --backup-confirmed [--ref <tag|commit>]
+  ./roo prod status
+  ./roo prod logs [dienst]
+
+Die Produktionsbefehle verwenden compose.production.yaml.
+Die übrigen ./roo-Befehle sind Entwicklungsbefehle.
+EOF
+        ;;
+      *)
+        echo "Unbekannter Produktionsbefehl: $PROD_COMMAND" >&2
+        exit 2
+        ;;
+    esac
+    ;;
   fresh)
     if [[ "${1:-}" != "--force" ]]; then
       echo "Abbruch: ./roo fresh löscht die normale lokale Datenbank."
@@ -76,6 +112,10 @@ Verwendung:
   ./roo pint
   ./roo test
   ./roo fresh
+  ./roo prod install
+  ./roo prod update --backup-confirmed [--ref <tag|commit>]
+  ./roo prod status
+  ./roo prod logs [dienst]
 EOF
     ;;
 esac

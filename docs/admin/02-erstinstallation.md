@@ -1,0 +1,52 @@
+# Erstinstallation
+
+Die Erstinstallation wird ausschließlich über den Produktionsbefehl von
+`./roo` ausgeführt. Das lokale `compose.yaml` und die Entwicklungsbefehle sind
+für diesen Vorgang nicht vorgesehen.
+
+## Voraussetzungen
+
+Vor dem Skriptlauf müssen:
+
+- Docker Engine und das Compose-Plugin installiert sein,
+- ein freigegebener Release-Checkout unter `/opt/roo/current` vorhanden sein,
+- `/opt/roo/current/.env` auf `/opt/roo/shared/.env` zeigen,
+- `APP_ENV=production` und `APP_DEBUG=false` gesetzt sein,
+- der Laravel-Key und alle Produktionszugänge eingerichtet sein,
+- die Verzeichnisse `data/bildungsplaene/plans` und
+  `data/curricula/curricula` im Release vorhanden sein.
+
+Die Konfiguration und die Key-Erzeugung sind in
+[Voraussetzungen und Zielarchitektur](01-voraussetzungen-und-architektur.md)
+beschrieben. Die `.env` muss mit `chmod 600` geschützt sein.
+
+## Installation ausführen
+
+```bash
+cd /opt/roo/current
+./roo prod install
+```
+
+Der Befehl prüft die Produktionskonfiguration, baut das Produktionsimage,
+startet die persistenten Dienste, legt die Storage-Buckets an, führt die
+Migrationen aus, importiert Bildungspläne und Curricula aus `data/`, baut die
+Laravel-Caches und startet App, Horizon, Scheduler und Webdienst.
+
+Das Installationsskript verwendet keine Seeder und keine destruktiven Befehle
+wie `migrate:fresh` oder `db:wipe`. Bei einem Fehler endet der Befehl mit einem
+Fehlercode. Die Ursache muss behoben werden, bevor der Befehl erneut ausgeführt
+wird.
+
+## Nachprüfung
+
+Status und Logs werden ebenfalls über `./roo` abgefragt:
+
+```bash
+./roo prod status
+./roo prod logs app horizon scheduler web
+```
+
+Danach Anmeldung, private Dateien, Suche, Queue, Mail sowie importierte
+Bildungspläne und Curricula fachlich prüfen. Die vollständige Checkliste steht
+unter [Produktionsskripte verwenden](07-produktionsskripte.md).
+

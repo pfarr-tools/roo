@@ -56,6 +56,41 @@ FROM php-base AS development
 
 USER www-data
 
+FROM node:22-bookworm-slim AS frontend-builder
+
+WORKDIR /app
+
+COPY src/package*.json ./
+RUN npm ci
+
+COPY src/ ./
+RUN npm run build
+
+FROM php-base AS production
+
+COPY --chown=www-data:www-data src/composer.json src/composer.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --optimize-autoloader
+
+COPY --chown=www-data:www-data src/ ./
+COPY --from=frontend-builder --chown=www-data:www-data /app/public/build ./public/build
+
+RUN php artisan package:discover --ansi
+
+RUN mkdir -p storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+USER www-data
+
 FROM node:22-bookworm-slim AS node
 
 WORKDIR /app
