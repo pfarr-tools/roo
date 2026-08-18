@@ -9,9 +9,9 @@ const showSchedule = ref(false)
 const form = useForm({ name: props.school.name, short_name: props.school.short_name ?? '', city: props.school.city ?? '', notes: props.school.notes ?? '' })
 const periods = useForm({ periods: Array.from({ length: 12 }, (_, index) => { const existing = (props.school.periods ?? []).find(period => period.period_number === index + 1); return { id: existing?.id ?? null, period_number: index + 1, starts_at: existing?.starts_at?.slice(0, 5) ?? '' } }) })
 function endAt(start) { if (!start) return ''; const [hours, minutes] = start.split(':').map(Number); const total = hours * 60 + minutes + 45; return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}` }
-function save() { form.put(`/schulen/${props.school.id}`) }
+function save() { form.put(`/schulen/${props.school.slug}`) }
 function savePeriods() { periods.transform(data => ({ periods: data.periods.filter(period => period.starts_at) })).put(`/schulen/${props.school.slug}/stundenraster`, { onSuccess: () => { showSchedule.value = false } }) }
-function removeSchool() { if (window.confirm(de.deleteSchoolConfirm)) router.delete(`/schulen/${props.school.id}`) }
+function removeSchool() { if (window.confirm(de.deleteSchoolConfirm)) router.delete(`/schulen/${props.school.slug}`) }
 </script>
 
 <template>

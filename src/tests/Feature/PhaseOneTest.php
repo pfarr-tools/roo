@@ -60,6 +60,15 @@ it('allows a teacher to delete a school in their organization', function () {
     $this->assertDatabaseMissing('schools', ['id' => $school->id]);
 });
 
+it('allows a teacher to update a school through its slug route', function () {
+    $user = phaseOneUser();
+    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Alte Schule']);
+
+    $this->actingAs($user)->put('/schulen/'.$school->slug, ['name' => 'Neue Schule', 'short_name' => 'NS', 'city' => 'Ulm', 'notes' => 'Notiz'])->assertRedirect('/schulen');
+
+    $this->assertDatabaseHas('schools', ['id' => $school->id, 'name' => 'Neue Schule', 'slug' => 'neue-schule']);
+});
+
 it('assigns a curriculum directly to a teaching group in a school year', function () {
     $user = phaseOneUser();
     $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Grundschule am Bach']);
