@@ -38,20 +38,23 @@ compose up -d postgres redis meilisearch object-storage
 echo "Lege Object-Storage-Buckets an ..."
 compose run --rm --no-deps create-buckets
 
+echo "Starte App für Initialisierung ..."
+compose up -d app
+
 echo "Führe Datenbankmigrationen aus ..."
-compose run --rm --no-deps app php artisan migrate --force
+compose exec app php artisan migrate --force
 
 echo "Importiere Bildungspläne aus data/ ..."
-compose run --rm --no-deps app php artisan education-plans:import /var/www/data/bildungsplaene/plans
+compose exec app php artisan education-plans:import /var/www/data/bildungsplaene/plans
 
 echo "Importiere Curricula aus data/ ..."
-compose run --rm --no-deps app php artisan curricula:import /var/www/data/curricula/curricula
+compose exec app php artisan curricula:import /var/www/data/curricula/curricula
 
 echo "Erzeuge Laravel-Produktionscache ..."
-compose run --rm --no-deps app php artisan optimize:clear
-compose run --rm --no-deps app php artisan config:cache
-compose run --rm --no-deps app php artisan route:cache
-compose run --rm --no-deps app php artisan view:cache
+compose exec app php artisan optimize:clear
+compose exec app php artisan config:cache
+compose exec app php artisan route:cache
+compose exec app php artisan view:cache
 
 echo "Übertrage statische Produktionsdateien ..."
 compose run --rm --no-deps public-assets

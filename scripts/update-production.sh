@@ -93,14 +93,18 @@ echo "Stelle persistente Dienste sicher ..."
 compose up -d postgres redis meilisearch object-storage
 compose run --rm --no-deps create-buckets
 
+echo "Starte aktualisierte App für Migrationen ..."
+compose up -d app
+compose exec app php artisan down --render="errors::503" || true
+
 echo "Führe Datenbankmigrationen aus ..."
-compose run --rm --no-deps app php artisan migrate --force
+compose exec app php artisan migrate --force
 
 echo "Erzeuge Laravel-Produktionscache ..."
-compose run --rm --no-deps app php artisan optimize:clear
-compose run --rm --no-deps app php artisan config:cache
-compose run --rm --no-deps app php artisan route:cache
-compose run --rm --no-deps app php artisan view:cache
+compose exec app php artisan optimize:clear
+compose exec app php artisan config:cache
+compose exec app php artisan route:cache
+compose exec app php artisan view:cache
 
 echo "Beende alte Horizon-Worker ..."
 compose exec app php artisan horizon:terminate || true
