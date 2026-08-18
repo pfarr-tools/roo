@@ -203,7 +203,6 @@ Reale Lerngruppen eines Schuljahres abbilden.
 
 ### Fachobjekte
 
-- SchoolClass
 - Student
 - TeachingGroup
 - TeachingGroupMembership
@@ -212,7 +211,6 @@ Reale Lerngruppen eines Schuljahres abbilden.
 
 ### Funktionen
 
-- Klassen anlegen
 - Schüler:innen per CSV importieren und manuell anlegen, bearbeiten und löschen
 - organisationsgeschützter CSV-Export von Schüler:innen einschließlich Schule
   und zugehöriger Schuljahre
@@ -232,7 +230,8 @@ sind kein aktiver Planungsablauf mehr.
 Das Stundenraster wird schulweit einmal pro Periodennummer (1 bis 12) mit
 Beginn gepflegt. Jede Unterrichtsstunde dauert 45 Minuten; das Ende wird
 berechnet. Unterrichtsgruppen wählen daraus Wochentag und Periodennummer,
-beispielsweise Dienstag 1 und 2.
+beispielsweise Dienstag 1 und 2. Die Bearbeitung konkreter Stunden und
+Perioden gehört zu den späteren Planungs- und Stundenphasen.
 
 Die Klassenbezeichnung ist bewusst ein Feld an `Student` (`class_name`), keine
 separat zu pflegende Entität. Eine Unterrichtsgruppe hat einen freien Namen,

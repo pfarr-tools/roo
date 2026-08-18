@@ -9,7 +9,6 @@ Organization
   └── User
 
 School
-  ├── SchoolClass
   ├── SchoolPeriod (1–12, Beginn; Ende + 45 Minuten)
   ├── TeachingGroup
   └── Curriculum (n:m, zeitlich gültig)
