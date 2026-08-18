@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePhaseTemplateRequest;
 use App\Models\LessonTemplate;
+use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
 use App\Models\SocialForm;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,7 @@ class PhaseTemplateController extends Controller
         $organizationId = auth()->user()->organization_id;
         $query = trim((string) $request->query('q', ''));
         $templates = PhaseTemplate::query()
-            ->with(['lessonTemplate:id,title', 'socialForm:id,name'])
+            ->with(['lessonTemplate:id,title', 'socialForm:id,name', 'materialItems:id,name'])
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))
@@ -38,10 +39,13 @@ class PhaseTemplateController extends Controller
     {
         $data = $request->validated();
         $this->ensureLessonTemplateBelongsToOrganization((int) $data['lesson_template_id']);
+        $materialItems = $data['material_items'] ?? [];
+        unset($data['material_items']);
         $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
         unset($data['social_form']);
         $data['position'] ??= $this->nextPosition((int) $data['lesson_template_id']);
-        PhaseTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
+        $template = PhaseTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
+        $this->syncMaterialItems($template, $materialItems);
 
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde angelegt.');
     }
@@ -51,9 +55,12 @@ class PhaseTemplateController extends Controller
         $this->ensureVisible($phaseTemplate);
         $data = $request->validated();
         $this->ensureLessonTemplateBelongsToOrganization((int) $data['lesson_template_id']);
+        $materialItems = $data['material_items'] ?? [];
+        unset($data['material_items']);
         $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
         unset($data['social_form']);
         $phaseTemplate->update($data + ['version' => $phaseTemplate->version + 1]);
+        $this->syncMaterialItems($phaseTemplate, $materialItems);
 
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde gespeichert.');
     }
@@ -64,6 +71,7 @@ class PhaseTemplateController extends Controller
         $copy = $phaseTemplate->replicate(['version', 'copied_from_id', 'created_at', 'updated_at']);
         $copy->fill(['title' => 'Kopie von '.$phaseTemplate->title, 'copied_from_id' => $phaseTemplate->id, 'version' => 1]);
         $copy->save();
+        $copy->materialItems()->sync($phaseTemplate->materialItems()->pluck('material_items.id'));
 
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde kopiert.');
     }
@@ -103,5 +111,11 @@ class PhaseTemplateController extends Controller
             'organization_id' => auth()->user()->organization_id,
             'name' => $name,
         ])->id;
+    }
+
+    private function syncMaterialItems(PhaseTemplate $template, array $names): void
+    {
+        $itemIds = collect($names)->map(fn (string $name): string => trim($name))->filter()->unique()->map(fn (string $name): int => MaterialItem::firstOrCreate(['organization_id' => auth()->user()->organization_id, 'name' => $name])->id);
+        $template->materialItems()->sync($itemIds);
     }
 }

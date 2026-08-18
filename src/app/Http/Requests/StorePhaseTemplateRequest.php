@@ -21,6 +21,8 @@ class StorePhaseTemplateRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:20000'],
             'material' => ['nullable', 'string', 'max:20000'],
             'position' => ['nullable', 'integer', 'min:0', 'max:999'],
+            'material_items' => ['nullable', 'array', 'max:30'],
+            'material_items.*' => ['string', 'max:100'],
         ];
     }
 }

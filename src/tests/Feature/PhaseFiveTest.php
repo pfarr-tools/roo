@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\LessonTemplate;
+use App\Models\MaterialItem;
 use App\Models\Organization;
 use App\Models\PhaseTemplate;
 use App\Models\SocialForm;
@@ -239,6 +240,20 @@ it('filters phase templates by material', function () {
 
     $this->actingAs($user)->get('/phasen-vorlagen?q=Bildkarte')
         ->assertInertia(fn ($page) => $page->has('templates', 1)->where('templates.0.title', 'Bild'));
+});
+
+it('stores and copies structured material items on phase templates', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Thema']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Stunde']);
+    $phaseTemplate = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Phase']);
+
+    $this->actingAs($user)->put("/phasen-vorlagen/{$phaseTemplate->id}", ['lesson_template_id' => $lessonTemplate->id, 'title' => 'Phase', 'material_items' => ['Bildkarte', 'Tuch']])->assertRedirect();
+    expect($phaseTemplate->fresh()->materialItems->pluck('name')->all())->toEqualCanonicalizing(['Bildkarte', 'Tuch']);
+
+    $this->actingAs($user)->post("/phasen-vorlagen/{$phaseTemplate->id}/kopieren")->assertRedirect();
+    expect(PhaseTemplate::where('copied_from_id', $phaseTemplate->id)->first()->materialItems->pluck('name')->all())->toEqualCanonicalizing(['Bildkarte', 'Tuch']);
+    expect(MaterialItem::where('organization_id', $user->organization_id)->count())->toBe(2);
 });
 
 it('rejects phase templates using another organizations lesson template', function () {

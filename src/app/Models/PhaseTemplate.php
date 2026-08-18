@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['organization_id', 'lesson_template_id', 'copied_from_id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material', 'position', 'version', 'is_active'])]
@@ -33,5 +34,10 @@ class PhaseTemplate extends Model
     public function copies(): HasMany
     {
         return $this->hasMany(self::class, 'copied_from_id');
+    }
+
+    public function materialItems(): BelongsToMany
+    {
+        return $this->belongsToMany(MaterialItem::class, 'phase_template_material_items')->withPivot('quantity');
     }
 }

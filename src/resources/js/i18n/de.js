@@ -85,6 +85,8 @@ export default {
     phaseTitle: 'Titel der Phase',
     socialForm: 'Sozialform',
     material: 'Material',
+    materialItems: 'Materialbestandteile',
+    materialItemsHint: 'Mehrere Bestandteile durch Komma trennen',
     position: 'Reihenfolge',
     assignedLessonTemplate: 'Zugehörige Stunden-Vorlage',
     noPhaseTemplates: 'Noch keine Phasen-Vorlagen vorhanden.',
