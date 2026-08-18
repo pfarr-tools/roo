@@ -35,6 +35,10 @@ services:
 
   public-assets:
     <<: *app
+    # The named volume is initialized as root-owned by Docker. This one-shot
+    # copy service needs write access; the long-running application remains
+    # unprivileged as www-data.
+    user: root
     command: sh -lc "cp -a /var/www/html/public/. /public/"
     volumes:
       - public_assets:/public

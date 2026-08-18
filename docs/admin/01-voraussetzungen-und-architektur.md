@@ -31,6 +31,10 @@ vertrauenswürdiger SMTP- oder Transaktionsmaildienst zu konfigurieren.
 - verwaltetes PostgreSQL/S3 ist gegenüber selbst betriebenen Diensten zu
   bevorzugen, wenn keine belastbare Betriebsroutine vorhanden ist
 
+Für einen Caddy-Reverse-Proxy auf dem Docker-Host gibt es ein
+[Konfigurationsbeispiel](08-reverse-proxy.md) und ein direkt kopierbares
+[Beispiel-Caddyfile](examples/Caddyfile).
+
 ## Netzwerk und Volumes
 
 Nur der Reverse-Proxy darf aus dem Internet erreichbar sein. PostgreSQL,
@@ -61,4 +65,3 @@ Das Ergebnis darf keine Entwicklungskomponenten, keine Source-Bind-Mounts und
 keine ungeschützten Infrastrukturports enthalten. Das App-Image muss alle
 Composer- und npm-Abhängigkeiten sowie den mit `npm run build` erzeugten
 `public/build`-Ordner enthalten.
-

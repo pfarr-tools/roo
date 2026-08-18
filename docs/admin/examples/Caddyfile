@@ -1,0 +1,10 @@
+# Caddyfile für einen auf dem Host betriebenen Reverse-Proxy.
+# Ersetze roo.example.org durch den tatsächlichen DNS-Namen.
+
+roo.example.org {
+    encode zstd gzip
+
+    # compose.production.yaml veröffentlicht Roo standardmäßig nur auf
+    # 127.0.0.1:8080. Caddy läuft hier außerhalb von Docker auf dem Host.
+    reverse_proxy 127.0.0.1:8080
+}

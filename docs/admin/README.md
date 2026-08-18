@@ -13,6 +13,11 @@ Backups und Updates verantworten.
 - [Sicherheit und Datenschutz](05-sicherheit-und-datenschutz.md)
 - [Störungsbehebung](06-stoerungsbehebung.md)
 - [Produktionsskripte verwenden](07-produktionsskripte.md)
+- [Reverse-Proxy mit Caddy](08-reverse-proxy.md)
+
+## Beispiele
+
+- [Caddyfile für einen Reverse-Proxy](examples/Caddyfile)
 
 ## Wichtiger Hinweis
 
