@@ -104,6 +104,8 @@ export default {
     deleteUnitTemplate: 'UE-Vorlage löschen',
     deleteUnitTemplateConfirm: 'Möchtest du diese Unterrichtseinheiten-Vorlage wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.',
     noUnitTemplates: 'Noch keine Unterrichtseinheiten-Vorlagen vorhanden.',
+    searchTemplates: 'Vorlagen durchsuchen',
+    filter: 'Filtern',
     noExpectedHours: 'Kein Zeitbedarf hinterlegt',
     description: 'Beschreibung',
     version: 'Version',

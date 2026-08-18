@@ -5,20 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUnitTemplateRequest;
 use App\Models\UnitTemplate;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class UnitTemplateController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $query = trim((string) $request->query('q', ''));
         $templates = UnitTemplate::query()
             ->where('organization_id', auth()->user()->organization_id)
             ->where('is_active', true)
+            ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
             ->orderBy('title')
             ->get(['id', 'title', 'description', 'expected_hours', 'notes', 'version', 'copied_from_id']);
 
-        return Inertia::render('UnitTemplates/Index', ['templates' => $templates]);
+        return Inertia::render('UnitTemplates/Index', ['templates' => $templates, 'filters' => ['q' => $query]]);
     }
 
     public function store(StoreUnitTemplateRequest $request): RedirectResponse

@@ -48,6 +48,20 @@ it('creates and lists unit templates within the users organization', function ()
             ->where('templates.0.title', 'Schöpfung bewahren'));
 });
 
+it('filters unit templates by title without exposing another organization', function () {
+    $user = phaseFiveUser();
+    UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Mose']);
+    UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Noah']);
+    $otherUser = phaseFiveUser();
+    UnitTemplate::create(['organization_id' => $otherUser->organization_id, 'title' => 'Mose fremd']);
+
+    $this->actingAs($user)->get('/unterrichtseinheiten-vorlagen?q=Mose')
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.q', 'Mose')
+            ->has('templates', 1)
+            ->where('templates.0.title', 'Mose'));
+});
+
 it('validates the required title for a unit template', function () {
     $user = phaseFiveUser();
 
