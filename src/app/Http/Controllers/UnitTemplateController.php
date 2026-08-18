@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUnitTemplateRequest;
+use App\Http\Requests\UploadUnitTemplateResourceRequest;
+use App\Models\ResourceReference;
 use App\Models\Tag;
 use App\Models\UnitTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +21,7 @@ class UnitTemplateController extends Controller
         $templates = UnitTemplate::query()
             ->where('organization_id', auth()->user()->organization_id)
             ->where('is_active', true)
-            ->with('tags:id,name')
+            ->with(['tags:id,name', 'resources:id,unit_template_id,original_name,mime_type,size'])
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
             ->orderBy('title')
             ->get(['id', 'title', 'description', 'expected_hours', 'notes', 'version', 'copied_from_id']);
@@ -70,6 +73,32 @@ class UnitTemplateController extends Controller
         $unitTemplate->delete();
 
         return to_route('unit-templates.index')->with('success', 'Unterrichtseinheit-Vorlage wurde gelöscht.');
+    }
+
+    public function uploadResource(UploadUnitTemplateResourceRequest $request, UnitTemplate $unitTemplate): RedirectResponse
+    {
+        $this->ensureVisible($unitTemplate);
+        $file = $request->file('resource');
+        $path = $file->store('unit-templates/'.$unitTemplate->id, 'local');
+        $unitTemplate->resources()->create([
+            'organization_id' => $request->user()->organization_id,
+            'original_name' => $file->getClientOriginalName(),
+            'storage_path' => $path,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+        ]);
+
+        return to_route('unit-templates.index')->with('success', 'Anhang wurde hochgeladen.');
+    }
+
+    public function destroyResource(UnitTemplate $unitTemplate, ResourceReference $resource): RedirectResponse
+    {
+        $this->ensureVisible($unitTemplate);
+        abort_unless($resource->unit_template_id === $unitTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        Storage::disk('local')->delete($resource->storage_path);
+        $resource->delete();
+
+        return to_route('unit-templates.index')->with('success', 'Anhang wurde gelöscht.');
     }
 
     private function ensureVisible(UnitTemplate $unitTemplate): void

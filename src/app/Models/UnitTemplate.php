@@ -30,4 +30,9 @@ class UnitTemplate extends Model
     {
         return $this->belongsToMany(Tag::class, 'unit_template_tags');
     }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(ResourceReference::class);
+    }
 }

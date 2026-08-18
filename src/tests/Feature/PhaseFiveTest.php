@@ -10,6 +10,8 @@ use App\Models\UnitTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -254,6 +256,20 @@ it('stores and copies structured material items on phase templates', function ()
     $this->actingAs($user)->post("/phasen-vorlagen/{$phaseTemplate->id}/kopieren")->assertRedirect();
     expect(PhaseTemplate::where('copied_from_id', $phaseTemplate->id)->first()->materialItems->pluck('name')->all())->toEqualCanonicalizing(['Bildkarte', 'Tuch']);
     expect(MaterialItem::where('organization_id', $user->organization_id)->count())->toBe(2);
+});
+
+it('uploads and deletes private resources for unit templates within the organization', function () {
+    Storage::fake('local');
+    $user = phaseFiveUser();
+    $template = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Material UE']);
+
+    $this->actingAs($user)->post("/unterrichtseinheiten-vorlagen/{$template->id}/anhaenge", ['resource' => UploadedFile::fake()->create('arbeitsblatt.pdf', 120, 'application/pdf')])->assertRedirect();
+    $resource = $template->fresh()->resources->first();
+    expect($resource->original_name)->toBe('arbeitsblatt.pdf');
+    Storage::disk('local')->assertExists($resource->storage_path);
+
+    $this->actingAs($user)->delete("/unterrichtseinheiten-vorlagen/{$template->id}/anhaenge/{$resource->id}")->assertRedirect();
+    Storage::disk('local')->assertMissing($resource->storage_path);
 });
 
 it('rejects phase templates using another organizations lesson template', function () {

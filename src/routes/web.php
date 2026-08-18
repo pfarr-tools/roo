@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtseinheiten-vorlagen/{unitTemplate}/kopieren', [UnitTemplateController::class, 'copy'])->name('unit-templates.copy');
     Route::put('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'update'])->name('unit-templates.update');
     Route::delete('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'destroy'])->name('unit-templates.destroy');
+    Route::post('/unterrichtseinheiten-vorlagen/{unitTemplate}/anhaenge', [UnitTemplateController::class, 'uploadResource'])->name('unit-templates.resources.store');
+    Route::delete('/unterrichtseinheiten-vorlagen/{unitTemplate}/anhaenge/{resource}', [UnitTemplateController::class, 'destroyResource'])->name('unit-templates.resources.destroy');
     Route::get('/stunden-vorlagen', [LessonTemplateController::class, 'index'])->name('lesson-templates.index');
     Route::post('/stunden-vorlagen', [LessonTemplateController::class, 'store'])->name('lesson-templates.store');
     Route::post('/stunden-vorlagen/{lessonTemplate}/kopieren', [LessonTemplateController::class, 'copy'])->name('lesson-templates.copy');
