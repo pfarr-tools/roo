@@ -16,7 +16,7 @@ Für manuelle Produktionsbefehle kapselt `./roo prod` die Produktionsdatei:
 ```bash
 ./roo prod status
 ./roo prod logs web
-./roo prod up -d web
+./roo prod up web
 ./roo prod restart app
 ./roo prod exec app php artisan about
 ./roo prod compose config --quiet
