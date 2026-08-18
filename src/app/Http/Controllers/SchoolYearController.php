@@ -88,6 +88,6 @@ class SchoolYearController extends Controller
         $this->authorize('update', $schoolYear);
         $count = app(ImportHolidaysFromApi::class)->execute($schoolYear, (string) request('state_code', config('services.ferien_api.default_state')));
 
-        return back()->with('success', $count.' Ferienzeiträume wurden aus der Ferien-API importiert.');
+        return back()->with('success', $count.' Ferien und Feiertage wurden aus der OpenHolidays API importiert.');
     }
 }

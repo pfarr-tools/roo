@@ -102,6 +102,9 @@ it('creates calendar days and keeps local exceptions after importing BW holidays
         'https://openholidaysapi.org/SchoolHolidays*' => Http::sequence()
             ->push([['id' => 'herbstferien-2026-BW', 'name' => [['language' => 'DE', 'text' => 'Herbstferien']], 'startDate' => '2026-10-26', 'endDate' => '2026-10-30']])
             ->push([]),
+        'https://openholidaysapi.org/PublicHolidays*' => Http::sequence()
+            ->push([['id' => 'tag-der-deutschen-einheit-2026', 'name' => [['language' => 'DE', 'text' => 'Tag der Deutschen Einheit']], 'startDate' => '2026-10-03', 'endDate' => '2026-10-03']])
+            ->push([]),
     ]);
     $user = phaseOneUser();
     $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
@@ -113,9 +116,12 @@ it('creates calendar days and keeps local exceptions after importing BW holidays
 
     $this->assertDatabaseHas('holiday_periods', ['school_year_id' => $year->id, 'name' => 'Schulfest', 'data_source_id' => null]);
     $this->assertDatabaseHas('holiday_periods', ['school_year_id' => $year->id, 'external_identifier' => 'herbstferien-2026-BW', 'starts_on' => '2026-10-26 00:00:00', 'ends_on' => '2026-10-30 00:00:00']);
+    $this->assertDatabaseHas('holiday_periods', ['school_year_id' => $year->id, 'external_identifier' => 'public-tag-der-deutschen-einheit-2026', 'name' => 'Tag der Deutschen Einheit']);
     $this->assertDatabaseHas('school_year_days', ['school_year_id' => $year->id, 'date' => '2026-09-10', 'kind' => 'holiday']);
-    Http::assertSentCount(2);
+    $this->assertDatabaseHas('school_year_days', ['school_year_id' => $year->id, 'date' => '2026-10-03', 'kind' => 'holiday', 'label' => 'Tag der Deutschen Einheit']);
+    Http::assertSentCount(4);
     Http::assertSent(fn ($request) => $request->url() === 'https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&subdivisionCode=DE-BW&languageIsoCode=DE&validFrom=2026-01-01&validTo=2026-12-31');
+    Http::assertSent(fn ($request) => $request->url() === 'https://openholidaysapi.org/PublicHolidays?countryIsoCode=DE&subdivisionCode=DE-BW&languageIsoCode=DE&validFrom=2026-01-01&validTo=2026-12-31');
 });
 
 it('allows editing a day without changing its date', function () {

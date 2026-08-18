@@ -16,22 +16,26 @@ class ImportHolidaysFromApi
         $years = array_unique([$schoolYear->starts_on->year, $schoolYear->ends_on->year]);
         $holidays = [];
         foreach ($years as $year) {
-            $response = Http::acceptJson()->timeout(15)->get(
-                rtrim(config('services.ferien_api.url'), '/').'/SchoolHolidays',
-                [
-                    'countryIsoCode' => config('services.ferien_api.country', 'DE'),
-                    'subdivisionCode' => $this->subdivisionCode($stateCode),
-                    'languageIsoCode' => config('services.ferien_api.language', 'DE'),
-                    'validFrom' => $year.'-01-01',
-                    'validTo' => $year.'-12-31',
-                ],
-            );
-            $response->throw();
-            $payload = $response->json();
-            if (! is_array($payload)) {
-                throw ValidationException::withMessages(['ferien' => 'Die Ferien-API hat ein ungültiges Format geliefert.']);
+            foreach (['SchoolHolidays' => 'school', 'PublicHolidays' => 'public'] as $endpoint => $kind) {
+                $response = Http::acceptJson()->timeout(15)->get(
+                    rtrim(config('services.ferien_api.url'), '/').'/'.$endpoint,
+                    [
+                        'countryIsoCode' => config('services.ferien_api.country', 'DE'),
+                        'subdivisionCode' => $this->subdivisionCode($stateCode),
+                        'languageIsoCode' => config('services.ferien_api.language', 'DE'),
+                        'validFrom' => $year.'-01-01',
+                        'validTo' => $year.'-12-31',
+                    ],
+                );
+                $response->throw();
+                $payload = $response->json();
+                if (! is_array($payload)) {
+                    throw ValidationException::withMessages(['ferien' => 'Die OpenHolidays API hat ein ungültiges Format geliefert.']);
+                }
+                foreach ($payload as $holiday) {
+                    $holidays[] = [...$holiday, '_kind' => $kind];
+                }
             }
-            $holidays = [...$holidays, ...$payload];
         }
 
         return DB::transaction(function () use ($schoolYear, $stateCode, $years, $holidays): int {
@@ -63,7 +67,7 @@ class ImportHolidaysFromApi
                 }
 
                 HolidayPeriod::updateOrCreate(
-                    ['school_year_id' => $schoolYear->id, 'external_identifier' => $holiday['id']],
+                    ['school_year_id' => $schoolYear->id, 'external_identifier' => ($holiday['_kind'] === 'public' ? 'public-' : '').$holiday['id']],
                     ['data_source_id' => $source->id, 'name' => $name, 'starts_on' => max($start, $schoolYear->starts_on->toDateString()), 'ends_on' => min($end, $schoolYear->ends_on->toDateString()), 'change_reason' => null],
                 );
                 $count++;
