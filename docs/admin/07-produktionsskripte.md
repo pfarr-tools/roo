@@ -11,6 +11,21 @@ Beide Skripte müssen aus einem Release-Checkout mit
 `compose.production.yaml`, `data/` und der Produktionskonfiguration ausgeführt
 werden. Die lokale Entwicklungsdatei `compose.yaml` wird nicht verwendet.
 
+Für manuelle Produktionsbefehle kapselt `./roo prod` die Produktionsdatei:
+
+```bash
+./roo prod status
+./roo prod logs web
+./roo prod up -d web
+./roo prod restart app
+./roo prod exec app php artisan about
+./roo prod compose config --quiet
+```
+
+`./roo prod compose ...` ist der allgemeine Durchgriff auf Docker Compose mit
+`compose.production.yaml`; die Kurzbefehle verwenden zusätzlich sinnvolle
+Standardoptionen wie `-d` bei `up` und `-f` bei `logs`.
+
 ## Voraussetzungen
 
 - Docker Engine und Compose-Plugin sind installiert.

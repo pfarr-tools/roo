@@ -62,8 +62,23 @@ case "$COMMAND" in
       status|ps)
         exec docker compose -f "$ROOT/compose.production.yaml" ps "$@"
         ;;
+      up)
+        exec docker compose -f "$ROOT/compose.production.yaml" up -d "$@"
+        ;;
+      down)
+        exec docker compose -f "$ROOT/compose.production.yaml" down "$@"
+        ;;
+      restart)
+        exec docker compose -f "$ROOT/compose.production.yaml" restart "$@"
+        ;;
       logs)
         exec docker compose -f "$ROOT/compose.production.yaml" logs -f "$@"
+        ;;
+      exec)
+        exec docker compose -f "$ROOT/compose.production.yaml" exec "$@"
+        ;;
+      compose)
+        exec docker compose -f "$ROOT/compose.production.yaml" "$@"
         ;;
       help)
         cat <<'EOF'
@@ -72,8 +87,13 @@ Produktionsbefehle
 Verwendung:
   ./roo prod install
   ./roo prod update --backup-confirmed [--ref <tag|commit>]
+  ./roo prod up [dienst ...]
+  ./roo prod down
+  ./roo prod restart [dienst ...]
   ./roo prod status
   ./roo prod logs [dienst]
+  ./roo prod exec <dienst> <befehl>
+  ./roo prod compose <docker-compose-befehl> [argumente ...]
 
 Die Produktionsbefehle verwenden compose.production.yaml.
 Die übrigen ./roo-Befehle sind Entwicklungsbefehle.
