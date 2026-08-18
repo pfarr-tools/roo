@@ -82,6 +82,30 @@ class CurriculumController extends Controller
         return redirect()->route('curricula.show', $curriculum);
     }
 
+    public function storeVersion(Curriculum $curriculum): RedirectResponse
+    {
+        $this->ensureVisible($curriculum);
+        $source = $curriculum->versions()->with(['bindings', 'topics.competencies', 'topics.profiles'])->latest('id')->firstOrFail();
+        abort_unless($source->is_editable, 403);
+
+        $number = ((int) $curriculum->versions()->where('external_identifier', 'like', 'custom-%')->pluck('external_identifier')->map(fn (string $id): int => (int) str_replace('custom-', '', $id))->max()) + 1;
+        $version = $curriculum->versions()->create($source->only(['schema_version', 'source_url', 'source_format', 'is_complete', 'conversion_metadata', 'raw_payload']) + ['external_identifier' => 'custom-'.$number, 'is_editable' => true]);
+        foreach ($source->bindings as $binding) {
+            $version->bindings()->create($binding->only(['education_plan_id', 'plan_code', 'role', 'denomination', 'subject', 'raw_data']));
+        }
+        foreach ($source->topics as $topic) {
+            $copy = $version->topics()->create($topic->only(['source_curriculum_version_id', 'external_identifier', 'number', 'title', 'position', 'year', 'hours', 'notes', 'preparation_questions', 'shared_plan', 'raw_rows']));
+            foreach ($topic->competencies as $competency) {
+                $copy->competencies()->create($competency->only(['education_plan_competency_id', 'denomination', 'competency_kind', 'external_identifier', 'display', 'raw_text', 'position']));
+            }
+            foreach ($topic->profiles as $profile) {
+                $copy->profiles()->create($profile->only(['denomination', 'perspective']));
+            }
+        }
+
+        return redirect()->route('curricula.show', $curriculum)->with('success', 'Neue Curriculumfassung wurde angelegt.');
+    }
+
     public function show(Curriculum $curriculum): Response
     {
         $this->ensureVisible($curriculum);

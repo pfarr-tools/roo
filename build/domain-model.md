@@ -10,6 +10,7 @@ Organization
 
 School
   ├── SchoolClass
+  ├── SchoolPeriod (1–12, Beginn; Ende + 45 Minuten)
   ├── TeachingGroup
   └── Curriculum (n:m, zeitlich gültig)
 
@@ -53,7 +54,7 @@ CurriculumVersion
 
 TeachingGroup
   ├── Student (n:m über zeitliche Mitgliedschaft)
-  ├── TimetableSlot
+  ├── SchoolPeriod (n:m mit Wochentag)
   ├── Curriculum (n:m, mit Rolle)
   ├── GroupYearPlan
   └── GroupSongbook

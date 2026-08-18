@@ -13,8 +13,8 @@ const sidebarExpanded = computed(() => sidebarPinned.value || sidebarHovered.val
 const moduleGroups = [
     { title: labels.organization, items: [
         { label: labels.schools, icon: 'bi-building', url: '/schulen', enabled: true },
-        { label: labels.teachingGroups, icon: 'bi-people', enabled: false },
-        { label: labels.students, icon: 'bi-person-vcard', enabled: false },
+        { label: labels.teachingGroups, icon: 'bi-people', url: '/unterrichtsgruppen', enabled: true },
+        { label: labels.students, icon: 'bi-person-vcard', url: '/schuelerinnen', enabled: true },
     ] },
     { title: labels.content, items: [
         { label: labels.educationPlans, icon: 'bi-journal-text', url: '/bildungsplaene', enabled: true },

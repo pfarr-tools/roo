@@ -137,8 +137,9 @@ Bildungspläne dürfen nicht als ein einziger JSON-Block gespeichert werden.
 
 Fortschritt: `[~]` Importmodell, relationale Curriculumdaten, eine
 bearbeitbare Arbeitsoberfläche für eigene Curricula, die
-Curriculum-Schulzuordnung und ein read-only Curriculumvergleich sind
-umgesetzt. Weitere Fassungsfunktionen folgen im nächsten Schnitt.
+Curriculum-Schulzuordnung, ein read-only Curriculumvergleich und das Kopieren
+eigener Fassungen sind umgesetzt. Weitere Fassungsfunktionen folgen im
+nächsten Schnitt.
 
 ### Ziel
 
@@ -166,10 +167,15 @@ Schulen verwendet werden.
 - Curriculum kopieren
 - Curriculum-Vergleich: zwei sichtbare Curricula mit Einheiten, Jahrgängen,
   Zeitbedarf und Kompetenzanzahl gegenüberstellen
+- eigene Curriculumfassung als vollständige, bearbeitbare Kopie anlegen
 
 ---
 
 ## Phase 4 – Klassen, Schüler:innen und Unterrichtsgruppen
+
+Fortschritt: `[~]` Unterrichtsgruppen, Schüler:innen, zeitliche
+Mitgliedschaften, Mehrfach-Jahrgangsstufen, Stundenplantermine und
+Curriculumzuordnungen sind als erster vertikaler Schnitt umgesetzt.
 
 ### Ziel
 
@@ -187,17 +193,40 @@ Reale Lerngruppen eines Schuljahres abbilden.
 ### Funktionen
 
 - Klassen anlegen
-- Schüler:innen importieren und manuell verwalten
+- Schüler:innen per CSV importieren und manuell anlegen, bearbeiten und löschen
+- zentrale Schüler:innenübersicht mit organisationsweiter Suche, Filtern,
+  Sortierung und Pagination
 - Gruppe aus mehreren Klassen zusammensetzen
 - Eintritt/Austritt zeitlich abbilden
 - Stundenplan mit mehreren regelmäßigen Terminen
 - primäres und ergänzende Curricula zuordnen
+
+Das Stundenraster wird schulweit einmal pro Periodennummer (1 bis 12) mit
+Beginn gepflegt. Jede Unterrichtsstunde dauert 45 Minuten; das Ende wird
+berechnet. Unterrichtsgruppen wählen daraus Wochentag und Periodennummer,
+beispielsweise Dienstag 1 und 2.
+
+Die Klassenbezeichnung ist bewusst ein Feld an `Student` (`class_name`), keine
+separat zu pflegende Entität. Eine Unterrichtsgruppe hat einen freien Namen,
+kann ohne Mitglieder angelegt werden und erhält mindestens eine, beliebig viele
+Jahrgangsstufen. So kann etwa die Gruppe „2ab“ Schüler:innen aus „2a“ und „2b“
+enthalten.
 
 ### Datenschutz
 
 - Policies und Mandantenscopes vollständig
 - Export- und Löschpfade vorbereiten
 - keine Indexierung von Schülerdaten in Meilisearch
+- Schüler:innen-CSV erwartet `Vorname`, `Nachname` und `Klasse`; `Notizen` ist optional.
+- Mitgliedschaften können mit Beginn und Ende erfasst werden.
+
+### UI-Konvention für Detailseiten
+
+Auf einer Detailseite gibt es keine untergeordneten Speichern- oder
+Absende-Buttons. Änderungen am Hauptobjekt werden über die zentrale
+Seitenaktion gespeichert; eigenständige Abläufe wie Schüler:innen anlegen,
+importieren oder zuordnen öffnen ein Modal. Das Anlegen bietet zusätzlich
+„Speichern und neu“.
 
 ---
 

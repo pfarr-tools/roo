@@ -29,6 +29,20 @@ it('compares two visible curricula', function () {
     $this->actingAs($user)->get('/curricula/vergleichen?left='.$first->id.'&right='.$second->id)->assertSuccessful()->assertInertia(fn ($page) => $page->where('left.id', $first->id)->where('right.id', $second->id)->has('left.topics')->has('right.topics'));
 });
 
+it('creates a new editable curriculum version by copying the current version', function () {
+    $result = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/curricula', ['title' => 'Versionscurriculum', 'grades' => [1, 2], 'source_version_ids' => [$result['version']->id]])->assertRedirect();
+    $curriculum = Curriculum::where('title', 'Versionscurriculum')->firstOrFail();
+    $originalCount = $curriculum->versions()->firstOrFail()->topics()->count();
+
+    $this->actingAs($user)->post('/curricula/'.$curriculum->id.'/fassungen')->assertRedirect();
+
+    expect($curriculum->versions()->count())->toBe(2)
+        ->and($curriculum->versions()->latest('id')->first()->topics()->count())->toBe($originalCount)
+        ->and($curriculum->versions()->latest('id')->first()->is_editable)->toBeTrue();
+});
+
 it('creates and edits an own curriculum without changing the source', function () {
     $imported = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
     $user = User::factory()->create();

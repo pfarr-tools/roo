@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\CurriculumController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolYearController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeachingGroupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -12,7 +15,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');
@@ -21,7 +24,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');
+    Route::post('/curricula/{curriculum}/fassungen', [CurriculumController::class, 'storeVersion'])->name('curricula.versions.store');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');
+    Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
+    Route::get('/schuelerinnen', [StudentController::class, 'index'])->name('students.index');
+    Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
+    Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
+    Route::put('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'update'])->name('teaching-groups.update');
+    Route::delete('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'destroy'])->name('teaching-groups.destroy');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/mitglieder', [TeachingGroupController::class, 'storeMembership'])->name('teaching-groups.memberships.store');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/schuelerinnen', [TeachingGroupController::class, 'storeStudentForGroup'])->name('teaching-groups.students.store');
+    Route::delete('/unterrichtsgruppen/{teachingGroup}/mitglieder/{student}', [TeachingGroupController::class, 'destroyMembership'])->name('teaching-groups.memberships.destroy');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/stundenplan', [TeachingGroupController::class, 'storeTimetableSlot'])->name('teaching-groups.timetable.store');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/curricula', [TeachingGroupController::class, 'updateCurricula'])->name('teaching-groups.curricula.update');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/stundenraster', [TeachingGroupController::class, 'updatePeriods'])->name('teaching-groups.periods.update');
+    Route::post('/schuelerinnen', [TeachingGroupController::class, 'storeStudent'])->name('students.store');
+    Route::post('/schuelerinnen/importieren', [TeachingGroupController::class, 'importStudents'])->name('students.import');
+    Route::put('/schuelerinnen/{student}', [TeachingGroupController::class, 'updateStudent'])->name('students.update');
+    Route::delete('/schuelerinnen/{student}', [TeachingGroupController::class, 'destroyStudent'])->name('students.destroy');
     Route::put('/curricula/{curriculum}', [CurriculumController::class, 'update'])->name('curricula.update');
     Route::delete('/curricula/{curriculum}', [CurriculumController::class, 'destroy'])->name('curricula.destroy');
     Route::post('/curricula/{curriculum}/themen', [CurriculumController::class, 'storeTopic'])->name('curricula.topics.store');
@@ -31,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/bildungsplaene/{educationPlan}/kompetenzen/{competency}/status', [EducationPlanController::class, 'updateCompetencyStatus'])->name('education-plans.competencies.status');
     Route::post('/schulen', [SchoolController::class, 'store'])->name('schools.store');
     Route::put('/schulen/{school}', [SchoolController::class, 'update'])->name('schools.update');
+    Route::put('/schulen/{school}/stundenraster', [SchoolController::class, 'updatePeriods'])->name('schools.periods.update');
     Route::delete('/schulen/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
     Route::scopeBindings()->group(function (): void {
         Route::get('/schulen/{school}/{schoolYear}', [SchoolYearController::class, 'show'])->name('school-years.show');

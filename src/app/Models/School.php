@@ -45,4 +45,19 @@ class School extends Model
     {
         return $this->hasMany(CurriculumSchoolAssignment::class);
     }
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function teachingGroups(): HasMany
+    {
+        return $this->hasMany(TeachingGroup::class);
+    }
+
+    public function periods(): HasMany
+    {
+        return $this->hasMany(SchoolPeriod::class);
+    }
 }

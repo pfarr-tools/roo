@@ -54,4 +54,9 @@ class SchoolYear extends Model
     {
         return $this->hasMany(CalendarException::class);
     }
+
+    public function teachingGroups(): HasMany
+    {
+        return $this->hasMany(TeachingGroup::class);
+    }
 }
