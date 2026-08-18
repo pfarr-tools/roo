@@ -20,7 +20,7 @@ class LessonTemplateController extends Controller
         $organizationId = auth()->user()->organization_id;
         $query = trim((string) $request->query('q', ''));
         $templates = LessonTemplate::query()
-            ->with('unitTemplate:id,title')
+            ->with(['unitTemplate:id,title', 'resources:id,lesson_template_id,original_name'])
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('objective', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))

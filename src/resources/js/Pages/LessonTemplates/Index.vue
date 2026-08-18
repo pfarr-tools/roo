@@ -9,6 +9,7 @@ const open = ref(false)
 const search = ref(props.filters?.q ?? '')
 const editing = ref(null)
 const form = useForm({ unit_template_id: '', title: '', duration_minutes: '', objective: '', notes: '' })
+const resourceForm = useForm({ resource: null })
 
 function resetForm() {
     form.reset()
@@ -46,6 +47,14 @@ function filter() {
 function copyTemplate(template) {
     router.post(`/stunden-vorlagen/${template.id}/kopieren`)
 }
+
+function uploadResource(template) {
+    resourceForm.post(`/stunden-vorlagen/${template.id}/anhaenge`, { forceFormData: true, onSuccess: () => resourceForm.reset() })
+}
+
+function removeResource(template, resource) {
+    if (window.confirm(`${de.attachments}: ${resource.original_name} wirklich löschen?`)) router.delete(`/stunden-vorlagen/${template.id}/anhaenge/${resource.id}`)
+}
 </script>
 
 <template>
@@ -57,7 +66,7 @@ function copyTemplate(template) {
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!templates.length" class="alert alert-info">{{ de.noLessonTemplates }}</div>
             <div v-for="template in templates" :key="template.id" class="card mb-3">
-                <div class="card-body"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ template.title }}</h2><div class="text-muted small mb-2">{{ template.unit_template.title }} · {{ template.duration_minutes ? `${template.duration_minutes} ${de.minutes}` : de.noDuration }} · {{ de.version }} {{ template.version }}</div><p v-if="template.objective" class="mb-0">{{ template.objective }}</p></div><div class="d-flex align-items-start gap-2"><span class="badge text-bg-light">{{ de.lessonTemplate }}</span><button class="btn btn-sm btn-outline-secondary" type="button" :aria-label="`${de.copyTemplate}: ${template.title}`" @click="copyTemplate(template)"><i class="bi bi-copy" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-primary" type="button" :aria-label="`${de.editLessonTemplate}: ${template.title}`" @click="openEdit(template)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" :aria-label="`${de.deleteLessonTemplate}: ${template.title}`" @click="remove(template)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></div>
+                <div class="card-body"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ template.title }}</h2><div class="text-muted small mb-2">{{ template.unit_template.title }} · {{ template.duration_minutes ? `${template.duration_minutes} ${de.minutes}` : de.noDuration }} · {{ de.version }} {{ template.version }}</div><p v-if="template.objective" class="mb-0">{{ template.objective }}</p><div v-if="template.resources?.length" class="small mt-2"><strong>{{ de.attachments }}:</strong> <span v-for="resource in template.resources" :key="resource.id" class="badge text-bg-light me-1">{{ resource.original_name }} <button class="btn btn-link btn-sm p-0 text-danger" type="button" @click="removeResource(template, resource)">×</button></span></div><form class="mt-2" @submit.prevent="uploadResource(template)"><label class="visually-hidden" :for="`lesson-resource-${template.id}`">{{ de.chooseFile }}</label><input :id="`lesson-resource-${template.id}`" class="form-control form-control-sm" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt,.md" @change="resourceForm.resource = $event.target.files[0]"><button class="btn btn-sm btn-outline-secondary mt-1" type="submit" :disabled="!resourceForm.resource || resourceForm.processing">{{ de.uploadAttachment }}</button></form></div><div class="d-flex align-items-start gap-2"><span class="badge text-bg-light">{{ de.lessonTemplate }}</span><button class="btn btn-sm btn-outline-secondary" type="button" :aria-label="`${de.copyTemplate}: ${template.title}`" @click="copyTemplate(template)"><i class="bi bi-copy" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-primary" type="button" :aria-label="`${de.editLessonTemplate}: ${template.title}`" @click="openEdit(template)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" :aria-label="`${de.deleteLessonTemplate}: ${template.title}`" @click="remove(template)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></div>
             </div>
         </div>
         <div v-if="open" class="roo-modal-backdrop" role="presentation" @click.self="open = false"><section class="roo-modal" role="dialog" aria-modal="true" :aria-label="editing ? de.editLessonTemplate : de.addLessonTemplate"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ editing ? de.editLessonTemplate : de.addLessonTemplate }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="open = false"></button></div><form @submit.prevent="save">
