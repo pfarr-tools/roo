@@ -270,9 +270,9 @@ importieren oder zuordnen öffnen ein Modal. Das Anlegen bietet zusätzlich
 
 ## Phase 5 – Wiederverwendbare Unterrichtsinhalte
 
-Fortschritt: `[~]` Mandantengeschützte UE-, Stunden- und Phasen-Vorlagen mit
-strukturierten Metadaten, Bearbeitung, Löschung und Versionsnummern sind
-anlegbar und übersichtlich darstellbar.
+Fortschritt: `[x]` UE-, Stunden- und Phasen-Vorlagen, wiederkehrende Phasen,
+private Anhänge, Suche/Filter, Kopieren und versioniertes Aktualisieren sowie
+relationale Sozialformen, Tags und Materialbestandteile sind umgesetzt.
 
 ### Ziel
 
