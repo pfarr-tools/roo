@@ -31,9 +31,7 @@ function goToComparison(event) { window.location.href = event.target.value ? com
     <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
             <div>
-                <a href="/bildungsplaene" class="text-decoration-none">{{ de.educationPlans }}</a>
-                <h1 class="h2 mt-2 mb-1">{{ educationPlan.title }}</h1>
-                <p class="text-muted mb-0">{{ educationPlan.subject }} · {{ educationPlan.external_identifier }}</p>
+                <h1 class="h2 mb-4">{{ educationPlan.title }}</h1>
             </div>
         </div>
 

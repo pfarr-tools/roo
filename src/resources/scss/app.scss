@@ -93,6 +93,11 @@ body {
 .roo-workspace { width: 100%; margin-left: var(--roo-sidebar-collapsed-width); transition: margin-left .2s ease; }
 .roo-sidebar-expanded .roo-workspace { margin-left: var(--roo-sidebar-width); }
 .roo-topbar { display: flex; align-items: center; min-height: 4.6rem; padding: .75rem 1.5rem; }
+.roo-topbar-left > a { display: none; }
+.roo-global-search { position: relative; display: flex; align-items: center; width: min(18rem, 30vw); }
+.roo-global-search i { position: absolute; left: .75rem; color: var(--bs-secondary-color); pointer-events: none; }
+.roo-global-search input { width: 100%; padding: .45rem .75rem .45rem 2.1rem; border: 1px solid var(--bs-border-color); border-radius: 2rem; background: rgba(255,255,255,.75); }
+.roo-global-search input:focus { border-color: var(--roo-orange-dark); box-shadow: 0 0 0 .2rem rgba(199,104,8,.14); outline: 0; }
 .roo-profile-menu { position: relative; }
 .roo-profile-menu summary { list-style: none; cursor: pointer; }
 .roo-profile-menu summary::-webkit-details-marker { display: none; }
@@ -102,11 +107,20 @@ body {
 .roo-profile-dropdown a:hover, .roo-profile-dropdown button:hover { background: var(--roo-sand); }
 .roo-modal-backdrop { position: fixed; z-index: 1050; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(23,25,28,.55); }
 .roo-modal { width: min(100%, 46rem); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: var(--roo-cream); box-shadow: 0 1rem 3rem rgba(0,0,0,.2); }
+.roo-curriculum-board .card { background: rgba(255,255,255,.72); }
+.roo-curriculum-board article.card { border-color: #e4d3bb; background: #fff8ed; box-shadow: 0 .25rem .75rem rgba(60,37,13,.08) !important; }
 
 @media (max-width: 991.98px) {
     .roo-sidebar { transform: translateX(-100%); }
     .roo-sidebar-expanded .roo-sidebar { transform: translateX(0); width: var(--roo-sidebar-width); }
     .roo-workspace, .roo-sidebar-expanded .roo-workspace { margin-left: 0; }
+    .roo-global-search { width: min(16rem, 38vw); }
+}
+
+@media (max-width: 575.98px) {
+    .roo-global-search { width: 2.4rem; }
+    .roo-global-search input { padding-left: 2rem; color: transparent; cursor: pointer; }
+    .roo-global-search input:focus { width: min(14rem, 60vw); color: var(--bs-body-color); }
 }
 
 .roo-hero {

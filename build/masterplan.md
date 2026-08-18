@@ -12,6 +12,20 @@ Die Entwicklung erfolgt in kleinen, testbaren vertikalen Schnitten. Ein Modul
 gilt nicht als fertig, nur weil Tabellen und CRUD-Seiten vorhanden sind. Jeder
 Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 
+## Verbindliche UI-Grundsätze
+
+- Die Topbar enthält keine Seitentitel. Aktionen der aktuellen Seite dürfen
+  dort weiterhin als kompakte Werkzeugleiste erscheinen.
+- Seitenköpfe zeigen ausschließlich die jeweilige Überschrift. Rücksprunglinks
+  und beschreibende Unterzeilen gehören nicht in den Seitenkopf; die Navigation
+  erfolgt über die globale Seitennavigation und kontextbezogene Aktionen.
+- Angemeldete Ansichten enthalten in der Topbar unmittelbar vor dem Profilmenü
+  eine globale Suche. Sie durchsucht nur sichtbare, mandantengeschützte Daten
+  und führt zu einer eigenen Ergebnisansicht unter `/suche`.
+- Karten in Planungs- und Zuordnungsansichten, insbesondere Curriculum-
+  Drag-and-drop-Spalten und Unterrichtseinheiten, erhalten eine dezente
+  Hintergrundfläche und ausreichenden Kontrast zum Seitenhintergrund.
+
 ---
 
 ## Phase 0 – Technische Basis

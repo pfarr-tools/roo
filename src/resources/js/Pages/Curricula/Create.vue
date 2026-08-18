@@ -19,9 +19,7 @@ function submit() { form.post('/curricula') }
     <AppShell>
         <template #toolbar><a href="/curricula" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-primary" type="button" :disabled="form.processing" @click="submit">{{ de.createCurriculum }}</button></template>
         <div class="container-full px-3 py-4">
-            <a href="/curricula">{{ de.curricula }}</a>
-            <h1 class="h2 mt-2">{{ de.createCurriculum }}</h1>
-            <p class="text-muted">Wähle optional Vorlagen. Ohne Auswahl wird ein leeres Curriculum angelegt.</p>
+            <h1 class="h2">{{ de.createCurriculum }}</h1>
             <form class="card" @submit.prevent="submit">
                 <div class="card-body">
                     <div class="row g-3 mb-4">

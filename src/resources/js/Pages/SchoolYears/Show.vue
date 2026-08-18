@@ -31,9 +31,7 @@ function formatDate(value) { const date = String(value).slice(0, 10).split('-');
     <AppShell>
         <template #toolbar><a href="/schulen" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-primary" type="button" @click="importHolidays"><i class="bi bi-cloud-download me-1" aria-hidden="true"></i>{{ de.importHolidays }}</button></template>
         <div class="container-full px-3 py-4">
-            <a href="/schulen" class="text-decoration-none">{{ de.schools }}</a>
-            <h1 class="h2 mt-2">{{ schoolYear.school.name }} – {{ schoolYear.name }}</h1>
-            <p class="text-muted">{{ formatDate(schoolYear.starts_on) }} bis {{ formatDate(schoolYear.ends_on) }}</p>
+            <h1 class="h2">{{ schoolYear.school.name }} – {{ schoolYear.name }}</h1>
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <h2 class="h5 mt-5">{{ de.calendar }}</h2>
             <div class="table-responsive"><table class="table table-sm align-middle">

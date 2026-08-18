@@ -17,9 +17,7 @@ function formatDate(value) {
     <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <a href="/dashboard" class="text-decoration-none">{{ de.dashboard }}</a>
-                <h1 class="h2 mt-2 mb-1">{{ de.educationPlans }}</h1>
-                <p class="text-muted mb-0">{{ de.educationPlansIntro }}</p>
+                <h1 class="h2 mb-0">{{ de.educationPlans }}</h1>
             </div>
         </div>
 
