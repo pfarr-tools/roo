@@ -2,7 +2,12 @@
     root * /var/www/html/public
     encode zstd gzip
 
-    php_fastcgi app:9000
+    php_fastcgi app:9000 {
+        # The public TLS proxy connects to this internal Caddy instance over
+        # HTTP. Tell PHP/Laravel that the public request is HTTPS.
+        env HTTPS on
+        env HTTP_X_FORWARDED_PROTO https
+    }
     file_server
 
     @blocked path /.env /composer.* /package*.json /vite.config.* /storage/*
