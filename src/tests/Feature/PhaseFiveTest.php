@@ -1,0 +1,87 @@
+<?php
+
+use App\Models\Organization;
+use App\Models\UnitTemplate;
+use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->withoutMiddleware([PreventRequestForgery::class]);
+});
+
+function phaseFiveUser(): User
+{
+    $organization = Organization::create(['name' => 'Phase 5 Organisation']);
+
+    return User::factory()->create(['organization_id' => $organization->id]);
+}
+
+it('creates and lists unit templates within the users organization', function () {
+    $user = phaseFiveUser();
+    $otherOrganization = Organization::create(['name' => 'Andere Organisation']);
+    UnitTemplate::create(['organization_id' => $otherOrganization->id, 'title' => 'Fremde Vorlage']);
+
+    $this->actingAs($user)->post('/unterrichtseinheiten-vorlagen', [
+        'title' => 'Schöpfung bewahren',
+        'description' => 'Eine wiederverwendbare Unterrichtseinheit.',
+        'expected_hours' => 4,
+        'notes' => 'Material frühzeitig prüfen.',
+    ])->assertRedirect('/unterrichtseinheiten-vorlagen');
+
+    $this->assertDatabaseHas('unit_templates', [
+        'organization_id' => $user->organization_id,
+        'title' => 'Schöpfung bewahren',
+        'expected_hours' => 4,
+        'version' => 1,
+    ]);
+
+    $this->actingAs($user)->get('/unterrichtseinheiten-vorlagen')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('templates', 1)
+            ->where('templates.0.title', 'Schöpfung bewahren'));
+});
+
+it('validates the required title for a unit template', function () {
+    $user = phaseFiveUser();
+
+    $this->actingAs($user)->post('/unterrichtseinheiten-vorlagen', ['title' => ''])
+        ->assertSessionHasErrors('title');
+});
+
+it('does not list inactive unit templates', function () {
+    $user = phaseFiveUser();
+    UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Archivierte Vorlage', 'is_active' => false]);
+
+    $this->actingAs($user)->get('/unterrichtseinheiten-vorlagen')
+        ->assertInertia(fn ($page) => $page->has('templates', 0));
+});
+
+it('edits a unit template and increments its version', function () {
+    $user = phaseFiveUser();
+    $template = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Alte Vorlage']);
+
+    $this->actingAs($user)->put("/unterrichtseinheiten-vorlagen/{$template->id}", [
+        'title' => 'Überarbeitete Vorlage',
+        'expected_hours' => 3,
+    ])->assertRedirect('/unterrichtseinheiten-vorlagen');
+
+    expect($template->fresh()->title)->toBe('Überarbeitete Vorlage')
+        ->and($template->fresh()->version)->toBe(2);
+});
+
+it('deletes a unit template only within the users organization', function () {
+    $user = phaseFiveUser();
+    $template = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Löschen']);
+    $otherUser = phaseFiveUser();
+    $foreignTemplate = UnitTemplate::create(['organization_id' => $otherUser->organization_id, 'title' => 'Fremd']);
+
+    $this->actingAs($otherUser)->delete("/unterrichtseinheiten-vorlagen/{$template->id}")->assertForbidden();
+    $this->actingAs($user)->delete("/unterrichtseinheiten-vorlagen/{$template->id}")->assertRedirect('/unterrichtseinheiten-vorlagen');
+
+    $this->assertDatabaseMissing('unit_templates', ['id' => $template->id]);
+    $this->assertDatabaseHas('unit_templates', ['id' => $foreignTemplate->id]);
+});

@@ -8,6 +8,7 @@ use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachingGroupController;
+use App\Http\Controllers\UnitTemplateController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,6 +24,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');
     Route::get('/bildungsplaene/{educationPlan}', [EducationPlanController::class, 'show'])->name('education-plans.show');
     Route::get('/curricula', [CurriculumController::class, 'index'])->name('curricula.index');
+    Route::get('/unterrichtseinheiten-vorlagen', [UnitTemplateController::class, 'index'])->name('unit-templates.index');
+    Route::post('/unterrichtseinheiten-vorlagen', [UnitTemplateController::class, 'store'])->name('unit-templates.store');
+    Route::put('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'update'])->name('unit-templates.update');
+    Route::delete('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'destroy'])->name('unit-templates.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');

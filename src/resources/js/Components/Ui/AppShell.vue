@@ -19,6 +19,7 @@ const moduleGroups = [
     { title: labels.content, items: [
         { label: labels.educationPlans, icon: 'bi-journal-text', url: '/bildungsplaene', enabled: true },
         { label: labels.curricula, icon: 'bi-diagram-3', url: '/curricula', enabled: true },
+        { label: labels.unitTemplates, icon: 'bi-collection', url: '/unterrichtseinheiten-vorlagen', enabled: true },
         { label: labels.resources, icon: 'bi-folder2-open', enabled: false },
         { label: labels.songs, icon: 'bi-music-note-beamed', enabled: false },
     ] },
