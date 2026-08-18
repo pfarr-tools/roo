@@ -3,6 +3,7 @@
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationPlanController;
+use App\Http\Controllers\LessonTemplateController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\SearchController;
@@ -28,6 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtseinheiten-vorlagen', [UnitTemplateController::class, 'store'])->name('unit-templates.store');
     Route::put('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'update'])->name('unit-templates.update');
     Route::delete('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'destroy'])->name('unit-templates.destroy');
+    Route::get('/stunden-vorlagen', [LessonTemplateController::class, 'index'])->name('lesson-templates.index');
+    Route::post('/stunden-vorlagen', [LessonTemplateController::class, 'store'])->name('lesson-templates.store');
+    Route::put('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'update'])->name('lesson-templates.update');
+    Route::delete('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'destroy'])->name('lesson-templates.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');

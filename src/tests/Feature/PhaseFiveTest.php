@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LessonTemplate;
 use App\Models\Organization;
 use App\Models\UnitTemplate;
 use App\Models\User;
@@ -84,4 +85,58 @@ it('deletes a unit template only within the users organization', function () {
 
     $this->assertDatabaseMissing('unit_templates', ['id' => $template->id]);
     $this->assertDatabaseHas('unit_templates', ['id' => $foreignTemplate->id]);
+});
+
+it('creates, lists and versions lesson templates for an organization unit template', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Schöpfung']);
+
+    $this->actingAs($user)->post('/stunden-vorlagen', [
+        'unit_template_id' => $unitTemplate->id,
+        'title' => 'Einstieg',
+        'duration_minutes' => 45,
+        'objective' => 'Die Kinder formulieren erste Fragen.',
+    ])->assertRedirect('/stunden-vorlagen');
+
+    $lessonTemplate = LessonTemplate::firstOrFail();
+    expect($lessonTemplate->unit_template_id)->toBe($unitTemplate->id);
+
+    $this->actingAs($user)->put("/stunden-vorlagen/{$lessonTemplate->id}", [
+        'unit_template_id' => $unitTemplate->id,
+        'title' => 'Einstieg und Fragen',
+        'duration_minutes' => 60,
+    ])->assertRedirect('/stunden-vorlagen');
+
+    expect($lessonTemplate->fresh()->title)->toBe('Einstieg und Fragen')
+        ->and($lessonTemplate->fresh()->version)->toBe(2);
+
+    $this->actingAs($user)->get('/stunden-vorlagen')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('templates', 1)
+            ->has('unitTemplates', 1)
+            ->where('templates.0.unit_template.title', 'Schöpfung'));
+});
+
+it('rejects lesson templates using another organizations unit template', function () {
+    $user = phaseFiveUser();
+    $otherUser = phaseFiveUser();
+    $foreignUnitTemplate = UnitTemplate::create(['organization_id' => $otherUser->organization_id, 'title' => 'Fremd']);
+
+    $this->actingAs($user)->post('/stunden-vorlagen', [
+        'unit_template_id' => $foreignUnitTemplate->id,
+        'title' => 'Nicht erlaubt',
+    ])->assertForbidden();
+});
+
+it('deletes a lesson template only within the users organization', function () {
+    $user = phaseFiveUser();
+    $otherUser = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Eigene']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Löschen']);
+
+    $this->actingAs($otherUser)->delete("/stunden-vorlagen/{$lessonTemplate->id}")->assertForbidden();
+    $this->actingAs($user)->delete("/stunden-vorlagen/{$lessonTemplate->id}")->assertRedirect('/stunden-vorlagen');
+
+    $this->assertDatabaseMissing('lesson_templates', ['id' => $lessonTemplate->id]);
 });
