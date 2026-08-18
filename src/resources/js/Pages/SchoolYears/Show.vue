@@ -29,7 +29,7 @@ function formatDate(value) { const date = String(value).slice(0, 10).split('-');
 
 <template>
     <AppShell>
-        <template #toolbar><button class="btn btn-sm btn-primary" type="button" @click="importHolidays"><i class="bi bi-cloud-download me-1" aria-hidden="true"></i>{{ de.importHolidays }}</button></template>
+        <template #toolbar><a href="/schulen" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-primary" type="button" @click="importHolidays"><i class="bi bi-cloud-download me-1" aria-hidden="true"></i>{{ de.importHolidays }}</button></template>
         <div class="container-full px-3 py-4">
             <a href="/schulen" class="text-decoration-none">{{ de.schools }}</a>
             <h1 class="h2 mt-2">{{ schoolYear.school.name }} – {{ schoolYear.name }}</h1>

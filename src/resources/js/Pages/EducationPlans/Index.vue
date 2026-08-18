@@ -13,6 +13,7 @@ function formatDate(value) {
 
 <template>
     <AppShell>
+    <template #toolbar><a href="/schulen" class="btn btn-sm btn-outline-secondary">{{ de.schools }}</a></template>
     <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -20,7 +21,6 @@ function formatDate(value) {
                 <h1 class="h2 mt-2 mb-1">{{ de.educationPlans }}</h1>
                 <p class="text-muted mb-0">{{ de.educationPlansIntro }}</p>
             </div>
-            <a href="/schulen" class="btn btn-outline-secondary">{{ de.schools }}</a>
         </div>
 
         <form method="get" action="/bildungsplaene" class="input-group mb-4" role="search">

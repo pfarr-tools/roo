@@ -27,6 +27,7 @@ function goToComparison(event) { window.location.href = event.target.value ? com
 
 <template>
     <AppShell>
+    <template #toolbar><a href="/bildungsplaene" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a></template>
     <div class="container-full px-3 py-4">
         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
             <div>
@@ -34,7 +35,6 @@ function goToComparison(event) { window.location.href = event.target.value ? com
                 <h1 class="h2 mt-2 mb-1">{{ educationPlan.title }}</h1>
                 <p class="text-muted mb-0">{{ educationPlan.subject }} · {{ educationPlan.external_identifier }}</p>
             </div>
-            <a href="/dashboard" class="btn btn-outline-secondary">{{ de.dashboard }}</a>
         </div>
 
         <div class="row g-4">

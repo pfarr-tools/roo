@@ -17,6 +17,7 @@ function submit() { form.post('/curricula') }
 
 <template>
     <AppShell>
+        <template #toolbar><a href="/curricula" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-primary" type="button" :disabled="form.processing" @click="submit">{{ de.createCurriculum }}</button></template>
         <div class="container-full px-3 py-4">
             <a href="/curricula">{{ de.curricula }}</a>
             <h1 class="h2 mt-2">{{ de.createCurriculum }}</h1>
@@ -33,7 +34,6 @@ function submit() { form.post('/curricula') }
                     <p class="text-muted small">{{ de.noSourceCurriculum }}: Du kannst Bildungspläne und Kompetenzen später im Curriculum hinterlegen.</p>
                     <div class="list-group mb-3"><label v-for="source in props.sources" :key="source.id" class="list-group-item d-flex gap-3 align-items-center"><input class="form-check-input" type="checkbox" :checked="form.source_version_ids.includes(source.id)" @change="toggle(source.id)"><span><strong>{{ source.curriculum.title }}</strong><br><small class="text-muted">{{ [source.curriculum.school_type, source.curriculum.grades?.join(', ')].filter(Boolean).join(' · ') }} · {{ source.topics_count }} {{ de.units }}</small></span></label></div>
                     <div v-if="form.errors.source_version_ids" class="text-danger small mb-3">{{ form.errors.source_version_ids }}</div>
-                    <button class="btn btn-primary" :disabled="form.processing">{{ de.createCurriculum }}</button>
                 </div>
             </form>
         </div>
