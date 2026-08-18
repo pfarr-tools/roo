@@ -5,19 +5,22 @@
 
 ## Entscheidung
 
-Roo importiert Ferienzeiträume standardmäßig aus der Ferien-API
-(`https://ferien-api.de`) für Baden-Württemberg (`BW`). Der Import erfolgt
+Roo importiert Ferienzeiträume standardmäßig aus der OpenHolidays API
+(`https://openholidaysapi.org`) für Deutschland und Baden-Württemberg
+(`DE`/`DE-BW`). Der Import erfolgt
 pro Schuljahr und berücksichtigt beide Kalenderjahre, wenn ein Schuljahr über
 den Jahreswechsel reicht.
 
-Importierte Zeiträume erhalten eine `DataSource` und den externen API-Slug als
-stabile Kennung. Lokale Ferienzeiten und einzelne Kalenderausnahmen werden
+Importierte Zeiträume erhalten eine `DataSource` und die externe API-ID als
+stabile Kennung. Die API wird mit Jahresbereich und deutscher Sprache
+abgefragt; die Zustandskennung `BW` wird zu `DE-BW` normalisiert. Lokale Ferienzeiten und einzelne Kalenderausnahmen werden
 relational gespeichert und können zusätzlich erfasst werden. Ein erneuter
 Import identifiziert nur seine eigenen API-Datensätze und überschreibt keine
 lokalen Einträge.
 
-Die API liefert UTC-Zeitstempel. Roo wandelt sie in die Zeitzone des
-Schuljahres (Standard `Europe/Berlin`) um und speichert Kalendertage.
+Die API liefert ISO-Datumswerte mit inklusivem Enddatum. Roo wandelt sie in
+die Zeitzone des Schuljahres (Standard `Europe/Berlin`) um und speichert
+Kalendertage.
 
 ## Konsequenzen
 

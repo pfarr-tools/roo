@@ -243,7 +243,7 @@ export default {
     setHolidayDay: 'Als Ferientag markieren',
     setNoInstructionDay: 'Als Tag ohne Unterricht markieren',
     changeReason: 'Änderungsgrund (optional)',
-    importHolidays: 'Ferien aus BW-API importieren',
+    importHolidays: 'Ferien aus OpenHolidays API importieren',
     calendar: 'Unterrichtskalender',
     date: 'Datum',
     status: 'Status',

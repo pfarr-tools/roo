@@ -16,7 +16,16 @@ class ImportHolidaysFromApi
         $years = array_unique([$schoolYear->starts_on->year, $schoolYear->ends_on->year]);
         $holidays = [];
         foreach ($years as $year) {
-            $response = Http::acceptJson()->timeout(15)->get(sprintf('%s/api/v1/holidays/%s/%d', rtrim(config('services.ferien_api.url'), '/'), strtoupper($stateCode), $year));
+            $response = Http::acceptJson()->timeout(15)->get(
+                rtrim(config('services.ferien_api.url'), '/').'/SchoolHolidays',
+                [
+                    'countryIsoCode' => config('services.ferien_api.country', 'DE'),
+                    'subdivisionCode' => $this->subdivisionCode($stateCode),
+                    'languageIsoCode' => config('services.ferien_api.language', 'DE'),
+                    'validFrom' => $year.'-01-01',
+                    'validTo' => $year.'-12-31',
+                ],
+            );
             $response->throw();
             $payload = $response->json();
             if (! is_array($payload)) {
@@ -36,19 +45,26 @@ class ImportHolidaysFromApi
 
             $count = 0;
             foreach ($holidays as $holiday) {
-                if (! isset($holiday['slug'], $holiday['name'], $holiday['start'], $holiday['end'])) {
+                if (! isset($holiday['id'], $holiday['name'], $holiday['startDate'], $holiday['endDate'])) {
                     continue;
                 }
 
-                $start = now()->parse($holiday['start'])->setTimezone($schoolYear->timezone)->toDateString();
-                $end = now()->parse($holiday['end'])->setTimezone($schoolYear->timezone)->subDay()->toDateString();
+                $name = collect($holiday['name'])->firstWhere('language', config('services.ferien_api.language', 'DE'))['text']
+                    ?? collect($holiday['name'])->first()['text']
+                    ?? null;
+                if (! $name) {
+                    continue;
+                }
+
+                $start = now()->parse($holiday['startDate'])->setTimezone($schoolYear->timezone)->toDateString();
+                $end = now()->parse($holiday['endDate'])->setTimezone($schoolYear->timezone)->toDateString();
                 if ($start > $end || $end < $schoolYear->starts_on->toDateString() || $start > $schoolYear->ends_on->toDateString()) {
                     continue;
                 }
 
                 HolidayPeriod::updateOrCreate(
-                    ['school_year_id' => $schoolYear->id, 'external_identifier' => $holiday['slug']],
-                    ['data_source_id' => $source->id, 'name' => mb_strtoupper(mb_substr($holiday['name'], 0, 1)).mb_substr($holiday['name'], 1), 'starts_on' => max($start, $schoolYear->starts_on->toDateString()), 'ends_on' => min($end, $schoolYear->ends_on->toDateString()), 'change_reason' => null],
+                    ['school_year_id' => $schoolYear->id, 'external_identifier' => $holiday['id']],
+                    ['data_source_id' => $source->id, 'name' => $name, 'starts_on' => max($start, $schoolYear->starts_on->toDateString()), 'ends_on' => min($end, $schoolYear->ends_on->toDateString()), 'change_reason' => null],
                 );
                 $count++;
             }
@@ -57,5 +73,10 @@ class ImportHolidaysFromApi
 
             return $count;
         });
+    }
+
+    private function subdivisionCode(string $stateCode): string
+    {
+        return str_contains($stateCode, '-') ? strtoupper($stateCode) : config('services.ferien_api.country', 'DE').'-'.strtoupper($stateCode);
     }
 }

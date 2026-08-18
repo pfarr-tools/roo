@@ -99,8 +99,9 @@ it('includes school year slugs for the school overview links', function () {
 
 it('creates calendar days and keeps local exceptions after importing BW holidays', function () {
     Http::fake([
-        'https://ferien-api.de/api/v1/holidays/BW/2026' => Http::response([['slug' => 'osterferien-2026-BW', 'name' => 'osterferien', 'start' => '2026-03-29T22:00', 'end' => '2026-04-10T22:00']]),
-        'https://ferien-api.de/api/v1/holidays/BW/2027' => Http::response([]),
+        'https://openholidaysapi.org/SchoolHolidays*' => Http::sequence()
+            ->push([['id' => 'herbstferien-2026-BW', 'name' => [['language' => 'DE', 'text' => 'Herbstferien']], 'startDate' => '2026-10-26', 'endDate' => '2026-10-30']])
+            ->push([]),
     ]);
     $user = phaseOneUser();
     $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
@@ -111,8 +112,10 @@ it('creates calendar days and keeps local exceptions after importing BW holidays
     $this->actingAs($user)->post('/schulen/'.$school->slug.'/'.$year->slug.'/ferien/importieren', ['_token' => csrf_token()])->assertRedirect();
 
     $this->assertDatabaseHas('holiday_periods', ['school_year_id' => $year->id, 'name' => 'Schulfest', 'data_source_id' => null]);
+    $this->assertDatabaseHas('holiday_periods', ['school_year_id' => $year->id, 'external_identifier' => 'herbstferien-2026-BW', 'starts_on' => '2026-10-26 00:00:00', 'ends_on' => '2026-10-30 00:00:00']);
     $this->assertDatabaseHas('school_year_days', ['school_year_id' => $year->id, 'date' => '2026-09-10', 'kind' => 'holiday']);
     Http::assertSentCount(2);
+    Http::assertSent(fn ($request) => $request->url() === 'https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&subdivisionCode=DE-BW&languageIsoCode=DE&validFrom=2026-01-01&validTo=2026-12-31');
 });
 
 it('allows editing a day without changing its date', function () {

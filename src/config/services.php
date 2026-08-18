@@ -3,8 +3,10 @@
 return [
 
     'ferien_api' => [
-        'url' => env('FERIEN_API_URL', 'https://ferien-api.de'),
+        'url' => env('FERIEN_API_URL', 'https://openholidaysapi.org'),
         'default_state' => env('FERIEN_API_STATE', 'BW'),
+        'country' => env('FERIEN_API_COUNTRY', 'DE'),
+        'language' => env('FERIEN_API_LANGUAGE', 'DE'),
     ],
 
     /*
