@@ -99,7 +99,12 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: sh -lc 'redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD muss gesetzt sein}"'
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - "${REDIS_PASSWORD:?REDIS_PASSWORD muss gesetzt sein}"
     env_file:
       - .env
     volumes:
