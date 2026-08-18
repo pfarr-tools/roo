@@ -58,6 +58,16 @@ class PhaseTemplateController extends Controller
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde gespeichert.');
     }
 
+    public function copy(PhaseTemplate $phaseTemplate): RedirectResponse
+    {
+        $this->ensureVisible($phaseTemplate);
+        $copy = $phaseTemplate->replicate(['version', 'copied_from_id', 'created_at', 'updated_at']);
+        $copy->fill(['title' => 'Kopie von '.$phaseTemplate->title, 'copied_from_id' => $phaseTemplate->id, 'version' => 1]);
+        $copy->save();
+
+        return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde kopiert.');
+    }
+
     public function destroy(PhaseTemplate $phaseTemplate): RedirectResponse
     {
         $this->ensureVisible($phaseTemplate);

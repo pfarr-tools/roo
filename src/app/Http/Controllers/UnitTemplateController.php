@@ -43,6 +43,16 @@ class UnitTemplateController extends Controller
         return to_route('unit-templates.index')->with('success', 'Unterrichtseinheit-Vorlage wurde gespeichert.');
     }
 
+    public function copy(UnitTemplate $unitTemplate): RedirectResponse
+    {
+        $this->ensureVisible($unitTemplate);
+        $copy = $unitTemplate->replicate(['version', 'copied_from_id', 'created_at', 'updated_at']);
+        $copy->fill(['title' => 'Kopie von '.$unitTemplate->title, 'copied_from_id' => $unitTemplate->id, 'version' => 1]);
+        $copy->save();
+
+        return to_route('unit-templates.index')->with('success', 'Unterrichtseinheit-Vorlage wurde kopiert.');
+    }
+
     public function destroy(UnitTemplate $unitTemplate): RedirectResponse
     {
         $this->ensureVisible($unitTemplate);

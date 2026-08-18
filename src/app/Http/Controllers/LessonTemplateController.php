@@ -51,6 +51,16 @@ class LessonTemplateController extends Controller
         return to_route('lesson-templates.index')->with('success', 'Stunden-Vorlage wurde gespeichert.');
     }
 
+    public function copy(LessonTemplate $lessonTemplate): RedirectResponse
+    {
+        $this->ensureVisible($lessonTemplate);
+        $copy = $lessonTemplate->replicate(['version', 'copied_from_id', 'created_at', 'updated_at']);
+        $copy->fill(['title' => 'Kopie von '.$lessonTemplate->title, 'copied_from_id' => $lessonTemplate->id, 'version' => 1]);
+        $copy->save();
+
+        return to_route('lesson-templates.index')->with('success', 'Stunden-Vorlage wurde kopiert.');
+    }
+
     public function destroy(LessonTemplate $lessonTemplate): RedirectResponse
     {
         $this->ensureVisible($lessonTemplate);

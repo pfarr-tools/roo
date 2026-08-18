@@ -47,6 +47,10 @@ function remove(template) {
 function filter() {
     router.get('/unterrichtseinheiten-vorlagen', { q: search.value }, { preserveState: true, replace: true })
 }
+
+function copyTemplate(template) {
+    router.post(`/unterrichtseinheiten-vorlagen/${template.id}/kopieren`)
+}
 </script>
 
 <template>
@@ -58,7 +62,7 @@ function filter() {
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!templates.length" class="alert alert-info">{{ de.noUnitTemplates }}</div>
             <div v-for="template in templates" :key="template.id" class="card mb-3">
-                <div class="card-body"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ template.title }}</h2><p v-if="template.description" class="mb-2">{{ template.description }}</p><div class="text-muted small">{{ template.expected_hours ? `${template.expected_hours} ${de.hours.toLowerCase()}` : de.noExpectedHours }} · {{ de.version }} {{ template.version }}</div></div><div class="d-flex align-items-start gap-2"><span class="badge text-bg-light">{{ de.unitTemplate }}</span><button class="btn btn-sm btn-outline-primary" type="button" :aria-label="`${de.editUnitTemplate}: ${template.title}`" @click="openEdit(template)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" :aria-label="`${de.deleteUnitTemplate}: ${template.title}`" @click="remove(template)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></div>
+                <div class="card-body"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ template.title }}</h2><p v-if="template.description" class="mb-2">{{ template.description }}</p><div class="text-muted small">{{ template.expected_hours ? `${template.expected_hours} ${de.hours.toLowerCase()}` : de.noExpectedHours }} · {{ de.version }} {{ template.version }}</div></div><div class="d-flex align-items-start gap-2"><span class="badge text-bg-light">{{ de.unitTemplate }}</span><button class="btn btn-sm btn-outline-secondary" type="button" :aria-label="`${de.copyTemplate}: ${template.title}`" @click="copyTemplate(template)"><i class="bi bi-copy" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-primary" type="button" :aria-label="`${de.editUnitTemplate}: ${template.title}`" @click="openEdit(template)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" :aria-label="`${de.deleteUnitTemplate}: ${template.title}`" @click="remove(template)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></div>
             </div>
         </div>
         <div v-if="open" class="roo-modal-backdrop" role="presentation" @click.self="open = false"><section class="roo-modal" role="dialog" aria-modal="true" :aria-label="editing ? de.editUnitTemplate : de.addUnitTemplate"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ editing ? de.editUnitTemplate : de.addUnitTemplate }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="open = false"></button></div><form @submit.prevent="save">

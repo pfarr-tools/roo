@@ -28,14 +28,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/curricula', [CurriculumController::class, 'index'])->name('curricula.index');
     Route::get('/unterrichtseinheiten-vorlagen', [UnitTemplateController::class, 'index'])->name('unit-templates.index');
     Route::post('/unterrichtseinheiten-vorlagen', [UnitTemplateController::class, 'store'])->name('unit-templates.store');
+    Route::post('/unterrichtseinheiten-vorlagen/{unitTemplate}/kopieren', [UnitTemplateController::class, 'copy'])->name('unit-templates.copy');
     Route::put('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'update'])->name('unit-templates.update');
     Route::delete('/unterrichtseinheiten-vorlagen/{unitTemplate}', [UnitTemplateController::class, 'destroy'])->name('unit-templates.destroy');
     Route::get('/stunden-vorlagen', [LessonTemplateController::class, 'index'])->name('lesson-templates.index');
     Route::post('/stunden-vorlagen', [LessonTemplateController::class, 'store'])->name('lesson-templates.store');
+    Route::post('/stunden-vorlagen/{lessonTemplate}/kopieren', [LessonTemplateController::class, 'copy'])->name('lesson-templates.copy');
     Route::put('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'update'])->name('lesson-templates.update');
     Route::delete('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'destroy'])->name('lesson-templates.destroy');
     Route::get('/phasen-vorlagen', [PhaseTemplateController::class, 'index'])->name('phase-templates.index');
     Route::post('/phasen-vorlagen', [PhaseTemplateController::class, 'store'])->name('phase-templates.store');
+    Route::post('/phasen-vorlagen/{phaseTemplate}/kopieren', [PhaseTemplateController::class, 'copy'])->name('phase-templates.copy');
     Route::put('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'update'])->name('phase-templates.update');
     Route::delete('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'destroy'])->name('phase-templates.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');

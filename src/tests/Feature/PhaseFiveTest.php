@@ -62,6 +62,21 @@ it('filters unit templates by title without exposing another organization', func
             ->where('templates.0.title', 'Mose'));
 });
 
+it('copies each template type as a new version one record with provenance', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'UE']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Stunde']);
+    $phaseTemplate = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Phase']);
+
+    $this->actingAs($user)->post("/unterrichtseinheiten-vorlagen/{$unitTemplate->id}/kopieren")->assertRedirect();
+    $this->actingAs($user)->post("/stunden-vorlagen/{$lessonTemplate->id}/kopieren")->assertRedirect();
+    $this->actingAs($user)->post("/phasen-vorlagen/{$phaseTemplate->id}/kopieren")->assertRedirect();
+
+    expect(UnitTemplate::where('copied_from_id', $unitTemplate->id)->first()->version)->toBe(1)
+        ->and(LessonTemplate::where('copied_from_id', $lessonTemplate->id)->first()->version)->toBe(1)
+        ->and(PhaseTemplate::where('copied_from_id', $phaseTemplate->id)->first()->version)->toBe(1);
+});
+
 it('validates the required title for a unit template', function () {
     $user = phaseFiveUser();
 
