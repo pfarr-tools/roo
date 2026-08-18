@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'notes'])]
 class TeachingGroup extends Model
@@ -49,5 +50,10 @@ class TeachingGroup extends Model
     public function schoolPeriods(): BelongsToMany
     {
         return $this->belongsToMany(SchoolPeriod::class, 'teaching_group_periods')->withPivot('weekday');
+    }
+
+    public function yearPlan(): HasOne
+    {
+        return $this->hasOne(GroupYearPlan::class);
     }
 }

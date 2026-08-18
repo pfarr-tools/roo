@@ -11,6 +11,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachingGroupController;
 use App\Http\Controllers\UnitTemplateController;
+use App\Http\Controllers\YearPlanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -53,6 +54,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/curricula/{curriculum}/fassungen', [CurriculumController::class, 'storeVersion'])->name('curricula.versions.store');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
+    Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');
+    Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
+    Route::post('/jahresplanung/{teachingGroup}/einheiten', [YearPlanController::class, 'storeUnit'])->name('year-plans.units.store');
+    Route::put('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}', [YearPlanController::class, 'updateUnit'])->name('year-plans.units.update');
+    Route::delete('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}', [YearPlanController::class, 'destroyUnit'])->name('year-plans.units.destroy');
+    Route::post('/jahresplanung/{teachingGroup}/stunden-erzeugen', [YearPlanController::class, 'generateLessons'])->name('year-plans.lessons.generate');
+    Route::put('/jahresplanung/{teachingGroup}/vorkommnisse/{occurrence}', [YearPlanController::class, 'updateOccurrence'])->name('year-plans.occurrences.update');
     Route::get('/schueler:innen', [StudentController::class, 'index'])->name('students.index');
     Route::get('/schueler:innen/export', [StudentController::class, 'export'])->name('students.export');
     Route::get('/schüler:innen', fn () => to_route('students.index'));
