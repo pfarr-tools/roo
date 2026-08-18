@@ -1,3 +1,10 @@
+{
+    servers {
+        # Trust the host-level reverse proxy and Docker's private networks.
+        trusted_proxies static private_ranges
+    }
+}
+
 :80 {
     root * /var/www/html/public
     encode zstd gzip
@@ -6,7 +13,6 @@
         # The public TLS proxy connects to this internal Caddy instance over
         # HTTP. Tell PHP/Laravel that the public request is HTTPS.
         env HTTPS on
-        env HTTP_X_FORWARDED_PROTO https
     }
     file_server
 
