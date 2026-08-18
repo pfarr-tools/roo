@@ -22,7 +22,8 @@ class StudentController extends Controller
 
         $students = Student::query()
             ->where('students.organization_id', $organizationId)
-            ->with(['school:id,name'])
+            ->with(['school:id,name', 'teachingGroups:id,name,school_year_id'])
+            ->with('teachingGroups.schoolYear:id,name')
             ->when($search !== '', function ($query) use ($search): void {
                 $like = '%'.mb_strtolower($search).'%';
                 $query->where(function ($query) use ($like): void {

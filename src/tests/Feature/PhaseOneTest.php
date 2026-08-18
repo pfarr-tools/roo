@@ -4,6 +4,7 @@ use App\Models\Curriculum;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,22 +51,16 @@ it('allows a teacher to delete a school in their organization', function () {
     $this->assertDatabaseMissing('schools', ['id' => $school->id]);
 });
 
-it('assigns a curriculum to a school with a validity period', function () {
+it('assigns a curriculum directly to a teaching group in a school year', function () {
     $user = phaseOneUser();
     $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Grundschule am Bach']);
+    $schoolYear = SchoolYear::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin']);
+    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $schoolYear->id, 'name' => 'Religionsgruppe']);
     $curriculum = Curriculum::create(['title' => 'Mein Curriculum', 'school_type' => 'GS', 'grades' => [1, 2], 'denominations' => []]);
 
-    $this->actingAs($user)->put('/schulen/'.$school->slug, [
-        'name' => $school->name,
-        'curriculum_assignments' => [['curriculum_id' => $curriculum->id, 'valid_from' => '2026-08-01', 'valid_until' => '2027-07-31', 'notes' => 'Pilotjahr']],
-    ])->assertRedirect();
+    $this->actingAs($user)->put('/unterrichtsgruppen/'.$group->id.'/curricula', ['curriculum_assignments' => [['curriculum_id' => $curriculum->id, 'role' => 'primary']]])->assertRedirect();
 
-    $assignment = $school->curriculumAssignments()->first();
-    expect($assignment->organization_id)->toBe($user->organization_id)
-        ->and($assignment->curriculum_id)->toBe($curriculum->id)
-        ->and($assignment->valid_from->toDateString())->toBe('2026-08-01')
-        ->and($assignment->valid_until->toDateString())->toBe('2027-07-31')
-        ->and($assignment->notes)->toBe('Pilotjahr');
+    expect($group->fresh()->curricula()->first()->pivot->role)->toBe('primary');
 });
 
 it('includes school year slugs for the school overview links', function () {

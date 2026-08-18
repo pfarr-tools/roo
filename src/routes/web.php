@@ -27,7 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/curricula/{curriculum}/fassungen', [CurriculumController::class, 'storeVersion'])->name('curricula.versions.store');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
-    Route::get('/schuelerinnen', [StudentController::class, 'index'])->name('students.index');
+    Route::get('/schüler:innen', [StudentController::class, 'index'])->name('students.index');
+    Route::get('/schuelerinnen', [StudentController::class, 'index'])->name('students.index.legacy');
     Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
     Route::put('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'update'])->name('teaching-groups.update');

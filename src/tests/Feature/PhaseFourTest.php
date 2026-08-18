@@ -56,7 +56,7 @@ it('shows the organization-wide searchable and filterable student list', functio
     [$otherSchool] = phaseFourSchoolYear($otherUser);
     Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
-    $this->actingAs($user)->get('/schuelerinnen?q=Anna&class_name=2a&sort=first_name&direction=desc')->assertSuccessful()->assertInertia(fn ($page) => $page
+    $this->actingAs($user)->get('/schüler:innen?q=Anna&class_name=2a&sort=first_name&direction=desc')->assertSuccessful()->assertInertia(fn ($page) => $page
         ->where('filters.q', 'Anna')
         ->where('filters.class_name', '2a')
         ->where('filters.sort', 'first_name')

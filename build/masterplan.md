@@ -201,6 +201,12 @@ Reale Lerngruppen eines Schuljahres abbilden.
 - Stundenplan mit mehreren regelmäßigen Terminen
 - primäres und ergänzende Curricula zuordnen
 
+Curricula werden ausschließlich direkt an der Unterrichtsgruppe zugeordnet.
+Die Zuordnung ist dadurch automatisch an deren konkretes Schuljahr gebunden;
+Gültigkeitsdaten sind nicht erforderlich. Schulweite Curriculum-Zuordnungen
+sind kein aktiver Planungsablauf mehr.
+
+
 Das Stundenraster wird schulweit einmal pro Periodennummer (1 bis 12) mit
 Beginn gepflegt. Jede Unterrichtsstunde dauert 45 Minuten; das Ende wird
 berechnet. Unterrichtsgruppen wählen daraus Wochentag und Periodennummer,
@@ -524,3 +530,28 @@ In jeder Phase:
 - `[!]` blockiert
 
 Codex aktualisiert diesen Masterplan nur bei tatsächlich geprüftem Fortschritt.
+
+## UI-Konventionen
+
+Die Oberfläche folgt auf Detailseiten einer festen Aktionslogik:
+
+- Die Topbar enthält nur die Seiten-Navigation und die zentrale Aktion für das
+  Hauptobjekt.
+- Zurück bzw. Schließen wird als X-Symbol dargestellt und mit Tooltip sowie
+  zugänglichem Label versehen.
+- „Änderungen speichern“ speichert das Hauptobjekt einschließlich seiner
+  zusammengehörigen Detailänderungen und schließt anschließend zurück zur
+  übergeordneten Übersicht.
+- Fachliche Nebenaktionen stehen nicht in der Topbar. Sie werden rechts neben
+  der Überschrift der jeweils zuständigen Karte platziert.
+- Nebenaktionen verwenden kompakte sekundäre Buttons (`btn-sm
+  btn-outline-primary`) und kurze Beschriftungen, etwa „Zuordnen“, „Anlegen“
+  oder „Importieren“.
+- Eigenständige Nebenabläufe wie Anlegen, Importieren, Zuordnen und Bearbeiten
+  öffnen ein Modal. Das Modal enthält die Eingaben und die zugehörige
+  Speichern-/Bestätigungsaktion.
+- Auf der Detailseite gibt es keine untergeordneten Speichern-Buttons für
+  das Hauptformular. Auswahl- und Rasterbuttons dürfen lokale Zustände ändern;
+  gespeichert wird über die zentrale Seitenaktion.
+- Kartenaktionen bleiben responsiv: Auf großen Bildschirmen stehen sie neben
+  der Überschrift, auf kleinen Bildschirmen dürfen sie umbrechen.

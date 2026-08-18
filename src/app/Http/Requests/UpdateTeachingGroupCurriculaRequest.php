@@ -13,6 +13,6 @@ class UpdateTeachingGroupCurriculaRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['curriculum_assignments' => ['nullable', 'array'], 'curriculum_assignments.*.curriculum_id' => ['required', 'integer', 'exists:curricula,id'], 'curriculum_assignments.*.role' => ['required', 'in:primary,additional']];
+        return ['curriculum_assignments' => ['nullable', 'array'], 'curriculum_assignments.*.curriculum_id' => ['required', 'integer', 'distinct', 'exists:curricula,id'], 'curriculum_assignments.*.role' => ['required', 'in:primary,additional']];
     }
 }
