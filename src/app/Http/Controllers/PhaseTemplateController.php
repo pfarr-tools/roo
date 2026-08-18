@@ -7,18 +7,21 @@ use App\Models\LessonTemplate;
 use App\Models\PhaseTemplate;
 use App\Models\SocialForm;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PhaseTemplateController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $organizationId = auth()->user()->organization_id;
+        $query = trim((string) $request->query('q', ''));
         $templates = PhaseTemplate::query()
             ->with(['lessonTemplate:id,title', 'socialForm:id,name'])
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
+            ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))
             ->orderBy('position')
             ->orderBy('title')
             ->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material', 'position', 'version']);
@@ -28,7 +31,7 @@ class PhaseTemplateController extends Controller
             ->orderBy('title')
             ->get(['id', 'title']);
 
-        return Inertia::render('PhaseTemplates/Index', compact('templates', 'lessonTemplates'));
+        return Inertia::render('PhaseTemplates/Index', compact('templates', 'lessonTemplates') + ['filters' => ['q' => $query]]);
     }
 
     public function store(StorePhaseTemplateRequest $request): RedirectResponse

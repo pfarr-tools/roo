@@ -6,18 +6,21 @@ use App\Http\Requests\StoreLessonTemplateRequest;
 use App\Models\LessonTemplate;
 use App\Models\UnitTemplate;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LessonTemplateController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $organizationId = auth()->user()->organization_id;
+        $query = trim((string) $request->query('q', ''));
         $templates = LessonTemplate::query()
             ->with('unitTemplate:id,title')
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
+            ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('objective', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
             ->orderBy('title')
             ->get(['id', 'unit_template_id', 'title', 'duration_minutes', 'objective', 'notes', 'version']);
         $unitTemplates = UnitTemplate::query()
@@ -26,7 +29,7 @@ class LessonTemplateController extends Controller
             ->orderBy('title')
             ->get(['id', 'title']);
 
-        return Inertia::render('LessonTemplates/Index', compact('templates', 'unitTemplates'));
+        return Inertia::render('LessonTemplates/Index', compact('templates', 'unitTemplates') + ['filters' => ['q' => $query]]);
     }
 
     public function store(StoreLessonTemplateRequest $request): RedirectResponse

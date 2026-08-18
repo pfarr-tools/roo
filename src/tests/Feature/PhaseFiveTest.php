@@ -134,6 +134,16 @@ it('creates, lists and versions lesson templates for an organization unit templa
             ->where('templates.0.unit_template.title', 'Schöpfung'));
 });
 
+it('filters lesson templates by objective', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Thema']);
+    LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Start', 'objective' => 'Fragen entwickeln']);
+    LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Abschluss', 'objective' => 'Ergebnisse sichern']);
+
+    $this->actingAs($user)->get('/stunden-vorlagen?q=Fragen')
+        ->assertInertia(fn ($page) => $page->has('templates', 1)->where('templates.0.title', 'Start'));
+});
+
 it('rejects lesson templates using another organizations unit template', function () {
     $user = phaseFiveUser();
     $otherUser = phaseFiveUser();
@@ -190,6 +200,17 @@ it('creates, lists and versions phase templates for an organization lesson templ
             ->has('templates', 1)
             ->has('lessonTemplates', 1)
             ->where('templates.0.lesson_template.title', 'Einstieg'));
+});
+
+it('filters phase templates by material', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Thema']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Stunde']);
+    PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Bild', 'material' => 'Bildkarte']);
+    PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Gespräch', 'material' => 'Heft']);
+
+    $this->actingAs($user)->get('/phasen-vorlagen?q=Bildkarte')
+        ->assertInertia(fn ($page) => $page->has('templates', 1)->where('templates.0.title', 'Bild'));
 });
 
 it('rejects phase templates using another organizations lesson template', function () {

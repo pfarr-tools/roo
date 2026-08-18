@@ -4,8 +4,9 @@ import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
 
-defineProps({ templates: Array, unitTemplates: Array })
+const props = defineProps({ templates: Array, unitTemplates: Array, filters: Object })
 const open = ref(false)
+const search = ref(props.filters?.q ?? '')
 const editing = ref(null)
 const form = useForm({ unit_template_id: '', title: '', duration_minutes: '', objective: '', notes: '' })
 
@@ -37,6 +38,10 @@ function save() {
 function remove(template) {
     if (window.confirm(de.deleteLessonTemplateConfirm)) router.delete(`/stunden-vorlagen/${template.id}`)
 }
+
+function filter() {
+    router.get('/stunden-vorlagen', { q: search.value }, { preserveState: true, replace: true })
+}
 </script>
 
 <template>
@@ -44,6 +49,7 @@ function remove(template) {
         <template #toolbar><button class="btn btn-sm btn-primary" type="button" @click="openCreate"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ de.addLessonTemplate }}</button></template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ de.lessonTemplates }}</h1>
+            <form class="row g-2 mb-3" role="search" @submit.prevent="filter"><div class="col-sm-8 col-lg-5"><label class="visually-hidden" for="lesson-template-search">{{ de.searchTemplates }}</label><input id="lesson-template-search" v-model="search" class="form-control" type="search" :placeholder="de.searchTemplates"></div><div class="col-auto"><button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ de.filter }}</button></div></form>
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!templates.length" class="alert alert-info">{{ de.noLessonTemplates }}</div>
             <div v-for="template in templates" :key="template.id" class="card mb-3">

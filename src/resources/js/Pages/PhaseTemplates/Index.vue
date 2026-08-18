@@ -4,8 +4,9 @@ import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
 
-defineProps({ templates: Array, lessonTemplates: Array })
+const props = defineProps({ templates: Array, lessonTemplates: Array, filters: Object })
 const open = ref(false)
+const search = ref(props.filters?.q ?? '')
 const editing = ref(null)
 const form = useForm({ lesson_template_id: '', title: '', duration_minutes: '', social_form: '', description: '', material: '', position: '' })
 
@@ -24,6 +25,10 @@ function save() {
 function remove(template) {
     if (window.confirm(de.deletePhaseTemplateConfirm)) router.delete(`/phasen-vorlagen/${template.id}`)
 }
+
+function filter() {
+    router.get('/phasen-vorlagen', { q: search.value }, { preserveState: true, replace: true })
+}
 </script>
 
 <template>
@@ -31,6 +36,7 @@ function remove(template) {
         <template #toolbar><button class="btn btn-sm btn-primary" type="button" @click="openCreate"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ de.addPhaseTemplate }}</button></template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ de.phaseTemplates }}</h1>
+            <form class="row g-2 mb-3" role="search" @submit.prevent="filter"><div class="col-sm-8 col-lg-5"><label class="visually-hidden" for="phase-template-search">{{ de.searchTemplates }}</label><input id="phase-template-search" v-model="search" class="form-control" type="search" :placeholder="de.searchTemplates"></div><div class="col-auto"><button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ de.filter }}</button></div></form>
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!templates.length" class="alert alert-info">{{ de.noPhaseTemplates }}</div>
             <div v-for="template in templates" :key="template.id" class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ template.title }}</h2><div class="text-muted small mb-2">{{ template.lesson_template.title }} · {{ template.duration_minutes ? `${template.duration_minutes} ${de.minutes}` : de.noDuration }}<span v-if="template.social_form"> · {{ template.social_form.name }}</span> · {{ de.version }} {{ template.version }}</div><p v-if="template.description" class="mb-2">{{ template.description }}</p><div v-if="template.material" class="small"><strong>{{ de.material }}:</strong> {{ template.material }}</div></div><div class="d-flex align-items-start gap-2"><span class="badge text-bg-light">{{ de.phaseTemplate }}</span><button class="btn btn-sm btn-outline-primary" type="button" :aria-label="`${de.editPhaseTemplate}: ${template.title}`" @click="openEdit(template)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" :aria-label="`${de.deletePhaseTemplate}: ${template.title}`" @click="remove(template)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></div></div>
