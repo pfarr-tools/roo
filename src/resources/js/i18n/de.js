@@ -224,6 +224,7 @@ export default {
     addSchoolYear: 'Schuljahr anlegen',
     schoolName: 'Name der Schule',
     schoolYearName: 'Bezeichnung',
+    notAvailable: '–',
     shortName: 'Kürzel',
     city: 'Ort',
     save: 'Speichern',

@@ -14,6 +14,11 @@ class SchoolYear extends Model
     protected static function booted(): void
     {
         static::saving(function (SchoolYear $schoolYear): void {
+            if ($schoolYear->starts_on) {
+                $startYear = $schoolYear->starts_on->year;
+                $schoolYear->name = $startYear.'/'.str_pad((string) (($startYear + 1) % 100), 2, '0', STR_PAD_LEFT);
+            }
+
             if ($schoolYear->isDirty('name') || ! $schoolYear->slug) {
                 $schoolYear->slug = Str::slug(str_replace('/', '-', $schoolYear->name));
             }

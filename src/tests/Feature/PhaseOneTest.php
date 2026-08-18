@@ -33,6 +33,15 @@ it('allows a teacher to create a school in their organization', function () {
     $this->assertDatabaseHas('schools', ['organization_id' => $user->organization_id, 'name' => 'Grundschule am Bach']);
 });
 
+it('derives the school year name from its start date', function () {
+    $user = phaseOneUser();
+    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+
+    $this->actingAs($user)->post('/schuljahre', ['_token' => csrf_token(), 'school_id' => $school->id, 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin'])->assertRedirect();
+
+    $this->assertDatabaseHas('school_years', ['school_id' => $school->id, 'name' => '2026/27']);
+});
+
 it('does not expose another organizations schools', function () {
     $user = phaseOneUser();
     $other = Organization::create(['name' => 'Andere Organisation']);

@@ -14,6 +14,6 @@ class StoreSchoolYearRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['school_id' => ['required', 'integer', 'exists:schools,id'], 'name' => ['required', 'string', 'max:100'], 'starts_on' => ['required', 'date'], 'ends_on' => ['required', 'date', 'after:starts_on'], 'timezone' => ['required', 'timezone']];
+        return ['school_id' => ['required', 'integer', 'exists:schools,id'], 'name' => ['sometimes', 'nullable', 'string', 'max:100'], 'starts_on' => ['required', 'date'], 'ends_on' => ['required', 'date', 'after:starts_on'], 'timezone' => ['required', 'timezone']];
     }
 }
