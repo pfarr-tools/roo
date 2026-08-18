@@ -4,6 +4,7 @@ use App\Models\LessonTemplate;
 use App\Models\Organization;
 use App\Models\PhaseTemplate;
 use App\Models\SocialForm;
+use App\Models\Tag;
 use App\Models\UnitTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -75,6 +76,18 @@ it('copies each template type as a new version one record with provenance', func
     expect(UnitTemplate::where('copied_from_id', $unitTemplate->id)->first()->version)->toBe(1)
         ->and(LessonTemplate::where('copied_from_id', $lessonTemplate->id)->first()->version)->toBe(1)
         ->and(PhaseTemplate::where('copied_from_id', $phaseTemplate->id)->first()->version)->toBe(1);
+});
+
+it('stores, updates and copies organization tags on unit templates', function () {
+    $user = phaseFiveUser();
+    $template = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Tagged']);
+
+    $this->actingAs($user)->put("/unterrichtseinheiten-vorlagen/{$template->id}", ['title' => 'Tagged', 'tags' => ['Ritual', 'Gespräch']])->assertRedirect();
+    expect($template->fresh()->tags->pluck('name')->all())->toEqualCanonicalizing(['Ritual', 'Gespräch']);
+
+    $this->actingAs($user)->post("/unterrichtseinheiten-vorlagen/{$template->id}/kopieren")->assertRedirect();
+    expect(UnitTemplate::where('copied_from_id', $template->id)->first()->tags->pluck('name')->all())->toEqualCanonicalizing(['Ritual', 'Gespräch']);
+    expect(Tag::where('organization_id', $user->organization_id)->count())->toBe(2);
 });
 
 it('validates the required title for a unit template', function () {

@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+#[Fillable(['organization_id', 'name'])]
+class Tag extends Model
+{
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unitTemplates(): BelongsToMany
+    {
+        return $this->belongsToMany(UnitTemplate::class, 'unit_template_tags');
+    }
+}

@@ -107,6 +107,8 @@ export default {
     noUnitTemplates: 'Noch keine Unterrichtseinheiten-Vorlagen vorhanden.',
     searchTemplates: 'Vorlagen durchsuchen',
     filter: 'Filtern',
+    tags: 'Tags',
+    tagsHint: 'Mehrere Tags durch Komma trennen',
     noExpectedHours: 'Kein Zeitbedarf hinterlegt',
     description: 'Beschreibung',
     version: 'Version',

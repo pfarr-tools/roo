@@ -18,6 +18,8 @@ class StoreUnitTemplateRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:20000'],
             'expected_hours' => ['nullable', 'integer', 'min:1', 'max:999'],
             'notes' => ['nullable', 'string', 'max:20000'],
+            'tags' => ['nullable', 'array', 'max:20'],
+            'tags.*' => ['string', 'max:50'],
         ];
     }
 }
