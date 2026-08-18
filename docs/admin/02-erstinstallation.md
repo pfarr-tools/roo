@@ -12,13 +12,19 @@ Vor dem Skriptlauf müssen:
 - ein freigegebener Release-Checkout unter `/opt/roo/current` vorhanden sein,
 - `/opt/roo/current/.env` auf `/opt/roo/shared/.env` zeigen,
 - `APP_ENV=production` und `APP_DEBUG=false` gesetzt sein,
-- der Laravel-Key und alle Produktionszugänge eingerichtet sein,
+- alle Produktionszugänge eingerichtet sein,
 - die Verzeichnisse `data/bildungsplaene/plans` und
   `data/curricula/curricula` im Release vorhanden sein.
 
 Die Konfiguration und die Key-Erzeugung sind in
 [Voraussetzungen und Zielarchitektur](01-voraussetzungen-und-architektur.md)
 beschrieben. Die `.env` muss mit `chmod 600` geschützt sein.
+
+Beim Installationslauf erzeugt `./roo prod install` automatisch einen sicheren
+`APP_KEY` und ein `REDIS_PASSWORD`, wenn die jeweiligen Einträge in `.env`
+fehlen oder leer sind. Bereits gesetzte Werte werden nicht überschrieben. Die
+generierten Werte werden nicht ausgegeben und die `.env` muss weiterhin mit
+`chmod 600` geschützt bleiben.
 
 ## Installation ausführen
 
@@ -49,4 +55,3 @@ Status und Logs werden ebenfalls über `./roo` abgefragt:
 Danach Anmeldung, private Dateien, Suche, Queue, Mail sowie importierte
 Bildungspläne und Curricula fachlich prüfen. Die vollständige Checkliste steht
 unter [Produktionsskripte verwenden](07-produktionsskripte.md).
-

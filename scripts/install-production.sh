@@ -22,6 +22,25 @@ grep -Eq '^APP_DEBUG=false([[:space:]]|$)' "$ROOT/.env" \
 
 cd "$ROOT"
 
+set_env_if_empty() {
+  local key="$1"
+  local value="$2"
+
+  if grep -Eq "^${key}=[[:space:]]*$" "$ROOT/.env"; then
+    sed -i "s|^${key}=.*$|${key}=${value}|" "$ROOT/.env"
+    echo "Erzeuge fehlenden Wert für ${key}."
+  elif ! grep -Eq "^${key}=" "$ROOT/.env"; then
+    printf '%s=%s\n' "$key" "$value" >> "$ROOT/.env"
+    echo "Ergänze fehlenden Wert für ${key}."
+  fi
+}
+
+echo "Prüfe initiale Geheimnisse ..."
+APP_KEY_VALUE="base64:$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
+REDIS_PASSWORD_VALUE="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+set_env_if_empty APP_KEY "$APP_KEY_VALUE"
+set_env_if_empty REDIS_PASSWORD "$REDIS_PASSWORD_VALUE"
+
 compose() {
   docker compose --project-directory "$ROOT" -f "$COMPOSE_FILE" "$@"
 }
