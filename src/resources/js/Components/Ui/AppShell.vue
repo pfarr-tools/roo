@@ -26,6 +26,7 @@ const moduleGroups = [
     { title: labels.planning, items: [
         { label: labels.planningModule, icon: 'bi-calendar-range', enabled: false },
         { label: labels.lessonTemplates, icon: 'bi-easel2', url: '/stunden-vorlagen', enabled: true },
+        { label: labels.phaseTemplates, icon: 'bi-list-ol', url: '/phasen-vorlagen', enabled: true },
     ] },
     { title: labels.assessment, items: [
         { label: labels.observations, icon: 'bi-eye', enabled: false },

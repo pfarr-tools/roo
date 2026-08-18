@@ -4,6 +4,7 @@ use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\LessonTemplateController;
+use App\Http\Controllers\PhaseTemplateController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\SearchController;
@@ -33,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/stunden-vorlagen', [LessonTemplateController::class, 'store'])->name('lesson-templates.store');
     Route::put('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'update'])->name('lesson-templates.update');
     Route::delete('/stunden-vorlagen/{lessonTemplate}', [LessonTemplateController::class, 'destroy'])->name('lesson-templates.destroy');
+    Route::get('/phasen-vorlagen', [PhaseTemplateController::class, 'index'])->name('phase-templates.index');
+    Route::post('/phasen-vorlagen', [PhaseTemplateController::class, 'store'])->name('phase-templates.store');
+    Route::put('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'update'])->name('phase-templates.update');
+    Route::delete('/phasen-vorlagen/{phaseTemplate}', [PhaseTemplateController::class, 'destroy'])->name('phase-templates.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');

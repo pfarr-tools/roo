@@ -2,6 +2,7 @@
 
 use App\Models\LessonTemplate;
 use App\Models\Organization;
+use App\Models\PhaseTemplate;
 use App\Models\UnitTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -139,4 +140,49 @@ it('deletes a lesson template only within the users organization', function () {
     $this->actingAs($user)->delete("/stunden-vorlagen/{$lessonTemplate->id}")->assertRedirect('/stunden-vorlagen');
 
     $this->assertDatabaseMissing('lesson_templates', ['id' => $lessonTemplate->id]);
+});
+
+it('creates, lists and versions phase templates for an organization lesson template', function () {
+    $user = phaseFiveUser();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Schöpfung']);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Einstieg']);
+
+    $this->actingAs($user)->post('/phasen-vorlagen', [
+        'lesson_template_id' => $lessonTemplate->id,
+        'title' => 'Ritualisierter Einstieg',
+        'duration_minutes' => 10,
+        'social_form' => 'Plenum',
+        'material' => 'Bildkarte',
+    ])->assertRedirect('/phasen-vorlagen');
+
+    $phaseTemplate = PhaseTemplate::firstOrFail();
+    expect($phaseTemplate->position)->toBe(1);
+
+    $this->actingAs($user)->put("/phasen-vorlagen/{$phaseTemplate->id}", [
+        'lesson_template_id' => $lessonTemplate->id,
+        'title' => 'Überarbeiteter Einstieg',
+        'position' => 2,
+    ])->assertRedirect('/phasen-vorlagen');
+
+    expect($phaseTemplate->fresh()->title)->toBe('Überarbeiteter Einstieg')
+        ->and($phaseTemplate->fresh()->version)->toBe(2);
+
+    $this->actingAs($user)->get('/phasen-vorlagen')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('templates', 1)
+            ->has('lessonTemplates', 1)
+            ->where('templates.0.lesson_template.title', 'Einstieg'));
+});
+
+it('rejects phase templates using another organizations lesson template', function () {
+    $user = phaseFiveUser();
+    $otherUser = phaseFiveUser();
+    $foreignUnitTemplate = UnitTemplate::create(['organization_id' => $otherUser->organization_id, 'title' => 'Fremd UE']);
+    $foreignLessonTemplate = LessonTemplate::create(['organization_id' => $otherUser->organization_id, 'unit_template_id' => $foreignUnitTemplate->id, 'title' => 'Fremde Stunde']);
+
+    $this->actingAs($user)->post('/phasen-vorlagen', [
+        'lesson_template_id' => $foreignLessonTemplate->id,
+        'title' => 'Nicht erlaubt',
+    ])->assertForbidden();
 });
