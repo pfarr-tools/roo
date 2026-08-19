@@ -9,6 +9,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachingGroupController;
 use App\Http\Controllers\TeachingUnitController;
+use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\TeachingUnitResourceController;
 use App\Http\Controllers\YearPlanController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ Route::get('/', function (Request $request) {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');

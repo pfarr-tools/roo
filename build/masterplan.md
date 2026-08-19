@@ -354,6 +354,12 @@ Phasensortierung, Zeitprüfung und die Statusführung im Stundeneditor sind
 umgesetzt. Durchführungsnotizen, Materiallisten sowie Präsentations- und
 Nachplanungsansichten folgen in den nächsten vertikalen Schnitten.
 
+Der konkrete Arbeitsraum einer eingeplanten Stunde entsteht unter
+`/unterricht/{slot}` mit den Bereichen Planung, Durchführung und Beobachtung.
+Die Planungsansicht bündelt Stundendaten, Materialien und eine umfangreiche
+Phasenansicht; die Stammdatenbearbeitung öffnet den Stundeneditor ohne
+Phasen-Tab.
+
 ### Ziel
 
 Einzelne Stunden schnell vorbereiten und im Unterricht verwenden.

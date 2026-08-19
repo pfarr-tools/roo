@@ -4,7 +4,7 @@ import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, showPhases: { type: Boolean, default: true } })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -104,7 +104,7 @@ function save() {
                     <ul class="nav nav-tabs unit-editor-tabs mb-4" role="tablist">
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'metadata' }" type="button" @click="activeTab = 'metadata'">{{ de.unitEditorMetadata }}</button></li>
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'competencies' }" type="button" @click="activeTab = 'competencies'">{{ de.unitEditorCompetencies }}</button></li>
-                        <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'phases' }" type="button" @click="activeTab = 'phases'">{{ de.phases }}</button></li>
+                        <li v-if="showPhases" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'phases' }" type="button" @click="activeTab = 'phases'">{{ de.phases }}</button></li>
                     </ul>
 
                     <form @submit.prevent="save">

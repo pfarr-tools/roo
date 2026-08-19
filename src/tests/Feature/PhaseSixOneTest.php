@@ -129,6 +129,7 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     $slot = ScheduleSlot::firstOrFail();
     app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $slot);
     $scheduled = ScheduledLesson::firstOrFail();
+    $this->actingAs($user)->get("/unterricht/{$slot->id}")->assertOk();
 
     expect($scheduled->status)->toBe('assigned');
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['title' => 'Einstieg'])->assertRedirect();
