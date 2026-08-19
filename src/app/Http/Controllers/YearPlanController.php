@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\InterruptPlannedUnitRequest;
 use App\Http\Requests\SplitPlannedUnitRequest;
 use App\Http\Requests\StorePlannedUnitRequest;
 use App\Http\Requests\UpdateLessonOccurrenceRequest;
+use App\Models\CurriculumTopic;
 use App\Models\GroupYearPlan;
 use App\Models\LessonOccurrence;
 use App\Models\PlannedUnit;
@@ -37,6 +39,7 @@ class YearPlanController extends Controller
             'plan' => $plan,
             'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
             'checks' => $this->checks($teachingGroup, $plan),
+            'calendar' => $this->calendar($teachingGroup),
         ]);
     }
 
@@ -48,6 +51,7 @@ class YearPlanController extends Controller
         if (! empty($data['unit_template_id'])) {
             abort_unless(UnitTemplate::where('id', $data['unit_template_id'])->where('organization_id', $teachingGroup->organization_id)->exists(), 422);
         }
+        $this->validateTopicScope($teachingGroup, $data['curriculum_topic_id'] ?? null);
         $plan = $this->planFor($teachingGroup);
         DB::transaction(function () use ($plan, $data, $request): void {
             $unit = $plan->units()->create($data + ['position' => $plan->units()->max('position') + 1]);
@@ -63,6 +67,7 @@ class YearPlanController extends Controller
         abort_unless($plannedUnit->plan->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validated();
         abort_unless($this->dateInYear($teachingGroup, $data['starts_on']) && $this->dateInYear($teachingGroup, $data['ends_on']), 422);
+        $this->validateTopicScope($teachingGroup, $data['curriculum_topic_id'] ?? null);
         DB::transaction(function () use ($plannedUnit, $data, $request): void {
             $plannedUnit->update($data);
             $this->revise($plannedUnit->plan, $request->user()->id, 'unit_updated', 'Unterrichtseinheit „'.$plannedUnit->title.'“ geändert.');
@@ -115,6 +120,16 @@ class YearPlanController extends Controller
         return back()->with('success', 'Unterrichtseinheit wurde geteilt.');
     }
 
+    public function interruptUnit(InterruptPlannedUnitRequest $request, TeachingGroup $teachingGroup, PlannedUnit $plannedUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($plannedUnit->plan->teaching_group_id === $teachingGroup->id, 404);
+        $plannedUnit->update($request->validated());
+        $this->revise($plannedUnit->plan, auth()->id(), 'unit_interrupted', $plannedUnit->is_interrupted ? 'Unterrichtseinheit unterbrochen.' : 'Unterbrechung der Unterrichtseinheit aufgehoben.');
+
+        return back()->with('success', 'Unterbrechung wurde gespeichert.');
+    }
+
     public function generateLessons(TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -122,13 +137,12 @@ class YearPlanController extends Controller
         $dates = $this->instructionDates($teachingGroup);
         $periods = $teachingGroup->schoolPeriods()->get(['school_periods.id', 'period_number'])->mapWithKeys(fn ($period) => [$period->pivot->weekday.'-'.$period->period_number => true]);
         $available = collect($dates)->filter(fn ($date) => $periods->keys()->contains(fn ($key) => (int) explode('-', $key)[0] === $date->dayOfWeekIso));
-        $index = 0;
-        DB::transaction(function () use ($plan, $available, &$index): void {
+        DB::transaction(function () use ($plan, $available): void {
             foreach ($plan->units as $unit) {
-                foreach ($available->slice($index, $unit->planned_hours) as $position => $date) {
+                $unitDates = $available->filter(fn ($date) => $date->toDateString() >= $unit->starts_on->toDateString() && $date->toDateString() <= $unit->ends_on->toDateString())->values();
+                foreach ($unitDates->take($unit->planned_hours) as $position => $date) {
                     $lesson = $unit->lessons()->firstOrCreate(['position' => $position + 1], ['title' => $unit->title.' – '.($position + 1).'. Stunde']);
                     $lesson->occurrences()->firstOrCreate(['planned_on' => $date->toDateString()]);
-                    $index++;
                 }
             }
             $this->revise($plan, auth()->id(), 'lessons_generated', 'Stunden aus dem Stundenplan erzeugt.');
@@ -179,7 +193,27 @@ class YearPlanController extends Controller
             'units_without_competencies' => $units->filter(fn ($unit) => ! $unit->curriculum_topic_id || $unit->curriculumTopic->competencies->isEmpty())->pluck('title')->values(),
             'topics_without_planned_unit' => $topics->whereNotIn('id', $plannedTopicIds)->pluck('title')->values(),
             'planned_competence_count' => $units->flatMap(fn ($unit) => $unit->curriculumTopic?->competencies ?? collect())->unique('id')->count(),
+            'total_competence_count' => $topics->flatMap->competencies->unique('id')->count(),
+            'uncovered_competencies' => $topics->whereNotIn('id', $plannedTopicIds)->flatMap->competencies->pluck('display')->filter()->unique()->values(),
         ];
+    }
+
+    private function calendar(TeachingGroup $group): array
+    {
+        return $group->schoolYear->days()->orderBy('date')->get(['date', 'kind', 'label'])->map(fn ($day) => [
+            'date' => $day->date->toDateString(),
+            'kind' => $day->kind,
+            'label' => $day->label,
+        ])->all();
+    }
+
+    private function validateTopicScope(TeachingGroup $group, ?int $topicId): void
+    {
+        if ($topicId === null) {
+            return;
+        }
+        $curriculumIds = $group->curricula()->pluck('curricula.id');
+        abort_unless(CurriculumTopic::whereKey($topicId)->whereHas('version', fn ($query) => $query->whereIn('curriculum_id', $curriculumIds))->exists(), 422, 'Das Curriculumthema gehört nicht zu dieser Unterrichtsgruppe.');
     }
 
     private function availableHours(TeachingGroup $group): int

@@ -67,6 +67,15 @@ it('generates lessons on regular timetable days and skips no-instruction days', 
     expect(GroupYearPlan::first()->revision)->toBe(3);
 });
 
+it('generates occurrences only inside each units planned date range', function () {
+    [$user, , $group] = phaseSixGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", ['title' => 'Spätes Thema', 'starts_on' => '2026-09-20', 'ends_on' => '2026-09-30', 'planned_hours' => 1]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/stunden-erzeugen")->assertRedirect();
+
+    expect(LessonOccurrence::firstOrFail()->planned_on->toDateString())->toBe('2026-09-22');
+});
+
 it('keeps actual lesson status separate from planning and protects organizations', function () {
     [$user, , $group] = phaseSixGroup();
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", ['title' => 'Stunde', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-10', 'planned_hours' => 1]);
@@ -94,4 +103,16 @@ it('splits a planned unit while preserving its original span and recording the c
         ->and($unit->fresh()->ends_on->toDateString())->toBe('2026-09-05')
         ->and(PlannedUnit::orderByDesc('id')->first()->starts_on->toDateString())->toBe('2026-09-06');
     $this->assertDatabaseHas('plan_revisions', ['action' => 'unit_split']);
+});
+
+it('explicitly marks and resumes an interrupted planned unit', function () {
+    [$user, , $group] = phaseSixGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", ['title' => 'Unterbrechung', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-10', 'planned_hours' => 1]);
+    $unit = PlannedUnit::firstOrFail();
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/einheiten/{$unit->id}/unterbrechen", ['is_interrupted' => true])->assertRedirect();
+    expect($unit->fresh()->is_interrupted)->toBeTrue();
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/einheiten/{$unit->id}/unterbrechen", ['is_interrupted' => false])->assertRedirect();
+    expect($unit->fresh()->is_interrupted)->toBeFalse();
+    $this->assertDatabaseHas('plan_revisions', ['action' => 'unit_interrupted']);
 });

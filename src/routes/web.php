@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/jahresplanung/{teachingGroup}/einheiten', [YearPlanController::class, 'storeUnit'])->name('year-plans.units.store');
     Route::put('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}', [YearPlanController::class, 'updateUnit'])->name('year-plans.units.update');
     Route::post('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}/teilen', [YearPlanController::class, 'splitUnit'])->name('year-plans.units.split');
+    Route::put('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}/unterbrechen', [YearPlanController::class, 'interruptUnit'])->name('year-plans.units.interrupt');
     Route::delete('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}', [YearPlanController::class, 'destroyUnit'])->name('year-plans.units.destroy');
     Route::post('/jahresplanung/{teachingGroup}/stunden-erzeugen', [YearPlanController::class, 'generateLessons'])->name('year-plans.lessons.generate');
     Route::put('/jahresplanung/{teachingGroup}/vorkommnisse/{occurrence}', [YearPlanController::class, 'updateOccurrence'])->name('year-plans.occurrences.update');

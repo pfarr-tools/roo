@@ -596,3 +596,31 @@ Die Oberfläche folgt auf Detailseiten einer festen Aktionslogik:
   gespeichert wird über die zentrale Seitenaktion.
 - Kartenaktionen bleiben responsiv: Auf großen Bildschirmen stehen sie neben
   der Überschrift, auf kleinen Bildschirmen dürfen sie umbrechen.
+
+### UI: Jahresplanung und Planungsebenen
+
+Die Jahresplanung ist der zentrale Arbeitsbereich für die konkrete Unterrichtsplanung.
+
+Auf Desktop folgt sie grundsätzlich einem Drei-Spalten-Modell:
+
+1. **Jahresplan** – konkrete Unterrichtstermine und eingeplante Stunden,
+2. **Meine Unterrichtseinheiten** – die tatsächlich von der Nutzer:in verwendeten und bearbeitbaren UEs,
+3. **Curricula** – Unterrichtsvorschläge aus den für die Gruppe ausgewählten Curricula.
+
+Die Curriculum-Spalte ist schmaler als die beiden Arbeitsbereiche und standardmäßig geöffnet, aber einklappbar.
+
+Die UI muss die fachlichen Ebenen strikt trennen:
+
+`EducationPlan → Curriculum → eigene Unterrichtsplanung → Jahresplan`
+
+Curriculum-UEs und Curriculum-Stundenvorschläge sind niemals direkt planbar. Sie müssen zunächst als eigene, danach unabhängig bearbeitbare UE bzw. Stunde instanziiert werden.
+
+Drag-and-drop ist die bevorzugte Desktop-Interaktion für Übernahme, Einplanung und Sortierung, darf aber niemals die einzige Möglichkeit zur Durchführung einer Aktion sein.
+
+Verschachtelte Modals sind zu vermeiden. Für Detailbearbeitung innerhalb eines Modals (z. B. Phase innerhalb eines Stundenentwurfs) sind bevorzugt Offcanvas-/Side-Panel-Interaktionen zu verwenden.
+
+Die UI arbeitet bei der Jahresplanung ausschließlich mit ganzen Schulstunden. Eine minutengenaue Verteilung von Inhalten über Unterrichtsstundengrenzen ist nicht vorgesehen.
+
+Kompetenzbeziehungen werden über stabile fachliche Relationen/IDs abgebildet, niemals durch Textvergleich. Die UI muss langfristig zwischen Curriculum-Abdeckung und der maßgeblichen EducationPlan-Abdeckung unterscheiden können.
+
+
