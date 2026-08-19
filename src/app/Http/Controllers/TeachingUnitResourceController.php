@@ -50,7 +50,7 @@ class TeachingUnitResourceController extends Controller
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
 
-        return Storage::disk('local')->download($resource->storage_path, $resource->original_name);
+        return Storage::disk('local')->download($resource->storage_path, $this->filenameFor($teachingUnit, $resource));
     }
 
     public function preview(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource)
@@ -75,5 +75,22 @@ class TeachingUnitResourceController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnit->organization_id === $request->user()->organization_id, 404);
+    }
+
+    private function filenameFor(TeachingUnit $teachingUnit, ResourceReference $resource): string
+    {
+        $group = $teachingUnit->group()->with(['gradeLevels', 'schoolYear'])->first();
+        $grade = $this->filenamePart($group?->gradeLevels->pluck('grade_level')->implode('-') ?: '');
+        $aktenzeichen = $this->filenamePart($group?->aktenzeichen ?: '');
+        $keyword = $this->filenamePart($teachingUnit->keyword ?: '');
+        $original = $this->filenamePart($resource->original_name ?: 'Datei');
+        $prefix = $aktenzeichen !== '' ? $aktenzeichen.'_'.$grade : $grade;
+
+        return trim(collect([$prefix, $keyword, $original])->filter()->implode(' '));
+    }
+
+    private function filenamePart(string $value): string
+    {
+        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), " .-");
     }
 }

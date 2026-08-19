@@ -151,7 +151,7 @@ class YearPlanController extends Controller
     public function storeTeachingUnit(Request $request, TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
         $teachingGroup->teachingUnits()->create($data + ['education_plan_id' => $this->educationPlanIdsForGroup($teachingGroup)->first(), 'organization_id' => $teachingGroup->organization_id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
 
         return back()->with('success', 'Eigene Unterrichtseinheit wurde angelegt.');
@@ -161,8 +161,8 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer']]);
-        $teachingUnit->update(collect($data)->only(['title', 'notes'])->all());
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer']]);
+        $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes'])->all());
         if (array_key_exists('competency_ids', $data)) {
             $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'])->pluck('id');
             abort_unless($validIds->count() === count($data['competency_ids']), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');

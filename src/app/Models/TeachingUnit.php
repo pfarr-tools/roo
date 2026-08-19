@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['organization_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'position', 'notes'])]
+#[Fillable(['organization_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes'])]
 class TeachingUnit extends Model
 {
     public function group(): BelongsTo

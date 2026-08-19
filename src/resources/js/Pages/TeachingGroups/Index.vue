@@ -6,7 +6,7 @@ import de from '../../i18n/de'
 
 const props = defineProps({ groups: Array, schools: Array })
 const open = ref(false)
-const form = useForm({ school_id: '', school_year_id: '', name: '', notes: '', grade_levels: [''] })
+const form = useForm({ school_id: '', school_year_id: '', name: '', aktenzeichen: '', notes: '', grade_levels: [''] })
 const selectedSchool = ref(null)
 function yearsForSchool() { return props.schools.find(school => String(school.id) === String(form.school_id))?.school_years ?? [] }
 function addGrade() { form.grade_levels.push('') }
@@ -27,6 +27,7 @@ function create() { form.grade_levels = form.grade_levels.map(value => value.tri
             <label class="form-label">{{ de.school }}</label><select v-model="form.school_id" class="form-select" required><option value="">{{ de.choose }}</option><option v-for="school in schools" :key="school.id" :value="school.id">{{ school.name }}</option></select>
             <label class="form-label mt-3">{{ de.schoolYear }}</label><select v-model="form.school_year_id" class="form-select" required><option value="">{{ de.choose }}</option><option v-for="year in yearsForSchool()" :key="year.id" :value="year.id">{{ year.name }}</option></select>
             <label class="form-label mt-3">{{ de.groupName }}</label><input v-model="form.name" class="form-control" required>
+            <label class="form-label mt-3">{{ de.aktenzeichen }}</label><input v-model="form.aktenzeichen" class="form-control" maxlength="30"><div class="form-text">{{ de.aktenzeichenHint }}</div>
             <label class="form-label mt-3">{{ de.groupGrades }}</label><div v-for="(_, index) in form.grade_levels" :key="index" class="input-group mb-2"><input v-model="form.grade_levels[index]" class="form-control" placeholder="z. B. 2" required><button class="btn btn-outline-secondary" type="button" :disabled="form.grade_levels.length === 1" @click="removeGrade(index)">×</button></div><button class="btn btn-sm btn-outline-secondary" type="button" @click="addGrade">{{ de.add }} {{ de.groupGrades }}</button><div class="form-text">{{ de.groupGradesHint }}</div>
             <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="open = false">{{ de.cancel }}</button><button class="btn btn-primary" type="submit" :disabled="form.processing">{{ de.save }}</button></div>
         </form></div></div></section></div>

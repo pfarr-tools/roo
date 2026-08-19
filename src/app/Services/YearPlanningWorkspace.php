@@ -104,6 +104,7 @@ class YearPlanningWorkspace
                 'copied_from_id' => $source->id,
                 'source_curriculum_topic_id' => $source->source_curriculum_topic_id,
                 'title' => $source->title,
+                'keyword' => $source->keyword,
                 'position' => ($targetGroup->teachingUnits()->max('position') ?? 0) + 1,
                 'notes' => $source->notes,
             ]);

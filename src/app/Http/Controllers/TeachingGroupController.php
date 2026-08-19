@@ -70,7 +70,7 @@ class TeachingGroupController extends Controller
         $schoolYear = SchoolYear::whereKey($data['school_year_id'])->where('organization_id', $request->user()->organization_id)->where('school_id', $school->id)->firstOrFail();
 
         $group = DB::transaction(function () use ($data, $request): TeachingGroup {
-            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
+            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
             $group->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
 
             return $group;
@@ -86,7 +86,7 @@ class TeachingGroupController extends Controller
         abort_unless($data['school_id'] === $teachingGroup->school_id && $data['school_year_id'] === $teachingGroup->school_year_id, 422);
         $nameChanged = $teachingGroup->name !== $data['name'];
         DB::transaction(function () use ($data, $teachingGroup): void {
-            $teachingGroup->update(collect($data)->only(['name', 'notes'])->all());
+            $teachingGroup->update(collect($data)->only(['name', 'aktenzeichen', 'notes'])->all());
             $teachingGroup->gradeLevels()->delete();
             $teachingGroup->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
             if (array_key_exists('periods', $data)) {

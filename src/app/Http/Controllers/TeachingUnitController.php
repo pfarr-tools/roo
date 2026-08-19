@@ -23,7 +23,7 @@ class TeachingUnitController extends Controller
                 ->where('title', 'like', "%{$query}%")
                 ->orWhereHas('group', fn ($group) => $group->where('name', 'like', "%{$query}%"))))
             ->orderBy('title')
-            ->get(['id', 'teaching_group_id', 'education_plan_id', 'source_curriculum_topic_id', 'title', 'position', 'notes', 'copied_from_id']);
+            ->get(['id', 'teaching_group_id', 'education_plan_id', 'source_curriculum_topic_id', 'title', 'keyword', 'position', 'notes', 'copied_from_id']);
 
         return Inertia::render('TeachingUnits/Index', [
             'units' => $units,
@@ -37,7 +37,7 @@ class TeachingUnitController extends Controller
         abort_unless($teachingUnit->organization_id === $request->user()->organization_id, 404);
         $group = $teachingUnit->group;
         $this->authorize('update', $group);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer']]);
         if (isset($data['education_plan_id'])) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422);
         }
