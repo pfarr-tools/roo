@@ -99,7 +99,7 @@ class ImportCurriculum
                                 $this->createCompetency($topic, $denomination, 'content', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
                             }
                             foreach ($references as $reference) {
-                                $this->createCompetency($topic, $denomination, 'content', ['id' => $reference['id'] ?? null, 'display' => $reference['display'] ?? null, 'raw' => $competency['raw'] ?? null], $competencyPosition++, $findCompetency($reference['id'] ?? null));
+                                $this->createCompetency($topic, $denomination, 'content', ['id' => $reference['id'] ?? null, 'display' => $reference['display'] ?? null, 'text' => $competency['text'] ?? null, 'raw' => $competency['raw'] ?? null], $competencyPosition++, $findCompetency($reference['id'] ?? null));
                             }
                         }
                     }
@@ -120,7 +120,7 @@ class ImportCurriculum
         CurriculumTopicCompetency::create([
             'curriculum_topic_id' => $topic->id, 'education_plan_competency_id' => $educationPlanCompetencyId, 'denomination' => $denomination, 'competency_kind' => $kind,
             'external_identifier' => $data['id'] ?? ($data['references'][0]['id'] ?? null),
-            'display' => $data['display'] ?? ($data['references'][0]['display'] ?? null),
+            'display' => $data['display'] ?? ($data['references'][0]['display'] ?? null), 'text' => $data['text'] ?? null,
             'raw_text' => $data['raw'] ?? null, 'position' => $position,
         ]);
     }
