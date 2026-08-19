@@ -59,7 +59,7 @@ const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total,
 const competencyCardStyle = competency => {
     const totalHours = (props.unit?.lessons ?? []).reduce((total, lesson) => total + Number(lesson.duration ?? 0), 0)
     const ratio = totalHours ? Math.min(1, competencyHours(competency) / totalHours) : 0
-    return { backgroundColor: `rgba(var(--bs-primary-rgb), ${0.05 + ratio * 0.2})` }
+    return { backgroundColor: hours ? `rgba(var(--bs-success-rgb), ${0.18 + ratio * 0.42})` : 'rgba(var(--bs-secondary-rgb), 0.04)' }
 }
 
 function addCompetency(option) {
@@ -80,14 +80,10 @@ function addCompetency(option) {
 }
 
 function save() {
-    form.put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => competencyForm.put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => emit('close'),
-        }),
+        onSuccess: () => emit('close'),
     })
 }
 
