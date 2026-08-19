@@ -9,14 +9,14 @@ const open = ref(false)
 const search = ref(props.filters?.q ?? '')
 const materialItemsText = ref('')
 const editing = ref(null)
-const form = useForm({ lesson_template_id: '', title: '', duration_minutes: '', social_form: '', description: '', material: '', position: '' })
+const form = useForm({ lesson_template_id: '', title: '', duration_minutes: '', social_form: '', description: '', teacher_interaction: '', learner_activity: '', differentiation: '', didactic_comment: '', material: '', media: '', position: '' })
 const resourceForm = useForm({ resource: null })
 
 function resetForm() { form.reset(); form.clearErrors(); editing.value = null; materialItemsText.value = '' }
 function openCreate() { resetForm(); open.value = true }
 function openEdit(template) {
     editing.value = template
-    form.defaults({ lesson_template_id: template.lesson_template_id, title: template.title, duration_minutes: template.duration_minutes ?? '', social_form: template.social_form?.name ?? '', description: template.description ?? '', material: template.material ?? '', position: template.position, material_items: template.material_items?.map(item => item.name) ?? [] })
+    form.defaults({ lesson_template_id: template.lesson_template_id, title: template.title, duration_minutes: template.duration_minutes ?? '', social_form: template.social_form?.name ?? '', description: template.description ?? '', teacher_interaction: template.teacher_interaction ?? '', learner_activity: template.learner_activity ?? '', differentiation: template.differentiation ?? '', didactic_comment: template.didactic_comment ?? '', material: template.material ?? '', media: template.media ?? '', position: template.position, material_items: template.material_items?.map(item => item.name) ?? [] })
     form.reset(); form.clearErrors(); materialItemsText.value = template.material_items?.map(item => item.name).join(', ') ?? ''; open.value = true
 }
 function save() {
@@ -62,7 +62,9 @@ function removeResource(template, resource) {
             <label class="form-label mt-3" for="phase-template-duration">{{ de.durationMinutes }}</label><input id="phase-template-duration" v-model="form.duration_minutes" class="form-control" type="number" min="1">
             <label class="form-label mt-3" for="phase-template-social-form">{{ de.socialForm }}</label><input id="phase-template-social-form" v-model="form.social_form" class="form-control" placeholder="z. B. Plenum">
             <label class="form-label mt-3" for="phase-template-description">{{ de.description }}</label><textarea id="phase-template-description" v-model="form.description" class="form-control" rows="3"></textarea>
+            <div class="row g-2"><div class="col-lg-6"><label class="form-label mt-3" for="phase-template-teacher-interaction">{{ de.teacherInteraction }}</label><textarea id="phase-template-teacher-interaction" v-model="form.teacher_interaction" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-3" for="phase-template-learner-activity">{{ de.learnerActivity }}</label><textarea id="phase-template-learner-activity" v-model="form.learner_activity" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-3" for="phase-template-differentiation">{{ de.differentiation }}</label><textarea id="phase-template-differentiation" v-model="form.differentiation" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-3" for="phase-template-didactic-comment">{{ de.didacticComment }}</label><textarea id="phase-template-didactic-comment" v-model="form.didactic_comment" class="form-control" rows="3"></textarea></div></div>
             <label class="form-label mt-3" for="phase-template-material">{{ de.material }}</label><textarea id="phase-template-material" v-model="form.material" class="form-control" rows="2"></textarea>
+            <label class="form-label mt-3" for="phase-template-media">{{ de.media }}</label><textarea id="phase-template-media" v-model="form.media" class="form-control" rows="2"></textarea>
             <label class="form-label mt-3" for="phase-template-material-items">{{ de.materialItems }}</label><input id="phase-template-material-items" v-model="materialItemsText" class="form-control" :placeholder="de.materialItemsHint">
             <label class="form-label mt-3" for="phase-template-position">{{ de.position }}</label><input id="phase-template-position" v-model="form.position" class="form-control" type="number" min="0">
             <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="open = false">{{ de.cancel }}</button><button class="btn btn-primary" type="submit" :disabled="form.processing">{{ de.save }}</button></div>

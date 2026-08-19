@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'addLessonCompetency'])->name('year-plans.lessons.competencies.store');
     Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
+    Route::post('/jahresplanung/{teachingGroup}/phasen/{phase}/als-vorlage', [YearPlanController::class, 'savePhaseAsTemplate'])->name('year-plans.phases.save-template');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen', [YearPlanController::class, 'storePhase'])->name('year-plans.phases.store');
     Route::delete('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'destroyPhase'])->name('year-plans.phases.destroy');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen/reihenfolge', [YearPlanController::class, 'reorderPhases'])->name('year-plans.phases.reorder');

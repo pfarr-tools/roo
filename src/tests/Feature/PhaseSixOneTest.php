@@ -155,6 +155,10 @@ it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', funct
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['phase_template_id' => $template->id])->assertRedirect();
     $phase = $lesson->phases()->firstOrFail();
     expect($phase->title)->toBe('Ritual')->and($phase->description)->toBe('Ankommen');
+    $phase->update(['teacher_interaction' => 'Lehrkraft begrüßt die Gruppe.', 'learner_activity' => 'Die S:innen kommen an.', 'differentiation' => 'Bildkarten liegen bereit.', 'didactic_comment' => 'Ritualisierter Einstieg.', 'media' => 'Bildkarten']);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/phasen/{$phase->id}/als-vorlage")->assertRedirect();
+    expect(PhaseTemplate::where('title', 'Ritual')->count())->toBe(2)
+        ->and(PhaseTemplate::where('title', 'Ritual')->latest('id')->value('teacher_interaction'))->toBe('Lehrkraft begrüßt die Gruppe.');
 
     $second = $lesson->phases()->create(['title' => 'Sicherung', 'position' => 2]);
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen/reihenfolge", ['phase_ids' => [$second->id, $phase->id]])->assertRedirect();

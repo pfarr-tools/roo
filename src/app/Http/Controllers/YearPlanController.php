@@ -13,6 +13,7 @@ use App\Models\CurriculumEducationPlanBinding;
 use App\Models\EducationPlanCompetency;
 use App\Models\GroupYearPlan;
 use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
 use App\Models\PlannedUnit;
@@ -284,7 +285,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.description' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.description' => ['nullable', 'string'], 'phases.*.teacher_interaction' => ['nullable', 'string'], 'phases.*.learner_activity' => ['nullable', 'string'], 'phases.*.differentiation' => ['nullable', 'string'], 'phases.*.didactic_comment' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string'], 'phases.*.media' => ['nullable', 'string']]);
         $phaseTemplateIds = collect($data['phases'] ?? [])->pluck('phase_template_id')->filter()->unique();
         abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
         DB::transaction(function () use ($data, $lesson): void {
@@ -357,6 +358,36 @@ class YearPlanController extends Controller
         return back()->with('success', 'Stunden-Vorlage wurde gespeichert.');
     }
 
+    public function savePhaseAsTemplate(TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $phase->load(['lesson.unit.template', 'lesson.template']);
+        abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+
+        $this->saveLessonAsTemplate($teachingGroup, $phase->lesson);
+        $lesson = $phase->lesson->fresh('template');
+        $phase->refresh();
+        PhaseTemplate::create([
+            'organization_id' => $teachingGroup->organization_id,
+            'lesson_template_id' => $lesson->template->id,
+            'title' => $phase->title,
+            'duration_minutes' => $phase->duration_minutes,
+            'social_form_id' => $phase->social_form_id,
+            'description' => $phase->description,
+            'teacher_interaction' => $phase->teacher_interaction,
+            'learner_activity' => $phase->learner_activity,
+            'differentiation' => $phase->differentiation,
+            'didactic_comment' => $phase->didactic_comment,
+            'material' => $phase->materials,
+            'media' => $phase->media,
+            'position' => ((int) PhaseTemplate::where('lesson_template_id', $lesson->template->id)->max('position')) + 1,
+            'version' => 1,
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Phasen-Vorlage wurde angelegt.');
+    }
+
     public function updateLessonCompetencies(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -373,7 +404,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'description' => ['nullable', 'string'], 'materials' => ['nullable', 'string']]));
+        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'description' => ['nullable', 'string'], 'teacher_interaction' => ['nullable', 'string'], 'learner_activity' => ['nullable', 'string'], 'differentiation' => ['nullable', 'string'], 'didactic_comment' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'media' => ['nullable', 'string']]));
 
         return back()->with('success', 'Phase wurde gespeichert.');
     }

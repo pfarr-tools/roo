@@ -24,20 +24,30 @@ class LessonWorkspaceController extends Controller
             'group.schoolYear:id,name',
             'scheduledLesson.lesson.unit.resources',
             'scheduledLesson.lesson.phases.socialForm',
-            'scheduledLesson.lesson.competencies',
+            'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
+            'scheduledLesson.lesson.competencies.curriculumCompetency',
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
+        $targetCompetencies = $lesson->competencies->map(fn ($competency): array => [
+            'id' => $competency->id,
+            'kind' => $competency->educationPlanCompetency?->area?->kind ?? $competency->curriculumCompetency?->competency_kind ?? 'content',
+            'text' => $competency->local_wording
+                ?: $competency->educationPlanCompetency?->text
+                ?: $competency->curriculumCompetency?->display
+                ?: $competency->curriculumCompetency?->text,
+        ])->groupBy('kind')->map(fn ($competencies) => $competencies->values())->all();
 
         return Inertia::render('Lessons/Show', [
             'slot' => $scheduleSlot,
             'group' => $group,
             'lesson' => $lesson,
             'unit' => $lesson->unit,
-            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'description', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'competencyOptions' => EducationPlanCompetency::query()->whereIn('id', $lesson->unit->competencies->pluck('education_plan_competency_id')->filter())->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position'])->get(),
+            'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
         ]);
     }
 
