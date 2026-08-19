@@ -286,11 +286,12 @@ class YearPlanningWorkspace
         $firstSourceIndex = $sourceIndexes->min();
         abort_unless($firstSourceIndex === null || ! $slots->slice($firstSourceIndex + 1, max(0, $targetIndex - $firstSourceIndex))->contains(fn (ScheduleSlot $slot) => $slot->is_pinned), 422, 'Eine fixierte Stunde kann nicht verschoben werden.');
         $nextPinned = $slots->slice($targetIndex)->search(fn (ScheduleSlot $candidate) => $candidate->is_pinned);
+        $freeRun = $slots->slice($targetIndex)->takeWhile(fn (ScheduleSlot $candidate) => ! $candidate->is_pinned && (! $candidate->scheduledLesson || in_array((int) $candidate->scheduledLesson->lesson_id, $sourceIds, true)))->count();
         if ($nextPinned !== false) {
             $beforePinned = $slots->slice($targetIndex, $nextPinned)->filter(fn (ScheduleSlot $candidate) => ! $candidate->scheduledLesson || in_array((int) $candidate->scheduledLesson->lesson_id, $sourceIds, true));
             abort_unless($beforePinned->count() >= count($block), 422, 'Die Einfügung würde eine fixierte Stunde verschieben.');
         }
-        if (! $target->scheduledLesson && ($nextPinned === false || $slots->slice($targetIndex, $nextPinned)->count() >= count($block))) {
+        if (! $target->scheduledLesson && $freeRun >= count($block)) {
             return DB::transaction(function () use ($sourceIds, $block, $slots, $targetIndex): array {
                 ScheduledLesson::whereIn('lesson_id', $sourceIds)->delete();
                 foreach ($block as $offset => $lessonId) {

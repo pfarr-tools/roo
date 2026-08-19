@@ -308,6 +308,25 @@ it('verschiebt eine UE um ihre fixierte Stunde herum', function () {
         ->and(ScheduledLesson::where('lesson_id', $otherLesson->id)->value('schedule_slot_id'))->toBe($slots[2]->id);
 });
 
+it('bestätigt und erlaubt Überlauf am Ende beim Einfügen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $existingUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bestehende UE', 'position' => 1]);
+    $existingLesson = $existingUnit->lessons()->create(['title' => 'Letzte Stunde', 'position' => 1, 'duration' => 1]);
+    $newUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue UE', 'position' => 2]);
+    $newLesson = $newUnit->lessons()->create(['title' => 'Mehrstündige neue Stunde', 'position' => 1, 'duration' => 2]);
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    $lastSlot = $slots->last();
+    $targetSlot = $slots->get($slots->count() - 2);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $existingLesson, $lastSlot);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$targetSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $newUnit->id])->assertStatus(422);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$targetSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $newUnit->id, 'allow_overflow' => true])->assertRedirect();
+    expect(ScheduledLesson::where('lesson_id', $newLesson->id)->count())->toBe(2)
+        ->and(ScheduledLesson::where('lesson_id', $newLesson->id)->where('schedule_slot_id', $targetSlot->id)->exists())->toBeTrue()
+        ->and(ScheduledLesson::where('lesson_id', $existingLesson->id)->count())->toBe(0);
+});
+
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
     [$user, $group] = phaseSixOneGroup();
     $units = collect(['Bereits geplant', 'Zweite UE', 'Dritte UE'])->map(function (string $title, int $index) use ($group, $user) {
