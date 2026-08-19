@@ -25,10 +25,10 @@ class PhaseTemplateController extends Controller
             ->with(['lessonTemplate:id,title', 'socialForm:id,name', 'materialItems:id,name', 'resources:id,phase_template_id,original_name'])
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
-            ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))
+            ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))
             ->orderBy('position')
             ->orderBy('title')
-            ->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'description', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'position', 'version']);
+            ->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'position', 'version']);
         $lessonTemplates = LessonTemplate::query()
             ->where('organization_id', $organizationId)
             ->where('is_active', true)

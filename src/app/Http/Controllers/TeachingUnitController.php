@@ -32,7 +32,7 @@ class TeachingUnitController extends Controller
             'units' => $units,
             'educationPlans' => EducationPlan::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->orderBy('title')->get(['id', 'title', 'external_identifier']),
             'filters' => ['q' => $query],
-            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'description', 'material', 'version']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'material', 'version']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
         ]);
     }

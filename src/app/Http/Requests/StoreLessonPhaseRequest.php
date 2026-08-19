@@ -18,7 +18,6 @@ class StoreLessonPhaseRequest extends FormRequest
             'title' => ['required_without:phase_template_id', 'nullable', 'string', 'max:255'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'],
             'social_form' => ['nullable', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
             'teacher_interaction' => ['nullable', 'string'],
             'learner_activity' => ['nullable', 'string'],
             'differentiation' => ['nullable', 'string'],

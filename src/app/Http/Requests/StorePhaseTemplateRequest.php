@@ -18,7 +18,6 @@ class StorePhaseTemplateRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'],
             'social_form' => ['nullable', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:20000'],
             'teacher_interaction' => ['nullable', 'string', 'max:20000'],
             'learner_activity' => ['nullable', 'string', 'max:20000'],
             'differentiation' => ['nullable', 'string', 'max:20000'],

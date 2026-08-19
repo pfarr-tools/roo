@@ -150,11 +150,11 @@ it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', funct
     $lesson = $unit->lessons()->create(['title' => 'Phasenstunde', 'position' => 1, 'duration' => 1]);
     $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
     $templateLesson = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
-    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $templateLesson->id, 'title' => 'Ritual', 'description' => 'Ankommen', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $templateLesson->id, 'title' => 'Ritual', 'version' => 1, 'is_active' => true]);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['phase_template_id' => $template->id])->assertRedirect();
     $phase = $lesson->phases()->firstOrFail();
-    expect($phase->title)->toBe('Ritual')->and($phase->description)->toBe('Ankommen');
+    expect($phase->title)->toBe('Ritual');
     $phase->update(['teacher_interaction' => 'Lehrkraft begrüßt die Gruppe.', 'learner_activity' => 'Die S:innen kommen an.', 'differentiation' => 'Bildkarten liegen bereit.', 'didactic_comment' => 'Ritualisierter Einstieg.', 'media' => 'Bildkarten']);
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/phasen/{$phase->id}/als-vorlage")->assertRedirect();
     expect(PhaseTemplate::where('title', 'Ritual')->count())->toBe(2)
@@ -171,7 +171,7 @@ it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', fun
     $lesson = $unit->lessons()->create(['title' => 'Neue Stunde', 'position' => 1, 'duration' => 1]);
     $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Ritualvorlagen', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
     $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Ritualstunde', 'version' => 1, 'is_active' => true]);
-    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'description' => 'Wir beginnen gemeinsam.', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'version' => 1, 'is_active' => true]);
     $group->gradeLevels()->create(['grade_level' => '4']);
     $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}", [
         'school_id' => $group->school_id,

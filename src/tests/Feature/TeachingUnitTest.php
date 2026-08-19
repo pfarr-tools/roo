@@ -21,7 +21,7 @@ it('lists canonical teaching units and imports a recursive independent copy', fu
     $competency = $source->competencies()->create(['local_wording' => 'Verantwortung übernehmen']);
     $lesson = $source->lessons()->create(['title' => 'Einstieg', 'position' => 1, 'duration' => 1]);
     $lesson->competencies()->attach($competency->id);
-    $lesson->phases()->create(['title' => 'Gespräch', 'position' => 1, 'description' => 'Austausch']);
+    $lesson->phases()->create(['title' => 'Gespräch', 'position' => 1]);
 
     $this->actingAs($user)->get('/unterrichtseinheiten')->assertInertia(fn ($page) => $page->component('TeachingUnits/Index')->has('units', 1));
     $this->actingAs($user)->post("/jahresplanung/{$targetGroup->id}/eigene-einheiten/importieren", ['source_id' => $source->id])->assertRedirect();

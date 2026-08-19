@@ -135,7 +135,7 @@ function save() {
                             </div>
                         </div>
 
-                        <LessonPhasesTab v-else :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" @update:phases="phaseDraft = $event" />
+                        <LessonPhasesTab v-else :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" compact @update:phases="phaseDraft = $event" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>

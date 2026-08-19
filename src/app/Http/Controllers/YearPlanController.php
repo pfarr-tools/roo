@@ -86,7 +86,7 @@ class YearPlanController extends Controller
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
             'competencyOptions' => EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
                 ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text']),
-            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),
             'socialForms' => SocialForm::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -285,7 +285,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.description' => ['nullable', 'string'], 'phases.*.teacher_interaction' => ['nullable', 'string'], 'phases.*.learner_activity' => ['nullable', 'string'], 'phases.*.differentiation' => ['nullable', 'string'], 'phases.*.didactic_comment' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string'], 'phases.*.media' => ['nullable', 'string']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.teacher_interaction' => ['nullable', 'string'], 'phases.*.learner_activity' => ['nullable', 'string'], 'phases.*.differentiation' => ['nullable', 'string'], 'phases.*.didactic_comment' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string'], 'phases.*.media' => ['nullable', 'string']]);
         $phaseTemplateIds = collect($data['phases'] ?? [])->pluck('phase_template_id')->filter()->unique();
         abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
         DB::transaction(function () use ($data, $lesson): void {
@@ -373,7 +373,6 @@ class YearPlanController extends Controller
             'title' => $phase->title,
             'duration_minutes' => $phase->duration_minutes,
             'social_form_id' => $phase->social_form_id,
-            'description' => $phase->description,
             'teacher_interaction' => $phase->teacher_interaction,
             'learner_activity' => $phase->learner_activity,
             'differentiation' => $phase->differentiation,
@@ -404,7 +403,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'description' => ['nullable', 'string'], 'teacher_interaction' => ['nullable', 'string'], 'learner_activity' => ['nullable', 'string'], 'differentiation' => ['nullable', 'string'], 'didactic_comment' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'media' => ['nullable', 'string']]));
+        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'teacher_interaction' => ['nullable', 'string'], 'learner_activity' => ['nullable', 'string'], 'differentiation' => ['nullable', 'string'], 'didactic_comment' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'media' => ['nullable', 'string']]));
 
         return back()->with('success', 'Phase wurde gespeichert.');
     }
