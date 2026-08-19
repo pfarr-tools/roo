@@ -239,20 +239,34 @@ class YearPlanningWorkspace
 
     public function blockAndReflow(TeachingGroup $group, ScheduleSlot $slot, string $status): array
     {
-        $scheduled = $slot->scheduledLesson;
-        $lesson = $scheduled?->lesson;
-        $slot->update(['status' => $status]);
-        if (! $lesson) {
-            return ['scheduled' => 0, 'overflow' => 0];
-        }
-        ScheduledLesson::where('lesson_id', $lesson->id)->delete();
-        $available = $this->availableSlots($group)->filter(fn (ScheduleSlot $candidate) => $candidate->date->toDateString() > $slot->date->toDateString() || ($candidate->date->toDateString() === $slot->date->toDateString() && $candidate->period_number > $slot->period_number))->values();
-        $selected = $available->take($lesson->duration);
-        foreach ($selected as $candidate) {
-            ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $candidate->id]);
-        }
+        return DB::transaction(function () use ($group, $slot, $status): array {
+            $slot->update(['status' => $status]);
+            $allSlots = ScheduleSlot::where('teaching_group_id', $group->id)
+                ->with('scheduledLesson')
+                ->orderBy('date')
+                ->orderBy('period_number')
+                ->get();
+            $changedIndex = $allSlots->search(fn (ScheduleSlot $candidate) => $candidate->id === $slot->id);
+            abort_unless($changedIndex !== false, 404);
 
-        return ['scheduled' => $selected->count(), 'overflow' => max(0, $lesson->duration - $selected->count())];
+            $eligible = $allSlots->filter(fn (ScheduleSlot $candidate) => in_array($candidate->status, ['free', 'buffer'], true))->values();
+            $suffixSlots = $allSlots->slice($changedIndex)->values();
+            $suffixLessonIds = $suffixSlots->map(fn (ScheduleSlot $candidate) => $candidate->scheduledLesson?->lesson_id)->filter()->values();
+            $suffixEligible = $eligible->filter(fn (ScheduleSlot $candidate) => $candidate->date->gt($slot->date) || ($candidate->date->equalTo($slot->date) && $candidate->period_number >= $slot->period_number))->values();
+            $prefixAssignments = $allSlots->slice(0, $changedIndex)
+                ->filter(fn (ScheduleSlot $candidate) => $candidate->scheduledLesson && in_array($candidate->status, ['free', 'buffer'], true))
+                ->map(fn (ScheduleSlot $candidate) => [$candidate->scheduledLesson->lesson_id, $candidate->id])
+                ->values();
+            $suffixAssignments = $suffixEligible->take($suffixLessonIds->count())->values()->map(fn (ScheduleSlot $candidate, int $index) => [$suffixLessonIds[$index], $candidate->id]);
+            $assignments = $prefixAssignments->concat($suffixAssignments)->values();
+            $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
+            ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
+            foreach ($assignments as [$lessonId, $slotId]) {
+                ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slotId]);
+            }
+
+            return ['scheduled' => $suffixLessonIds->count() - max(0, $suffixLessonIds->count() - $suffixEligible->count()), 'overflow' => max(0, $suffixLessonIds->count() - $suffixEligible->count())];
+        });
     }
 
     public function coverage(TeachingGroup $group): array

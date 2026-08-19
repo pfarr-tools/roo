@@ -99,6 +99,26 @@ it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot',
         ->and($slot->fresh()->status)->toBe('free');
 });
 
+it('ordnet den Jahresplan beim Sperren und Freigeben eines Slots neu', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Reflow UE', 'position' => 1]);
+    $firstLesson = $unit->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
+    $secondLesson = $unit->lessons()->create(['title' => 'Zweite Stunde', 'position' => 2, 'duration' => 1]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $firstLesson, $slots[0]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $secondLesson, $slots[1]);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'absent'])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($firstLesson->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[2]->id)->value('lesson_id'))->toBe($secondLesson->id);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'free'])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($firstLesson->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($secondLesson->id);
+});
+
 it('behandelt das Rückgängigmachen ohne Verschiebung als folgenlose Anfrage', function () {
     [$user, $group] = phaseSixOneGroup();
 

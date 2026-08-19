@@ -230,8 +230,9 @@ class YearPlanController extends Controller
         if (! $revision || empty($revision->payload)) {
             return back()->with('warning', 'Keine rückgängig machbare Verschiebung vorhanden.');
         }
+        $lessonIds = $teachingGroup->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
+        ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
         foreach ($revision->payload['assignments'] as $assignment) {
-            ScheduledLesson::where('lesson_id', $assignment['lesson_id'])->delete();
             ScheduledLesson::create(['lesson_id' => $assignment['lesson_id'], 'schedule_slot_id' => $assignment['schedule_slot_id']]);
         }
         ScheduleSlot::whereKey($revision->payload['blocked_slot_id'])->update(['status' => $revision->payload['previous_status']]);
@@ -293,13 +294,16 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
-        if ($data['status'] !== 'free' && $slot->scheduledLesson()->exists()) {
-            $assignments = $slot->scheduledLesson->lesson->scheduledLessons()->get(['schedule_slot_id', 'lesson_id'])->map(fn ($assignment) => $assignment->only(['schedule_slot_id', 'lesson_id']))->all();
+        $wasAvailable = in_array($slot->status, ['free', 'buffer'], true);
+        $previousStatus = $slot->status;
+        $willBeAvailable = in_array($data['status'], ['free', 'buffer'], true);
+        if ($wasAvailable !== $willBeAvailable) {
+            $assignments = $teachingGroup->teachingUnits()->with('lessons.scheduledLessons')->get()->flatMap->lessons->flatMap->scheduledLessons->map(fn ($assignment) => $assignment->only(['schedule_slot_id', 'lesson_id']))->all();
             $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status']);
             $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null]);
-            $this->revise($this->planFor($teachingGroup), auth()->id(), 'slot_reflow', 'Ausgefallener Termin wurde automatisch verschoben.', ['assignments' => $assignments, 'blocked_slot_id' => $slot->id, 'previous_status' => 'free']);
+            $this->revise($this->planFor($teachingGroup), auth()->id(), 'slot_reflow', 'Terminstatus geändert und Jahresplan neu angeordnet.', ['assignments' => $assignments, 'blocked_slot_id' => $slot->id, 'previous_status' => $previousStatus]);
 
-            return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Ausfall gespeichert und nachfolgende Stunde verschoben.');
+            return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Terminstatus gespeichert und Jahresplan neu angeordnet.');
         }
         $slot->update($data);
 

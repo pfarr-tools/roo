@@ -46,6 +46,7 @@ export default {
     removeCurriculumSchool: 'Schulzuordnung entfernen',
     educationPlans: 'Bildungspläne',
     curricula: 'Curricula',
+    curriculum: 'Curriculum',
     curriculaIntro: 'Curricula importieren, vergleichen und für die eigenen Jahrgänge zusammenstellen.',
     createCurriculum: 'Eigenes Curriculum erstellen',
     compareCurricula: 'Curricula vergleichen',
