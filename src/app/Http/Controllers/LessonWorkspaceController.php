@@ -10,20 +10,22 @@ use App\Models\SocialForm;
 use App\Http\Requests\UpdateLessonExecutionRequest;
 use App\Models\ScheduledLesson;
 use App\Services\CompetencyResolver;
+use App\Services\WscDocInspector;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LessonWorkspaceController extends Controller
 {
-    public function show(Request $request, ScheduleSlot $scheduleSlot, CompetencyResolver $competencyResolver): Response
+    public function show(Request $request, ScheduleSlot $scheduleSlot, CompetencyResolver $competencyResolver, WscDocInspector $inspector): Response
     {
         $group = $scheduleSlot->group;
         $this->authorize('view', $group);
         $scheduleSlot->load([
             'group.school:id,name,short_name',
             'group.schoolYear:id,name',
-            'scheduledLesson.lesson.unit.resources',
+            'scheduledLesson.lesson.unit.resources.lesson',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.unit.competencies.curriculumCompetency',
@@ -34,6 +36,12 @@ class LessonWorkspaceController extends Controller
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        $lesson->unit->resources->each(function ($resource) use ($lesson, $inspector): void {
+            if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
+                $resource->page_count = $inspector->pageCount(Storage::disk('local')->path($resource->storage_path));
+            }
+            $resource->setAttribute('display_name', $this->resourceFilename($lesson->unit, $resource));
+        });
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency))
             ->groupBy('kind')
@@ -51,6 +59,26 @@ class LessonWorkspaceController extends Controller
             'competencyOptions' => EducationPlanCompetency::query()->whereIn('id', $lesson->unit->competencies->pluck('education_plan_competency_id')->filter())->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position'])->get()->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))),
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
         ]);
+    }
+
+    private function resourceFilename($unit, $resource): string
+    {
+        $group = $unit->group()->with('gradeLevels')->first();
+        $grade = $this->filenamePart($group?->gradeLevels->pluck('grade_level')->implode('-') ?: '');
+        $aktenzeichen = $this->filenamePart($group?->aktenzeichen ?: '');
+        $keyword = $this->filenamePart($unit->keyword ?: '');
+        $original = pathinfo($resource->original_name ?: 'Datei', PATHINFO_FILENAME);
+        $extension = pathinfo($resource->original_name ?: '', PATHINFO_EXTENSION);
+        $original = preg_replace('/^\d+(?:\.\d+)*_[^\s]+\s+/u', '', $original) ?: $original;
+        $prefix = $aktenzeichen !== '' ? $aktenzeichen.'_'.$grade : $grade;
+        $lessonPart = $resource->lesson?->position ? str_pad((string) $resource->lesson->position, 2, '0', STR_PAD_LEFT) : null;
+
+        return trim(collect([$prefix, $keyword, $lessonPart, $this->filenamePart($original).($extension ? '.'.$this->filenamePart($extension) : '')])->filter()->implode(' '));
+    }
+
+    private function filenamePart(string $value): string
+    {
+        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), " .-");
     }
 
     public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): \Illuminate\Http\RedirectResponse

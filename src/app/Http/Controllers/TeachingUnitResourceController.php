@@ -27,6 +27,7 @@ class TeachingUnitResourceController extends Controller
         }
         $teachingUnit->resources()->create([
             'organization_id' => $request->user()->organization_id,
+            'lesson_id' => $this->lessonId($request, $teachingUnit),
             'original_name' => $file->getClientOriginalName(),
             'description' => $request->input('description'),
             'storage_path' => $path,
@@ -93,10 +94,33 @@ class TeachingUnitResourceController extends Controller
         $grade = $this->filenamePart($group?->gradeLevels->pluck('grade_level')->implode('-') ?: '');
         $aktenzeichen = $this->filenamePart($group?->aktenzeichen ?: '');
         $keyword = $this->filenamePart($teachingUnit->keyword ?: '');
-        $original = $this->filenamePart($resource->original_name ?: 'Datei');
+        $original = $this->cleanOriginalName($resource->original_name ?: 'Datei');
         $prefix = $aktenzeichen !== '' ? $aktenzeichen.'_'.$grade : $grade;
+        $lessonPart = $resource->lesson?->position ? str_pad((string) $resource->lesson->position, 2, '0', STR_PAD_LEFT) : null;
 
-        return trim(collect([$prefix, $keyword, $original])->filter()->implode(' '));
+        return trim(collect([$prefix, $keyword, $lessonPart, $original])->filter()->implode(' '));
+    }
+
+    private function lessonId(Request $request, TeachingUnit $teachingUnit): ?int
+    {
+        $lessonId = $request->integer('lesson_id') ?: null;
+        if ($lessonId === null) {
+            return null;
+        }
+
+        abort_unless($teachingUnit->lessons()->whereKey($lessonId)->exists(), 422);
+
+        return $lessonId;
+    }
+
+    private function cleanOriginalName(string $value): string
+    {
+        $extension = pathinfo($value, PATHINFO_EXTENSION);
+        $basename = pathinfo($value, PATHINFO_FILENAME);
+        $basename = preg_replace('/^\d+(?:\.\d+)*_[^\s]+\s+/u', '', $basename) ?: $basename;
+        $basename = preg_replace('/^\d+(?:\.\d+)*\s+/u', '', $basename) ?: $basename;
+
+        return $this->filenamePart($basename).($extension !== '' ? '.'.$this->filenamePart($extension) : '');
     }
 
     private function filenamePart(string $value): string

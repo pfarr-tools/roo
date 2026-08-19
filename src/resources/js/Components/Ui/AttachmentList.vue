@@ -35,7 +35,7 @@ function saveDescription(resource) { emit('update', resource, descriptionFor(res
             <i class="bi fs-4 text-primary" :class="iconFor(resource)" aria-hidden="true"></i>
             <div class="flex-grow-1 min-w-0">
                 <div class="d-flex flex-wrap align-items-baseline gap-2">
-                    <strong class="text-break">{{ resource.original_name }}</strong>
+                    <strong class="text-break">{{ resource.display_name || resource.original_name }}</strong>
                     <span class="small text-muted">{{ fileTypeFor(resource) }} · {{ sizeFor(resource.size) }}<span v-if="isWscDoc(resource) && resource.page_count"> ({{ resource.page_count }} {{ pageLabel(resource) }})</span></span>
                 </div>
                 <div class="input-group input-group-sm mt-2">

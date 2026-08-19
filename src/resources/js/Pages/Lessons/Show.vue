@@ -16,7 +16,7 @@ const saveForm = useForm({})
 const executionMode = ref('teacher')
 const currentPhase = ref(0)
 const checkedMaterials = ref([])
-const resourceForm = useForm({ resource: null, description: '' })
+const resourceForm = useForm({ resource: null, description: '', lesson_id: props.lesson.id })
 const toastMessages = ref([])
 let toastId = 0
 const executionForm = useForm({ status: props.slot.scheduled_lesson.status, actual_on: props.slot.scheduled_lesson.actual_on ?? '', execution_notes: props.slot.scheduled_lesson.execution_notes ?? '' })
@@ -30,7 +30,7 @@ function saveExecution() { executionForm.put(`/unterricht/${props.slot.id}/durch
 function markConducted() { executionForm.status = 'conducted'; if (!executionForm.actual_on) executionForm.actual_on = String(props.slot.date).slice(0, 10); saveExecution() }
 function uploadResource() {
     if (!resourceForm.resource) return
-    resourceForm.submit('post', `/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge`, { forceFormData: true, preserveScroll: true, onSuccess: () => resourceForm.reset(), onError: errors => addToast('error', Object.values(errors)[0] || de.uploadAttachmentError) })
+    resourceForm.submit('post', `/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge`, { forceFormData: true, preserveScroll: true, onSuccess: () => resourceForm.reset('resource', 'description'), onError: errors => addToast('error', Object.values(errors)[0] || de.uploadAttachmentError) })
 }
 function addToast(type, message) { const id = ++toastId; toastMessages.value.push({ id, type, message }); window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 5000) }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
