@@ -27,6 +27,7 @@ const statusOptions = [
 ]
 const totalMinutes = computed(() => phases.value.reduce((total, phase) => total + Number(phase.duration_minutes ?? 0), 0))
 const expectedMinutes = computed(() => Number(props.lesson?.duration ?? 1) * 45)
+const phaseKey = phase => phase.id ?? phase.local_key
 
 function addPhase() {
     const template = props.phaseTemplates.find(item => String(item.id) === String(selectedTemplate.value))
