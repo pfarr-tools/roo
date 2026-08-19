@@ -11,6 +11,7 @@ use App\Models\GroupYearPlan;
 use App\Models\Lesson;
 use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
+use App\Models\LessonTemplate;
 use App\Models\PlannedUnit;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
@@ -52,7 +53,7 @@ class YearPlanController extends Controller
             'calendar' => $this->calendar($teachingGroup),
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,external_identifier,number,text', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,external_identifier,number,text', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
                 'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
@@ -91,6 +92,28 @@ class YearPlanController extends Controller
         return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
     }
 
+    public function saveUnitAsTemplate(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $teachingUnit->load(['template', 'lessons']);
+        $attributes = [
+            'title' => $teachingUnit->title,
+            'description' => null,
+            'expected_hours' => max(1, (int) $teachingUnit->lessons->sum('duration')),
+            'notes' => $teachingUnit->notes,
+        ];
+        $template = $teachingUnit->template;
+        if ($template) {
+            $template->update($attributes + ['version' => $template->version + 1]);
+        } else {
+            $template = UnitTemplate::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'version' => 1, 'is_active' => true]);
+            $teachingUnit->update(['unit_template_id' => $template->id]);
+        }
+
+        return back()->with('success', 'UE-Vorlage wurde gespeichert.');
+    }
+
     public function storeLesson(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -108,6 +131,50 @@ class YearPlanController extends Controller
         $lesson->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string']]));
 
         return back()->with('success', 'Stunde wurde gespeichert.');
+    }
+
+    public function destroyLesson(TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $lesson->delete();
+
+        return back()->with('success', 'Stunde wurde aus der UE entfernt.');
+    }
+
+    public function saveLessonAsTemplate(TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $lesson->load(['unit.template', 'template']);
+        $unitTemplate = $lesson->unit->template;
+        if (! $unitTemplate) {
+            $unitTemplate = UnitTemplate::create([
+                'organization_id' => $teachingGroup->organization_id,
+                'title' => $lesson->unit->title,
+                'expected_hours' => max(1, (int) $lesson->unit->lessons()->sum('duration')),
+                'notes' => $lesson->unit->notes,
+                'version' => 1,
+                'is_active' => true,
+            ]);
+            $lesson->unit->update(['unit_template_id' => $unitTemplate->id]);
+        }
+        $attributes = [
+            'unit_template_id' => $unitTemplate->id,
+            'title' => $lesson->title,
+            'duration_minutes' => max(1, $lesson->duration * 45),
+            'objective' => $lesson->learning_goals,
+            'notes' => collect([$lesson->materials, $lesson->homework, $lesson->assessment_note, $lesson->notes])->filter()->implode("\n\n"),
+        ];
+        $template = $lesson->template;
+        if ($template) {
+            $template->update($attributes + ['version' => $template->version + 1]);
+        } else {
+            $template = LessonTemplate::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'version' => 1, 'is_active' => true]);
+            $lesson->update(['lesson_template_id' => $template->id]);
+        }
+
+        return back()->with('success', 'Stunden-Vorlage wurde gespeichert.');
     }
 
     public function updateLessonCompetencies(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse

@@ -9,6 +9,7 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
 use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use App\Models\Organization;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
@@ -17,6 +18,7 @@ use App\Models\SchoolPeriod;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
+use App\Models\UnitTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -137,4 +139,24 @@ it('entfernt Lesson- und UE-Belegungen ohne die eigene Planung zu löschen', fun
     $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanung")->assertRedirect();
 
     expect(ScheduledLesson::count())->toBe(0)->and(TeachingUnit::find($unit->id))->not->toBeNull();
+});
+
+it('bearbeitet UEs, speichert UE und Stunde als Vorlage und entfernt Stunden', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Vorlagen UE', 'notes' => 'Hinweis']);
+    $unit = TeachingUnit::firstOrFail();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/stunden", ['title' => 'Vorlagen Stunde', 'duration' => 2]);
+    $lesson = $unit->lessons()->firstOrFail();
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", ['title' => 'Bearbeitete UE', 'notes' => 'Aktualisiert'])->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/vorlage")->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/vorlage")->assertRedirect();
+
+    expect(UnitTemplate::count())->toBe(1)
+        ->and(LessonTemplate::count())->toBe(1)
+        ->and($unit->fresh()->unit_template_id)->toBe(UnitTemplate::firstOrFail()->id)
+        ->and($lesson->fresh()->lesson_template_id)->toBe(LessonTemplate::firstOrFail()->id);
+
+    $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lesson->id}")->assertRedirect();
+    expect(Lesson::find($lesson->id))->toBeNull();
 });

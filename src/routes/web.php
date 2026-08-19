@@ -58,9 +58,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten', [YearPlanController::class, 'storeTeachingUnit'])->name('year-plans.teaching-units.store');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}', [YearPlanController::class, 'updateTeachingUnit'])->name('year-plans.teaching-units.update');
+    Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/vorlage', [YearPlanController::class, 'saveUnitAsTemplate'])->name('year-plans.teaching-units.template');
     Route::post('/jahresplanung/{teachingGroup}/curriculum-themen/{topic}/uebernehmen', [YearPlanController::class, 'takeCurriculumUnit'])->name('year-plans.curriculum-topics.take');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden', [YearPlanController::class, 'storeLesson'])->name('year-plans.lessons.store');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'updateLesson'])->name('year-plans.lessons.update');
+    Route::delete('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'destroyLesson'])->name('year-plans.lessons.destroy');
+    Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/vorlage', [YearPlanController::class, 'saveLessonAsTemplate'])->name('year-plans.lessons.template');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
     Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden/reihenfolge', [YearPlanController::class, 'reorderLessons'])->name('year-plans.lessons.reorder');

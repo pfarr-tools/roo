@@ -8,12 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['teaching_unit_id', 'title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes'])]
+#[Fillable(['teaching_unit_id', 'lesson_template_id', 'title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes'])]
 class Lesson extends Model
 {
     public function unit(): BelongsTo
     {
         return $this->belongsTo(TeachingUnit::class, 'teaching_unit_id');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(LessonTemplate::class, 'lesson_template_id');
     }
 
     public function competencies(): BelongsToMany
