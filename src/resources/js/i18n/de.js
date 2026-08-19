@@ -379,6 +379,7 @@ export default {
     pagination: 'Seitennavigation',
     page: 'Seite',
     pages: 'Seiten',
+    worksheetCrafter: 'Worksheet Crafter',
     teachingGroup: 'Unterrichtsgruppe',
     teachingGroupsIntro: 'Gruppen eines Schuljahres aus mehreren Klassen zusammenstellen.',
     addTeachingGroup: 'Unterrichtsgruppe anlegen',

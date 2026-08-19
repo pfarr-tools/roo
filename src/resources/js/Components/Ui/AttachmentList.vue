@@ -22,6 +22,7 @@ const sizeFor = bytes => {
 }
 const descriptionFor = resource => descriptions.value[resource.id] ?? resource.description ?? ''
 const isWscDoc = resource => resource.original_name?.toLowerCase().endsWith('.wscdoc')
+const fileTypeFor = resource => isWscDoc(resource) ? de.worksheetCrafter : (resource.mime_type || 'Datei')
 const isPreviewable = resource => isWscDoc(resource) || resource.mime_type?.startsWith('image/') || resource.mime_type?.startsWith('video/') || resource.mime_type?.startsWith('audio/')
 const previewKind = resource => isWscDoc(resource) || resource.mime_type?.startsWith('image/') ? 'image' : resource.mime_type?.startsWith('video/') ? 'video' : 'audio'
 const pageLabel = resource => resource.page_count === 1 ? de.page : de.pages
@@ -35,7 +36,7 @@ function saveDescription(resource) { emit('update', resource, descriptionFor(res
             <div class="flex-grow-1 min-w-0">
                 <div class="d-flex flex-wrap align-items-baseline gap-2">
                     <strong class="text-break">{{ resource.original_name }}</strong>
-                    <span class="small text-muted">{{ resource.mime_type || 'Datei' }} · {{ sizeFor(resource.size) }}<span v-if="resource.page_count"> · {{ resource.page_count }} {{ pageLabel(resource) }}</span></span>
+                    <span class="small text-muted">{{ fileTypeFor(resource) }} · {{ sizeFor(resource.size) }}<span v-if="isWscDoc(resource) && resource.page_count"> ({{ resource.page_count }} {{ pageLabel(resource) }})</span></span>
                 </div>
                 <div class="input-group input-group-sm mt-2">
                     <input :value="descriptionFor(resource)" class="form-control" type="text" placeholder="Beschreibung" @input="descriptions[resource.id] = $event.target.value" @keydown.enter.prevent="saveDescription(resource)">
