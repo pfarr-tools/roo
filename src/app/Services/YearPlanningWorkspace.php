@@ -99,6 +99,7 @@ class YearPlanningWorkspace
     public function scheduleLesson(TeachingGroup $group, Lesson $lesson, ?ScheduleSlot $start = null): array
     {
         abort_unless($lesson->unit->teaching_group_id === $group->id, 404);
+        ScheduledLesson::where('lesson_id', $lesson->id)->delete();
         $slots = $this->availableSlots($group);
         if ($start) {
             $index = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $start->id);
@@ -121,6 +122,7 @@ class YearPlanningWorkspace
     public function scheduleUnit(TeachingGroup $group, TeachingUnit $unit, ?ScheduleSlot $start = null): array
     {
         abort_unless($unit->teaching_group_id === $group->id, 404);
+        ScheduledLesson::whereIn('lesson_id', $unit->lessons()->pluck('id'))->delete();
         $slots = $this->availableSlots($group);
         if ($start) {
             $index = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $start->id);

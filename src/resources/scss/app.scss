@@ -156,6 +156,7 @@ body {
 .planning-column { min-width: 0; }
 .planning-column > .planning-card, .planning-slot { background: var(--bs-tertiary-bg); }
 .planning-day { padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
+.holiday-divider { margin: .75rem 0; padding: .65rem .75rem; border: 1px solid rgba(var(--bs-warning-rgb), .45); border-radius: .45rem; background: rgba(var(--bs-warning-rgb), .12); color: var(--bs-emphasis-color); }
 .planning-slot { padding: .5rem; margin-top: .35rem; border-radius: .35rem; border: 1px solid var(--bs-border-color); }
 .planning-slot.slot-blocked { opacity: .75; }
 .lesson-row { padding: .55rem 0; border-top: 1px solid var(--bs-border-color); cursor: grab; }

@@ -4,7 +4,7 @@ import de from '../../i18n/de'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
-const props = defineProps({ group: Object, workspace: Object, groupOptions: Array })
+const props = defineProps({ group: Object, workspace: Object, groupOptions: Array, holidayPeriods: Array })
 const curriculumOpen = ref(true)
 const expandedUnits = ref([])
 const editorLesson = ref(null)
@@ -13,6 +13,7 @@ const newUnitOpen = ref(false)
 const newUnit = useForm({ title: '', notes: '' })
 const slotsByDate = computed(() => props.workspace.slots.reduce((groups, slot) => { (groups[slot.date] ||= []).push(slot); return groups }, {}))
 const curricula = computed(() => props.workspace.curricula.flatMap(curriculum => curriculum.versions.flatMap(version => version.topics.map(topic => ({ ...topic, curriculum_title: curriculum.title })))))
+const holidays = computed(() => (props.holidayPeriods ?? []).map(holiday => ({ ...holiday, starts_on: String(holiday.starts_on).slice(0, 10), ends_on: String(holiday.ends_on).slice(0, 10) })))
 const isExpanded = unit => expandedUnits.value.includes(unit.id)
 const toggleUnit = unit => { expandedUnits.value = isExpanded(unit) ? expandedUnits.value.filter(id => id !== unit.id) : [...expandedUnits.value, unit.id] }
 const statusClass = slot => ({ free: 'text-bg-light', buffer: 'text-bg-info', absent: 'text-bg-danger', cancelled: 'text-bg-warning', blocked: 'text-bg-secondary' }[slot.status] ?? 'text-bg-light')
@@ -56,7 +57,7 @@ function dropTopic(event) { const value = JSON.parse(event.dataTransfer.getData(
             <div class="year-planning-grid" :class="{ 'curriculum-collapsed': !curriculumOpen }">
                 <section class="planning-column planning-year" aria-labelledby="year-plan-heading">
                     <div class="d-flex justify-content-between align-items-center mb-2"><h2 id="year-plan-heading" class="h5 mb-0">{{ de.yearPlanColumn }}</h2><span class="badge text-bg-light">{{ workspace.slots.length }}</span></div><p class="small text-muted">{{ de.yearPlanQuestion }}</p>
-                    <div v-if="!Object.keys(slotsByDate).length" class="text-muted small">{{ de.noScheduleSlots }}</div>
+                    <div v-for="holiday in holidays" :key="`holiday-${holiday.id}`" class="holiday-divider"><i class="bi bi-sun me-1" aria-hidden="true"></i><strong>{{ holiday.name || de.holidays }}</strong><span class="small ms-2">{{ formatDate(holiday.starts_on) }} – {{ formatDate(holiday.ends_on) }}</span></div><div v-if="!Object.keys(slotsByDate).length" class="text-muted small">{{ de.noScheduleSlots }}</div>
                     <div v-for="(slots, date) in slotsByDate" :key="date" class="planning-day"><h3 class="h6 mb-2">{{ formatDate(date) }}</h3><div v-for="slot in slots" :key="slot.id" class="planning-slot" :class="{ 'slot-blocked': slot.status !== 'free' && slot.status !== 'buffer' }" @dragover.prevent @drop="dropOnSlot($event, slot)"><div class="d-flex align-items-center gap-2"><span class="small text-muted">{{ slot.period_number }}. {{ de.period }}</span><span class="flex-grow-1 text-truncate">{{ slot.scheduled_lesson?.lesson?.title || de.free }}</span><span v-if="slot.scheduled_lesson" class="small text-truncate">{{ slot.scheduled_lesson.lesson.unit.title }}</span><button class="btn btn-sm btn-link p-0" type="button" :title="de.changeSlotStatus" :aria-label="de.changeSlotStatus" @click="markSlot(slot)"><span class="badge" :class="statusClass(slot)">{{ statusLabel(slot) }}</span></button></div></div></div>
                 </section>
                 <section class="planning-column planning-units" aria-labelledby="units-heading" @dragover.prevent @drop="dropTopic">

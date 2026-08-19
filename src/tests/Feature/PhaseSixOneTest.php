@@ -95,3 +95,19 @@ it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot',
     expect(ScheduledLesson::firstOrFail()->schedule_slot_id)->toBe($slot->id)
         ->and($slot->fresh()->status)->toBe('free');
 });
+
+it('verschiebt eine komplette eigene UE beim erneuten Einplanen ohne Doppelbelegung', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Verschiebbare UE']);
+    $unit = TeachingUnit::firstOrFail();
+    foreach (['Erste Stunde', 'Zweite Stunde'] as $title) {
+        $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/stunden", ['title' => $title, 'duration' => 1]);
+    }
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/einplanen", ['schedule_slot_id' => $slots[0]->id]);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/einplanen", ['schedule_slot_id' => $slots[2]->id]);
+
+    expect(ScheduledLesson::whereIn('lesson_id', $unit->lessons()->pluck('id'))->count())->toBe(2)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->count())->toBe(0);
+});

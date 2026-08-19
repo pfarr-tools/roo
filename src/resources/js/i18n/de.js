@@ -202,6 +202,7 @@ export default {
     showCurricula: 'Curricula einblenden',
     collapseCurriculum: 'Curriculum-Spalte einklappen',
     noScheduleSlots: 'Noch keine Unterrichtstermine aus dem Stundenplan.',
+    holidays: 'Ferien',
     noTeachingUnits: 'Noch keine eigenen Unterrichtseinheiten.',
     noLessons: 'Noch keine Stunden.',
     addLesson: 'Stunde hinzufügen',
