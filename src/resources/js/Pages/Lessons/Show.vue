@@ -17,7 +17,7 @@ const resourceLinks = ref((props.resourceLinks ?? []).map(link => ({ ...link }))
 const resourceMaterialItems = ref((props.materialItems ?? []).map(item => ({ ...item })))
 const deletedResourceLinkIds = ref([])
 const deletedMaterialItemIds = ref([])
-const saveForm = useForm({})
+const saveProcessing = ref(false)
 const executionMode = ref('teacher')
 const currentPhase = ref(0)
 const checkedMaterials = ref([])
@@ -28,9 +28,30 @@ const competencyText = competency => competency.competency_presentation?.label |
 const targetCompetencyText = competency => competency.label || competency.text || de.noCompetencyText
 const formatDate = value => new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
 function savePlanning() {
-    saveForm.transform(() => ({ title: props.lesson.title, duration: props.lesson.duration, learning_goals: props.lesson.learning_goals, materials: props.lesson.materials, homework: props.lesson.homework, assessment_note: props.lesson.assessment_note, notes: props.lesson.notes, phases: phaseDraft.value, resource_links: resourceLinks.value, material_items: resourceMaterialItems.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}`, { preserveScroll: true })
+    if (saveProcessing.value) return
+    saveProcessing.value = true
+    try {
+        const phases = (Array.isArray(phaseDraft.value) ? phaseDraft.value : []).map(phase => ({
+            ...phase,
+            social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
+        }))
+        router.put(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}`, { title: props.lesson.title, duration: props.lesson.duration, learning_goals: props.lesson.learning_goals, materials: props.lesson.materials, homework: props.lesson.homework, assessment_note: props.lesson.assessment_note, notes: props.lesson.notes, phases, resource_links: resourceLinks.value, material_items: resourceMaterialItems.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value }, {
+            preserveScroll: true,
+            onSuccess: () => addToast('success', 'Stunde wurde gespeichert.'),
+            onError: errors => addToast('error', Object.values(errors)[0] || 'Die Stunde konnte nicht gespeichert werden.'),
+            onFinish: () => { saveProcessing.value = false },
+        })
+    } catch (error) {
+        saveProcessing.value = false
+        addToast('error', error instanceof Error ? error.message : 'Die Stunde konnte nicht gespeichert werden.')
+    }
 }
 function saveExecution() { executionForm.put(`/unterricht/${props.slot.id}/durchfuehrung`, { preserveScroll: true }) }
+function refreshResources(page) {
+    if (page?.props?.resourceLinks) resourceLinks.value = page.props.resourceLinks.map(link => ({ ...link }))
+    if (page?.props?.materialItems) resourceMaterialItems.value = page.props.materialItems.map(item => ({ ...item }))
+    if (page?.props?.lesson?.resources) props.lesson.resources = page.props.lesson.resources
+}
 function markConducted() { executionForm.status = 'conducted'; if (!executionForm.actual_on) executionForm.actual_on = String(props.slot.date).slice(0, 10); saveExecution() }
 function addToast(type, message) { const id = ++toastId; toastMessages.value.push({ id, type, message }); window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 5000) }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
@@ -43,11 +64,12 @@ const materialChecklistItems = computed(() => [...String(props.lesson.materials 
     <AppShell>
         <div class="planning-toast-container" aria-live="polite" aria-atomic="true"><div v-for="toast in toastMessages" :key="toast.id" class="planning-toast" :class="`planning-toast-${toast.type}`" role="alert"><span>{{ toast.message }}</span><button class="btn-close btn-close-white ms-3" type="button" :aria-label="de.close" @click="toastMessages = toastMessages.filter(item => item.id !== toast.id)"></button></div></div>
         <template #toolbar>
+            <a href="/dashboard" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+            <button v-if="activeView === 'planning'" class="btn btn-sm btn-primary ms-2" type="button" @click="savePlanning"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
+            <button v-else-if="activeView === 'execution'" class="btn btn-sm btn-primary ms-2" type="button" :disabled="executionForm.processing" @click="saveExecution"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
             <div class="btn-group btn-group-sm" role="tablist" :aria-label="de.lessonViews">
                 <button v-for="view in [{ id: 'planning', label: de.lessonPlanning }, { id: 'execution', label: de.lessonExecution }, { id: 'observation', label: de.lessonObservation }]" :key="view.id" class="btn" :class="activeView === view.id ? 'btn-primary' : 'btn-outline-secondary'" type="button" role="tab" :aria-selected="activeView === view.id" @click="activeView = view.id">{{ view.label }}</button>
             </div>
-            <button v-if="activeView === 'planning'" class="btn btn-sm btn-primary ms-2" type="button" :disabled="saveForm.processing" @click="savePlanning"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
-            <button v-else-if="activeView === 'execution'" class="btn btn-sm btn-primary ms-2" type="button" :disabled="executionForm.processing" @click="saveExecution"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
         </template>
         <div class="container-full px-3 py-4">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div><h1 class="h2 mb-1">{{ lesson.title }}</h1><div class="text-muted">{{ formatDate(slot.date) }} · {{ slot.period_number }}. {{ de.period }} · {{ group.name }}</div></div><span class="badge text-bg-primary align-self-start">{{ statusLabel(slot.scheduled_lesson.status) }}</span></div>
@@ -56,7 +78,7 @@ const materialChecklistItems = computed(() => [...String(props.lesson.materials 
                 <h2 id="planning-heading" class="visually-hidden">{{ de.lessonPlanning }}</h2>
                 <div class="row g-4 mb-4">
                     <div class="col-lg-6"><article class="card h-100"><div class="card-body"><div class="d-flex justify-content-between align-items-start"><h2 class="h5">{{ de.lessonMetadata }}</h2><button class="btn btn-sm btn-outline-secondary" type="button" @click="editorOpen = true"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ de.editLesson }}</button></div><dl class="row mb-0 small"><dt class="col-sm-5">{{ de.unit }}</dt><dd class="col-sm-7">{{ unit.title }}</dd><dt class="col-sm-5">{{ de.lessonDuration }}</dt><dd class="col-sm-7">{{ lesson.duration }} {{ de.hours.toLowerCase() }}</dd><dt class="col-sm-5">{{ de.learningGoals }}</dt><dd class="col-sm-7 text-pre-wrap">{{ lesson.learning_goals || '–' }}</dd></dl><div class="row g-3 mt-2"><div class="col-md-6"><h3 class="h6">{{ de.processCompetencies }}</h3><ul v-if="targetCompetencies.process.length" class="small mb-0 ps-3"><li v-for="competency in targetCompetencies.process" :key="competency.id">{{ targetCompetencyText(competency) }}</li></ul><p v-else class="small text-muted mb-0">{{ de.noCompetencies }}</p></div><div class="col-md-6"><h3 class="h6">{{ de.contentCompetencies }}</h3><ul v-if="targetCompetencies.content.length" class="small mb-0 ps-3"><li v-for="competency in targetCompetencies.content" :key="competency.id">{{ targetCompetencyText(competency) }}</li></ul><p v-else class="small text-muted mb-0">{{ de.noCompetencies }}</p></div></div></div></article></div>
-                    <div class="col-lg-6"><article class="card h-100"><div class="card-body"><h2 class="h5">{{ de.materials }}</h2><AttachmentList :resources="lesson.resources ?? []" :resource-links="resourceLinks" :material-items="resourceMaterialItems" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + group.id + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="router.reload({ preserveScroll: true })" @update:resource-links="resourceLinks = $event" @update:material-items="resourceMaterialItems = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" @error="addToast('error', $event)" /></div></article></div>
+                    <div class="col-lg-6"><article class="card h-100"><div class="card-body"><h2 class="h5">{{ de.materials }}</h2><AttachmentList :resources="lesson.resources ?? []" :resource-links="resourceLinks" :material-items="resourceMaterialItems" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + group.id + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="refreshResources" @update:resource-links="resourceLinks = $event" @update:material-items="resourceMaterialItems = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" @error="addToast('error', $event)" /></div></article></div>
                 </div>
                 <article class="card planning-phases-workspace"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4 mb-1">{{ de.phases }}</h2><p class="text-muted mb-0">{{ de.lessonPhasesWorkspaceIntro }}</p></div><span class="badge text-bg-light">{{ phaseDraft.length }} {{ de.phases.toLowerCase() }}</span></div><LessonPhasesTab :lesson="lesson" :phases="phaseDraft" :group-id="group.id" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinks" :material-items="resourceMaterialItems" @update:phases="phaseDraft = $event" /></div></article>
             </section>

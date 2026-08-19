@@ -22,6 +22,9 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 - Angemeldete Ansichten enthalten in der Topbar unmittelbar vor dem Profilmenü
   eine globale Suche. Sie durchsucht nur sichtbare, mandantengeschützte Daten
   und führt zu einer eigenen Ergebnisansicht unter `/suche`.
+- Rücksprungaktionen in der Topbar verwenden für das Schließen bzw. Zurückgehen
+  ein helles Bootstrap-Icon-Button-Muster (`btn btn-sm btn-light`) mit
+  `bi-x-lg`, deutschem `title` und `aria-label`.
 - Karten in Planungs- und Zuordnungsansichten, insbesondere Curriculum-
   Drag-and-drop-Spalten und Unterrichtseinheiten, erhalten eine dezente
   Hintergrundfläche und ausreichenden Kontrast zum Seitenhintergrund.
@@ -377,6 +380,16 @@ Einzelne Stunden schnell vorbereiten und im Unterricht verwenden.
 - einfache Nachplanung
 
 ---
+
+### Bibliothek – abgeschlossener vertikaler Schnitt
+
+Die zentrale Bibliothek ist als eigener, mandantengeschützter Arbeitsbereich
+umgesetzt. Dateien, Webressourcen und Materialbestandteile werden gemeinsam
+durchsucht, nach Typ gefiltert und nach Name oder Eingangsdatum sortiert.
+Beziehungen zu Unterrichtseinheiten, Stunden und Phasen werden angezeigt.
+Die Seite bietet Bearbeiten, Vorschau, Download und Löschen sowie die drei
+globalen Hinzufügen-Aktionen in der Topbar. Die bestehende Bibliotheksauswahl
+in den Anhängen nutzt weiterhin die JSON-Variante derselben Route.
 
 ## Phase 8 – Liedersammlung und Gruppenliederbuch
 

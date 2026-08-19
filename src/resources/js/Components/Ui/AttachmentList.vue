@@ -48,17 +48,30 @@ function uploadFile() {
 }
 function addResourceLink() {
     if (!resourceLinkForm.value.title.trim() || !resourceLinkForm.value.url.trim()) return
+    if (props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
+        router.post(`${props.libraryAttachUrl}/resource/erstellen`, { ...resourceLinkForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => { resourceLinkForm.value = { title: '', url: '' }; activeAdd.value = null; emit('uploaded', page) }, onError: errors => emit('error', Object.values(errors)[0] || 'Die Ressource konnte nicht gespeichert werden.') })
+        return
+    }
     emit('update:resource-links', [...props.resourceLinks, { local_key: `new-link-${Date.now()}`, ...resourceLinkForm.value }])
     resourceLinkForm.value = { title: '', url: '' }
     activeAdd.value = null
 }
 function addMaterialItem() {
     if (!materialItemForm.value.name.trim()) return
+    if (props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
+        router.post(`${props.libraryAttachUrl}/material/erstellen`, { ...materialItemForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => { materialItemForm.value = { name: '', material_number: '', storage_location: '', description: '' }; activeAdd.value = null; emit('uploaded', page) }, onError: errors => emit('error', Object.values(errors)[0] || 'Das Material konnte nicht gespeichert werden.') })
+        return
+    }
     emit('update:material-items', [...props.materialItems, { local_key: `new-material-${Date.now()}`, ...materialItemForm.value }])
     materialItemForm.value = { name: '', material_number: '', storage_location: '', description: '' }
     activeAdd.value = null
 }
 function selectLibraryItem(item) {
+    if ((item.kind === 'resource' || item.kind === 'material') && props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
+        router.post(`${props.libraryAttachUrl}/${item.kind}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page), onError: errors => emit('error', Object.values(errors)[0] || 'Die Zuordnung konnte nicht gespeichert werden.') })
+        activeAdd.value = null
+        return
+    }
     if (item.kind === 'resource') emit('update:resource-links', [...props.resourceLinks, { ...item, local_key: `library-link-${item.id}` }])
     if (item.kind === 'material') emit('update:material-items', [...props.materialItems, { ...item, local_key: `library-material-${item.id}` }])
     if (item.kind === 'file') {

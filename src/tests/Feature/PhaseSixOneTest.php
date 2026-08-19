@@ -154,20 +154,57 @@ it('ordnet Dateien, Ressourcen und MaterialItems einer Phase zu', function () {
     $lesson = $unit->lessons()->create(['title' => 'Ressourcenstunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
     $file = $unit->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'test/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
-    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'teaching_unit_id' => $unit->id, 'title' => 'Erklärvideo', 'url' => 'https://example.test/video']);
+    $lessonFile = $lesson->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Stundenbild.pdf', 'storage_path' => 'test/stundenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $phaseFile = $lesson->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Phasenbild.pdf', 'storage_path' => 'test/phasenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $phaseFile->update(['teaching_unit_id' => null, 'lesson_id' => null]);
+    $phase->resources()->attach($phaseFile->id);
+    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'title' => 'Erklärvideo', 'url' => 'https://example.test/video']);
     $materialItem = MaterialItem::create(['organization_id' => $user->organization_id, 'name' => 'Bibel']);
 
     $response = $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
         'title' => $lesson->title,
         'duration' => 1,
         'resource_links' => [['id' => $link->id, 'title' => $link->title, 'url' => $link->url]],
-        'phases' => [['id' => $phase->id, 'title' => $phase->title, 'resource_ids' => [$file->id], 'resource_link_ids' => [$link->id], 'material_item_ids' => [$materialItem->id]]],
+        'material_items' => [['id' => $materialItem->id, 'name' => $materialItem->name]],
+        'phases' => [['id' => $phase->id, 'title' => $phase->title, 'resource_ids' => [$file->id, $lessonFile->id, $phaseFile->id], 'resource_link_ids' => [$link->id], 'material_item_ids' => [$materialItem->id]]],
     ]);
     $response->assertRedirect();
 
-    expect($phase->fresh()->resources->pluck('id')->all())->toBe([$file->id])
+    expect($phase->fresh()->resources->pluck('id')->all())->toBe([$file->id, $lessonFile->id, $phaseFile->id])
         ->and($phase->fresh()->resourceLinks->pluck('id')->all())->toBe([$link->id])
-        ->and($phase->fresh()->materialItems->pluck('id')->all())->toBe([$materialItem->id]);
+        ->and($phase->fresh()->materialItems->pluck('id')->all())->toBe([$materialItem->id])
+        ->and($lesson->fresh()->materialItems->pluck('id')->all())->toBe([$materialItem->id]);
+});
+
+it('speichert eine neue Ressource direkt mit ihrer Phasenzuordnung', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue Ressource UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Neue Ressourcenstunde', 'position' => 1, 'duration' => 1]);
+    $phase = $lesson->phases()->create(['title' => 'Einstieg', 'position' => 1]);
+
+    $response = $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
+        'title' => $lesson->title,
+        'duration' => 1,
+        'resource_links' => [['local_key' => 'new-link-1', 'title' => 'Neue Quelle', 'url' => 'https://example.test/neu']],
+        'phases' => [['id' => $phase->id, 'title' => $phase->title, 'resource_link_ids' => ['new-link-1']]],
+    ]);
+
+    $response->assertRedirect();
+    expect($phase->fresh()->resourceLinks)->toHaveCount(1);
+});
+
+it('ordnet Bibliotheksressourcen und MaterialItems sofort einer Stunde zu', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bibliotheks UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Bibliotheksstunde', 'position' => 1, 'duration' => 1]);
+    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'title' => 'Bibliothekslink', 'url' => 'https://example.test/bibliothek']);
+    $material = MaterialItem::create(['organization_id' => $user->organization_id, 'name' => 'Bibliotheksmaterial']);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/resource/{$link->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/material/{$material->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
+
+    expect($link->fresh()->lesson_id)->toBe($lesson->id)
+        ->and($lesson->fresh()->materialItems->pluck('id')->all())->toBe([$material->id]);
 });
 
 it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum', function () {

@@ -21,6 +21,7 @@ use App\Models\PlannedUnit;
 use App\Models\ScheduledLesson;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
+use App\Models\ResourceReference;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
 use App\Models\TeachingGroup;
@@ -342,10 +343,8 @@ class YearPlanController extends Controller
             }
             foreach ($data['resource_links'] ?? [] as $link) {
                 if (! empty($link['id'])) {
-                    $existing = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->where(function ($query) use ($lesson): void {
-                        $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
-                    })->firstOrFail();
-                    $existing->update(['title' => $link['title'], 'url' => $link['url']]);
+                    $existing = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->firstOrFail();
+                    $existing->update(['teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? $existing->description]);
                     $resourceLinkIds[$link['local_key'] ?? 'id-'.$existing->id] = $existing->id;
                 } else {
                     $created = ResourceLink::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? null]);
@@ -356,6 +355,9 @@ class YearPlanController extends Controller
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->delete();
             MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_material_item_ids'])->delete();
+            if (array_key_exists('material_items', $data)) {
+                $lesson->materialItems()->sync(array_values($materialItemIdsByKey));
+            }
             if (array_key_exists('phases', $data)) {
                 $phases = collect($data['phases']);
                 $existingIds = $lesson->phases()->pluck('id');
@@ -365,12 +367,27 @@ class YearPlanController extends Controller
                     $resourceIds = array_values(array_filter($phase['resource_ids'] ?? [], 'is_numeric'));
                     $materialItemSelection = collect($phase['material_item_ids'] ?? [])->map(fn ($id) => is_numeric($id) ? (int) $id : ($materialItemIdsByKey[$id] ?? null))->filter()->values()->all();
                     $resourceLinkPhaseIds = collect($phase['resource_link_ids'] ?? [])->map(fn ($id) => is_numeric($id) ? (int) $id : ($resourceLinkIds[$id] ?? null))->filter()->values()->all();
-                    $validResourceIds = $lesson->unit->resources()->whereIn('id', $resourceIds)->pluck('id')->all();
+                    $validResourceIds = ResourceReference::where('organization_id', $teachingGroup->organization_id)
+                        ->whereIn('id', $resourceIds)
+                        ->where(function ($query) use ($lesson): void {
+                            $query->where('teaching_unit_id', $lesson->teaching_unit_id)
+                                ->orWhere('lesson_id', $lesson->id);
+                        })
+                        ->pluck('id')->all();
+                    if (! empty($phase['id'])) {
+                        $phaseResourceIds = ResourceReference::where('organization_id', $teachingGroup->organization_id)
+                            ->whereIn('id', $resourceIds)
+                            ->whereHas('phases', fn ($query) => $query->where('lesson_id', $lesson->id)->whereKey($phase['id']))
+                            ->pluck('id');
+                        $validResourceIds = collect($validResourceIds)->merge($phaseResourceIds)->unique()->values()->all();
+                    }
                     $validMaterialItemIds = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $materialItemSelection)->pluck('id')->all();
                     $validResourceLinkIds = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $resourceLinkPhaseIds)->where(function ($query) use ($lesson): void {
                         $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
                     })->pluck('id')->all();
-                    abort_unless(count($validResourceIds) === count($resourceIds) && count($validMaterialItemIds) === count($materialItemSelection) && count($validResourceLinkIds) === count($resourceLinkPhaseIds), 422, 'Eine Ressource gehört nicht zu dieser Unterrichtseinheit.');
+                    abort_unless(count($validResourceIds) === count($resourceIds), 422, 'Eine Datei gehört nicht zu dieser Unterrichtseinheit.');
+                    abort_unless(count($validResourceLinkIds) === count($resourceLinkPhaseIds), 422, 'Eine Webressource gehört nicht zu dieser Unterrichtseinheit.');
+                    abort_unless(count($validMaterialItemIds) === count($materialItemSelection), 422, 'Ein Material gehört nicht zu dieser Unterrichtseinheit.');
                     $attributes = collect($phase)->except(['id', 'local_key', 'resource_ids', 'resource_link_ids', 'material_item_ids', 'materials', 'media'])->merge(['position' => $position + 1, 'materials' => null, 'media' => null])->all();
                     $socialFormName = trim((string) ($attributes['social_form'] ?? ''));
                     unset($attributes['social_form']);

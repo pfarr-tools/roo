@@ -31,7 +31,16 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::post('/ressourcen/bibliothek/dateien', [ResourceLibraryController::class, 'storeFile'])->name('resources.library.files.store');
+    Route::post('/ressourcen/bibliothek/ressourcen', [ResourceLibraryController::class, 'storeResource'])->name('resources.library.resources.store');
+    Route::post('/ressourcen/bibliothek/materialien', [ResourceLibraryController::class, 'storeMaterial'])->name('resources.library.materials.store');
+    Route::put('/ressourcen/bibliothek/{kind}/{resource}', [ResourceLibraryController::class, 'updateItem'])->name('resources.library.update');
+    Route::delete('/ressourcen/bibliothek/{kind}/{resource}', [ResourceLibraryController::class, 'destroyItem'])->name('resources.library.destroy');
+    Route::get('/ressourcen/bibliothek/dateien/{resource}/download', [ResourceLibraryController::class, 'download'])->name('resources.library.files.download');
+    Route::get('/ressourcen/bibliothek/dateien/{resource}/preview', [ResourceLibraryController::class, 'preview'])->name('resources.library.files.preview');
     Route::post('/jahresplanung/{teachingGroup}/ressourcen/{resource}/zuordnen', [ResourceLibraryController::class, 'assign'])->name('resources.assign');
+    Route::post('/jahresplanung/{teachingGroup}/ressourcen/{kind}/{resource}/zuordnen', [ResourceLibraryController::class, 'assignItem'])->name('resources.assign-item');
+    Route::post('/jahresplanung/{teachingGroup}/ressourcen/{kind}/erstellen', [ResourceLibraryController::class, 'storeAndAssign'])->name('resources.store-and-assign');
     Route::get('/jahresplanung/{teachingGroup}/ressourcen/{kind}/{resource}/zuordnungsstatus', [ResourceLibraryController::class, 'associationStatus'])->name('resources.association-status');
     Route::post('/jahresplanung/{teachingGroup}/ressourcen/{kind}/{resource}/trennen', [ResourceLibraryController::class, 'detach'])->name('resources.detach');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
