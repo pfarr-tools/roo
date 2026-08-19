@@ -161,6 +161,24 @@ it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', funct
     expect($phase->fresh()->position)->toBe(2);
 });
 
+it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ritual UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Neue Stunde', 'position' => 1, 'duration' => 1]);
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Ritualvorlagen', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Ritualstunde', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'description' => 'Wir beginnen gemeinsam.', 'version' => 1, 'is_active' => true]);
+    $group->rituals()->create(['organization_id' => $user->organization_id, 'phase_template_id' => $template->id, 'position' => 1]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, ScheduleSlot::firstOrFail());
+
+    $phase = $lesson->phases()->firstOrFail();
+    expect($phase->phase_template_id)->toBe($template->id)
+        ->and($phase->duration_minutes)->toBe(5)
+        ->and(ScheduledLesson::firstOrFail()->status)->toBe(ScheduledLesson::STATUS_PLANNED);
+});
+
 it('behandelt das Rückgängigmachen ohne Verschiebung als folgenlose Anfrage', function () {
     [$user, $group] = phaseSixOneGroup();
 

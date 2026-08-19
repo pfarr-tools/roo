@@ -349,16 +349,16 @@ Bildungsplandaten bleiben dabei unverändert.
 
 ## Phase 7 – Stundeneditor und Durchführung
 
-Fortschritt: `[~]` Statusmodell, Phasenbearbeitung, Vorlagenübernahme,
-Phasensortierung, Zeitprüfung und die Statusführung im Stundeneditor sind
-umgesetzt. Durchführungsnotizen, Materiallisten sowie Präsentations- und
-Nachplanungsansichten folgen in den nächsten vertikalen Schnitten.
+Fortschritt: `[x]` Statusmodell, Phasenbearbeitung, Vorlagenübernahme,
+Phasensortierung, Zeitprüfung, Gruppenrituale, Materialliste sowie die
+Status- und Durchführungsführung sind umgesetzt.
 
 Der konkrete Arbeitsraum einer eingeplanten Stunde entsteht unter
 `/unterricht/{slot}` mit den Bereichen Planung, Durchführung und Beobachtung.
 Die Planungsansicht bündelt Stundendaten, Materialien und eine umfangreiche
 Phasenansicht; die Stammdatenbearbeitung öffnet den Stundeneditor ohne
-Phasen-Tab.
+Phasen-Tab. Gruppenrituale werden in der Gruppenverwaltung gepflegt und beim
+Einplanen als konkrete Phasen in die Stunde kopiert.
 
 ### Ziel
 

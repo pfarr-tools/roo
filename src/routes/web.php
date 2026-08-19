@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtsgruppen/{teachingGroup}/stundenplan', [TeachingGroupController::class, 'storeTimetableSlot'])->name('teaching-groups.timetable.store');
     Route::put('/unterrichtsgruppen/{teachingGroup}/curricula', [TeachingGroupController::class, 'updateCurricula'])->name('teaching-groups.curricula.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/stundenraster', [TeachingGroupController::class, 'updatePeriods'])->name('teaching-groups.periods.update');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/rituale', [TeachingGroupController::class, 'updateRituals'])->name('teaching-groups.rituals.update');
     Route::post('/schuelerinnen', [TeachingGroupController::class, 'storeStudent'])->name('students.store');
     Route::post('/schuelerinnen/importieren', [TeachingGroupController::class, 'importStudents'])->name('students.import');
     Route::put('/schuelerinnen/{student}', [TeachingGroupController::class, 'updateStudent'])->name('students.update');

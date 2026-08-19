@@ -66,4 +66,9 @@ class TeachingGroup extends Model
     {
         return $this->hasMany(ScheduleSlot::class);
     }
+
+    public function rituals(): HasMany
+    {
+        return $this->hasMany(TeachingGroupRitual::class)->orderBy('position');
+    }
 }

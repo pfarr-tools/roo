@@ -10,11 +10,13 @@ use App\Http\Requests\StoreTimetableSlotRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Requests\UpdateTeachingGroupCurriculaRequest;
 use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
+use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\TeachingGroup;
+use App\Models\PhaseTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -37,7 +39,7 @@ class TeachingGroupController extends Controller
     public function show(TeachingGroup $teachingGroup): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes']);
         $organizationId = auth()->user()->organization_id;
 
         return Inertia::render('TeachingGroups/Show', [
@@ -45,7 +47,19 @@ class TeachingGroupController extends Controller
             'students' => Student::where('organization_id', $organizationId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
             'curricula' => Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->orderBy('title')->get(['id', 'title']),
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),
+            'ritualPhaseTemplates' => PhaseTemplate::where('organization_id', $organizationId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
         ]);
+    }
+
+    public function updateRituals(UpdateTeachingGroupRitualsRequest $request, TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $ids = collect($request->validated()['phase_template_ids'] ?? [])->unique()->values();
+        abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $ids)->count() === $ids->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
+        $teachingGroup->rituals()->delete();
+        $teachingGroup->rituals()->createMany($ids->values()->map(fn (int $id, int $position): array => ['organization_id' => $teachingGroup->organization_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
+
+        return back()->with('success', 'Gruppenrituale wurden gespeichert.');
     }
 
     public function updatePeriods(UpdateTeachingGroupPeriodsRequest $request, TeachingGroup $teachingGroup): RedirectResponse
