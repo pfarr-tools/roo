@@ -96,6 +96,19 @@ it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot',
         ->and($slot->fresh()->status)->toBe('free');
 });
 
+it('behandelt das Rückgängigmachen ohne Verschiebung als folgenlose Anfrage', function () {
+    [$user, $group] = phaseSixOneGroup();
+
+    $this->actingAs($user)
+        ->get("/jahresplanung/{$group->id}")
+        ->assertInertia(fn ($page) => $page->where('canUndoReflow', false));
+
+    $this->actingAs($user)
+        ->post("/jahresplanung/{$group->id}/reflow/rueckgaengig")
+        ->assertRedirect()
+        ->assertSessionHas('warning', 'Keine rückgängig machbare Verschiebung vorhanden.');
+});
+
 it('verschiebt eine komplette eigene UE beim erneuten Einplanen ohne Doppelbelegung', function () {
     [$user, $group] = phaseSixOneGroup();
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Verschiebbare UE']);

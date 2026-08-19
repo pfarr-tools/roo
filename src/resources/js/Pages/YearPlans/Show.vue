@@ -4,7 +4,7 @@ import de from '../../i18n/de'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
-const props = defineProps({ group: Object, workspace: Object, groupOptions: Array, holidayPeriods: Array })
+const props = defineProps({ group: Object, workspace: Object, groupOptions: Array, holidayPeriods: Array, canUndoReflow: Boolean })
 const curriculumOpen = ref(true)
 const expandedUnits = ref([])
 const editorLesson = ref(null)
@@ -64,7 +64,7 @@ function dropTopic(event) { endCurriculumDrag(); const value = JSON.parse(event.
     <AppShell>
         <template #toolbar>
             <a href="/jahresplanung" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
-            <button class="btn btn-sm btn-outline-secondary" type="button" :title="de.undoReflow" :aria-label="de.undoReflow" @click="router.post(`/jahresplanung/${group.id}/reflow/rueckgaengig`)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" :title="de.undoReflow" :aria-label="de.undoReflow" :disabled="!canUndoReflow" @click="router.post(`/jahresplanung/${group.id}/reflow/rueckgaengig`)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
             <label class="visually-hidden" for="active-group">{{ de.activeTeachingGroup }}</label>
             <select id="active-group" class="form-select form-select-sm" :aria-label="de.activeTeachingGroup" :value="group.id" @change="router.visit(`/jahresplanung/${$event.target.value}`)"><option v-for="option in groupOptions" :key="option.id" :value="option.id">{{ option.name }} · {{ option.school_year.name }}</option></select>
             <span class="small text-muted d-none d-md-inline">{{ group.school_year.name }}</span>

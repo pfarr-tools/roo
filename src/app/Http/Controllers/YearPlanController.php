@@ -46,6 +46,7 @@ class YearPlanController extends Controller
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots']),
             'plan' => $plan,
+            'canUndoReflow' => $plan->revisions->contains(fn ($revision) => $revision->action === 'slot_reflow' && ! empty($revision->payload)),
             'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
             'checks' => $this->checks($teachingGroup, $plan),
             'calendar' => $this->calendar($teachingGroup),
@@ -148,7 +149,9 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $revision = $this->planFor($teachingGroup)->revisions()->where('action', 'slot_reflow')->latest()->first();
-        abort_unless($revision && $revision->payload, 422, 'Keine rückgängig machbare Verschiebung vorhanden.');
+        if (! $revision || empty($revision->payload)) {
+            return back()->with('warning', 'Keine rückgängig machbare Verschiebung vorhanden.');
+        }
         foreach ($revision->payload['assignments'] as $assignment) {
             ScheduledLesson::where('lesson_id', $assignment['lesson_id'])->delete();
             ScheduledLesson::create(['lesson_id' => $assignment['lesson_id'], 'schedule_slot_id' => $assignment['schedule_slot_id']]);
