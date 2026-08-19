@@ -158,6 +158,13 @@ body {
 .planning-day { padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
 .holiday-divider { margin: .75rem 0; padding: .65rem .75rem; border: 1px solid rgba(var(--bs-warning-rgb), .45); border-radius: .45rem; background: rgba(var(--bs-warning-rgb), .12); color: var(--bs-emphasis-color); }
 .planning-slot { padding: .5rem; margin-top: .35rem; border-radius: .35rem; border: 1px solid var(--bs-border-color); }
+.planning-card.unit-tone-0, .planning-slot.unit-tone-0 { --unit-accent: var(--bs-primary); --unit-background: rgba(var(--bs-primary-rgb), .08); }
+.planning-card.unit-tone-1, .planning-slot.unit-tone-1 { --unit-accent: var(--bs-success); --unit-background: rgba(var(--bs-success-rgb), .08); }
+.planning-card.unit-tone-2, .planning-slot.unit-tone-2 { --unit-accent: var(--bs-info); --unit-background: rgba(var(--bs-info-rgb), .1); }
+.planning-card.unit-tone-3, .planning-slot.unit-tone-3 { --unit-accent: var(--bs-warning); --unit-background: rgba(var(--bs-warning-rgb), .12); }
+.planning-card.unit-tone-4, .planning-slot.unit-tone-4 { --unit-accent: var(--bs-danger); --unit-background: rgba(var(--bs-danger-rgb), .08); }
+.planning-card.unit-tone-5, .planning-slot.unit-tone-5 { --unit-accent: var(--bs-secondary); --unit-background: rgba(var(--bs-secondary-rgb), .1); }
+.planning-card[class*="unit-tone-"], .planning-slot[class*="unit-tone-"] { background-color: var(--unit-background); border-left: .3rem solid var(--unit-accent); }
 .planning-slot.drop-ready { border-color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .12); box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .16); }
 .planning-slot.slot-blocked { opacity: .75; }
 .lesson-row { padding: .55rem 0; border-top: 1px solid var(--bs-border-color); cursor: grab; }
