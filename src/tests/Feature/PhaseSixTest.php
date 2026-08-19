@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Curriculum;
+use App\Models\CurriculumTopic;
+use App\Models\CurriculumVersion;
 use App\Models\GroupYearPlan;
 use App\Models\LessonOccurrence;
 use App\Models\Organization;
@@ -115,4 +118,16 @@ it('explicitly marks and resumes an interrupted planned unit', function () {
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/einheiten/{$unit->id}/unterbrechen", ['is_interrupted' => false])->assertRedirect();
     expect($unit->fresh()->is_interrupted)->toBeFalse();
     $this->assertDatabaseHas('plan_revisions', ['action' => 'unit_interrupted']);
+});
+
+it('rejects curriculum topics that are not assigned to the teaching group', function () {
+    [$user, , $group] = phaseSixGroup();
+    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Eigene Lehrpläne']);
+    $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'is_editable' => true]);
+    $topic = CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Nicht zugeordnet', 'position' => 1]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", [
+        'title' => 'Fremdes Thema', 'curriculum_topic_id' => $topic->id,
+        'starts_on' => '2026-09-01', 'ends_on' => '2026-09-10', 'planned_hours' => 1,
+    ])->assertStatus(422);
 });
