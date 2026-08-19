@@ -160,3 +160,18 @@ it('bearbeitet UEs, speichert UE und Stunde als Vorlage und entfernt Stunden', f
     $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lesson->id}")->assertRedirect();
     expect(Lesson::find($lesson->id))->toBeNull();
 });
+
+it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $group->gradeLevels()->create(['grade_level' => '4a']);
+    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Jahrgangs-Curriculum']);
+    $group->curricula()->attach($curriculum->id, ['role' => 'primary']);
+    $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'external_identifier' => 'v1', 'is_editable' => false, 'is_complete' => true]);
+    CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Passende UE', 'year' => 4, 'position' => 1]);
+    CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Fremde UE', 'year' => 5, 'position' => 2]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}")
+        ->assertInertia(fn ($page) => $page
+            ->has('workspace.curricula.0.versions.0.topics', 1)
+            ->where('workspace.curricula.0.versions.0.topics.0.title', 'Passende UE'));
+});

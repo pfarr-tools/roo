@@ -144,7 +144,7 @@ export default {
     noCompetencyText: 'Keine Kompetenzformulierung hinterlegt.',
     noSourceCurriculum: 'Ohne Vorlage starten',
     unitTitle: 'Titel der Unterrichtseinheit',
-    hours: 'Zeitbedarf in Stunden',
+    hours: 'Stunden',
     notes: 'Notizen',
     preparationQuestions: 'Vorbereitungsfragen (eine pro Zeile)',
     saveChanges: 'Änderungen speichern',

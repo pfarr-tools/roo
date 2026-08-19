@@ -41,11 +41,12 @@ class YearPlanController extends Controller
     {
         $this->authorize('view', $teachingGroup);
         $plan = $this->planFor($teachingGroup)->load(['units.template:id,title', 'units.curriculumTopic:id,title', 'units.lessons.occurrences', 'revisions.user:id,name']);
+        $gradeLevels = $teachingGroup->gradeLevels()->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter()->values();
 
         $workspace->syncSlots($teachingGroup);
 
         return Inertia::render('YearPlans/Show', [
-            'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots']),
+            'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
             'canUndoReflow' => $plan->revisions->contains(fn ($revision) => $revision->action === 'slot_reflow' && ! empty($revision->payload)),
             'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
@@ -54,7 +55,7 @@ class YearPlanController extends Controller
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
             'workspace' => [
                 'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,external_identifier,number,text', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
-                'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
+                'curricula' => $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
             ],
