@@ -261,6 +261,8 @@ it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken
 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
     expect($slots[1]->fresh()->is_pinned)->toBeTrue();
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => false])->assertRedirect();
+    expect($slots[1]->fresh()->is_pinned)->toBeFalse();
 });
 
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
