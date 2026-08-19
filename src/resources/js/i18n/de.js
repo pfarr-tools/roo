@@ -246,7 +246,7 @@ export default {
     partiallyPlanned: 'Teilweise eingeplant',
     notPlanned: 'Noch nicht eingeplant',
     slotsPlanned: 'Slots eingeplant',
-    competenciesInLessons: 'Kompetenzen in Lessons',
+    competenciesInLessons: 'Kompetenzen abgedeckt',
     coverage: 'Abdeckung',
     free: 'verfügbar',
     available: 'verfügbar',

@@ -31,6 +31,7 @@ const autoPlanForm = useForm({ start_mode: 'free', schedule_slot_id: null, keep_
 const slotsByDate = computed(() => props.workspace.slots.reduce((groups, slot) => { (groups[slot.date] ||= []).push(slot); return groups }, {}))
 const groupGrades = computed(() => (props.group.grade_levels ?? []).map(level => String(level.grade_level ?? level).match(/\d+/)?.[0]).filter(Boolean))
 const curricula = computed(() => props.workspace.curricula.flatMap(curriculum => curriculum.versions.flatMap(version => version.topics.filter(topic => groupGrades.value.includes(String(topic.year))).map(topic => ({ ...topic, curriculum_title: curriculum.title })))))
+const coveragePercent = computed(() => { const total = Number(props.workspace.coverage?.curriculum_total ?? 0); return total ? Math.round((Number(props.workspace.coverage?.curriculum_covered ?? 0) / total) * 100) : 0 })
 const holidays = computed(() => (props.holidayPeriods ?? []).map(holiday => ({ ...holiday, starts_on: String(holiday.starts_on).slice(0, 10), ends_on: String(holiday.ends_on).slice(0, 10) })))
 const planningEntries = computed(() => [...Object.entries(slotsByDate.value).map(([date, slots]) => ({ type: 'day', date, slots })), ...holidays.value.map(holiday => ({ type: 'holiday', date: holiday.starts_on, holiday }))].sort((left, right) => left.date.localeCompare(right.date) || (left.type === 'holiday' ? -1 : 1)))
 const autoPlanSlots = computed(() => props.workspace.slots.filter(slot => ['free', 'buffer'].includes(slot.status) && !slot.scheduled_lesson && !slot.is_pinned))
@@ -118,7 +119,7 @@ function dropTopic(event) { endCurriculumDrag(); const value = JSON.parse(event.
             <h1 class="h2">{{ de.yearPlans }}</h1>
             <div v-if="$page.props.flash?.success" class="alert alert-success" role="status">{{ $page.props.flash.success }}</div>
             <div v-if="$page.props.flash?.warning" class="alert alert-warning" role="alert">{{ $page.props.flash.warning }}</div>
-            <div class="small text-muted mb-3">{{ group.school.name }} · {{ group.school_year.name }} · {{ de.coverage }}: {{ workspace.coverage.curriculum_covered }}/{{ workspace.coverage.curriculum_total }} · {{ workspace.coverage.education_plan_lesson }} {{ de.competenciesInLessons }}</div>
+            <div class="small text-muted mb-3">{{ group.school.name }} · {{ group.school_year.name }} · {{ de.coverage }}: {{ coveragePercent }} % · {{ workspace.coverage.education_plan_lesson }} {{ de.competenciesInLessons }}</div>
             <div class="year-planning-grid" :class="{ 'curriculum-collapsed': !curriculumOpen }">
                 <section class="planning-column planning-year" aria-labelledby="year-plan-heading">
                     <div class="d-flex justify-content-between align-items-center mb-2"><h2 id="year-plan-heading" class="h5 mb-0">{{ de.yearPlanColumn }}</h2><span class="badge text-bg-light">{{ workspace.slots.length }}</span></div><p class="small text-muted">{{ de.yearPlanQuestion }}</p>
