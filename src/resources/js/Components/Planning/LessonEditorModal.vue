@@ -58,7 +58,8 @@ const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total,
 }, 0)
 const competencyCardStyle = competency => {
     const totalHours = (props.unit?.lessons ?? []).reduce((total, lesson) => total + Number(lesson.duration ?? 0), 0)
-    const ratio = totalHours ? Math.min(1, competencyHours(competency) / totalHours) : 0
+    const hours = competencyHours(competency)
+    const ratio = totalHours ? Math.min(1, hours / totalHours) : 0
     return { backgroundColor: hours ? `rgba(var(--bs-success-rgb), ${0.18 + ratio * 0.42})` : 'rgba(var(--bs-secondary-rgb), 0.04)' }
 }
 
