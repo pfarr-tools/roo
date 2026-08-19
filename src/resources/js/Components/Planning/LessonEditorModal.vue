@@ -82,7 +82,11 @@ function addCompetency(option) {
 }
 
 function save() {
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases: phaseDraft.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    const phases = phaseDraft.value.map(phase => ({
+        ...phase,
+        social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
+    }))
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => emit('close'),

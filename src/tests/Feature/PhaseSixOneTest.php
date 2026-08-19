@@ -25,6 +25,8 @@ use App\Models\User;
 use App\Services\YearPlanningWorkspace;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -169,6 +171,22 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
             ->where('targetCompetencies.content.0.label', '3.2.3 (4) – die Sprache der biblischen Bildworte wahrnehmen und deuten')
             ->where('unit.competencies.0.competency_presentation.kind', 'process')
             ->where('unit.competencies.0.competency_presentation.text', 'Wahrnehmen und beschreiben'));
+});
+
+it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', function () {
+    Storage::fake('local');
+    [$user, $group] = phaseSixOneGroup();
+    $group->update(['aktenzeichen' => '62.53']);
+    $group->gradeLevels()->create(['grade_level' => '4']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
+    $file = UploadedFile::fake()->create('Arbeitsblatt.pdf', 12, 'application/pdf');
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge", ['resource' => $file])->assertRedirect();
+    $resource = $unit->resources()->firstOrFail();
+    Storage::disk('local')->assertExists($resource->storage_path);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge/{$resource->id}/download")
+        ->assertDownload('62.53_4 Gottesbilder Arbeitsblatt.pdf');
 });
 
 it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', function () {
