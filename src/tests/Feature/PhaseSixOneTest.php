@@ -168,7 +168,14 @@ it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', fun
     $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Ritualvorlagen', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
     $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Ritualstunde', 'version' => 1, 'is_active' => true]);
     $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'description' => 'Wir beginnen gemeinsam.', 'version' => 1, 'is_active' => true]);
-    $group->rituals()->create(['organization_id' => $user->organization_id, 'phase_template_id' => $template->id, 'position' => 1]);
+    $group->gradeLevels()->create(['grade_level' => '4']);
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}", [
+        'school_id' => $group->school_id,
+        'school_year_id' => $group->school_year_id,
+        'name' => $group->name,
+        'grade_levels' => ['4'],
+        'phase_template_ids' => [$template->id],
+    ])->assertRedirect();
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $firstSlot = ScheduleSlot::firstOrFail();

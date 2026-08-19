@@ -113,6 +113,12 @@ class TeachingGroupController extends Controller
                     DB::table('teaching_group_periods')->insert($periods->map(fn (array $period) => ['teaching_group_id' => $teachingGroup->id, 'school_period_id' => $period['school_period_id'], 'weekday' => $period['weekday']])->all());
                 }
             }
+            if (array_key_exists('phase_template_ids', $data)) {
+                $phaseTemplateIds = collect($data['phase_template_ids'])->unique()->values();
+                abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
+                $teachingGroup->rituals()->delete();
+                $teachingGroup->rituals()->createMany($phaseTemplateIds->map(fn (int $id, int $position): array => ['organization_id' => $teachingGroup->organization_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
+            }
         });
         if ($nameChanged) {
             $teachingGroup->students()->get()->each->searchable();

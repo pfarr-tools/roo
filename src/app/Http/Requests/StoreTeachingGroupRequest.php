@@ -25,6 +25,8 @@ class StoreTeachingGroupRequest extends FormRequest
             'periods' => ['sometimes', 'array'],
             'periods.*.school_period_id' => ['required', 'integer', 'exists:school_periods,id'],
             'periods.*.weekday' => ['required', 'integer', 'between:1,5'],
+            'phase_template_ids' => ['sometimes', 'array'],
+            'phase_template_ids.*' => ['required', 'integer', 'distinct'],
         ];
     }
 }
