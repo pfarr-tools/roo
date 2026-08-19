@@ -124,7 +124,7 @@ function savePhase() {
                                 <div v-for="competency in unitCompetencies" :key="competency.id" class="col-md-6">
                                     <label class="form-check border rounded p-2 ps-5 h-100">
                                         <input v-model="competencyForm.competency_ids" class="form-check-input" type="checkbox" :value="competency.id">
-                                        <span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.secondary }}</span></span>
+                                        <span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.fromLesson }}</span></span>
                                     </label>
                                 </div>
                             </div>

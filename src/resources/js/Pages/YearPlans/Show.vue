@@ -93,7 +93,17 @@ function removeUnitCompetency(competency) { if (!window.confirm(de.removeCompete
 function uploadUnitResource() { resourceForm.post(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge`, { forceFormData: true, preserveState: true, preserveScroll: true, onSuccess: response => { refreshEditorUnit(response); resourceForm.reset() } }) }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge/${resource.id}`, { preserveState: true, preserveScroll: true, onSuccess: refreshEditorUnit }) }
 function deleteUnitResource(resource) { if (window.confirm(de.deleteAttachmentConfirm)) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge/${resource.id}`, { preserveState: true, preserveScroll: true, onSuccess: refreshEditorUnit }) }
-function addLesson(unit) { useForm({ title: `${unit.title} – neue Stunde`, duration: 1 }).post(`/jahresplanung/${props.group.id}/eigene-einheiten/${unit.id}/stunden`) }
+function addLesson(unit) {
+    const title = `${unit.title} – neue Stunde`
+    useForm({ title, duration: 1 }).post(`/jahresplanung/${props.group.id}/eigene-einheiten/${unit.id}/stunden`, {
+        onSuccess: response => {
+            expandedUnits.value = expandedUnits.value.includes(unit.id) ? expandedUnits.value : [...expandedUnits.value, unit.id]
+            const updatedUnit = response.props.workspace?.units?.find(candidate => candidate.id === unit.id)
+            const createdLesson = updatedUnit?.lessons?.find(lesson => lesson.title === title) ?? updatedUnit?.lessons?.at(-1)
+            if (createdLesson) lessonEditor.value = createdLesson
+        },
+    })
+}
 function schedule(lesson, slot = null) { useForm({ schedule_slot_id: slot?.id ?? null }).post(`/jahresplanung/${props.group.id}/lessons/${lesson.id}/einplanen`) }
 function scheduleUnit(unit, slot = null) { useForm({ schedule_slot_id: slot?.id ?? null }).post(`/jahresplanung/${props.group.id}/eigene-einheiten/${unit.id}/einplanen`) }
 function unscheduleLesson(lesson, moveFollowing = false) { useForm({ move_following: moveFollowing }).delete(`/jahresplanung/${props.group.id}/lessons/${lesson.id}/einplanung`) }
