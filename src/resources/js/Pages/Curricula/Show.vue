@@ -4,6 +4,7 @@ import de from '../../i18n/de'
 import { formatCompetencyIdentifier } from '../../utils/competencies'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, reactive, ref } from 'vue'
+import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ curriculum: Object, version: Object, educationPlans: Array, schoolTypes: Array })
 const denominations = ['evangelical', 'catholic', 'old_catholic', 'syriac_orthodox']
@@ -38,8 +39,8 @@ function drop(event, year) { const topic = props.version.topics.find(item => Str
 function saveCurriculum() { curriculumForm.put(`/curricula/${props.curriculum.id}`, { preserveScroll: true, onSuccess: () => { showCurriculumForm.value = false } }) }
 function saveTopic(topic) { router.put(`/curricula/${props.curriculum.id}/themen/${topic.id}`, topicForms[topic.id], { preserveScroll: true, onSuccess: () => { editingTopic.value = null } }) }
 function addTopic() { addForm.post(`/curricula/${props.curriculum.id}/themen`, { preserveScroll: true, onSuccess: () => { addForm.reset(); showAddForm.value = false } }) }
-function deleteCurriculum() { if (window.confirm(de.deleteCurriculumConfirm)) router.delete(`/curricula/${props.curriculum.id}`) }
-function createVersion() { if (window.confirm(`${de.newCurriculumVersion}?`)) router.post(`/curricula/${props.curriculum.id}/fassungen`) }
+async function deleteCurriculum() { if (await requestConfirmation({ message: de.deleteCurriculumConfirm })) router.delete(`/curricula/${props.curriculum.id}`) }
+async function createVersion() { if (await requestConfirmation({ message: `${de.newCurriculumVersion}?` })) router.post(`/curricula/${props.curriculum.id}/fassungen`) }
 function addBinding() { curriculumForm.education_plan_bindings.push({ denomination: '', subject: '', plan_code: '' }) }
 function removeBinding(index) { curriculumForm.education_plan_bindings.splice(index, 1) }
 function openCompetencies(topic, kind) {

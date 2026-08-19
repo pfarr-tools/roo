@@ -3,6 +3,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
+import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ group: Object, students: Array, curricula: Array, schoolPeriods: Array, ritualPhaseTemplates: Array })
 const selectedStudent = ref(null)
@@ -75,8 +76,8 @@ function editStudent(student) {
     editStudentForm.reset()
 }
 function saveStudent() { editStudentForm.put(`/schuelerinnen/${selectedStudent.value.id}`, { onSuccess: () => { selectedStudent.value = null } }) }
-function deleteStudent(student) { if (window.confirm(de.deleteStudentConfirm)) useForm({}).delete(`/schuelerinnen/${student.id}`) }
-function remove(student) { if (window.confirm(`${student.first_name} ${student.last_name} aus der Gruppe entfernen?`)) useForm({}).delete(`/unterrichtsgruppen/${props.group.id}/mitglieder/${student.id}`) }
+async function deleteStudent(student) { if (await requestConfirmation({ message: de.deleteStudentConfirm })) useForm({}).delete(`/schuelerinnen/${student.id}`) }
+async function remove(student) { if (await requestConfirmation({ message: `${student.first_name} ${student.last_name} aus der Gruppe entfernen?` })) useForm({}).delete(`/unterrichtsgruppen/${props.group.id}/mitglieder/${student.id}`) }
 </script>
 
 <template>

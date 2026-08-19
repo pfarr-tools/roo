@@ -1,6 +1,7 @@
 <script setup>
 import AppShell from '../../Components/Ui/AppShell.vue'
 import { ref } from 'vue'
+import { requestConfirmation } from '../../utils/confirmation'
 import { router, useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
 
@@ -36,8 +37,8 @@ function save() {
     else form.post('/stunden-vorlagen', options)
 }
 
-function remove(template) {
-    if (window.confirm(de.deleteLessonTemplateConfirm)) router.delete(`/stunden-vorlagen/${template.id}`)
+async function remove(template) {
+    if (await requestConfirmation({ message: de.deleteLessonTemplateConfirm })) router.delete(`/stunden-vorlagen/${template.id}`)
 }
 
 function filter() {
@@ -52,8 +53,8 @@ function uploadResource(template) {
     resourceForm.post(`/stunden-vorlagen/${template.id}/anhaenge`, { forceFormData: true, onSuccess: () => resourceForm.reset() })
 }
 
-function removeResource(template, resource) {
-    if (window.confirm(`${de.attachments}: ${resource.original_name} wirklich löschen?`)) router.delete(`/stunden-vorlagen/${template.id}/anhaenge/${resource.id}`)
+async function removeResource(template, resource) {
+    if (await requestConfirmation({ message: `${de.attachments}: ${resource.original_name} wirklich löschen?` })) router.delete(`/stunden-vorlagen/${template.id}/anhaenge/${resource.id}`)
 }
 </script>
 

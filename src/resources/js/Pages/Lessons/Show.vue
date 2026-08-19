@@ -5,6 +5,7 @@ import LessonEditorModal from '../../Components/Planning/LessonEditorModal.vue'
 import LessonPhasesTab from '../../Components/Planning/LessonPhasesTab.vue'
 import de from '../../i18n/de'
 import { ref } from 'vue'
+import { requestConfirmation } from '../../utils/confirmation'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
@@ -33,7 +34,7 @@ function saveExecution() { executionForm.put(`/unterricht/${props.slot.id}/durch
 function markConducted() { executionForm.status = 'conducted'; if (!executionForm.actual_on) executionForm.actual_on = String(props.slot.date).slice(0, 10); saveExecution() }
 function addToast(type, message) { const id = ++toastId; toastMessages.value.push({ id, type, message }); window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 5000) }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
-function deleteResource(resource) { if (window.confirm(de.deleteAttachmentConfirm)) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
+async function deleteResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
 const statusLabel = status => ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed }[status] ?? status)
 const materialChecklistItems = computed(() => [...String(props.lesson.materials ?? '').split('\n'), ...(props.lesson.phases ?? []).flatMap(phase => String(phase.materials ?? '').split('\n'))].map(item => item.trim()).filter(Boolean).filter((item, index, all) => all.indexOf(item) === index))
 </script>

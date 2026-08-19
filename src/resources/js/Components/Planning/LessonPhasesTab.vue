@@ -1,5 +1,6 @@
 <script setup>
 import de from '../../i18n/de'
+import { requestConfirmation } from '../../utils/confirmation'
 import PhaseResourcePicker from './PhaseResourcePicker.vue'
 import { router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
@@ -62,8 +63,8 @@ function phaseMaterialMedia(phase) {
     return [...files, ...links, ...items].filter(Boolean).join('\n') || '–'
 }
 
-function removePhase(phase) {
-    if (window.confirm(de.deletePhaseConfirm)) { phases.value = phases.value.filter(item => item !== phase); emit('update:phases', phases.value) }
+async function removePhase(phase) {
+    if (await requestConfirmation({ message: de.deletePhaseConfirm })) { phases.value = phases.value.filter(item => item !== phase); emit('update:phases', phases.value) }
 }
 
 function movePhase(index, direction) {

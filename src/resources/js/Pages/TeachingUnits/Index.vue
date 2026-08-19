@@ -4,6 +4,7 @@ import AttachmentList from '../../Components/Ui/AttachmentList.vue'
 import de from '../../i18n/de'
 import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ units: Array, educationPlans: Array, filters: Object, materialItems: { type: Array, default: () => [] }, phaseTemplates: Array, lessonTemplates: Array, socialForms: { type: Array, default: () => [] } })
 const search = ref(props.filters?.q ?? '')
@@ -26,11 +27,11 @@ function updateResourceDescription(resource, description) { useForm({ descriptio
 function deleteResource(resource) { router.delete(`${resourceBaseUrl()}/${resource.id}`, { preserveScroll: true, onSuccess: refreshEditingUnit }) }
 function refreshEditingUnit(response) { const units = response?.props?.units ?? response?.props?.workspace?.units ?? []; const updated = units.find(unit => unit.id === editing.value?.id); if (updated) editing.value = updated }
 function reloadEditingUnit() { router.reload({ preserveScroll: true, onSuccess: refreshEditingUnit }) }
-function remove(unit) { if (window.confirm(de.deleteUnitConfirm)) router.delete(`/unterrichtseinheiten/${unit.id}`) }
+async function remove(unit) { if (await requestConfirmation({ message: de.deleteUnitConfirm })) router.delete(`/unterrichtseinheiten/${unit.id}`) }
 function editTemplate(template) { templateEditing.value = template; templateForm.defaults({ lesson_template_id: template.lesson_template_id, title: template.title, duration_minutes: template.duration_minutes, social_form: template.social_form?.name ?? '', teacher_interaction: template.teacher_interaction ?? '', learner_activity: template.learner_activity ?? '', differentiation: template.differentiation ?? '', didactic_comment: template.didactic_comment ?? '', material: template.material ?? '', media: template.media ?? '' }); templateForm.reset(); templateForm.clearErrors() }
 function newTemplate() { templateEditing.value = {}; templateForm.reset(); templateForm.clearErrors() }
 function saveTemplate() { const url = templateEditing.value.id ? `/unterrichtseinheiten/phasen-vorlagen/${templateEditing.value.id}` : '/unterrichtseinheiten/phasen-vorlagen'; const method = templateEditing.value.id ? 'put' : 'post'; templateForm[method](url, { onSuccess: () => { templateEditing.value = null } }) }
-function removeTemplate(template) { if (window.confirm(de.deletePhaseTemplateConfirm)) router.delete(`/unterrichtseinheiten/phasen-vorlagen/${template.id}`) }
+async function removeTemplate(template) { if (await requestConfirmation({ message: de.deletePhaseTemplateConfirm })) router.delete(`/unterrichtseinheiten/phasen-vorlagen/${template.id}`) }
 </script>
 
 <template>

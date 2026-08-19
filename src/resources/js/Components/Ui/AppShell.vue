@@ -1,6 +1,7 @@
 <script setup>
 import logo from '../../../images/branding/roo-logo.png'
 import icon from '../../../images/branding/roo-icon.png'
+import ConfirmationModal from './ConfirmationModal.vue'
 import de from '../../i18n/de'
 import { computed, ref } from 'vue'
 
@@ -46,6 +47,7 @@ defineProps({
 
 <template>
     <div :class="['roo-app', { 'roo-sidebar-expanded': sidebarExpanded }]">
+        <ConfirmationModal />
         <aside v-if="authenticated && showHeader" class="roo-sidebar" aria-label="Module" @mouseenter="sidebarHovered = true" @mouseleave="sidebarHovered = false">
             <div class="roo-sidebar-brand"><a class="roo-brand" :href="authenticated ? '/dashboard' : '/'"><img class="roo-sidebar-icon" :src="icon" alt="Roo – Religionsunterricht organisieren"><span v-if="sidebarExpanded" class="roo-sidebar-name">Roo</span></a><button class="btn btn-sm btn-link roo-sidebar-toggle" type="button" :aria-label="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" :title="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" @click="sidebarPinned = !sidebarPinned"><i :class="sidebarPinned ? 'bi bi-pin-angle-fill' : 'bi bi-pin-angle'" aria-hidden="true"></i></button></div>
             <nav class="roo-module-nav" :aria-label="'Hauptnavigation – ' + labels.modules">

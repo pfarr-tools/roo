@@ -3,6 +3,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import de from '../../i18n/de'
 import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ school: Object })
 const showSchedule = ref(false)
@@ -11,7 +12,7 @@ const periods = useForm({ periods: Array.from({ length: 12 }, (_, index) => { co
 function endAt(start) { if (!start) return ''; const [hours, minutes] = start.split(':').map(Number); const total = hours * 60 + minutes + 45; return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}` }
 function save() { form.put(`/schulen/${props.school.slug}`) }
 function savePeriods() { periods.transform(data => ({ periods: data.periods.filter(period => period.starts_at) })).put(`/schulen/${props.school.slug}/stundenraster`, { onSuccess: () => { showSchedule.value = false } }) }
-function removeSchool() { if (window.confirm(de.deleteSchoolConfirm)) router.delete(`/schulen/${props.school.slug}`) }
+async function removeSchool() { if (await requestConfirmation({ message: de.deleteSchoolConfirm })) router.delete(`/schulen/${props.school.slug}`) }
 </script>
 
 <template>

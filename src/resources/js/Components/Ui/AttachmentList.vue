@@ -2,6 +2,7 @@
 import de from '../../i18n/de'
 import { computed, ref, watch } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
+import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, libraryMaterialItems: { type: Array, default: () => [] }, libraryAttachUrl: { type: String, default: '' }, libraryTargetType: { type: String, default: '' }, libraryTargetId: { type: [String, Number], default: null }, materialText: { type: String, default: '' }, downloadBaseUrl: { type: String, required: true }, uploadUrl: { type: String, default: '' }, uploadLessonId: { type: [String, Number], default: null }, manage: { type: Boolean, default: false } })
 const emit = defineEmits(['update', 'delete', 'uploaded', 'select-resource', 'update:resource-links', 'update:material-items', 'delete:resource-link', 'delete:material-item', 'error'])
@@ -92,12 +93,9 @@ async function removeItem(type, item) {
         if (!response.ok) throw new Error('association-status')
         const status = await response.json()
         let permanent = false
-        if (status.association_count <= 1) {
-            if (!window.confirm(de.deleteResourcePermanentlyConfirm)) permanent = false
-            else permanent = true
-        } else if (!window.confirm(de.detachResourceConfirm)) {
-            return
-        }
+        if (status.association_count <= 1) permanent = await requestConfirmation({ title: de.deleteAttachment, message: de.deleteResourcePermanentlyConfirm, actions: [{ value: false, label: de.keepInLibrary, variant: 'outline-secondary' }, { value: true, label: de.deletePermanently, variant: 'danger' }, { value: 'cancel', label: de.cancel, variant: 'secondary' }] })
+        else if (!await requestConfirmation({ title: de.deleteAttachment, message: de.detachResourceConfirm, actions: [{ value: true, label: de.removeAssociation, variant: 'danger' }, { value: false, label: de.cancel, variant: 'secondary' }] })) return
+        if (permanent === 'cancel') return
         router.post(`${props.libraryAttachUrl}/${type}/${item.id}/trennen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId, permanent }, { preserveScroll: true, onSuccess: page => removeFromLocalList(type, item, page), onError: errors => emit('error', Object.values(errors)[0] || de.deleteAttachmentConfirm) })
     } catch {
         emit('error', de.deleteAttachmentConfirm)
