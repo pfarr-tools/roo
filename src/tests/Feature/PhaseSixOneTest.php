@@ -150,10 +150,13 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Wahrnehmen', 'position' => 1]);
     $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.1', 'text' => '2.1.1 Wahrnehmen und beschreiben', 'position' => 1, 'is_active' => true]);
+    $contentArea = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => '3.2.3', 'title' => 'Biblische Bildworte', 'position' => 2]);
+    $contentCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.2.3.4', 'text' => '(4) die Sprache der biblischen Bildworte wahrnehmen und deuten', 'position' => 1, 'is_active' => true]);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
     $link = $unit->competencies()->create(['education_plan_competency_id' => $educationCompetency->id]);
+    $contentLink = $unit->competencies()->create(['education_plan_competency_id' => $contentCompetency->id]);
     $lesson = $unit->lessons()->create(['title' => 'Kompetenzstunde', 'position' => 1, 'duration' => 1]);
-    $lesson->competencies()->attach($link->id);
+    $lesson->competencies()->attach([$link->id, $contentLink->id]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'planned']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => 'planned']);
 
@@ -162,6 +165,8 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
             ->where('targetCompetencies.process.0.kind', 'process')
             ->where('targetCompetencies.process.0.text', 'Wahrnehmen und beschreiben')
             ->where('targetCompetencies.process.0.label', '2.1.1 (1) – Wahrnehmen und beschreiben')
+            ->where('targetCompetencies.content.0.text', 'die Sprache der biblischen Bildworte wahrnehmen und deuten')
+            ->where('targetCompetencies.content.0.label', '3.2.3 (4) – die Sprache der biblischen Bildworte wahrnehmen und deuten')
             ->where('unit.competencies.0.competency_presentation.kind', 'process')
             ->where('unit.competencies.0.competency_presentation.text', 'Wahrnehmen und beschreiben'));
 });

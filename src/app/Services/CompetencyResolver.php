@@ -109,7 +109,7 @@ class CompetencyResolver
             return '';
         }
 
-        $identifierPattern = $identifier !== '' ? preg_quote($identifier, '/').'|'.preg_quote((string) preg_replace('/\s*\(\d+\)$/', '', $identifier), '/') : '(?:\d+(?:\.\d+){2,4}(?:\s*\(\d+\))?)';
+        $identifierPattern = $identifier !== '' ? preg_quote($identifier, '/').'|'.preg_quote((string) preg_replace('/\s*\(\d+\)$/', '', $identifier), '/').'|'.preg_quote((string) preg_replace('/^.*(\(\d+\))$/', '$1', $identifier), '/') : '(?:\d+(?:\.\d+){2,4}(?:\s*\(\d+\))?)';
 
         return trim((string) preg_replace('/^\s*'.$identifierPattern.'\s*(?:[-–:]\s*)?[GME]?\s*/iu', '', $text));
     }
