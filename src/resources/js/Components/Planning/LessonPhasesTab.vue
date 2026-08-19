@@ -12,6 +12,8 @@ const resourceLinks = computed(() => props.resourceLinks)
 const editing = ref(null)
 const selectedTemplate = ref('')
 const newPhaseTitle = ref('')
+const newPhaseDuration = ref(null)
+const newPhaseSocialForm = ref('')
 const phaseForm = ref({ title: '', duration_minutes: null, social_form: '', teacher_interaction: '', learner_activity: '', differentiation: '', didactic_comment: '', resource_ids: [], resource_link_ids: [], material_item_ids: [] })
 
 watch(() => props.phases, value => { phases.value = value.map(phase => ({ ...phase })) }, { immediate: true })
@@ -38,8 +40,8 @@ function addPhase() {
         local_key: `new-${Date.now()}-${phases.value.length}`,
         phase_template_id: template?.id ?? null,
         title: template?.title ?? newPhaseTitle.value,
-        duration_minutes: template?.duration_minutes ?? null,
-        social_form: template?.social_form?.name ?? '',
+        duration_minutes: newPhaseDuration.value ?? template?.duration_minutes ?? null,
+        social_form: newPhaseSocialForm.value || template?.social_form?.name || '',
         teacher_interaction: template?.teacher_interaction ?? '',
         learner_activity: template?.learner_activity ?? '',
         differentiation: template?.differentiation ?? '',
@@ -47,7 +49,7 @@ function addPhase() {
         resource_ids: [], resource_link_ids: [], material_item_ids: [],
     })
     emit('update:phases', phases.value)
-    selectedTemplate.value = ''; newPhaseTitle.value = ''
+    selectedTemplate.value = ''; newPhaseTitle.value = ''; newPhaseDuration.value = null; newPhaseSocialForm.value = ''
 }
 
 function editPhase(phase) {
@@ -96,13 +98,15 @@ function savePhaseAsTemplate(phase) {
             <div class="form-text">{{ de.lessonStatusHint }}</div>
         </div>
 
-        <div class="input-group mb-3">
-            <input v-model="newPhaseTitle" class="form-control" :placeholder="de.phaseTitle" :disabled="Boolean(selectedTemplate)">
-            <select v-model="selectedTemplate" class="form-select" :aria-label="de.insertPhaseTemplate">
+        <div class="row g-2 mb-3">
+            <div class="col-lg-4"><input v-model="newPhaseTitle" class="form-control" :placeholder="de.phaseTitle" :disabled="Boolean(selectedTemplate)"></div>
+            <div class="col-lg-3"><input v-model="newPhaseDuration" class="form-control" type="number" min="1" max="999" :placeholder="de.phaseDuration" aria-label="Dauer der neuen Phase"></div>
+            <div class="col-lg-3"><input v-model="newPhaseSocialForm" class="form-control" list="new-phase-social-forms" :placeholder="de.socialForm" aria-label="Sozialform der neuen Phase"><datalist id="new-phase-social-forms"><option v-for="socialForm in socialForms" :key="socialForm.id" :value="socialForm.name"></option></datalist></div>
+            <div class="col-lg-2"><select v-model="selectedTemplate" class="form-select" :aria-label="de.insertPhaseTemplate">
                 <option value="">{{ de.insertPhaseTemplate }}</option>
                 <option v-for="template in phaseTemplates" :key="template.id" :value="template.id">{{ template.title }}</option>
-            </select>
-            <button class="btn btn-primary" type="button" :disabled="!newPhaseTitle && !selectedTemplate" @click="addPhase">{{ de.addPhase }}</button>
+            </select></div>
+            <div class="col-12"><button class="btn btn-primary" type="button" :disabled="!newPhaseTitle && !selectedTemplate" @click="addPhase">{{ de.addPhase }}</button></div>
         </div>
         <div v-if="totalMinutes" class="alert mb-3" :class="totalMinutes === expectedMinutes ? 'alert-success' : 'alert-warning'" role="status">
             {{ de.phaseTimeSummary(totalMinutes, expectedMinutes) }}
