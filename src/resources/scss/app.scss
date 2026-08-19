@@ -159,6 +159,7 @@ body {
 .planning-day { padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
 .holiday-divider { margin: .75rem 0; padding: .65rem .75rem; border: 1px solid rgba(var(--bs-warning-rgb), .45); border-radius: .45rem; background: rgba(var(--bs-warning-rgb), .12); color: var(--bs-emphasis-color); }
 .planning-slot { padding: .5rem; margin-top: .35rem; border-radius: .35rem; border: 1px solid var(--bs-border-color); }
+.planning-slot-label { min-width: 0; overflow-wrap: anywhere; }
 .planning-card.unit-tone-0, .planning-slot.unit-tone-0 { --unit-accent: var(--bs-primary); --unit-background: rgba(var(--bs-primary-rgb), .08); }
 .planning-card.unit-tone-1, .planning-slot.unit-tone-1 { --unit-accent: var(--bs-success); --unit-background: rgba(var(--bs-success-rgb), .08); }
 .planning-card.unit-tone-2, .planning-slot.unit-tone-2 { --unit-accent: var(--bs-info); --unit-background: rgba(var(--bs-info-rgb), .1); }
