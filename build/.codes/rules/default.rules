@@ -1,0 +1,35 @@
+prefix_rule(
+    pattern = ["./roo", "npm", "run", "build"],
+    decision = "allow",
+)
+
+prefix_rule(
+    pattern = ["./roo", "npm", "test"],
+    decision = "allow",
+)
+
+prefix_rule(
+    pattern = ["./roo", "php", "artisan", "test"],
+    decision = "allow",
+)
+
+prefix_rule(
+    pattern = ["./roo", "pint"],
+    decision = "allow",
+)
+
+prefix_rule(
+    pattern = ["./roo", "test"],
+    decision = "allow",
+)
+
+prefix_rule(
+    pattern = ["git", "short"],
+    decision = "allow",
+)
+
+
+prefix_rule(
+    pattern = ["git", "diff", "--check"],
+    decision = "allow",
+)

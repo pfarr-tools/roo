@@ -373,3 +373,20 @@ Eine Aufgabe ist erst abgeschlossen, wenn:
   `build`, `ci` und `chore`.
 - Commit-Nachrichten bleiben innerhalb eines Pull Requests konsistent und
   beschreiben eine fachlich zusammenhängende Änderung.
+
+### Ausführung von Validierungsbefehlen
+
+Validierungsbefehle sollen möglichst direkt ausgeführt werden, damit die Codex-Regeln in `default.rules` auf die einzelnen Befehle matchen können.
+
+Insbesondere:
+
+- keine Ausgabe in variabel benannte `/tmp`-Logdateien umleiten,
+- keine Konstruktionen wie `status=$?; ...; exit $status` verwenden,
+- keine unnötigen `bash -lc`-Wrapper erzeugen,
+- stattdessen Befehle direkt und möglichst einfach mit `&&` verketten.
+
+Bevorzugt zum Beispiel:
+
+```bash
+./roo test --compact && ./roo npm run build && git diff --check
+
