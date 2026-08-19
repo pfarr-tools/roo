@@ -20,6 +20,8 @@ use App\Models\PhaseTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,7 +41,7 @@ class TeachingGroupController extends Controller
     public function show(TeachingGroup $teachingGroup): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet']);
         $organizationId = auth()->user()->organization_id;
 
         return Inertia::render('TeachingGroups/Show', [
@@ -49,6 +51,25 @@ class TeachingGroupController extends Controller
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),
             'ritualPhaseTemplates' => PhaseTemplate::where('organization_id', $organizationId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
         ]);
+    }
+
+    public function uploadSongbookTitlePage(Request $request, TeachingGroup $teachingGroup): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['title_page' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200']]);
+        $book = $teachingGroup->songbook()->firstOrCreate([]);
+        if ($book->title_page_path) Storage::disk('local')->delete($book->title_page_path);
+        $file = $data['title_page'];
+        $book->update(['title_page_path' => $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local'), 'title_page_original_name' => $file->getClientOriginalName(), 'title_page_mime_type' => $file->getMimeType(), 'title_page_size' => $file->getSize()]);
+        return back()->with('success', 'Titelseite des Liederbuchs wurde gespeichert.');
+    }
+
+    public function songbookTitlePage(Request $request, TeachingGroup $teachingGroup)
+    {
+        $this->authorize('view', $teachingGroup);
+        $book = $teachingGroup->songbook;
+        abort_unless($book?->title_page_path, 404);
+        return response()->file(Storage::disk('local')->path($book->title_page_path), ['Content-Type' => $book->title_page_mime_type ?: 'application/octet-stream']);
     }
 
     public function updateRituals(UpdateTeachingGroupRitualsRequest $request, TeachingGroup $teachingGroup): RedirectResponse

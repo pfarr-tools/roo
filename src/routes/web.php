@@ -12,6 +12,7 @@ use App\Http\Controllers\TeachingUnitController;
 use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\TeachingUnitResourceController;
 use App\Http\Controllers\ResourceLibraryController;
+use App\Http\Controllers\SongController;
 use App\Http\Controllers\YearPlanController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -31,6 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::get('/lieder', [SongController::class, 'index'])->name('songs.index');
+    Route::post('/lieder', [SongController::class, 'store'])->name('songs.store');
+    Route::post('/lieder/fassungen/{songVersion}/liedblatt', [SongController::class, 'uploadSheet'])->name('songs.sheets.upload');
+    Route::get('/lieder/fassungen/{songVersion}/liedblatt', [SongController::class, 'downloadSheet'])->name('songs.sheets.download');
     Route::post('/ressourcen/bibliothek/dateien', [ResourceLibraryController::class, 'storeFile'])->name('resources.library.files.store');
     Route::post('/ressourcen/bibliothek/ressourcen', [ResourceLibraryController::class, 'storeResource'])->name('resources.library.resources.store');
     Route::post('/ressourcen/bibliothek/materialien', [ResourceLibraryController::class, 'storeMaterial'])->name('resources.library.materials.store');
@@ -113,6 +118,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/schuelerinnen', fn () => to_route('students.index'))->name('students.index.legacy');
     Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'songbookTitlePage'])->name('teaching-groups.songbook.title-page');
     Route::put('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'update'])->name('teaching-groups.update');
     Route::delete('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'destroy'])->name('teaching-groups.destroy');
     Route::post('/unterrichtsgruppen/{teachingGroup}/mitglieder', [TeachingGroupController::class, 'storeMembership'])->name('teaching-groups.memberships.store');

@@ -71,4 +71,9 @@ class TeachingGroup extends Model
     {
         return $this->hasMany(TeachingGroupRitual::class)->orderBy('position');
     }
+
+    public function songbook(): HasOne
+    {
+        return $this->hasOne(GroupSongbook::class);
+    }
 }

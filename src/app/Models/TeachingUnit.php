@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\MaterialItem;
+use App\Models\SongVersion;
 
 #[Fillable(['organization_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes'])]
 class TeachingUnit extends Model
@@ -60,5 +61,10 @@ class TeachingUnit extends Model
     public function materialItems(): BelongsToMany
     {
         return $this->morphToMany(MaterialItem::class, 'material_itemable');
+    }
+
+    public function songs(): BelongsToMany
+    {
+        return $this->belongsToMany(SongVersion::class, 'unit_songs')->withPivot('position')->withTimestamps();
     }
 }

@@ -5,11 +5,13 @@ const props = defineProps({
     resources: { type: Array, default: () => [] },
     resourceLinks: { type: Array, default: () => [] },
     materialItems: { type: Array, default: () => [] },
+    songs: { type: Array, default: () => [] },
     selectedResourceIds: { type: Array, default: () => [] },
     selectedResourceLinkIds: { type: Array, default: () => [] },
     selectedMaterialItemIds: { type: Array, default: () => [] },
+    selectedSongIds: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['update:resource-ids', 'update:resource-link-ids', 'update:material-item-ids'])
+const emit = defineEmits(['update:resource-ids', 'update:resource-link-ids', 'update:material-item-ids', 'update:song-ids'])
 
 const toggle = (values, value, event) => {
     const next = [...values]
@@ -43,6 +45,13 @@ const toggle = (values, value, event) => {
             <label v-for="item in materialItems" :key="item.id" class="d-flex gap-2 align-items-start small mb-2">
                 <input class="form-check-input mt-1" type="checkbox" :checked="selectedMaterialItemIds.some(id => String(id) === String(item.id))" @change="emit('update:material-item-ids', toggle(selectedMaterialItemIds, item.id, $event))">
                 <span>{{ item.name }}<span v-if="item.description" class="d-block text-muted">{{ item.description }}</span></span>
+            </label>
+        </div>
+        <div v-if="songs.length" class="mb-3">
+            <div class="small fw-semibold mb-1">Lieder</div>
+            <label v-for="song in songs" :key="song.id" class="d-flex gap-2 align-items-start small mb-2">
+                <input class="form-check-input mt-1" type="checkbox" :checked="selectedSongIds.some(id => String(id) === String(song.id))" @change="emit('update:song-ids', toggle(selectedSongIds, song.id, $event))">
+                <span>{{ song.song?.title || song.name || song.title }}</span>
             </label>
         </div>
     </fieldset>

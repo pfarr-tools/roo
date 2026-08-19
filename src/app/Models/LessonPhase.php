@@ -39,4 +39,9 @@ class LessonPhase extends Model
     {
         return $this->belongsToMany(MaterialItem::class, 'lesson_phase_material_items');
     }
+
+    public function songs(): BelongsToMany
+    {
+        return $this->belongsToMany(SongVersion::class, 'phase_songs')->withPivot('position')->withTimestamps();
+    }
 }

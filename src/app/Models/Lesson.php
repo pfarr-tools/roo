@@ -50,4 +50,9 @@ class Lesson extends Model
     {
         return $this->morphToMany(MaterialItem::class, 'material_itemable');
     }
+
+    public function songs(): BelongsToMany
+    {
+        return $this->belongsToMany(SongVersion::class, 'lesson_songs')->withPivot('position')->withTimestamps();
+    }
 }
