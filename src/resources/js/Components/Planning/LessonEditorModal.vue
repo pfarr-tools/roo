@@ -48,7 +48,7 @@ const availableCompetencies = computed(() => {
     return (props.competencyOptions ?? []).filter(option => !selected.has(option.id) && (!query || props.competencyText(option).toLowerCase().includes(query))).slice(0, 50)
 })
 
-const competencyKind = competency => competency.education_plan_competency?.area?.kind || competency.curriculum_competency?.competency_kind || 'content'
+const competencyKind = competency => competency.competency_presentation?.kind || competency.education_plan_competency?.area?.kind || competency.curriculum_competency?.competency_kind || 'content'
 const processCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) === 'process'))
 const contentCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) !== 'process'))
 const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {

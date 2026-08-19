@@ -27,6 +27,7 @@ use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
 use App\Models\UserPreference;
 use App\Services\YearPlanningWorkspace;
+use App\Services\CompetencyResolver;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,7 +53,7 @@ class YearPlanController extends Controller
         ]);
     }
 
-    public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): Response
+    public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace, CompetencyResolver $competencyResolver): Response
     {
         $this->authorize('view', $teachingGroup);
         if ($request->user()->last_year_plan_teaching_group_id !== $teachingGroup->id) {
@@ -64,6 +65,16 @@ class YearPlanController extends Controller
         $workspace->syncSlots($teachingGroup);
         $curriculumColumnPreference = $request->user()->preferences()->where('key', 'year-plan.'.$teachingGroup->id.'.curriculum-column')->first()?->value ?? [];
 
+        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
+        $workspaceUnits->each(fn ($unit) => $unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))));
+        $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
+        $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
+        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+            ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])
+            ->orderBy('external_identifier')
+            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
+            ->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
@@ -73,8 +84,8 @@ class YearPlanController extends Controller
             'calendar' => $this->calendar($teachingGroup),
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
-                'curricula' => $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
+                'units' => $workspaceUnits,
+                'curricula' => $curricula,
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
             ],
@@ -84,8 +95,7 @@ class YearPlanController extends Controller
                 ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name'])
                 ->orderBy('title')->get(['id', 'teaching_group_id', 'education_plan_id', 'title', 'notes']),
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
-            'competencyOptions' => EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-                ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text']),
+            'competencyOptions' => $competencyOptions,
             'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),
             'socialForms' => SocialForm::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name']),
         ]);

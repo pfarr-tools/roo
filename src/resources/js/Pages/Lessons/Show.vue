@@ -17,8 +17,8 @@ const executionMode = ref('teacher')
 const currentPhase = ref(0)
 const checkedMaterials = ref([])
 const executionForm = useForm({ status: props.slot.scheduled_lesson.status, actual_on: props.slot.scheduled_lesson.actual_on ?? '', execution_notes: props.slot.scheduled_lesson.execution_notes ?? '' })
-const competencyText = competency => competency.text ?? competency.display ?? de.noCompetencyText
-const targetCompetencyText = competency => competency.text || de.noCompetencyText
+const competencyText = competency => competency.competency_presentation?.label || competency.competency_presentation?.text || competency.text || competency.display || de.noCompetencyText
+const targetCompetencyText = competency => competency.label || competency.text || de.noCompetencyText
 const formatDate = value => new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
 function savePlanning() {
     saveForm.transform(() => ({ title: props.lesson.title, duration: props.lesson.duration, learning_goals: props.lesson.learning_goals, materials: props.lesson.materials, homework: props.lesson.homework, assessment_note: props.lesson.assessment_note, notes: props.lesson.notes, phases: phaseDraft.value })).put(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}`, { preserveScroll: true })
