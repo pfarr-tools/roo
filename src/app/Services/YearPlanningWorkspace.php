@@ -264,7 +264,9 @@ class YearPlanningWorkspace
             $length = count($block);
             array_splice($movableTokens, $targetMovableIndex, 0, $block);
             $overflow = count(array_filter(array_slice($movableTokens, count($movableIndexes)), fn ($lessonId) => $lessonId !== null));
-            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            if ($overflow > 0 && ! $allowOverflow) {
+                return ['scheduled' => 0, 'overflow' => $overflow, 'requires_confirmation' => true];
+            }
             $movableTokens = array_slice($movableTokens, 0, count($movableIndexes));
 
             return DB::transaction(function () use ($group, $slots, $movableIndexes, $movableTokens, $length, $overflow): array {
@@ -315,16 +317,16 @@ class YearPlanningWorkspace
         $sourceBeforeTarget = $sourceIndexes->isNotEmpty() && $sourceIndexes->min() < $targetIndex;
         if (! $sourceBeforeTarget) {
             $overflow = max(0, $targetIndex + $length - count($tokens)) + collect(array_slice($tokens, max($targetIndex, count($tokens) - $length)))->filter()->count();
-            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
-            $tail = array_slice($tokens, -$length);
-            if (! $allowOverflow) {
-                abort_unless(collect($tail)->every(fn ($lessonId) => $lessonId === null), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            if ($overflow > 0 && ! $allowOverflow) {
+                return ['scheduled' => 0, 'overflow' => $overflow, 'requires_confirmation' => true];
             }
         } else {
             $firstSourceIndex = $sourceIndexes->min();
             $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
             $overflow = max(0, $firstSourceIndex + count($segment) + $length - count($tokens));
-            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            if ($overflow > 0 && ! $allowOverflow) {
+                return ['scheduled' => 0, 'overflow' => $overflow, 'requires_confirmation' => true];
+            }
         }
 
         return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes, $overflow): array {

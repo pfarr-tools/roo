@@ -302,6 +302,9 @@ class YearPlanController extends Controller
         abort_unless($scheduleSlot->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer'], 'allow_overflow' => ['sometimes', 'boolean']]);
         $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot, (bool) ($data['allow_overflow'] ?? false));
+        if ($result['requires_confirmation'] ?? false) {
+            return back()->with('planning_overflow', $result['overflow']);
+        }
 
         return back()->with('success', $data['type'] === 'unit' ? 'Unterrichtseinheit wurde eingefügt.' : 'Stunde wurde eingefügt.');
     }

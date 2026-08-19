@@ -320,7 +320,7 @@ it('bestätigt und erlaubt Überlauf am Ende beim Einfügen', function () {
     $targetSlot = $slots->get($slots->count() - 2);
     app(YearPlanningWorkspace::class)->scheduleLesson($group, $existingLesson, $lastSlot);
 
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$targetSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $newUnit->id])->assertStatus(422);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$targetSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $newUnit->id])->assertRedirect()->assertSessionHas('planning_overflow', 1);
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$targetSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $newUnit->id, 'allow_overflow' => true])->assertRedirect();
     expect(ScheduledLesson::where('lesson_id', $newLesson->id)->count())->toBe(2)
         ->and(ScheduledLesson::where('lesson_id', $newLesson->id)->where('schedule_slot_id', $targetSlot->id)->exists())->toBeTrue()
