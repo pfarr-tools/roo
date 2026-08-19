@@ -323,14 +323,22 @@ class YearPlanningWorkspace
         } else {
             $firstSourceIndex = $sourceIndexes->min();
             $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
-            $overflow = max(0, $firstSourceIndex + count($segment) + $length - count($tokens));
+            $overflow = max(0, $firstSourceIndex + count($segment) + $length - count($tokens), $targetIndex + $length - count($tokens));
             if ($overflow > 0 && ! $allowOverflow) {
                 return ['scheduled' => 0, 'overflow' => $overflow, 'requires_confirmation' => true];
             }
         }
 
-        return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes, $overflow): array {
-            if ($sourceBeforeTarget) {
+        $directOverflowPlacement = $sourceBeforeTarget && $targetIndex + $length > count($tokens);
+
+        return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes, $overflow, $directOverflowPlacement): array {
+            if ($directOverflowPlacement) {
+                foreach ($block as $offset => $lessonId) {
+                    if (isset($slots[$targetIndex + $offset])) {
+                        $tokens[$targetIndex + $offset] = $lessonId;
+                    }
+                }
+            } elseif ($sourceBeforeTarget) {
                 $firstSourceIndex = $sourceIndexes->min();
                 $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
                 $insertionIndex = $firstSourceIndex + count($segment);

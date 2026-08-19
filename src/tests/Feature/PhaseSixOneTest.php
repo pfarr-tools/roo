@@ -327,6 +327,22 @@ it('bestätigt und erlaubt Überlauf am Ende beim Einfügen', function () {
         ->and(ScheduledLesson::where('lesson_id', $existingLesson->id)->count())->toBe(0);
 });
 
+it('warnt beim Verschieben einer mehrstündigen UE auf den letzten Slot', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Letzte UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Zweistündige Stunde', 'position' => 1, 'duration' => 2]);
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    $firstSlot = $slots->get($slots->count() - 2);
+    $lastSlot = $slots->last();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $firstSlot);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$lastSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $unit->id])->assertRedirect()->assertSessionHas('planning_overflow', 1);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$lastSlot->id}/einfügen", ['type' => 'unit', 'source_id' => $unit->id, 'allow_overflow' => true])->assertRedirect();
+    expect(ScheduledLesson::where('lesson_id', $lesson->id)->count())->toBe(1)
+        ->and(ScheduledLesson::where('lesson_id', $lesson->id)->value('schedule_slot_id'))->toBe($lastSlot->id);
+});
+
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
     [$user, $group] = phaseSixOneGroup();
     $units = collect(['Bereits geplant', 'Zweite UE', 'Dritte UE'])->map(function (string $title, int $index) use ($group, $user) {
