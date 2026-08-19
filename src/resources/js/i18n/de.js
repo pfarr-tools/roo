@@ -230,6 +230,7 @@ export default {
     reflowQuestion: 'Was soll mit den folgenden Inhalten geschehen?',
     restoreReflowQuestion: 'Der Termin ist wieder verfügbar. Was soll mit den folgenden Stunden geschehen?',
     removeFromPlanQuestion: 'Soll die frei gewordene Stelle genutzt werden?',
+    insertReflowQuestion: 'Sollen die folgenden Stunden in die frei gewordene Stelle nachrücken?',
     moveFollowing: 'Folgende Inhalte nachrücken lassen',
     moveFollowingIntoSpace: 'Folgende Stunden in den freien Termin verschieben',
     keepFree: 'Freiraum erhalten',

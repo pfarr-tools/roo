@@ -300,8 +300,8 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($scheduleSlot->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer'], 'allow_overflow' => ['sometimes', 'boolean']]);
-        $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot, (bool) ($data['allow_overflow'] ?? false));
+        $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer'], 'allow_overflow' => ['sometimes', 'boolean'], 'pull_following' => ['sometimes', 'boolean']]);
+        $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot, (bool) ($data['allow_overflow'] ?? false), (bool) ($data['pull_following'] ?? false));
         if ($result['requires_confirmation'] ?? false) {
             return back()->with('planning_overflow', $result['overflow']);
         }
