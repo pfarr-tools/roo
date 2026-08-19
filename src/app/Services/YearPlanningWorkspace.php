@@ -144,7 +144,7 @@ class YearPlanningWorkspace
         if ($selected->count() < $lesson->duration) {
             return ['scheduled' => 0, 'overflow' => $lesson->duration - $selected->count()];
         }
-        $ritualsAdded = $this->ensureGroupRituals($group, $lesson);
+        $ritualsAdded = $this->ensureGroupRituals($group, $lesson, $selected->first());
         DB::transaction(function () use ($lesson, $selected, $ritualsAdded): void {
             foreach ($selected as $slot) {
                 ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => $ritualsAdded ? ScheduledLesson::STATUS_PLANNED : ScheduledLesson::STATUS_ASSIGNED]);
@@ -170,7 +170,7 @@ class YearPlanningWorkspace
             if ($selected->count() < $lesson->duration) {
                 return ['scheduled' => $scheduled, 'overflow' => $lesson->duration - $selected->count()];
             }
-            $ritualsAdded = $this->ensureGroupRituals($group, $lesson);
+            $ritualsAdded = $this->ensureGroupRituals($group, $lesson, $selected->first());
             foreach ($selected as $slot) {
                 ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => $ritualsAdded ? ScheduledLesson::STATUS_PLANNED : ScheduledLesson::STATUS_ASSIGNED]);
                 $scheduled++;
@@ -186,12 +186,6 @@ class YearPlanningWorkspace
         $units = $units->filter(fn (TeachingUnit $unit) => $unit->lessons->isNotEmpty() && $unit->lessons->every(fn (Lesson $lesson) => $lesson->scheduledLessons->isEmpty()))->values();
         if ($units->isEmpty()) {
             return ['planned' => 0, 'overflow' => 0];
-        }
-
-        foreach ($units as $unit) {
-            foreach ($unit->lessons as $lesson) {
-                $this->ensureGroupRituals($group, $lesson);
-            }
         }
 
         return DB::transaction(function () use ($group, $start, $keepTogether, $units): array {
@@ -229,7 +223,8 @@ class YearPlanningWorkspace
 
                                 continue;
                             }
-                            ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $target->id]);
+                            $ritualsAdded = $offset === 0 && $this->ensureGroupRituals($group, $lesson, $target);
+                            ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $target->id, 'status' => $ritualsAdded ? ScheduledLesson::STATUS_PLANNED : ScheduledLesson::STATUS_ASSIGNED]);
                             $planned++;
                             $cursor++;
                         }
@@ -241,8 +236,11 @@ class YearPlanningWorkspace
         });
     }
 
-    private function ensureGroupRituals(TeachingGroup $group, Lesson $lesson): bool
+    private function ensureGroupRituals(TeachingGroup $group, Lesson $lesson, ?ScheduleSlot $start = null): bool
     {
+        if ($start && ! $this->startsNewGroupHour($group, $start)) {
+            return false;
+        }
         $group->loadMissing('rituals.phaseTemplate');
         $existing = $lesson->phases()->whereNotNull('phase_template_id')->pluck('phase_template_id')->all();
         $position = (int) $lesson->phases()->max('position');
@@ -266,6 +264,20 @@ class YearPlanningWorkspace
         }
 
         return $added;
+    }
+
+    private function startsNewGroupHour(TeachingGroup $group, ScheduleSlot $start): bool
+    {
+        $previous = ScheduleSlot::where('teaching_group_id', $group->id)
+            ->where(function ($query) use ($start): void {
+                $query->whereDate('date', '<', $start->date)
+                    ->orWhere(fn ($nested) => $nested->whereDate('date', $start->date)->where('period_number', '<', $start->period_number));
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('period_number')
+            ->first();
+
+        return ! $previous || ! $previous->scheduledLesson()->exists();
     }
 
     /**

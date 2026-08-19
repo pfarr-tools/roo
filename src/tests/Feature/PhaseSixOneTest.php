@@ -171,12 +171,17 @@ it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', fun
     $group->rituals()->create(['organization_id' => $user->organization_id, 'phase_template_id' => $template->id, 'position' => 1]);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
-    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, ScheduleSlot::firstOrFail());
+    $firstSlot = ScheduleSlot::firstOrFail();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $firstSlot);
 
     $phase = $lesson->phases()->firstOrFail();
     expect($phase->phase_template_id)->toBe($template->id)
         ->and($phase->duration_minutes)->toBe(5)
         ->and(ScheduledLesson::firstOrFail()->status)->toBe(ScheduledLesson::STATUS_PLANNED);
+
+    $secondLesson = $unit->lessons()->create(['title' => 'Direkt anschließende Stunde', 'position' => 2, 'duration' => 1]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $secondLesson, ScheduleSlot::orderBy('date')->orderBy('period_number')->skip(1)->firstOrFail());
+    expect($secondLesson->phases()->count())->toBe(0);
 });
 
 it('behandelt das Rückgängigmachen ohne Verschiebung als folgenlose Anfrage', function () {
