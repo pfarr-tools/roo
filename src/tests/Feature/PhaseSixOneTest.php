@@ -382,6 +382,24 @@ it('verschiebt eine UE mit der tatsächlichen Reihenfolge ihrer geplanten Stunde
         ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->value('schedule_slot_id'))->toBe($slots[6]->id);
 });
 
+it('verschiebt eine mehrstündige Lesson auch bei überlappendem Zielbereich', function () {
+    [$user, $group, , $year] = phaseSixOneGroup();
+    $year->update(['ends_on' => '2026-10-31']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Mehrstunden-UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Fünfstündige Lesson', 'position' => 1, 'duration' => 5]);
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $slots[0]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[2]->id}/einfügen", [
+        'type' => 'lesson',
+        'source_id' => $lesson->id,
+    ])->assertRedirect();
+
+    expect(ScheduledLesson::where('lesson_id', $lesson->id)->pluck('schedule_slot_id')->sort()->values()->all())
+        ->toBe($slots->slice(2, 5)->pluck('id')->sort()->values()->all());
+});
+
 it('fragt beim Einfügen einer späteren Stunde nach dem Nachrücken und verschiebt den Rest nach oben', function () {
     [$user, $group, , $year] = phaseSixOneGroup();
     $year->update(['ends_on' => '2026-10-31']);

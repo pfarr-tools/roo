@@ -321,6 +321,30 @@ class YearPlanningWorkspace
 
         $length = count($block);
         $sourceBeforeTarget = $sourceIndexes->isNotEmpty() && $sourceIndexes->min() < $targetIndex;
+        if ($sourceIndexes->isNotEmpty() && $targetIndex >= $sourceIndexes->min() && $targetIndex <= $sourceIndexes->max()) {
+            $overflow = max(0, $targetIndex + $length - count($tokens));
+            if ($overflow > 0 && ! $allowOverflow) {
+                return ['scheduled' => 0, 'overflow' => $overflow, 'requires_confirmation' => true];
+            }
+
+            return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $overflow): array {
+                foreach ($block as $offset => $lessonId) {
+                    if (isset($slots[$targetIndex + $offset])) {
+                        $tokens[$targetIndex + $offset] = $lessonId;
+                    }
+                }
+
+                $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
+                ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
+                foreach (array_slice($tokens, 0, count($slots)) as $index => $lessonId) {
+                    if ($lessonId !== null) {
+                        ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slots[$index]->id]);
+                    }
+                }
+
+                return ['scheduled' => $length - $overflow, 'overflow' => $overflow];
+            });
+        }
         if ($pullFollowing && $sourceIndexes->isNotEmpty() && ! $sourceBeforeTarget) {
             for ($index = $targetIndex + $length; $index < count($tokens); $index++) {
                 $tokens[$index - $length] = $tokens[$index];
