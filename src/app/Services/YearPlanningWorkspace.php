@@ -232,6 +232,10 @@ class YearPlanningWorkspace
         $targetIndex = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $target->id);
         abort_unless($targetIndex !== false, 422, 'Der Zielslot ist nicht verfügbar.');
 
+        $plannedSourceIds = $slots->filter(fn (ScheduleSlot $slot) => $slot->scheduledLesson && $sourceLessons->contains('id', $slot->scheduledLesson->lesson_id))->pluck('scheduledLesson.lesson_id')->map(fn ($id) => (int) $id)->unique()->all();
+        $sourceLessons = $type === 'unit' && $plannedSourceIds !== []
+            ? $sourceLessons->filter(fn (Lesson $lesson) => in_array((int) $lesson->id, $plannedSourceIds, true))->values()
+            : $sourceLessons;
         $pinnedSourceIds = $slots->filter(fn (ScheduleSlot $slot) => $slot->is_pinned && $slot->scheduledLesson && $sourceLessons->contains('id', $slot->scheduledLesson->lesson_id))->pluck('scheduledLesson.lesson_id')->map(fn ($id) => (int) $id)->all();
         abort_unless($type === 'unit' || $pinnedSourceIds === [], 422, 'Eine fixierte Stunde kann nicht einzeln verschoben werden.');
         $movableSourceLessons = $sourceLessons->reject(fn (Lesson $lesson) => in_array((int) $lesson->id, $pinnedSourceIds, true));
