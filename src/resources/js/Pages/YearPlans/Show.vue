@@ -14,6 +14,7 @@ const expandedUnits = ref([])
 const editorLesson = ref(null)
 const lessonEditor = ref(null)
 const lessonReturnUnitId = ref(null)
+const lessonReturnUnitSnapshot = ref(null)
 const editorUnit = ref(null)
 const unitEditorTab = ref('metadata')
 const competencySearch = ref('')
@@ -135,8 +136,8 @@ function resolveDecision(mode) { const decision = decisionDialog.value; decision
 const decisionTitle = dialog => dialog.kind === 'insert' ? de.insertReflowQuestion : dialog.kind === 'status' && dialog.restoring ? de.restoreReflowQuestion : dialog.kind === 'status' ? de.reflowQuestion : de.removeFromPlanQuestion
 const decisionSecondaryAction = dialog => dialog.kind === 'insert' ? de.keepFree : dialog.kind === 'status' && dialog.restoring ? de.keepSpaceEmpty : dialog.kind === 'status' ? de.removeAffected : de.keepFree
 const decisionPrimaryAction = dialog => dialog.kind === 'insert' ? de.moveFollowing : dialog.kind === 'status' && dialog.restoring ? de.moveFollowingIntoSpace : de.moveFollowing
-function editLesson(lesson) { lessonReturnUnitId.value = editorUnit.value?.id ?? null; lessonEditor.value = lesson }
-function closeLessonEditor() { if (lessonReturnUnitId.value) { const updatedUnit = props.workspace.units.find(unit => unit.id === lessonReturnUnitId.value); if (updatedUnit) { editorUnit.value = updatedUnit; unitEditorTab.value = 'lessons' } }; lessonEditor.value = null; lessonReturnUnitId.value = null }
+function editLesson(lesson) { lessonReturnUnitId.value = editorUnit.value?.id ?? null; lessonReturnUnitSnapshot.value = editorUnit.value ? { ...editorUnit.value } : null; lessonEditor.value = lesson }
+function closeLessonEditor() { if (lessonReturnUnitId.value) { const updatedUnit = props.workspace.units.find(unit => unit.id === lessonReturnUnitId.value); editorUnit.value = updatedUnit ?? lessonReturnUnitSnapshot.value; unitEditorTab.value = 'lessons' }; lessonEditor.value = null; lessonReturnUnitId.value = null; lessonReturnUnitSnapshot.value = null }
 function saveLesson() {
     const lessonForm = useForm({ title: editorLesson.value.title, duration: editorLesson.value.duration, learning_goals: editorLesson.value.learning_goals, materials: editorLesson.value.materials, homework: editorLesson.value.homework, assessment_note: editorLesson.value.assessment_note, notes: editorLesson.value.notes })
     lessonForm.put(`/jahresplanung/${props.group.id}/lessons/${editorLesson.value.id}`, { onSuccess: () => { useForm({ competency_ids: editorLesson.value.competency_ids ?? [] }).put(`/jahresplanung/${props.group.id}/lessons/${editorLesson.value.id}/kompetenzen`, { onSuccess: () => { editorLesson.value = null } }) } })
