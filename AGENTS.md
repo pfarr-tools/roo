@@ -384,9 +384,167 @@ Insbesondere:
 - keine Konstruktionen wie `status=$?; ...; exit $status` verwenden,
 - keine unnötigen `bash -lc`-Wrapper erzeugen,
 - stattdessen Befehle direkt und möglichst einfach mit `&&` verketten.
+- keine Ausgabeumleitungen wie `>/dev/null`, `>/tmp/...` oder `2>&1` verwenden,
+  wenn der Befehl auch direkt ausgeführt werden kann,
+
 
 Bevorzugt zum Beispiel:
 
 ```bash
 ./roo test --compact && ./roo npm run build && git diff --check
+```
 
+
+## File naming and Aktenplan integration
+
+Files managed by Roo receive deterministic, human-readable filenames when they are downloaded or exported. The filename reflects the educational context of the file and, optionally, the user's Aktenplan.
+
+### Group Aktenzeichen
+
+Each group has an optional `Aktenzeichen` setting.
+
+The default value is empty (`null`) and is displayed as **„kein Aktenplan“**.
+
+The following values are available:
+
+| Aktenzeichen | School type                                     |
+| ------------ | ----------------------------------------------- |
+| `62.53`      | Grund-, Haupt- und Werkrealschule               |
+| `62.54`      | Privatschule                                    |
+| `62.55`      | Real- und Gemeinschaftsschule                   |
+| `62.56`      | Gymnasium und Gemeinschaftsschule mit Oberstufe |
+| `62.57`      | SBBZ                                            |
+| `62.58`      | Berufliche Schule                               |
+
+The Aktenzeichen belongs to the **group**. It must not be inferred automatically from the school type, although the UI may make selecting the appropriate value easy.
+
+### Unit keyword
+
+Each unit has an optional **keyword** (`keyword`).
+
+The keyword is a short, human-readable filing term and is independent of the unit title. For example, a unit titled **„Wie Menschen nach Gott fragen“** may use `Gottesbilder` as its filing keyword.
+
+The keyword is used when generating filenames for files associated with the unit or one of its lessons.
+
+### Filename rules
+
+Roo distinguishes between files associated with a **unit**, a **lesson**, and a **group**.
+
+#### Unit files
+
+Files associated directly with a unit use:
+
+```text
+<Aktenzeichen>_<Grade> <Keyword> <File name>.<ext>
+```
+
+Example:
+
+```text
+62.53_4 Gottesbilder Arbeitsblatt Gottesvorstellungen.pdf
+```
+
+#### Lesson files
+
+Files associated with a lesson use:
+
+```text
+<Aktenzeichen>_<Grade> <Keyword> <nn> <File name>.<ext>
+```
+
+`<nn>` is the sequential position of the lesson within its unit, zero-padded to two digits.
+
+Examples:
+
+```text
+62.53_4 Gottesbilder 01 Einstieg.pdf
+62.53_4 Gottesbilder 02 Arbeitsblatt Gottesvorstellungen.pdf
+62.53_4 Gottesbilder 03 Ergebnissicherung.pdf
+```
+
+The number is derived from the lesson's **current position within the unit**, not from a database ID or from the order in which lessons were created. Reordering or inserting lessons therefore changes the generated filing number accordingly.
+
+#### Group files
+
+Files associated with a specific group rather than a unit or lesson—for example student lists, result lists, organizational documents, or similar group-specific resources—use:
+
+```text
+<Aktenzeichen>_<Grade>_<School year> <File name>.<ext>
+```
+
+Example:
+
+```text
+62.53_4_2026-27 Ergebnisliste.pdf
+```
+
+The school year uses Roo's canonical filesystem-safe short representation (`YYYY-YY`), e.g. `2026-27`.
+
+### Missing Aktenzeichen or keyword
+
+Optional filename components must be omitted cleanly. Roo must never generate empty separators, double spaces, or placeholder strings such as `null`.
+
+If no Aktenzeichen is configured, the Aktenzeichen **and its following underscore** are omitted:
+
+```text
+4 Gottesbilder Arbeitsblatt.pdf
+4 Gottesbilder 03 Ergebnissicherung.pdf
+4_2026-27 Ergebnisliste.pdf
+```
+
+If no unit keyword is configured, the keyword and its surrounding separator space are omitted:
+
+```text
+62.53_4 Arbeitsblatt.pdf
+62.53_4 03 Ergebnissicherung.pdf
+```
+
+The UI should encourage users to provide a keyword for units that contain files, but absence of a keyword must not prevent file handling.
+
+### Grade representation
+
+`<Grade>` is derived from the group and uses its canonical human-readable grade designation.
+
+Single-grade groups therefore use values such as:
+
+```text
+4
+7
+10
+```
+
+For mixed-grade groups, Roo preserves the group's actual grade designation rather than arbitrarily choosing one grade. The resulting value must be converted to a filesystem-safe representation where necessary.
+
+### Storage names vs. generated filenames
+
+These naming rules apply to **user-visible filenames**, especially downloads and exports. They must not be used as the primary identity of files in Roo's storage layer.
+
+Internally, files/resources must continue to use stable identifiers (e.g. UUIDs or equivalent storage keys).
+
+The user-visible filename is generated dynamically from the current metadata:
+
+* group's Aktenzeichen,
+* group's grade,
+* group's school year where applicable,
+* unit keyword where applicable,
+* current lesson position where applicable,
+* resource/file name,
+* original file extension.
+
+Consequently, changing an Aktenzeichen or keyword, moving a lesson, or reordering lessons must **not require renaming the underlying stored object**. The correct filename is generated from the current state whenever the file is downloaded or exported.
+
+### Filename sanitization
+
+Before generating a user-visible filename, Roo must sanitize all dynamic filename components.
+
+Sanitization must:
+
+* preserve German characters such as `ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, and `ß` where supported;
+* remove or replace filesystem-invalid path characters;
+* prevent `/` or `\` from creating path components;
+* prevent `.` and `..` path traversal;
+* collapse accidental repeated whitespace;
+* preserve the actual file extension;
+* produce filenames that are safe for common Windows, macOS, and Linux filesystems.
+
+The filename-generation logic must be implemented centrally and covered by automated tests. Individual download/export features must not independently reconstruct these naming rules.

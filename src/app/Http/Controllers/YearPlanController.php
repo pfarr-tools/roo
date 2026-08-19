@@ -7,17 +7,20 @@ use App\Http\Requests\SplitPlannedUnitRequest;
 use App\Http\Requests\StorePlannedUnitRequest;
 use App\Http\Requests\UpdateLessonOccurrenceRequest;
 use App\Models\CurriculumTopic;
+use App\Models\CurriculumEducationPlanBinding;
+use App\Models\EducationPlanCompetency;
 use App\Models\GroupYearPlan;
 use App\Models\Lesson;
 use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
-use App\Models\LessonTemplate;
 use App\Models\PlannedUnit;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
+use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
+use App\Models\UserPreference;
 use App\Services\YearPlanningWorkspace;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +57,7 @@ class YearPlanController extends Controller
         $gradeLevels = $teachingGroup->gradeLevels()->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter()->values();
 
         $workspace->syncSlots($teachingGroup);
+        $curriculumColumnPreference = $request->user()->preferences()->where('key', 'year-plan.'.$teachingGroup->id.'.curriculum-column')->first()?->value ?? [];
 
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
@@ -64,13 +68,43 @@ class YearPlanController extends Controller
             'calendar' => $this->calendar($teachingGroup),
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,external_identifier,number,text', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
                 'curricula' => $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
             ],
             'groupOptions' => TeachingGroup::where('organization_id', auth()->user()->organization_id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
+            'availableUnits' => TeachingUnit::where('organization_id', auth()->user()->organization_id)
+                ->where('teaching_group_id', '!=', $teachingGroup->id)
+                ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name'])
+                ->orderBy('title')->get(['id', 'teaching_group_id', 'education_plan_id', 'title', 'notes']),
+            'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
+            'competencyOptions' => EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+                ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text']),
         ]);
+    }
+
+    public function updateCurriculumColumnPreference(Request $request, TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('view', $teachingGroup);
+        $data = $request->validate(['open' => ['required', 'boolean']]);
+        UserPreference::updateOrCreate(
+            ['user_id' => $request->user()->id, 'key' => 'year-plan.'.$teachingGroup->id.'.curriculum-column'],
+            ['value' => ['open' => (bool) $data['open']]],
+        );
+
+        return back();
+    }
+
+    public function importTeachingUnit(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['source_id' => ['required', 'integer']]);
+        $source = TeachingUnit::where('organization_id', $teachingGroup->organization_id)->findOrFail($data['source_id']);
+        $unit = $workspace->copyTeachingUnit($teachingGroup, $source);
+        $this->revise($this->planFor($teachingGroup), $request->user()->id, 'teaching_unit_copied', 'Unterrichtseinheit „'.$unit->title.'“ aus einer anderen Planung übernommen.');
+
+        return back()->with('success', 'Unterrichtseinheit wurde unabhängig übernommen.');
     }
 
     public function takeCurriculumUnit(Request $request, TeachingGroup $teachingGroup, CurriculumTopic $topic, YearPlanningWorkspace $workspace): RedirectResponse
@@ -85,11 +119,40 @@ class YearPlanController extends Controller
         return back()->with('success', 'Die Curriculum-UE wurde als eigene Unterrichtseinheit übernommen.');
     }
 
+    public function takeAllCurriculumUnits(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $curriculumIds = $teachingGroup->curricula()->pluck('curricula.id');
+        $gradeLevels = $teachingGroup->gradeLevels()->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter()->values();
+        $topics = CurriculumTopic::query()
+            ->whereHas('version', fn ($query) => $query->whereIn('curriculum_id', $curriculumIds))
+            ->when($gradeLevels->isNotEmpty(), fn ($query) => $query->whereIn('year', $gradeLevels))
+            ->with('competencies')
+            ->get();
+        $existingTopicIds = $teachingGroup->teachingUnits()->whereNotNull('source_curriculum_topic_id')->pluck('source_curriculum_topic_id');
+        $imported = 0;
+        foreach ($topics->reject(fn ($topic) => $existingTopicIds->contains($topic->id)) as $topic) {
+            $workspace->importCurriculumUnit($teachingGroup, $topic);
+            $imported++;
+        }
+
+        return back()->with('success', $imported ? $imported.' Curriculum-UE(s) wurden übernommen.' : 'Alle Curriculum-UEs sind bereits im Plan.');
+    }
+
+    public function destroyTeachingUnit(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $teachingUnit->delete();
+
+        return back()->with('success', 'Unterrichtseinheit wurde aus diesem Plan entfernt.');
+    }
+
     public function storeTeachingUnit(Request $request, TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
-        $teachingGroup->teachingUnits()->create($data + ['organization_id' => $teachingGroup->organization_id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
+        $teachingGroup->teachingUnits()->create($data + ['education_plan_id' => $this->educationPlanIdsForGroup($teachingGroup)->first(), 'organization_id' => $teachingGroup->organization_id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
 
         return back()->with('success', 'Eigene Unterrichtseinheit wurde angelegt.');
     }
@@ -98,9 +161,71 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
-        $teachingUnit->update($request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string']]));
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer']]);
+        $teachingUnit->update(collect($data)->only(['title', 'notes'])->all());
+        if (array_key_exists('competency_ids', $data)) {
+            $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'])->pluck('id');
+            abort_unless($validIds->count() === count($data['competency_ids']), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
+            $removedCompetencies = $teachingUnit->competencies()->when($validIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $validIds))->get();
+            foreach ($removedCompetencies as $competency) {
+                $competency->lessons()->detach();
+            }
+            if ($validIds->isEmpty()) {
+                $teachingUnit->competencies()->delete();
+            }
+        }
 
         return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
+    }
+
+    public function updateTeachingUnitCompetencies(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['competency_ids' => ['array'], 'competency_ids.*' => ['integer']]);
+        $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'] ?? [])->pluck('id');
+        abort_unless($validIds->count() === count($data['competency_ids'] ?? []), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
+        $removedCompetencies = $teachingUnit->competencies()->when($validIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $validIds))->get();
+        foreach ($removedCompetencies as $competency) {
+            $competency->lessons()->detach();
+        }
+        if ($validIds->isEmpty()) {
+            $teachingUnit->competencies()->delete();
+        }
+
+        return back()->with('success', 'Kompetenzen der Unterrichtseinheit wurden gespeichert.');
+    }
+
+    public function addTeachingUnitCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['education_plan_competency_id' => ['required', 'integer']]);
+        $competency = EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
+            ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+            ->firstOrFail();
+        $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id]);
+
+        return back()->with('success', 'Kompetenz wurde hinzugefügt.');
+    }
+
+    public function removeTeachingUnitCompetency(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, TeachingUnitCompetency $teachingUnitCompetency): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnitCompetency->teaching_unit_id === $teachingUnit->id, 404);
+        $teachingUnitCompetency->lessons()->detach();
+        $teachingUnitCompetency->delete();
+
+        return back()->with('success', 'Kompetenz wurde entfernt.');
+    }
+
+    private function educationPlanIdsForGroup(TeachingGroup $teachingGroup)
+    {
+        $versionIds = $teachingGroup->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id');
+
+        return CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $versionIds)->whereNotNull('education_plan_id')->pluck('education_plan_id')
+            ->merge($teachingGroup->teachingUnits()->whereNotNull('education_plan_id')->pluck('education_plan_id'))
+            ->unique()->values();
     }
 
     public function saveUnitAsTemplate(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse

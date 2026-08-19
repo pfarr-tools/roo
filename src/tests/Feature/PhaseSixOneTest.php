@@ -162,25 +162,6 @@ it('entfernt Lesson- und UE-Belegungen ohne die eigene Planung zu löschen', fun
     expect(ScheduledLesson::count())->toBe(0)->and(TeachingUnit::find($unit->id))->not->toBeNull();
 });
 
-it('bearbeitet UEs, speichert UE und Stunde als Vorlage und entfernt Stunden', function () {
-    [$user, $group] = phaseSixOneGroup();
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Vorlagen UE', 'notes' => 'Hinweis']);
-    $unit = TeachingUnit::firstOrFail();
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/stunden", ['title' => 'Vorlagen Stunde', 'duration' => 2]);
-    $lesson = $unit->lessons()->firstOrFail();
-
-    $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", ['title' => 'Bearbeitete UE', 'notes' => 'Aktualisiert'])->assertRedirect();
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/vorlage")->assertRedirect();
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/vorlage")->assertRedirect();
-
-    expect(UnitTemplate::count())->toBe(1)
-        ->and(LessonTemplate::count())->toBe(1)
-        ->and($unit->fresh()->unit_template_id)->toBe(UnitTemplate::firstOrFail()->id)
-        ->and($lesson->fresh()->lesson_template_id)->toBe(LessonTemplate::firstOrFail()->id);
-
-    $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lesson->id}")->assertRedirect();
-    expect(Lesson::find($lesson->id))->toBeNull();
-});
 
 it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
     [$user, $group] = phaseSixOneGroup();

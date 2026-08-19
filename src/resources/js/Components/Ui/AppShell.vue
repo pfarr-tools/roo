@@ -19,14 +19,12 @@ const moduleGroups = [
     { title: labels.content, items: [
         { label: labels.educationPlans, icon: 'bi-journal-text', url: '/bildungsplaene', enabled: true },
         { label: labels.curricula, icon: 'bi-diagram-3', url: '/curricula', enabled: true },
-        { label: labels.unitTemplates, icon: 'bi-collection', url: '/unterrichtseinheiten-vorlagen', enabled: true },
+        { label: labels.teachingUnits, icon: 'bi-collection', url: '/unterrichtseinheiten', enabled: true },
         { label: labels.resources, icon: 'bi-folder2-open', enabled: false },
         { label: labels.songs, icon: 'bi-music-note-beamed', enabled: false },
     ] },
     { title: labels.planning, items: [
         { label: labels.planningModule, icon: 'bi-calendar-range', url: '/jahresplanung', enabled: true },
-        { label: labels.lessonTemplates, icon: 'bi-easel2', url: '/stunden-vorlagen', enabled: true },
-        { label: labels.phaseTemplates, icon: 'bi-list-ol', url: '/phasen-vorlagen', enabled: true },
     ] },
     { title: labels.assessment, items: [
         { label: labels.observations, icon: 'bi-eye', enabled: false },

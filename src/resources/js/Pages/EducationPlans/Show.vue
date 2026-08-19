@@ -2,6 +2,7 @@
 import AppShell from '../../Components/Ui/AppShell.vue'
 import CompetenceList from '../../Components/EducationPlans/CompetenceList.vue'
 import de from '../../i18n/de'
+import { formatCompetencyIdentifier } from '../../utils/competencies'
 
 const props = defineProps({
     educationPlan: Object,
@@ -86,8 +87,8 @@ function goToComparison(event) { window.location.href = event.target.value ? com
                             <table class="table table-sm align-middle">
                                 <thead><tr><th>Kennung</th><th>Bereich</th><th>{{ selectedVersion.external_identifier }}</th><th>{{ comparisonVersion.external_identifier }}</th><th>Status</th></tr></thead>
                                 <tbody>
-                                    <tr v-for="row in comparisonRows" :key="row.external_identifier">
-                                        <td>{{ row.external_identifier }}</td><td>{{ row.title }}</td><td class="small text-break">{{ row.current }}</td><td class="small text-break">{{ row.other }}</td>
+                            <tr v-for="row in comparisonRows" :key="row.external_identifier">
+                                <td>{{ formatCompetencyIdentifier(row.external_identifier) }}</td><td>{{ row.title }}</td><td class="small text-break">{{ row.current }}</td><td class="small text-break">{{ row.other }}</td>
                                         <td><span :class="['badge', statusClass(row.status)]">{{ de.comparisonStatus[row.status] }}</span></td>
                                     </tr>
                                 </tbody>

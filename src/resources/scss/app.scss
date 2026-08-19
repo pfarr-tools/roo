@@ -105,6 +105,20 @@ body {
 .roo-profile-dropdown a, .roo-profile-dropdown button { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .55rem .65rem; border: 0; border-radius: .5rem; color: var(--bs-body-color); background: transparent; text-align: left; text-decoration: none; }
 .roo-profile-dropdown a:hover, .roo-profile-dropdown button:hover { background: var(--roo-sand); }
 .roo-modal-backdrop { position: fixed; z-index: 1050; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(23,25,28,.55); }
+.roo-modal-wide { width: min(58rem, 100%); max-height: min(90vh, 52rem); overflow-y: auto; }
+.unit-editor-tabs { overflow-x: auto; flex-wrap: nowrap; }
+.unit-editor-tabs .nav-link { white-space: nowrap; }
+.attachment-list { display: grid; gap: .75rem; }
+.attachment-item { display: flex; align-items: flex-start; gap: .75rem; padding: .75rem; border: 1px solid var(--bs-border-color); border-radius: .6rem; background: #fff; }
+.attachment-item .input-group { max-width: 42rem; }
+.min-w-0 { min-width: 0; }
+.lesson-row { position: relative; transition: background-color .12s ease, box-shadow .12s ease; }
+.lesson-row.drop-ready { background: rgba(199,104,8,.08); border-radius: .45rem; }
+.lesson-row.lesson-drop-before::before, .lesson-row.lesson-drop-after::after { content: ''; position: absolute; z-index: 1; left: .25rem; right: .25rem; height: .2rem; border-radius: 1rem; background: var(--roo-orange-dark); box-shadow: 0 0 0 .15rem rgba(199,104,8,.15); pointer-events: none; }
+.lesson-row.lesson-drop-before::before { top: -.1rem; }
+.lesson-row.lesson-drop-after::after { bottom: -.1rem; }
+.attachment-preview-modal { width: min(58rem, 100%); }
+.attachment-preview-image, .attachment-preview-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; object-fit: contain; }
 .roo-modal { width: min(100%, 46rem); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: var(--roo-cream); box-shadow: 0 1rem 3rem rgba(0,0,0,.2); }
 .roo-curriculum-board .card { background: rgba(255,255,255,.72); }
 .roo-curriculum-board article.card { border-color: #e4d3bb; background: #fff8ed; box-shadow: 0 .25rem .75rem rgba(60,37,13,.08) !important; }
@@ -153,12 +167,15 @@ body {
 
 .year-planning-page { display: flex; flex-direction: column; height: calc(100vh - var(--roo-topbar-height)); min-height: 0; }
 .year-planning-grid { position: relative; display: grid; flex: 1 1 auto; min-height: 0; grid-template-columns: minmax(20rem, 45fr) minmax(18rem, 35fr) minmax(14rem, 20fr); gap: 1rem; align-items: stretch; }
-.year-planning-grid.curriculum-collapsed { grid-template-columns: minmax(20rem, 55fr) minmax(18rem, 45fr); }
-.planning-column { min-width: 0; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding-right: .35rem; }
+.year-planning-grid.curriculum-collapsed { grid-template-columns: minmax(20rem, 55fr) minmax(18rem, 45fr) 1.75rem; gap: .5rem; }
+.planning-column { min-width: 0; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding-right: .35rem; scrollbar-gutter: stable; }
+.planning-column > div:first-child { position: sticky; top: 0; z-index: 3; padding-top: .1rem; background: var(--bs-body-bg); }
+.planning-column > p:first-of-type { position: sticky; top: 2rem; z-index: 2; padding-bottom: .35rem; margin-bottom: .75rem; background: var(--bs-body-bg); }
 .planning-column > .planning-card, .planning-slot { background: var(--bs-tertiary-bg); }
 .planning-day { padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
 .holiday-divider { margin: .75rem 0; padding: .65rem .75rem; border: 1px solid rgba(var(--bs-warning-rgb), .45); border-radius: .45rem; background: rgba(var(--bs-warning-rgb), .12); color: var(--bs-emphasis-color); }
-.planning-slot { padding: .5rem; margin-top: .35rem; border-radius: .35rem; border: 1px solid var(--bs-border-color); }
+.planning-slot { position: relative; padding: .5rem; margin-top: .35rem; border-radius: .35rem; border: 1px solid var(--bs-border-color); }
+.planning-slot.dropdown-open { z-index: 20; }
 .planning-slot-label { min-width: 0; overflow-wrap: anywhere; }
 .planning-card.unit-tone-0, .planning-slot.unit-tone-0 { --unit-accent: var(--bs-primary); --unit-background: rgba(var(--bs-primary-rgb), .08); }
 .planning-card.unit-tone-1, .planning-slot.unit-tone-1 { --unit-accent: var(--bs-success); --unit-background: rgba(var(--bs-success-rgb), .08); }
@@ -194,5 +211,12 @@ body {
 .unschedule-column-ready { border-radius: .5rem; outline: .2rem dashed rgba(var(--bs-danger-rgb), .6); outline-offset: .35rem; background: rgba(var(--bs-danger-rgb), .04); }
 .unschedule-drop-zone { margin-bottom: .75rem; padding: .65rem .75rem; border: 1px dashed var(--bs-secondary); border-radius: .45rem; color: var(--bs-secondary-color); font-size: .875rem; text-align: center; }
 .unschedule-drop-zone.drop-ready { border-color: var(--bs-danger); background: rgba(var(--bs-danger-rgb), .1); color: var(--bs-danger-text-emphasis); }
-.curriculum-open-button { position: absolute; z-index: 2; top: 0; right: 0; }
-@media (max-width: 991.98px) { .year-planning-page { height: auto; } .year-planning-grid, .year-planning-grid.curriculum-collapsed { flex: none; grid-template-columns: 1fr; } .planning-column { height: auto; max-height: none; overflow: visible; } .planning-curricula { order: -1; } }
+.curriculum-rail { display: flex; height: 100%; width: 1.75rem; align-items: center; justify-content: center; gap: .25rem; padding: .5rem .2rem; border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius); background: var(--bs-tertiary-bg); color: var(--bs-secondary-color); writing-mode: vertical-rl; cursor: pointer; }
+.curriculum-rail:hover, .curriculum-rail:focus-visible { background: var(--bs-secondary-bg); color: var(--bs-body-color); }
+.curriculum-rail i { writing-mode: horizontal-tb; }
+.planning-toast-container { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1080; display: flex; width: min(26rem, calc(100vw - 2.5rem)); flex-direction: column; gap: .6rem; pointer-events: none; }
+.planning-toast { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: .8rem 1rem; border-radius: var(--bs-border-radius); box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .18); color: #fff; pointer-events: auto; animation: planning-toast-in .2s ease-out; }
+.planning-toast-success { background: var(--bs-success); }
+.planning-toast-warning { background: var(--bs-warning); color: var(--bs-dark); }
+@keyframes planning-toast-in { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 991.98px) { .year-planning-page { height: auto; } .year-planning-grid, .year-planning-grid.curriculum-collapsed { flex: none; grid-template-columns: 1fr; } .planning-column { height: auto; max-height: none; overflow: visible; } .planning-column > div:first-child, .planning-column > p:first-of-type { position: static; } .planning-curricula { order: -1; } .curriculum-rail { width: 100%; height: 2.5rem; writing-mode: horizontal-tb; } }

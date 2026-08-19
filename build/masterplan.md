@@ -270,9 +270,9 @@ importieren oder zuordnen öffnen ein Modal. Das Anlegen bietet zusätzlich
 
 ## Phase 5 – Wiederverwendbare Unterrichtsinhalte
 
-Fortschritt: `[x]` UE-, Stunden- und Phasen-Vorlagen, wiederkehrende Phasen,
-private Anhänge, Suche/Filter, Kopieren und versioniertes Aktualisieren sowie
-relationale Sozialformen, Tags und Materialbestandteile sind umgesetzt.
+Fortschritt: `[~]` Unterrichtseinheiten sind als zentrale, unabhängig
+bearbeitbare Datensätze verfügbar. Das frühere Vorlagenkonzept wird abgelöst;
+Übernahmen erzeugen rekursive Snapshots.
 
 ### Ziel
 
@@ -280,9 +280,9 @@ Vorhandene Einheiten und Stunden aus früheren Jahren strukturiert übernehmen.
 
 ### Fachobjekte
 
-- UnitTemplate
-- LessonTemplate
-- PhaseTemplate
+- TeachingUnit
+- Lesson
+- LessonPhase
 - SocialForm
 - ResourceReference
 - MaterialItem
@@ -290,12 +290,12 @@ Vorhandene Einheiten und Stunden aus früheren Jahren strukturiert übernehmen.
 
 ### Funktionen
 
-- Einheiten-Vorlagen verwalten
-- Stunden-Vorlagen verwalten
-- wiederkehrende Phasen
+- Unterrichtseinheiten zentral durchsuchen, sortieren und bearbeiten
+- Unterrichtseinheiten aus anderen Planungen rekursiv übernehmen
+- Stunden und Phasen als Bestandteil einer Unterrichtseinheit bearbeiten
 - Anhänge an Einheiten/Stunden/Phasen
 - Suche und Filter
-- Kopieren und versioniertes Aktualisieren
+- unabhängige Kopien mit optionaler Herkunftsreferenz
 - Import aus einfachem Markdown/JSON als späterer Ausbaupunkt
 
 ---
@@ -630,4 +630,3 @@ Verschachtelte Modals sind zu vermeiden. Für Detailbearbeitung innerhalb eines 
 Die UI arbeitet bei der Jahresplanung ausschließlich mit ganzen Schulstunden. Eine minutengenaue Verteilung von Inhalten über Unterrichtsstundengrenzen ist nicht vorgesehen.
 
 Kompetenzbeziehungen werden über stabile fachliche Relationen/IDs abgebildet, niemals durch Textvergleich. Die UI muss langfristig zwischen Curriculum-Abdeckung und der maßgeblichen EducationPlan-Abdeckung unterscheiden können.
-

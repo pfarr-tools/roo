@@ -67,6 +67,7 @@ class YearPlanningWorkspace
         return DB::transaction(function () use ($group, $topic): TeachingUnit {
             $unit = $group->teachingUnits()->create([
                 'organization_id' => $group->organization_id,
+                'education_plan_id' => $topic->loadMissing('version.bindings')->version?->bindings->firstWhere('education_plan_id', '!=', null)?->education_plan_id,
                 'source_curriculum_topic_id' => $topic->id,
                 'title' => $topic->title,
                 'position' => ($group->teachingUnits()->max('position') ?? 0) + 1,
@@ -88,6 +89,38 @@ class YearPlanningWorkspace
             }
 
             return $unit->load(['competencies.curriculumCompetency', 'lessons']);
+        });
+    }
+
+    public function copyTeachingUnit(TeachingGroup $targetGroup, TeachingUnit $source): TeachingUnit
+    {
+        abort_unless($source->organization_id === $targetGroup->organization_id, 404);
+
+        return DB::transaction(function () use ($targetGroup, $source): TeachingUnit {
+            $source->load(['competencies', 'lessons' => fn ($query) => $query->orderBy('position'), 'lessons.competencies', 'lessons.phases' => fn ($query) => $query->orderBy('position')]);
+            $copy = $targetGroup->teachingUnits()->create([
+                'organization_id' => $targetGroup->organization_id,
+                'education_plan_id' => $source->education_plan_id,
+                'copied_from_id' => $source->id,
+                'source_curriculum_topic_id' => $source->source_curriculum_topic_id,
+                'title' => $source->title,
+                'position' => ($targetGroup->teachingUnits()->max('position') ?? 0) + 1,
+                'notes' => $source->notes,
+            ]);
+            $competencies = [];
+            foreach ($source->competencies as $competency) {
+                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_competency_id', 'source_curriculum_topic_id', 'local_wording']));
+                $competencies[$competency->id] = $copyCompetency;
+            }
+            foreach ($source->lessons as $lesson) {
+                $lessonCopy = $copy->lessons()->create($lesson->only(['title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes']));
+                $lessonCopy->competencies()->sync(collect($lesson->competencies)->map(fn ($competency) => $competencies[$competency->id]?->id)->filter()->all());
+                foreach ($lesson->phases as $phase) {
+                    $lessonCopy->phases()->create($phase->only(['title', 'position', 'description', 'materials']));
+                }
+            }
+
+            return $copy->load(['competencies', 'lessons.phases']);
         });
     }
 

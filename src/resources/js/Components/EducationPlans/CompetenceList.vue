@@ -1,4 +1,6 @@
 <script setup>
+import { formatCompetencyIdentifier } from '../../utils/competencies'
+
 defineProps({
     competencies: Array,
     planId: Number,
@@ -11,7 +13,7 @@ defineProps({
     <ol class="list-group list-group-numbered list-group-flush">
         <li v-for="competency in competencies" :key="competency.id" class="list-group-item px-0">
             <div class="d-flex gap-2">
-                <span class="text-muted">{{ competency.external_identifier }}</span>
+                <span class="text-muted">{{ formatCompetencyIdentifier(competency.external_identifier) }}</span>
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between align-items-start gap-2">
                         <p v-if="competency.text" class="mb-2">{{ competency.text }}</p>
