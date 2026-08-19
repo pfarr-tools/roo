@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'updateLesson'])->name('year-plans.lessons.update');
     Route::delete('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'destroyLesson'])->name('year-plans.lessons.destroy');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
+    Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'addLessonCompetency'])->name('year-plans.lessons.competencies.store');
     Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden/reihenfolge', [YearPlanController::class, 'reorderLessons'])->name('year-plans.lessons.reorder');
     Route::post('/jahresplanung/{teachingGroup}/automatisch-einplanen', [YearPlanController::class, 'autoPlan'])->name('year-plans.auto-plan');

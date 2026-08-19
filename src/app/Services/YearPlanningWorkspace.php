@@ -109,7 +109,7 @@ class YearPlanningWorkspace
             ]);
             $competencies = [];
             foreach ($source->competencies as $competency) {
-                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_competency_id', 'source_curriculum_topic_id', 'local_wording']));
+                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_competency_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary']));
                 $competencies[$competency->id] = $copyCompetency;
             }
             foreach ($source->lessons as $lesson) {

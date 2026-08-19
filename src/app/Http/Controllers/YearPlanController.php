@@ -200,13 +200,27 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['education_plan_competency_id' => ['required', 'integer'], 'is_secondary' => ['sometimes', 'boolean']]);
+        $competency = EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
+            ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+            ->firstOrFail();
+        $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id], ['is_secondary' => (bool) ($data['is_secondary'] ?? false)]);
+
+        return back()->with('success', 'Kompetenz wurde hinzugefügt.');
+    }
+
+    public function addLessonCompetency(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['education_plan_competency_id' => ['required', 'integer']]);
         $competency = EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
             ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
             ->firstOrFail();
-        $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id]);
+        $unitCompetency = $lesson->unit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id], ['is_secondary' => true]);
+        $lesson->competencies()->syncWithoutDetaching([$unitCompetency->id]);
 
-        return back()->with('success', 'Kompetenz wurde hinzugefügt.');
+        return back()->with('success', 'Kompetenz wurde als sekundäre UE-Kompetenz hinzugefügt.');
     }
 
     public function removeTeachingUnitCompetency(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, TeachingUnitCompetency $teachingUnitCompetency): RedirectResponse

@@ -127,6 +127,8 @@ export default {
     deleteAttachment: 'Anhang löschen',
     deleteAttachmentConfirm: 'Möchtest du diesen Anhang wirklich löschen?',
     addCompetency: 'Kompetenz hinzufügen',
+    searchCompetencies: 'Kompetenzen durchsuchen …',
+    secondary: 'sekundär',
     removeCompetency: 'Kompetenz entfernen',
     removeCompetencyConfirm: 'Möchtest du diese Kompetenz wirklich entfernen?',
     noCompetencyOptions: 'Keine weiteren passenden Kompetenzen gefunden.',

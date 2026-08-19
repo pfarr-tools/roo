@@ -1,12 +1,15 @@
 <script setup>
 import de from '../../i18n/de'
-import { useForm } from '@inertiajs/vue3'
-import { ref, watch } from 'vue'
+import { router, useForm } from '@inertiajs/vue3'
+import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyText: Function })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const phaseEditor = ref(null)
+const unitCompetencies = ref([])
+const competencySearch = ref('')
+const competencySearchOpen = ref(false)
 const form = useForm({
     title: '',
     duration: 1,
@@ -32,9 +35,34 @@ function syncLesson(lesson) {
     })
     form.reset()
     competencyForm.competency_ids = lesson.competencies?.map(competency => competency.id) ?? []
+    unitCompetencies.value = [...(props.unit?.competencies ?? [])]
 }
 
 watch(() => props.lesson, syncLesson, { immediate: true })
+watch(() => props.unit, unit => { unitCompetencies.value = [...(unit?.competencies ?? [])] })
+
+const availableCompetencies = computed(() => {
+    const selected = new Set(unitCompetencies.value.map(competency => competency.education_plan_competency_id).filter(Boolean))
+    const query = competencySearch.value.trim().toLowerCase()
+    return (props.competencyOptions ?? []).filter(option => !selected.has(option.id) && (!query || props.competencyText(option).toLowerCase().includes(query))).slice(0, 50)
+})
+
+function addCompetency(option) {
+    router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { education_plan_competency_id: option.id }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: response => {
+            const updatedUnit = response.props.workspace?.units?.find(unit => unit.id === props.unit.id)
+            if (updatedUnit) {
+                unitCompetencies.value = [...(updatedUnit.competencies ?? [])]
+                const added = unitCompetencies.value.find(competency => competency.education_plan_competency_id === option.id)
+                if (added && !competencyForm.competency_ids.includes(added.id)) competencyForm.competency_ids.push(added.id)
+            }
+            competencySearch.value = ''
+            competencySearchOpen.value = false
+        },
+    })
+}
 
 function save() {
     form.put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
@@ -92,15 +120,23 @@ function savePhase() {
 
                         <div v-else-if="activeTab === 'competencies'">
                             <p class="small text-muted">{{ de.lessonCompetenciesHint }}</p>
-                            <div v-if="unit?.competencies?.length" class="row g-2">
-                                <div v-for="competency in unit.competencies" :key="competency.id" class="col-md-6">
+                            <div v-if="unitCompetencies.length" class="row g-2">
+                                <div v-for="competency in unitCompetencies" :key="competency.id" class="col-md-6">
                                     <label class="form-check border rounded p-2 ps-5 h-100">
                                         <input v-model="competencyForm.competency_ids" class="form-check-input" type="checkbox" :value="competency.id">
-                                        <span class="form-check-label small">{{ competencyText(competency) }}</span>
+                                        <span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.secondary }}</span></span>
                                     </label>
                                 </div>
                             </div>
                             <p v-else class="small text-muted">{{ de.noCompetencies }}</p>
+                            <div class="position-relative mt-4">
+                                <label class="form-label">{{ de.addCompetency }}</label>
+                                <input v-model="competencySearch" class="form-control" :placeholder="de.searchCompetencies" @focus="competencySearchOpen = true">
+                                <div v-if="competencySearchOpen" class="list-group position-absolute w-100 shadow-sm z-3">
+                                    <button v-for="option in availableCompetencies" :key="option.id" class="list-group-item list-group-item-action text-start small" type="button" @click="addCompetency(option)">{{ competencyText(option) }}</button>
+                                    <div v-if="!availableCompetencies.length" class="list-group-item small text-muted">{{ de.noCompetencyOptions }}</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div v-else>
