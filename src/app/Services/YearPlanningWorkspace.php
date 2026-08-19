@@ -323,7 +323,8 @@ class YearPlanningWorkspace
         } else {
             $firstSourceIndex = $sourceIndexes->min();
             $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
-            abort_unless($firstSourceIndex + count($segment) + $length <= count($tokens), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            $overflow = max(0, $firstSourceIndex + count($segment) + $length - count($tokens));
+            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
         }
 
         return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes, $overflow): array {
