@@ -283,6 +283,7 @@ export default {
     addPhase: 'Phase hinzufügen',
     phaseDuration: 'Dauer in Minuten',
     phaseTimeSummary: (actual, expected) => `Phasen: ${actual} Minuten · vorgesehen: ${expected} Minuten`,
+    phaseChangesSavedWithLesson: 'Änderungen werden mit der Stunde gespeichert.',
     deletePhase: 'Phase löschen',
     deletePhaseConfirm: 'Möchtest du diese Phase wirklich löschen?',
     insertPhaseTemplate: 'Phasen-Vorlage einfügen',

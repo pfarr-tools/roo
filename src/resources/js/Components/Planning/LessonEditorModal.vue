@@ -4,7 +4,7 @@ import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -20,6 +20,7 @@ const form = useForm({
     notes: '',
 })
 const competencyForm = useForm({ competency_ids: [] })
+const phaseDraft = ref([])
 
 function syncLesson(lesson) {
     if (!lesson) return
@@ -34,6 +35,7 @@ function syncLesson(lesson) {
     })
     form.reset()
     competencyForm.competency_ids = lesson.competencies?.map(competency => competency.id) ?? []
+    phaseDraft.value = (lesson.phases ?? []).map(phase => ({ ...phase }))
     unitCompetencies.value = [...(props.unit?.competencies ?? [])]
 }
 
@@ -80,7 +82,7 @@ function addCompetency(option) {
 }
 
 function save() {
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases: phaseDraft.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => emit('close'),
@@ -133,7 +135,7 @@ function save() {
                             </div>
                         </div>
 
-                        <LessonPhasesTab v-else :lesson="lesson" :group-id="groupId" :phase-templates="phaseTemplates" />
+                        <LessonPhasesTab v-else :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" @update:phases="phaseDraft = $event" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>
