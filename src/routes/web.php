@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::post('/jahresplanung/{teachingGroup}/ressourcen/{resource}/zuordnen', [ResourceLibraryController::class, 'assign'])->name('resources.assign');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');

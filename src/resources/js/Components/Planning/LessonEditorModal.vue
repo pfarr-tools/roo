@@ -99,8 +99,8 @@ function save() {
         onSuccess: () => emit('close'),
     })
 }
-function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
-function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
+function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
+function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
 
 </script>
 
@@ -150,7 +150,7 @@ function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupI
                         </div>
 
                         <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" compact @update:phases="phaseDraft = $event" />
-                        <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
+                        <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + groupId + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="router.reload({ preserveScroll: true })" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>

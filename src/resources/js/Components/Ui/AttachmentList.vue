@@ -1,9 +1,9 @@
 <script setup>
 import de from '../../i18n/de'
 import { computed, ref, watch } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 
-const props = defineProps({ resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, libraryMaterialItems: { type: Array, default: () => [] }, materialText: { type: String, default: '' }, downloadBaseUrl: { type: String, required: true }, uploadUrl: { type: String, default: '' }, uploadLessonId: { type: [String, Number], default: null }, manage: { type: Boolean, default: false } })
+const props = defineProps({ resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, libraryMaterialItems: { type: Array, default: () => [] }, libraryAttachUrl: { type: String, default: '' }, libraryTargetType: { type: String, default: '' }, libraryTargetId: { type: [String, Number], default: null }, materialText: { type: String, default: '' }, downloadBaseUrl: { type: String, required: true }, uploadUrl: { type: String, default: '' }, uploadLessonId: { type: [String, Number], default: null }, manage: { type: Boolean, default: false } })
 const emit = defineEmits(['update', 'delete', 'uploaded', 'select-resource', 'update:resource-links', 'update:material-items', 'delete:resource-link', 'delete:material-item', 'error'])
 const previewResource = ref(null)
 const activeAdd = ref(null)
@@ -60,7 +60,10 @@ function addMaterialItem() {
 function selectLibraryItem(item) {
     if (item.kind === 'resource') emit('update:resource-links', [...props.resourceLinks, { ...item, local_key: `library-link-${item.id}` }])
     if (item.kind === 'material') emit('update:material-items', [...props.materialItems, { ...item, local_key: `library-material-${item.id}` }])
-    if (item.kind === 'file') emit('select-resource', item)
+    if (item.kind === 'file') {
+        if (!props.libraryAttachUrl || !props.libraryTargetType || !props.libraryTargetId) return
+        router.post(`${props.libraryAttachUrl}/${item.id}`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page) })
+    }
     activeAdd.value = null
 }
 function openEdit(type, item) {
