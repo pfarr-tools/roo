@@ -5,7 +5,7 @@ import LessonEditorModal from '../../Components/Planning/LessonEditorModal.vue'
 import LessonPhasesTab from '../../Components/Planning/LessonPhasesTab.vue'
 import de from '../../i18n/de'
 import { ref } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 const props = defineProps({ slot: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, competencyOptions: Array, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) } })
@@ -16,6 +16,7 @@ const saveForm = useForm({})
 const executionMode = ref('teacher')
 const currentPhase = ref(0)
 const checkedMaterials = ref([])
+const resourceForm = useForm({ resource: null, description: '' })
 const executionForm = useForm({ status: props.slot.scheduled_lesson.status, actual_on: props.slot.scheduled_lesson.actual_on ?? '', execution_notes: props.slot.scheduled_lesson.execution_notes ?? '' })
 const competencyText = competency => competency.competency_presentation?.label || competency.competency_presentation?.text || competency.text || competency.display || de.noCompetencyText
 const targetCompetencyText = competency => competency.label || competency.text || de.noCompetencyText
@@ -25,6 +26,9 @@ function savePlanning() {
 }
 function saveExecution() { executionForm.put(`/unterricht/${props.slot.id}/durchfuehrung`, { preserveScroll: true }) }
 function markConducted() { executionForm.status = 'conducted'; if (!executionForm.actual_on) executionForm.actual_on = String(props.slot.date).slice(0, 10); saveExecution() }
+function uploadResource() { resourceForm.post(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge`, { forceFormData: true, preserveScroll: true, onSuccess: () => resourceForm.reset() }) }
+function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
+function deleteResource(resource) { if (window.confirm(de.deleteAttachmentConfirm)) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
 const statusLabel = status => ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed }[status] ?? status)
 const materialItems = computed(() => [...String(props.lesson.materials ?? '').split('\n'), ...(props.lesson.phases ?? []).flatMap(phase => String(phase.materials ?? '').split('\n'))].map(item => item.trim()).filter(Boolean).filter((item, index, all) => all.indexOf(item) === index))
 </script>
@@ -45,7 +49,7 @@ const materialItems = computed(() => [...String(props.lesson.materials ?? '').sp
                 <h2 id="planning-heading" class="visually-hidden">{{ de.lessonPlanning }}</h2>
                 <div class="row g-4 mb-4">
                     <div class="col-lg-5"><article class="card h-100"><div class="card-body"><div class="d-flex justify-content-between align-items-start"><h2 class="h5">{{ de.lessonMetadata }}</h2><button class="btn btn-sm btn-outline-secondary" type="button" @click="editorOpen = true"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ de.editLesson }}</button></div><dl class="row mb-0 small"><dt class="col-sm-5">{{ de.unit }}</dt><dd class="col-sm-7">{{ unit.title }}</dd><dt class="col-sm-5">{{ de.lessonDuration }}</dt><dd class="col-sm-7">{{ lesson.duration }} {{ de.hours.toLowerCase() }}</dd><dt class="col-sm-5">{{ de.learningGoals }}</dt><dd class="col-sm-7 text-pre-wrap">{{ lesson.learning_goals || '–' }}</dd></dl><div class="row g-3 mt-2"><div class="col-md-6"><h3 class="h6">{{ de.processCompetencies }}</h3><ul v-if="targetCompetencies.process.length" class="small mb-0 ps-3"><li v-for="competency in targetCompetencies.process" :key="competency.id">{{ targetCompetencyText(competency) }}</li></ul><p v-else class="small text-muted mb-0">{{ de.noCompetencies }}</p></div><div class="col-md-6"><h3 class="h6">{{ de.contentCompetencies }}</h3><ul v-if="targetCompetencies.content.length" class="small mb-0 ps-3"><li v-for="competency in targetCompetencies.content" :key="competency.id">{{ targetCompetencyText(competency) }}</li></ul><p v-else class="small text-muted mb-0">{{ de.noCompetencies }}</p></div></div></div></article></div>
-                    <div class="col-lg-7"><article class="card h-100"><div class="card-body"><div class="row g-4"><div class="col-lg-7"><h2 class="h5">{{ de.materials }}</h2><p v-if="lesson.materials" class="text-pre-wrap">{{ lesson.materials }}</p><p v-else class="small text-muted">{{ de.noMaterials }}</p></div><div class="col-lg-5"><h3 class="h6">{{ de.attachments }}</h3><AttachmentList :resources="unit.resources ?? []" :download-base-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" /></div></div></div></article></div>
+                    <div class="col-lg-7"><article class="card h-100"><div class="card-body"><div class="row g-4"><div class="col-lg-7"><h2 class="h5">{{ de.materials }}</h2><p v-if="lesson.materials" class="text-pre-wrap">{{ lesson.materials }}</p><p v-else class="small text-muted">{{ de.noMaterials }}</p></div><div class="col-lg-5"><h3 class="h6">{{ de.attachments }}</h3><form class="mb-3" @submit.prevent="uploadResource"><label class="visually-hidden" for="lesson-attachment">{{ de.chooseFile }}</label><input id="lesson-attachment" class="form-control form-control-sm" type="file" @change="resourceForm.resource = $event.target.files[0]"><button class="btn btn-sm btn-outline-primary mt-2" type="submit" :disabled="!resourceForm.resource || resourceForm.processing"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.uploadAttachment }}</button></form><AttachmentList :resources="unit.resources ?? []" :download-base-url="`/jahresplanung/${group.id}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" /></div></div></div></article></div>
                 </div>
                 <article class="card planning-phases-workspace"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4 mb-1">{{ de.phases }}</h2><p class="text-muted mb-0">{{ de.lessonPhasesWorkspaceIntro }}</p></div><span class="badge text-bg-light">{{ phaseDraft.length }} {{ de.phases.toLowerCase() }}</span></div><LessonPhasesTab :lesson="lesson" :phases="phaseDraft" :group-id="group.id" :phase-templates="phaseTemplates" :social-forms="socialForms" @update:phases="phaseDraft = $event" /></div></article>
             </section>
