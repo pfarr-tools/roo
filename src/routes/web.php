@@ -11,6 +11,7 @@ use App\Http\Controllers\TeachingGroupController;
 use App\Http\Controllers\TeachingUnitController;
 use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\TeachingUnitResourceController;
+use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\YearPlanController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
+    Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');

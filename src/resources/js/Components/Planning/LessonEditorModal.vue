@@ -5,7 +5,7 @@ import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -149,7 +149,7 @@ function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupI
                             </div>
                         </div>
 
-                        <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :library-material-items="materialItems" compact @update:phases="phaseDraft = $event" />
+                        <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" compact @update:phases="phaseDraft = $event" />
                         <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
