@@ -203,6 +203,7 @@ export default {
     collapseCurriculum: 'Curriculum-Spalte einklappen',
     noScheduleSlots: 'Noch keine Unterrichtstermine aus dem Stundenplan.',
     holidays: 'Ferien',
+    removeFromPlan: 'Aus dem Jahresplan entfernen',
     noTeachingUnits: 'Noch keine eigenen Unterrichtseinheiten.',
     noLessons: 'Noch keine Stunden.',
     addLesson: 'Stunde hinzufügen',

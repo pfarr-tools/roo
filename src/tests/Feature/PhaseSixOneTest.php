@@ -111,3 +111,17 @@ it('verschiebt eine komplette eigene UE beim erneuten Einplanen ohne Doppelbeleg
     expect(ScheduledLesson::whereIn('lesson_id', $unit->lessons()->pluck('id'))->count())->toBe(2)
         ->and(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->count())->toBe(0);
 });
+
+it('entfernt Lesson- und UE-Belegungen ohne die eigene Planung zu löschen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Entfernbare UE']);
+    $unit = TeachingUnit::firstOrFail();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/stunden", ['title' => 'Entfernbare Stunde', 'duration' => 1]);
+    $lesson = $unit->lessons()->firstOrFail();
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slot = ScheduleSlot::firstOrFail();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanen", ['schedule_slot_id' => $slot->id]);
+    $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanung")->assertRedirect();
+
+    expect(ScheduledLesson::count())->toBe(0)->and(TeachingUnit::find($unit->id))->not->toBeNull();
+});

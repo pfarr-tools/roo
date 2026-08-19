@@ -179,6 +179,24 @@ class YearPlanController extends Controller
         return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Unterrichtseinheit wurde eingeplant.');
     }
 
+    public function unscheduleLesson(TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $lesson->scheduledLessons()->delete();
+
+        return back()->with('success', 'Stunde wurde aus dem Jahresplan entfernt.');
+    }
+
+    public function unscheduleUnit(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        ScheduledLesson::whereIn('lesson_id', $teachingUnit->lessons()->pluck('id'))->delete();
+
+        return back()->with('success', 'Unterrichtseinheit wurde aus dem Jahresplan entfernt.');
+    }
+
     public function updateSlot(Request $request, TeachingGroup $teachingGroup, ScheduleSlot $slot): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
