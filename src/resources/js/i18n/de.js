@@ -377,6 +377,8 @@ export default {
     sortDescending: 'Absteigend sortieren',
     noStudents: 'Noch keine Schüler:innen vorhanden.',
     pagination: 'Seitennavigation',
+    page: 'Seite',
+    pages: 'Seiten',
     teachingGroup: 'Unterrichtsgruppe',
     teachingGroupsIntro: 'Gruppen eines Schuljahres aus mehreren Klassen zusammenstellen.',
     addTeachingGroup: 'Unterrichtsgruppe anlegen',

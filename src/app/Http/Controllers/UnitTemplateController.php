@@ -21,7 +21,7 @@ class UnitTemplateController extends Controller
         $templates = UnitTemplate::query()
             ->where('organization_id', auth()->user()->organization_id)
             ->where('is_active', true)
-            ->with(['tags:id,name', 'resources:id,unit_template_id,original_name,mime_type,size'])
+            ->with(['tags:id,name', 'resources:id,unit_template_id,original_name,description,mime_type,size,page_count'])
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
             ->orderBy('title')
             ->get(['id', 'title', 'description', 'expected_hours', 'notes', 'version', 'copied_from_id']);

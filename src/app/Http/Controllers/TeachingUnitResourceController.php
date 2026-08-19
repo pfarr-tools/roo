@@ -6,6 +6,7 @@ use App\Http\Requests\UploadUnitTemplateResourceRequest;
 use App\Models\ResourceReference;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
+use App\Services\WscDocInspector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,13 +14,17 @@ use Illuminate\Support\Str;
 
 class TeachingUnitResourceController extends Controller
 {
-    public function store(UploadUnitTemplateResourceRequest $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    public function store(UploadUnitTemplateResourceRequest $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, WscDocInspector $inspector): RedirectResponse
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         $file = $request->file('resource');
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = Str::slug($teachingUnit->title ?: 'unterrichtseinheit').'-'.Str::uuid().($extension ? '.'.$extension : '');
         $path = $file->storeAs('teaching-units/'.$teachingUnit->id, $filename, 'local');
+        $pageCount = null;
+        if ($extension === 'wscdoc') {
+            $pageCount = $inspector->pageCount(Storage::disk('local')->path($path));
+        }
         $teachingUnit->resources()->create([
             'organization_id' => $request->user()->organization_id,
             'original_name' => $file->getClientOriginalName(),
@@ -27,6 +32,7 @@ class TeachingUnitResourceController extends Controller
             'storage_path' => $path,
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
+            'page_count' => $pageCount,
             'checksum' => hash_file('sha256', $file->getRealPath()),
             'security_status' => 'pending',
             'source' => 'user_upload',
@@ -53,10 +59,14 @@ class TeachingUnitResourceController extends Controller
         return Storage::disk('local')->download($resource->storage_path, $this->filenameFor($teachingUnit, $resource));
     }
 
-    public function preview(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource)
+    public function preview(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource, WscDocInspector $inspector)
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
+
+        if (strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
+            return response($inspector->previewBytes(Storage::disk('local')->path($resource->storage_path)), 200, ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, max-age=3600']);
+        }
 
         return response()->file(Storage::disk('local')->path($resource->storage_path), ['Content-Type' => $resource->mime_type ?: 'application/octet-stream']);
     }

@@ -22,7 +22,7 @@ class PhaseTemplateController extends Controller
         $organizationId = auth()->user()->organization_id;
         $query = trim((string) $request->query('q', ''));
         $templates = PhaseTemplate::query()
-            ->with(['lessonTemplate:id,title', 'socialForm:id,name', 'materialItems:id,name', 'resources:id,phase_template_id,original_name'])
+            ->with(['lessonTemplate:id,title', 'socialForm:id,name', 'materialItems:id,name', 'resources:id,phase_template_id,original_name,description,mime_type,size,page_count'])
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))

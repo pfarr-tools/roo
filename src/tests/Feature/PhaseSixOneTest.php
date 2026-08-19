@@ -179,14 +179,28 @@ it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', func
     $group->update(['aktenzeichen' => '62.53']);
     $group->gradeLevels()->create(['grade_level' => '4']);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
-    $file = UploadedFile::fake()->create('Arbeitsblatt.wscdoc', 12, 'application/octet-stream');
+    $archivePath = tempnam(sys_get_temp_dir(), 'wscdoc-');
+    $archive = new ZipArchive();
+    $archive->open($archivePath);
+    $archive->addFromString('info.json', json_encode(['Statistics' => ['PageCount' => 3]]));
+    $archive->addFromString('preview.jpg', 'preview');
+    $archive->addFromString('ws2.abd', '');
+    $archive->addFromString('FallbackContentSource.json', json_encode(['content' => []]));
+    $archive->addFromString('1.0.version', '');
+    $archive->close();
+    $file = UploadedFile::fake()->createWithContent('Arbeitsblatt.wscdoc', file_get_contents($archivePath));
+    unlink($archivePath);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge", ['resource' => $file])->assertRedirect();
     $resource = $unit->resources()->firstOrFail();
     Storage::disk('local')->assertExists($resource->storage_path);
+    expect($resource->page_count)->toBe(3);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge/{$resource->id}/download")
         ->assertDownload('62.53_4 Gottesbilder Arbeitsblatt.wscdoc');
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge/{$resource->id}/preview")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'image/jpeg');
 });
 
 it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', function () {

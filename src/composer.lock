@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "268a26a9f2186341a5f54e14cde5efd1",
+    "content-hash": "485a0345995d6d2bdf1655ce95ed7fae",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3535,6 +3535,56 @@
                 "source": "https://github.com/paragonie/constant_time_encoding"
             },
             "time": "2025-09-24T15:06:41+00:00"
+        },
+        {
+            "name": "peregrinus/wscdoc",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/potofcoffee/wscdoc.git",
+                "reference": "9fd32b398fc49fb219f266ec724cda29f0a8ad6d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/potofcoffee/wscdoc/zipball/9fd32b398fc49fb219f266ec724cda29f0a8ad6d",
+                "reference": "9fd32b398fc49fb219f266ec724cda29f0a8ad6d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-zip": "*",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.0"
+            },
+            "default-branch": true,
+            "bin": [
+                "bin/wscdoc-inspect"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Peregrinus\\WscDoc\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Christoph Fischer",
+                    "email": "chris@toph.de"
+                }
+            ],
+            "description": "Read, inspect and conservatively create/edit Worksheet Crafter .wscdoc files.",
+            "support": {
+                "issues": "https://github.com/potofcoffee/wscdoc/issues",
+                "source": "https://github.com/potofcoffee/wscdoc/tree/main"
+            },
+            "time": "2026-08-19T15:21:14+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -11513,7 +11563,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "peregrinus/wscdoc": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
