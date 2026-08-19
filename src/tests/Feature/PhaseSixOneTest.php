@@ -16,6 +16,7 @@ use App\Models\PhaseTemplate;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolPeriod;
+use App\Models\SocialForm;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
@@ -132,6 +133,10 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     expect($scheduled->status)->toBe('assigned');
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['title' => 'Einstieg'])->assertRedirect();
     expect($scheduled->fresh()->status)->toBe('planned');
+    $phase = $lesson->phases()->firstOrFail();
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", ['title' => $lesson->title, 'duration' => 1, 'phases' => [['id' => $phase->id, 'title' => 'Einstieg', 'duration_minutes' => 15, 'social_form' => 'Plenum']]])->assertRedirect();
+    expect(SocialForm::where('organization_id', $user->organization_id)->where('name', 'Plenum')->exists())->toBeTrue()
+        ->and($phase->fresh()->duration_minutes)->toBe(15);
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'ready'])->assertRedirect();
     expect($scheduled->fresh()->status)->toBe('ready');
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'unknown'])->assertSessionHasErrors('status');

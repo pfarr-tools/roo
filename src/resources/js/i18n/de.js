@@ -282,6 +282,7 @@ export default {
     editPhase: 'Phase bearbeiten',
     addPhase: 'Phase hinzufügen',
     phaseDuration: 'Dauer in Minuten',
+    socialFormPlaceholder: 'z. B. Plenum',
     phaseTimeSummary: (actual, expected) => `Phasen: ${actual} Minuten · vorgesehen: ${expected} Minuten`,
     phaseChangesSavedWithLesson: 'Änderungen werden mit der Stunde gespeichert.',
     deletePhase: 'Phase löschen',

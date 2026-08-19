@@ -72,7 +72,7 @@ class YearPlanController extends Controller
             'calendar' => $this->calendar($teachingGroup),
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'units' => $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
                 'curricula' => $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
@@ -85,7 +85,7 @@ class YearPlanController extends Controller
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
             'competencyOptions' => EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
                 ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text']),
-            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'description', 'material']),
             'socialForms' => SocialForm::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -284,11 +284,9 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'phases.*.description' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.description' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string']]);
         $phaseTemplateIds = collect($data['phases'] ?? [])->pluck('phase_template_id')->filter()->unique();
         abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
-        $socialFormIds = collect($data['phases'] ?? [])->pluck('social_form_id')->filter()->unique();
-        abort_unless(SocialForm::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $socialFormIds)->count() === $socialFormIds->count(), 422, 'Eine Sozialform gehört nicht zu dieser Organisation.');
         DB::transaction(function () use ($data, $lesson): void {
             $lesson->update(collect($data)->except(['competency_ids', 'phases'])->all());
             if (array_key_exists('phases', $data)) {
@@ -297,7 +295,10 @@ class YearPlanController extends Controller
                 abort_unless($phases->pluck('id')->filter()->diff($existingIds)->isEmpty(), 422, 'Eine Phase gehört nicht zu dieser Stunde.');
                 $lesson->phases()->whereNotIn('id', $phases->pluck('id')->filter())->delete();
                 foreach ($phases as $position => $phase) {
-                    $attributes = collect($phase)->except('id')->merge(['position' => $position + 1])->all();
+                    $attributes = collect($phase)->except(['id', 'local_key'])->merge(['position' => $position + 1])->all();
+                    $socialFormName = trim((string) ($attributes['social_form'] ?? ''));
+                    unset($attributes['social_form']);
+                    $attributes['social_form_id'] = $socialFormName === '' ? null : SocialForm::firstOrCreate(['organization_id' => $lesson->unit->organization_id, 'name' => $socialFormName])->id;
                     if (! empty($phase['id'])) $lesson->phases()->whereKey($phase['id'])->update($attributes); else $lesson->phases()->create($attributes);
                 }
                 if ($phases->isNotEmpty()) $lesson->scheduledLessons()->where('status', ScheduledLesson::STATUS_ASSIGNED)->update(['status' => ScheduledLesson::STATUS_PLANNED]);
