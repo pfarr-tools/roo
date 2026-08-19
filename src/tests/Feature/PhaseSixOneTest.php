@@ -238,3 +238,27 @@ it('fügt Stunden in belegte Slots ein und kann getrennte Teile wieder zusammenf
         ->and(ScheduledLesson::where('schedule_slot_id', $slots[2]->id)->value('lesson_id'))->toBe($lessonA->id)
         ->and(ScheduledLesson::where('schedule_slot_id', $slots[3]->id)->value('lesson_id'))->toBe($lessonB->id);
 });
+
+it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken, Fixierungen und Entfernen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unitA = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bestehende UE', 'position' => 1]);
+    $lessonA = $unitA->lessons()->create(['title' => 'Bestehende Stunde', 'position' => 1, 'duration' => 1]);
+    $unitB = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue UE', 'position' => 2]);
+    $lessonB = $unitB->lessons()->create(['title' => 'Neue Stunde', 'position' => 1, 'duration' => 1]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessonA, $slots[1]);
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[0]->id}/einfügen", ['type' => 'lesson', 'source_id' => $lessonB->id])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($lessonB->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($lessonA->id);
+
+    $this->actingAs($user)->delete("/jahresplanung/{$group->id}/lessons/{$lessonB->id}/einplanung", ['move_following' => true])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($lessonA->id);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'absent', 'reflow_mode' => 'remove'])->assertRedirect();
+    expect(ScheduledLesson::where('lesson_id', $lessonA->id)->count())->toBe(0);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
+    expect($slots[1]->fresh()->is_pinned)->toBeTrue();
+});

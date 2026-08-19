@@ -271,20 +271,22 @@ class YearPlanController extends Controller
         return back()->with('success', $data['type'] === 'unit' ? 'Unterrichtseinheit wurde eingefügt.' : 'Stunde wurde eingefügt.');
     }
 
-    public function unscheduleLesson(TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    public function unscheduleLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, YearPlanningWorkspace $workspace): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $lesson->scheduledLessons()->delete();
+        $data = $request->validate(['move_following' => ['sometimes', 'boolean']]);
+        $workspace->removeScheduled($teachingGroup, 'lesson', $lesson->id, (bool) ($data['move_following'] ?? false));
 
         return back()->with('success', 'Stunde wurde aus dem Jahresplan entfernt.');
     }
 
-    public function unscheduleUnit(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    public function unscheduleUnit(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, YearPlanningWorkspace $workspace): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
-        ScheduledLesson::whereIn('lesson_id', $teachingUnit->lessons()->pluck('id'))->delete();
+        $data = $request->validate(['move_following' => ['sometimes', 'boolean']]);
+        $workspace->removeScheduled($teachingGroup, 'unit', $teachingUnit->id, (bool) ($data['move_following'] ?? false));
 
         return back()->with('success', 'Unterrichtseinheit wurde aus dem Jahresplan entfernt.');
     }
@@ -293,19 +295,20 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
+        $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'is_pinned' => ['sometimes', 'boolean'], 'reflow_mode' => ['sometimes', 'in:move,remove']]);
         $wasAvailable = in_array($slot->status, ['free', 'buffer'], true);
         $previousStatus = $slot->status;
         $willBeAvailable = in_array($data['status'], ['free', 'buffer'], true);
+        $isPinned = (bool) ($data['is_pinned'] ?? $slot->is_pinned);
         if ($wasAvailable !== $willBeAvailable) {
             $assignments = $teachingGroup->teachingUnits()->with('lessons.scheduledLessons')->get()->flatMap->lessons->flatMap->scheduledLessons->map(fn ($assignment) => $assignment->only(['schedule_slot_id', 'lesson_id']))->all();
-            $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status']);
-            $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null]);
+            $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status'], $data['reflow_mode'] ?? 'move');
+            $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null, 'is_pinned' => $isPinned]);
             $this->revise($this->planFor($teachingGroup), auth()->id(), 'slot_reflow', 'Terminstatus geändert und Jahresplan neu angeordnet.', ['assignments' => $assignments, 'blocked_slot_id' => $slot->id, 'previous_status' => $previousStatus]);
 
             return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Terminstatus gespeichert und Jahresplan neu angeordnet.');
         }
-        $slot->update($data);
+        $slot->update(['status' => $data['status'], 'label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null, 'is_pinned' => $isPinned]);
 
         return back()->with('success', 'Terminstatus wurde gespeichert.');
     }

@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['teaching_group_id', 'date', 'period_number', 'starts_at', 'ends_at', 'status', 'label', 'notes'])]
+#[Fillable(['teaching_group_id', 'date', 'period_number', 'starts_at', 'ends_at', 'status', 'is_pinned', 'label', 'notes'])]
 class ScheduleSlot extends Model
 {
     protected function casts(): array
     {
-        return ['date' => 'date'];
+        return ['date' => 'date', 'is_pinned' => 'boolean'];
     }
 
     public function group(): BelongsTo
