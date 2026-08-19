@@ -41,10 +41,11 @@ class CompetencyResolver
         $plan = $this->related($competency, 'educationPlanCompetency') ?? $competency;
         $curriculum = $this->related($competency, 'curriculumCompetency');
         $curricula = $this->relatedMany($competency, 'curriculumCompetencies');
+        $identifier = $this->identifier($competency);
 
-        $curriculumText = $this->clean($curriculum?->text)
-            ?: $this->clean($curriculum?->raw_text)
-            ?: $this->displayText($curriculum?->display, $this->identifier($competency));
+        $curriculumText = $this->clean($curriculum?->text, $identifier)
+            ?: $this->clean($curriculum?->raw_text, $identifier)
+            ?: $this->displayText($curriculum?->display, $identifier);
         $variants = collect($this->relatedMany($competency, 'variants'))
             ->pluck('text')
             ->filter()
@@ -52,17 +53,17 @@ class CompetencyResolver
 
         if (! $curriculumText && $curricula->isNotEmpty()) {
             $curriculumText = $curricula
-                ->map(fn ($item) => $this->clean($item->text) ?: $this->clean($item->raw_text) ?: $this->displayText($item->display, $this->identifier($competency)))
+                ->map(fn ($item) => $this->clean($item->text, $identifier) ?: $this->clean($item->raw_text, $identifier) ?: $this->displayText($item->display, $identifier))
                 ->filter()
                 ->first();
         }
 
-        return (string) ($competency->local_wording
+        return (string) ($this->clean($competency->local_wording, $identifier)
             ?: $curriculumText
-            ?: $plan?->text
+            ?: $this->clean($plan?->text, $identifier)
             ?: $variants
-            ?: $competency->text
-            ?: $this->clean($competency->raw_text)
+            ?: $this->clean($competency->text, $identifier)
+            ?: $this->clean($competency->raw_text, $identifier)
             ?: $this->displayText($competency->display, $this->identifier($competency))
             ?: '');
     }
@@ -101,9 +102,16 @@ class CompetencyResolver
         return preg_replace('/^(\d+\.\d+\.\d+)\.(\d+)$/', '$1 ($2)', $identifier) ?: $identifier;
     }
 
-    private function clean(mixed $value): string
+    private function clean(mixed $value, string $identifier = ''): string
     {
-        return trim((string) preg_replace('/^\s*(?:\d+(?:\.\d+){3}|\d+(?:\.\d+){2}\s*\(?\d+\)?)\s*[GME]?\s*/i', '', (string) ($value ?? '')));
+        $text = trim((string) ($value ?? ''));
+        if ($text === '') {
+            return '';
+        }
+
+        $identifierPattern = $identifier !== '' ? preg_quote($identifier, '/').'|'.preg_quote((string) preg_replace('/\s*\(\d+\)$/', '', $identifier), '/') : '(?:\d+(?:\.\d+){2,4}(?:\s*\(\d+\))?)';
+
+        return trim((string) preg_replace('/^\s*'.$identifierPattern.'\s*(?:[-–:]\s*)?[GME]?\s*/iu', '', $text));
     }
 
     private function displayText(mixed $value, string $identifier): string
