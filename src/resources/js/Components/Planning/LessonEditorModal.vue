@@ -5,7 +5,7 @@ import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, scheduledLesson: { type: Object, default: null }, executionUrl: { type: String, default: '' }, materialItems: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -26,6 +26,7 @@ const resourceLinksDraft = ref([])
 const materialItemsDraft = ref([])
 const deletedResourceLinkIds = ref([])
 const deletedMaterialItemIds = ref([])
+const preparationStatus = ref('')
 
 function syncLesson(lesson) {
     if (!lesson) return
@@ -44,6 +45,7 @@ function syncLesson(lesson) {
     resourceLinksDraft.value = [...(lesson.resource_links ?? props.resourceLinks ?? props.unit?.resource_links ?? [])].map(link => ({ ...link }))
     materialItemsDraft.value = [...(lesson.material_items ?? props.materialItems ?? [])].map(item => ({ ...item }))
     unitCompetencies.value = [...(props.unit?.competencies ?? [])]
+    preparationStatus.value = props.scheduledLesson?.status ?? ''
 }
 
 watch(() => props.lesson, syncLesson, { immediate: true })
@@ -101,6 +103,10 @@ function save() {
 }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
 function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
+function updatePreparationStatus() {
+    if (!props.executionUrl || !preparationStatus.value) return
+    router.put(props.executionUrl, { status: preparationStatus.value, actual_on: props.scheduledLesson?.actual_on ?? null, execution_notes: props.scheduledLesson?.execution_notes ?? null }, { preserveState: true, preserveScroll: true, onSuccess: () => { if (props.scheduledLesson) props.scheduledLesson.status = preparationStatus.value } })
+}
 
 </script>
 
@@ -125,6 +131,7 @@ function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupI
                         <div v-if="activeTab === 'metadata'" class="row g-3">
                             <div class="col-md-8"><label class="form-label">{{ de.lessonTitle }}</label><input v-model="form.title" class="form-control" required></div>
                             <div class="col-md-4"><label class="form-label">{{ de.lessonDuration }}</label><input v-model="form.duration" class="form-control" type="number" min="1" max="12" required></div>
+                            <div v-if="scheduledLesson && executionUrl" class="col-md-4"><label class="form-label" for="lesson-preparation-status">{{ de.lessonStatus }}</label><select id="lesson-preparation-status" v-model="preparationStatus" class="form-select" @change="updatePreparationStatus"><option v-for="status in ['assigned', 'planned', 'ready', 'conducted', 'cancelled', 'postponed']" :key="status" :value="status">{{ ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed })[status] }}</option></select><div class="form-text">{{ de.lessonStatusHint }}</div></div>
                             <div class="col-12"><label class="form-label">{{ de.learningGoals }}</label><textarea v-model="form.learning_goals" class="form-control" rows="3"></textarea></div>
                             <div class="col-md-6"><label class="form-label">{{ de.materials }}</label><textarea v-model="form.materials" class="form-control" rows="4"></textarea></div>
                             <div class="col-md-6"><label class="form-label">{{ de.homework }}</label><textarea v-model="form.homework" class="form-control" rows="4"></textarea></div>
