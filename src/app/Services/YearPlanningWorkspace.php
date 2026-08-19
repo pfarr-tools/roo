@@ -145,13 +145,15 @@ class YearPlanningWorkspace
         $lessonEducation = $lessonCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
         $curriculumCompetencies = $group->curricula()->with('versions.topics.competencies')->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->competencies;
         $curriculumIds = $curriculumCompetencies->pluck('id')->unique();
-        $coveredCurriculumIds = $unitCompetencies->pluck('curriculum_topic_competency_id')->filter()->unique();
+        $coveredEducationIds = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique();
+        $coveredCurriculumIds = $curriculumCompetencies->filter(fn ($competency) => $coveredEducationIds->contains($competency->education_plan_competency_id) || $unitCompetencies->pluck('curriculum_topic_competency_id')->contains($competency->id))->pluck('id')->unique();
 
         return [
             'teaching_unit_competencies' => $unitCompetencies->count(),
             'lesson_competencies' => $lessonCompetencies->count(),
             'education_plan_planned' => $plannedEducation->count(),
             'education_plan_lesson' => $lessonEducation->count(),
+            'education_plan_total' => $curriculumCompetencies->pluck('education_plan_competency_id')->filter()->unique()->count(),
             'curriculum_covered' => $coveredCurriculumIds->intersect($curriculumIds)->count(),
             'curriculum_total' => $curriculumIds->count(),
         ];

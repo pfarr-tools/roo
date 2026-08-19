@@ -337,6 +337,14 @@ Unterrichtseinheiten visuell über das Schuljahr verteilen.
 - Curriculumthemen ohne geplante Einheit
 - Kompetenzabdeckung
 
+### Phase 6.1 – zentraler Jahresplanungsarbeitsbereich
+
+Fortschritt: `[x]` Der dreispaltige Arbeitsbereich mit unabhängigen eigenen
+Unterrichtseinheiten, Curriculum-Übernahme, generierten Unterrichtsslots,
+Lesson-Editor, Kompetenzabdeckung, Puffer-/Ausfallstatus, Reflow, Undo und
+zugänglichen Alternativaktionen ist umgesetzt. Curriculum- und
+Bildungsplandaten bleiben dabei unverändert.
+
 ---
 
 ## Phase 7 – Stundeneditor und Durchführung
@@ -622,5 +630,4 @@ Verschachtelte Modals sind zu vermeiden. Für Detailbearbeitung innerhalb eines 
 Die UI arbeitet bei der Jahresplanung ausschließlich mit ganzen Schulstunden. Eine minutengenaue Verteilung von Inhalten über Unterrichtsstundengrenzen ist nicht vorgesehen.
 
 Kompetenzbeziehungen werden über stabile fachliche Relationen/IDs abgebildet, niemals durch Textvergleich. Die UI muss langfristig zwischen Curriculum-Abdeckung und der maßgeblichen EducationPlan-Abdeckung unterscheiden können.
-
 

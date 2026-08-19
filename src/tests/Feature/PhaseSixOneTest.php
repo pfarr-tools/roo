@@ -90,4 +90,8 @@ it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot',
 
     expect(ScheduledLesson::firstOrFail()->schedule_slot_id)->not->toBe($slot->id)
         ->and($slot->fresh()->status)->toBe('absent');
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/reflow/rueckgaengig")->assertRedirect();
+    expect(ScheduledLesson::firstOrFail()->schedule_slot_id)->toBe($slot->id)
+        ->and($slot->fresh()->status)->toBe('free');
 });

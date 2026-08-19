@@ -12,6 +12,7 @@ use App\Models\Lesson;
 use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
 use App\Models\PlannedUnit;
+use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
@@ -49,8 +50,8 @@ class YearPlanController extends Controller
             'checks' => $this->checks($teachingGroup, $plan),
             'calendar' => $this->calendar($teachingGroup),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,display', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
-                'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,display'])->get(),
+                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,text', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
             ],
@@ -128,6 +129,35 @@ class YearPlanController extends Controller
         return back()->with('success', 'Phase wurde gespeichert.');
     }
 
+    public function reorderLessons(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['lesson_ids' => ['required', 'array'], 'lesson_ids.*' => ['integer']]);
+        $allowed = $teachingUnit->lessons()->pluck('id')->sort()->values()->all();
+        abort_unless($allowed === collect($data['lesson_ids'])->sort()->values()->all(), 422, 'Die Stunden gehören nicht vollständig zu dieser Unterrichtseinheit.');
+        foreach ($data['lesson_ids'] as $position => $lessonId) {
+            $teachingUnit->lessons()->whereKey($lessonId)->update(['position' => $position + 1]);
+        }
+
+        return back()->with('success', 'Reihenfolge der Stunden wurde gespeichert.');
+    }
+
+    public function undoLastReflow(TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $revision = $this->planFor($teachingGroup)->revisions()->where('action', 'slot_reflow')->latest()->first();
+        abort_unless($revision && $revision->payload, 422, 'Keine rückgängig machbare Verschiebung vorhanden.');
+        foreach ($revision->payload['assignments'] as $assignment) {
+            ScheduledLesson::where('lesson_id', $assignment['lesson_id'])->delete();
+            ScheduledLesson::create(['lesson_id' => $assignment['lesson_id'], 'schedule_slot_id' => $assignment['schedule_slot_id']]);
+        }
+        ScheduleSlot::whereKey($revision->payload['blocked_slot_id'])->update(['status' => $revision->payload['previous_status']]);
+        $revision->update(['action' => 'slot_reflow_undone']);
+
+        return back()->with('success', 'Die letzte Verschiebung wurde rückgängig gemacht.');
+    }
+
     public function scheduleLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, YearPlanningWorkspace $workspace): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -144,8 +174,10 @@ class YearPlanController extends Controller
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
         if ($data['status'] !== 'free' && $slot->scheduledLesson()->exists()) {
+            $assignments = $slot->scheduledLesson->lesson->scheduledLessons()->get(['schedule_slot_id', 'lesson_id'])->map(fn ($assignment) => $assignment->only(['schedule_slot_id', 'lesson_id']))->all();
             $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status']);
             $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null]);
+            $this->revise($this->planFor($teachingGroup), auth()->id(), 'slot_reflow', 'Ausgefallener Termin wurde automatisch verschoben.', ['assignments' => $assignments, 'blocked_slot_id' => $slot->id, 'previous_status' => 'free']);
 
             return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Ausfall gespeichert und nachfolgende Stunde verschoben.');
         }
@@ -334,9 +366,9 @@ class YearPlanController extends Controller
         return collect($this->instructionDates($group))->filter(fn ($date) => in_array($date->dayOfWeekIso, $weekdays, true))->count();
     }
 
-    private function revise(GroupYearPlan $plan, int $userId, string $action, string $description): void
+    private function revise(GroupYearPlan $plan, int $userId, string $action, string $description, ?array $payload = null): void
     {
         $plan->increment('revision');
-        $plan->revisions()->create(['user_id' => $userId, 'revision' => $plan->fresh()->revision, 'action' => $action, 'description' => $description]);
+        $plan->revisions()->create(['user_id' => $userId, 'revision' => $plan->fresh()->revision, 'action' => $action, 'description' => $description, 'payload' => $payload]);
     }
 }

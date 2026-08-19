@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['group_year_plan_id', 'user_id', 'revision', 'action', 'description'])]
+#[Fillable(['group_year_plan_id', 'user_id', 'revision', 'action', 'description', 'payload'])]
 class PlanRevision extends Model
 {
+    protected function casts(): array
+    {
+        return ['payload' => 'array'];
+    }
+
     public function plan(): BelongsTo
     {
         return $this->belongsTo(GroupYearPlan::class, 'group_year_plan_id');
