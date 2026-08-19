@@ -38,7 +38,7 @@ const materialItems = computed(() => [...String(props.lesson.materials ?? '').sp
             <button v-else-if="activeView === 'execution'" class="btn btn-sm btn-primary ms-2" type="button" :disabled="executionForm.processing" @click="saveExecution"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
         </template>
         <div class="container-full px-3 py-4">
-            <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div><h1 class="h2 mb-1">{{ lesson.title }}</h1><div class="text-muted">{{ formatDate(slot.date) }} · {{ slot.period_number }}. {{ de.period }} · {{ group.name }}</div></div><span class="badge text-bg-primary align-self-start">{{ slot.scheduled_lesson.status }}</span></div>
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div><h1 class="h2 mb-1">{{ lesson.title }}</h1><div class="text-muted">{{ formatDate(slot.date) }} · {{ slot.period_number }}. {{ de.period }} · {{ group.name }}</div></div><span class="badge text-bg-primary align-self-start">{{ statusLabel(slot.scheduled_lesson.status) }}</span></div>
 
             <section v-if="activeView === 'planning'" aria-labelledby="planning-heading">
                 <h2 id="planning-heading" class="visually-hidden">{{ de.lessonPlanning }}</h2>
