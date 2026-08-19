@@ -161,5 +161,8 @@ body {
 .planning-slot.drop-ready { border-color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .12); box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .16); }
 .planning-slot.slot-blocked { opacity: .75; }
 .lesson-row { padding: .55rem 0; border-top: 1px solid var(--bs-border-color); cursor: grab; }
+.drag-handle { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 1.5rem; color: var(--bs-secondary-color); cursor: grab; }
+.drag-handle:focus-visible, .drag-handle:hover { color: var(--bs-primary); }
+.curriculum-drop-ready { border-radius: .5rem; outline: .2rem dashed rgba(var(--bs-primary-rgb), .55); outline-offset: .35rem; background: rgba(var(--bs-primary-rgb), .04); }
 .curriculum-open-button { position: absolute; z-index: 2; top: 0; right: 0; }
 @media (max-width: 991.98px) { .year-planning-grid, .year-planning-grid.curriculum-collapsed { grid-template-columns: 1fr; } .planning-curricula { order: -1; } }
