@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');
     Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten', [YearPlanController::class, 'storeTeachingUnit'])->name('year-plans.teaching-units.store');
+    Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/reihenfolge', [YearPlanController::class, 'reorderUnits'])->name('year-plans.teaching-units.reorder');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}', [YearPlanController::class, 'updateTeachingUnit'])->name('year-plans.teaching-units.update');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/vorlage', [YearPlanController::class, 'saveUnitAsTemplate'])->name('year-plans.teaching-units.template');
     Route::post('/jahresplanung/{teachingGroup}/curriculum-themen/{topic}/uebernehmen', [YearPlanController::class, 'takeCurriculumUnit'])->name('year-plans.curriculum-topics.take');
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
     Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden/reihenfolge', [YearPlanController::class, 'reorderLessons'])->name('year-plans.lessons.reorder');
+    Route::post('/jahresplanung/{teachingGroup}/automatisch-einplanen', [YearPlanController::class, 'autoPlan'])->name('year-plans.auto-plan');
     Route::post('/jahresplanung/{teachingGroup}/reflow/rueckgaengig', [YearPlanController::class, 'undoLastReflow'])->name('year-plans.reflow.undo');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/einplanen', [YearPlanController::class, 'scheduleLesson'])->name('year-plans.lessons.schedule');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/einplanen', [YearPlanController::class, 'scheduleUnit'])->name('year-plans.teaching-units.schedule');

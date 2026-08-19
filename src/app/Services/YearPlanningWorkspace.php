@@ -144,6 +144,61 @@ class YearPlanningWorkspace
         return ['scheduled' => $scheduled, 'overflow' => 0];
     }
 
+    public function autoPlan(TeachingGroup $group, ?ScheduleSlot $start, bool $keepTogether): array
+    {
+        $units = $group->teachingUnits()->with(['lessons' => fn ($query) => $query->orderBy('position'), 'lessons.scheduledLessons'])->orderBy('position')->get();
+        $units = $units->filter(fn (TeachingUnit $unit) => $unit->lessons->isNotEmpty() && $unit->lessons->every(fn (Lesson $lesson) => $lesson->scheduledLessons->isEmpty()))->values();
+        if ($units->isEmpty()) {
+            return ['planned' => 0, 'overflow' => 0];
+        }
+
+        return DB::transaction(function () use ($group, $start, $keepTogether, $units): array {
+            $slots = $this->availableSlots($group);
+            $startIndex = $start ? $slots->search(fn (ScheduleSlot $slot) => $slot->id === $start->id) : 0;
+            abort_unless($startIndex !== false, 422, 'Der Startslot ist nicht frei.');
+            $cursor = $startIndex;
+            $planned = 0;
+            $overflow = 0;
+
+            foreach ($units as $unit) {
+                $lessons = $unit->lessons;
+                if ($keepTogether) {
+                    $duration = (int) $lessons->sum('duration');
+                    $target = $slots[$cursor] ?? null;
+                    if (! $target) {
+                        $overflow += $duration;
+
+                        continue;
+                    }
+                    $result = $this->insertAtSlot($group, 'unit', $unit->id, $target);
+                    $planned += $result['scheduled'];
+                    $overflow += $result['overflow'];
+                    $slots = $this->availableSlots($group);
+                    $cursor = $slots->search(fn (ScheduleSlot $slot) => $slot->date->gt($target->date) || ($slot->date->equalTo($target->date) && $slot->period_number > $target->period_number));
+                    if ($cursor === false) {
+                        $cursor = $slots->count();
+                    }
+                } else {
+                    foreach ($lessons as $lesson) {
+                        for ($offset = 0; $offset < $lesson->duration; $offset++) {
+                            $target = $slots[$cursor] ?? null;
+                            if (! $target) {
+                                $overflow++;
+
+                                continue;
+                            }
+                            ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $target->id]);
+                            $planned++;
+                            $cursor++;
+                        }
+                    }
+                }
+            }
+
+            return ['planned' => $planned, 'overflow' => $overflow];
+        });
+    }
+
     /**
      * Insert a lesson or unit at a calendar position and shift the following
      * schedule to the right. A lesson may therefore occupy two separate

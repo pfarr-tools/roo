@@ -262,3 +262,24 @@ it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
     expect($slots[1]->fresh()->is_pinned)->toBeTrue();
 });
+
+it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $units = collect(['Bereits geplant', 'Zweite UE', 'Dritte UE'])->map(function (string $title, int $index) use ($group, $user) {
+        $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => $title, 'position' => $index + 1]);
+        $unit->lessons()->create(['title' => $title.' – Stunde', 'position' => 1, 'duration' => $index === 1 ? 2 : 1]);
+
+        return $unit;
+    });
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    $plannedLesson = $units[0]->lessons()->first();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $plannedLesson, $slots[0]);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/reihenfolge", ['unit_ids' => [$units[2]->id, $units[1]->id, $units[0]->id]])->assertRedirect();
+    expect($units[2]->fresh()->position)->toBe(1);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/automatisch-einplanen", ['start_mode' => 'free', 'schedule_slot_id' => $slots[1]->id, 'keep_together' => true])->assertRedirect();
+    expect(ScheduledLesson::whereIn('lesson_id', $units[1]->lessons()->pluck('id'))->count())->toBe(2)
+        ->and(ScheduledLesson::whereIn('lesson_id', $units[2]->lessons()->pluck('id'))->count())->toBe(1);
+});

@@ -223,6 +223,41 @@ class YearPlanController extends Controller
         return back()->with('success', 'Reihenfolge der Stunden wurde gespeichert.');
     }
 
+    public function reorderUnits(Request $request, TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['unit_ids' => ['required', 'array'], 'unit_ids.*' => ['integer']]);
+        $allowed = $teachingGroup->teachingUnits()->pluck('id')->sort()->values()->all();
+        abort_unless($allowed === collect($data['unit_ids'])->sort()->values()->all(), 422, 'Die Unterrichtseinheiten gehören nicht vollständig zu dieser Gruppe.');
+        foreach ($data['unit_ids'] as $position => $unitId) {
+            $teachingGroup->teachingUnits()->whereKey($unitId)->update(['position' => $position + 1]);
+        }
+
+        return back()->with('success', 'Reihenfolge der Unterrichtseinheiten wurde gespeichert.');
+    }
+
+    public function autoPlan(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate([
+            'start_mode' => ['required', 'in:free,end'],
+            'schedule_slot_id' => ['nullable', 'integer'],
+            'keep_together' => ['required', 'boolean'],
+        ]);
+        $slot = null;
+        if ($data['start_mode'] === 'free') {
+            $slot = ScheduleSlot::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['schedule_slot_id'] ?? 0);
+        } else {
+            $available = $workspace->availableSlots($teachingGroup);
+            $lastPlanned = $teachingGroup->scheduleSlots()->whereHas('scheduledLesson')->orderBy('date')->orderBy('period_number')->get()->last();
+            $slot = $lastPlanned ? $available->first(fn (ScheduleSlot $candidate) => $candidate->date->gt($lastPlanned->date) || ($candidate->date->equalTo($lastPlanned->date) && $candidate->period_number > $lastPlanned->period_number)) : $available->first();
+        }
+        abort_unless($slot, 422, 'Es wurde kein geeigneter Startslot gefunden.');
+        $result = $workspace->autoPlan($teachingGroup, $slot, (bool) $data['keep_together']);
+
+        return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['planned'].' Stunde(n) eingeplant; '.$result['overflow'].' Stunde(n) konnten nicht eingeplant werden.' : $result['planned'].' Stunde(n) wurden automatisch eingeplant.');
+    }
+
     public function undoLastReflow(TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
