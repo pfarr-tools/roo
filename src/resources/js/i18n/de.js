@@ -142,6 +142,7 @@ export default {
     unitEditorResources: 'Anhänge und Materialien',
     unitEditorSongs: 'Lieder',
     uploadAttachment: 'Anhang hochladen',
+    uploadAttachmentError: 'Anhang konnte nicht hochgeladen werden.',
     chooseFile: 'Datei auswählen',
     noExpectedHours: 'Kein Zeitbedarf hinterlegt',
     description: 'Beschreibung',

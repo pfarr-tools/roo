@@ -13,6 +13,16 @@ class UploadUnitTemplateResourceRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['resource' => ['required', 'file', 'max:20480', 'mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,txt,md']];
+        return ['resource' => [
+            'required',
+            'file',
+            'max:20480',
+            function (string $attribute, mixed $file, \Closure $fail): void {
+                $allowed = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'txt', 'md', 'wscdoc'];
+                if (! in_array(strtolower($file->getClientOriginalExtension()), $allowed, true)) {
+                    $fail('Dieser Dateityp ist nicht zugelassen.');
+                }
+            },
+        ]];
     }
 }

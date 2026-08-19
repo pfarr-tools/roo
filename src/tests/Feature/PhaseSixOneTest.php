@@ -179,14 +179,14 @@ it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', func
     $group->update(['aktenzeichen' => '62.53']);
     $group->gradeLevels()->create(['grade_level' => '4']);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
-    $file = UploadedFile::fake()->create('Arbeitsblatt.pdf', 12, 'application/pdf');
+    $file = UploadedFile::fake()->create('Arbeitsblatt.wscdoc', 12, 'application/octet-stream');
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge", ['resource' => $file])->assertRedirect();
     $resource = $unit->resources()->firstOrFail();
     Storage::disk('local')->assertExists($resource->storage_path);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/anhaenge/{$resource->id}/download")
-        ->assertDownload('62.53_4 Gottesbilder Arbeitsblatt.pdf');
+        ->assertDownload('62.53_4 Gottesbilder Arbeitsblatt.wscdoc');
 });
 
 it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', function () {
