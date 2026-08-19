@@ -87,7 +87,7 @@ function dropTopic(event) { endCurriculumDrag(); const value = JSON.parse(event.
             <select id="active-group" class="form-select form-select-sm" :aria-label="de.activeTeachingGroup" :value="group.id" @change="router.visit(`/jahresplanung/${$event.target.value}`)"><option v-for="option in groupOptions" :key="option.id" :value="option.id">{{ option.name }} · {{ option.school_year.name }}</option></select>
             <span class="small text-muted d-none d-md-inline">{{ group.school_year.name }}</span>
         </template>
-        <div class="container-fluid px-3 py-4">
+        <div class="container-fluid px-3 py-4 year-planning-page">
             <h1 class="h2">{{ de.yearPlans }}</h1>
             <div v-if="$page.props.flash?.success" class="alert alert-success" role="status">{{ $page.props.flash.success }}</div>
             <div v-if="$page.props.flash?.warning" class="alert alert-warning" role="alert">{{ $page.props.flash.warning }}</div>
