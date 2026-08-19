@@ -12,6 +12,7 @@ use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\Organization;
 use App\Models\ScheduledLesson;
+use App\Models\PhaseTemplate;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolPeriod;
@@ -117,6 +118,40 @@ it('ordnet den Jahresplan beim Sperren und Freigeben eines Slots neu', function 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'free'])->assertRedirect();
     expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($firstLesson->id)
         ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($secondLesson->id);
+});
+
+it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Status UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Statusstunde', 'position' => 1, 'duration' => 1]);
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slot = ScheduleSlot::firstOrFail();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $slot);
+    $scheduled = ScheduledLesson::firstOrFail();
+
+    expect($scheduled->status)->toBe('assigned');
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['title' => 'Einstieg'])->assertRedirect();
+    expect($scheduled->fresh()->status)->toBe('planned');
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'ready'])->assertRedirect();
+    expect($scheduled->fresh()->status)->toBe('ready');
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'unknown'])->assertSessionHasErrors('status');
+});
+
+it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Phasen UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Phasenstunde', 'position' => 1, 'duration' => 1]);
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $templateLesson = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $templateLesson->id, 'title' => 'Ritual', 'description' => 'Ankommen', 'version' => 1, 'is_active' => true]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['phase_template_id' => $template->id])->assertRedirect();
+    $phase = $lesson->phases()->firstOrFail();
+    expect($phase->title)->toBe('Ritual')->and($phase->description)->toBe('Ankommen');
+
+    $second = $lesson->phases()->create(['title' => 'Sicherung', 'position' => 2]);
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen/reihenfolge", ['phase_ids' => [$second->id, $phase->id]])->assertRedirect();
+    expect($phase->fresh()->position)->toBe(2);
 });
 
 it('behandelt das Rückgängigmachen ohne Verschiebung als folgenlose Anfrage', function () {

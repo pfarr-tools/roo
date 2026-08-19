@@ -64,6 +64,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'addLessonCompetency'])->name('year-plans.lessons.competencies.store');
     Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
+    Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen', [YearPlanController::class, 'storePhase'])->name('year-plans.phases.store');
+    Route::delete('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'destroyPhase'])->name('year-plans.phases.destroy');
+    Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen/reihenfolge', [YearPlanController::class, 'reorderPhases'])->name('year-plans.phases.reorder');
+    Route::put('/jahresplanung/{teachingGroup}/geplante-stunden/{scheduledLesson}/status', [YearPlanController::class, 'updateScheduledLessonStatus'])->name('year-plans.scheduled-lessons.status');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden/reihenfolge', [YearPlanController::class, 'reorderLessons'])->name('year-plans.lessons.reorder');
     Route::post('/jahresplanung/{teachingGroup}/automatisch-einplanen', [YearPlanController::class, 'autoPlan'])->name('year-plans.auto-plan');
     Route::post('/jahresplanung/{teachingGroup}/reflow/rueckgaengig', [YearPlanController::class, 'undoLastReflow'])->name('year-plans.reflow.undo');
