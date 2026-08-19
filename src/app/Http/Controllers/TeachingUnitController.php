@@ -23,7 +23,7 @@ class TeachingUnitController extends Controller
         $query = trim((string) $request->query('q', ''));
         $units = TeachingUnit::query()
             ->where('organization_id', $request->user()->organization_id)
-            ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name', 'sourceCurriculumTopic:id,title', 'educationPlan:id,title,external_identifier', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description'])
+            ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name', 'sourceCurriculumTopic:id,title', 'educationPlan:id,title,external_identifier', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description'])
             ->withCount('lessons')
             ->when($query !== '', fn ($builder) => $builder->where(fn ($queryBuilder) => $queryBuilder
                 ->where('title', 'like', "%{$query}%")
@@ -35,7 +35,7 @@ class TeachingUnitController extends Controller
             'units' => $units,
             'educationPlans' => EducationPlan::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->orderBy('title')->get(['id', 'title', 'external_identifier']),
             'filters' => ['q' => $query],
-            'materialItems' => MaterialItem::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name', 'description']),
+            'materialItems' => MaterialItem::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name', 'material_number', 'storage_location', 'description']),
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'version']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
@@ -96,7 +96,7 @@ class TeachingUnitController extends Controller
         abort_unless($teachingUnit->organization_id === $request->user()->organization_id, 404);
         $group = $teachingUnit->group;
         $this->authorize('update', $group);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000'], 'material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string'], 'deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer'], 'deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000'], 'material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.material_number' => ['nullable', 'string', 'max:255'], 'material_items.*.storage_location' => ['nullable', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string'], 'deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer'], 'deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']]);
         if (isset($data['education_plan_id'])) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422);
         }
@@ -109,11 +109,17 @@ class TeachingUnitController extends Controller
             }
         }
         ResourceLink::where('organization_id', $request->user()->organization_id)->where('teaching_unit_id', $teachingUnit->id)->whereIn('id', $data['deleted_resource_link_ids'] ?? [])->delete();
+        $materialItemIds = [];
         foreach ($data['material_items'] ?? [] as $item) {
-            if (! empty($item['id'])) MaterialItem::where('organization_id', $request->user()->organization_id)->whereKey($item['id'])->update(['name' => $item['name'], 'description' => $item['description'] ?? null]);
-            else MaterialItem::firstOrCreate(['organization_id' => $request->user()->organization_id, 'name' => $item['name']], ['description' => $item['description'] ?? null]);
+            if (! empty($item['id'])) {
+                $material = MaterialItem::where('organization_id', $request->user()->organization_id)->whereKey($item['id'])->firstOrFail();
+                $material->update(['name' => $item['name'], 'material_number' => $item['material_number'] ?? null, 'storage_location' => $item['storage_location'] ?? null, 'description' => $item['description'] ?? null]);
+            } else {
+                $material = MaterialItem::firstOrCreate(['organization_id' => $request->user()->organization_id, 'name' => $item['name']], ['material_number' => $item['material_number'] ?? null, 'storage_location' => $item['storage_location'] ?? null, 'description' => $item['description'] ?? null]);
+            }
+            $materialItemIds[] = $material->id;
         }
-        MaterialItem::where('organization_id', $request->user()->organization_id)->whereIn('id', $data['deleted_material_item_ids'] ?? [])->delete();
+        if (array_key_exists('material_items', $data)) $teachingUnit->materialItems()->sync($materialItemIds);
 
         return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
     }

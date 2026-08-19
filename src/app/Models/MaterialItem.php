@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['organization_id', 'name', 'description'])]
+#[Fillable(['organization_id', 'name', 'material_number', 'storage_location', 'description'])]
 class MaterialItem extends Model
 {
     public function organization(): BelongsTo
@@ -23,5 +23,15 @@ class MaterialItem extends Model
     public function phases(): BelongsToMany
     {
         return $this->belongsToMany(LessonPhase::class, 'lesson_phase_material_items');
+    }
+
+    public function teachingUnits(): BelongsToMany
+    {
+        return $this->morphedByMany(TeachingUnit::class, 'material_itemable');
+    }
+
+    public function lessons(): BelongsToMany
+    {
+        return $this->morphedByMany(Lesson::class, 'material_itemable');
     }
 }

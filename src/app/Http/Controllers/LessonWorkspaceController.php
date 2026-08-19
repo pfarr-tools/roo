@@ -28,6 +28,9 @@ class LessonWorkspaceController extends Controller
             'group.school:id,name,short_name',
             'group.schoolYear:id,name',
             'scheduledLesson.lesson.unit.resources.lesson',
+            'scheduledLesson.lesson.unit.materialItems',
+            'scheduledLesson.lesson.resources',
+            'scheduledLesson.lesson.materialItems',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.unit.competencies.curriculumCompetency',
@@ -41,7 +44,7 @@ class LessonWorkspaceController extends Controller
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
-        $lesson->unit->resources->each(function ($resource) use ($lesson, $inspector): void {
+        $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
             if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
                 $resource->page_count = $inspector->pageCount(Storage::disk('local')->path($resource->storage_path));
             }
@@ -65,7 +68,7 @@ class LessonWorkspaceController extends Controller
             'unit' => $lesson->unit,
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
-            'materialItems' => MaterialItem::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name', 'description']),
+            'materialItems' => $lesson->unit->materialItems,
             'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),

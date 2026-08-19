@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\MaterialItem;
 
 #[Fillable(['organization_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes'])]
 class TeachingUnit extends Model
@@ -53,5 +55,10 @@ class TeachingUnit extends Model
     public function resourceLinks(): HasMany
     {
         return $this->hasMany(ResourceLink::class);
+    }
+
+    public function materialItems(): BelongsToMany
+    {
+        return $this->morphToMany(MaterialItem::class, 'material_itemable');
     }
 }

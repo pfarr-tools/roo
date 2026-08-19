@@ -45,4 +45,9 @@ class Lesson extends Model
     {
         return $this->hasMany(ResourceLink::class);
     }
+
+    public function materialItems(): BelongsToMany
+    {
+        return $this->morphToMany(MaterialItem::class, 'material_itemable');
+    }
 }

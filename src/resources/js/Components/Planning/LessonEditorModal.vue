@@ -42,7 +42,7 @@ function syncLesson(lesson) {
     competencyForm.competency_ids = lesson.competencies?.map(competency => competency.id) ?? []
     phaseDraft.value = (lesson.phases ?? []).map(phase => ({ ...phase }))
     resourceLinksDraft.value = [...(lesson.resource_links ?? props.resourceLinks ?? props.unit?.resource_links ?? [])].map(link => ({ ...link }))
-    materialItemsDraft.value = [...(props.materialItems ?? [])].map(item => ({ ...item }))
+    materialItemsDraft.value = [...(lesson.material_items ?? props.materialItems ?? [])].map(item => ({ ...item }))
     unitCompetencies.value = [...(props.unit?.competencies ?? [])]
 }
 
@@ -149,8 +149,8 @@ function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupI
                             </div>
                         </div>
 
-                        <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" compact @update:phases="phaseDraft = $event" />
-                        <AttachmentList v-else :resources="unit.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
+                        <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" compact @update:phases="phaseDraft = $event" />
+                        <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>
