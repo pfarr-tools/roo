@@ -334,6 +334,7 @@ export default {
     groupName: 'Name der Gruppe',
     aktenzeichen: 'Aktenzeichen',
     aktenzeichenHint: 'Optionaler Aktenplan-Schlüssel, z. B. 62.53',
+    noAktenzeichen: 'Kein Aktenplan',
     groupGrades: 'Jahrgangsstufen',
     groupGradesHint: 'Mindestens eine Stufe, z. B. 2 oder 5/6.',
     schoolYear: 'Schuljahr',

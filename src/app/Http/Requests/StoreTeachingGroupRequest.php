@@ -18,7 +18,7 @@ class StoreTeachingGroupRequest extends FormRequest
             'school_id' => ['required', 'integer', 'exists:schools,id'],
             'school_year_id' => ['required', 'integer', 'exists:school_years,id'],
             'name' => ['required', 'string', 'max:255'],
-            'aktenzeichen' => ['nullable', 'string', 'max:30'],
+            'aktenzeichen' => ['nullable', 'string', 'in:62.53,62.54,62.55,62.56,62.57,62.58'],
             'notes' => ['nullable', 'string'],
             'grade_levels' => ['required', 'array', 'min:1'],
             'grade_levels.*' => ['required', 'string', 'max:30', 'distinct'],
