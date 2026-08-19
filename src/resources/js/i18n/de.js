@@ -139,6 +139,8 @@ export default {
     saveDescription: 'Beschreibung speichern',
     deleteAttachment: 'Anhang löschen',
     deleteAttachmentConfirm: 'Möchtest du diesen Anhang wirklich löschen?',
+    detachResourceConfirm: 'Soll die Zuordnung zu diesem Objekt entfernt werden?',
+    deleteResourcePermanentlyConfirm: 'Dies ist die letzte Zuordnung. Soll das Element dauerhaft gelöscht werden? Wenn du Nein wählst, bleibt es in der Bibliothek verfügbar.',
     addCompetency: 'Kompetenz hinzufügen',
     searchCompetencies: 'Kompetenzen durchsuchen …',
     fromLesson: 'aus Unterrichtsstunde',

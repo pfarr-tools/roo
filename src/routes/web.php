@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
     Route::post('/jahresplanung/{teachingGroup}/ressourcen/{resource}/zuordnen', [ResourceLibraryController::class, 'assign'])->name('resources.assign');
+    Route::get('/jahresplanung/{teachingGroup}/ressourcen/{kind}/{resource}/zuordnungsstatus', [ResourceLibraryController::class, 'associationStatus'])->name('resources.association-status');
+    Route::post('/jahresplanung/{teachingGroup}/ressourcen/{kind}/{resource}/trennen', [ResourceLibraryController::class, 'detach'])->name('resources.detach');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');
     Route::get('/bildungsplaene', [EducationPlanController::class, 'index'])->name('education-plans.index');

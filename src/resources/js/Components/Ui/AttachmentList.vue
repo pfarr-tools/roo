@@ -78,11 +78,30 @@ function saveEdit() {
     if (editingType.value === 'material') emit('update:material-items', props.materialItems.map(item => item === editingItem.value ? { ...item, name: editingForm.value.name, material_number: editingForm.value.material_number, storage_location: editingForm.value.storage_location, description: editingForm.value.description } : item))
     closeEdit()
 }
-function removeItem(type, item) {
-    if (!window.confirm(de.deleteAttachmentConfirm)) return
-    if (type === 'file') emit('delete', item)
-    if (type === 'resource') { emit('update:resource-links', props.resourceLinks.filter(candidate => candidate !== item)); if (item.id) emit('delete:resource-link', item) }
-    if (type === 'material') { emit('update:material-items', props.materialItems.filter(candidate => candidate !== item)); if (item.id) emit('delete:material-item', item) }
+function removeFromLocalList(type, item, page = null) {
+    if (type === 'resource') emit('update:resource-links', props.resourceLinks.filter(candidate => candidate !== item))
+    if (type === 'material') emit('update:material-items', props.materialItems.filter(candidate => candidate !== item))
+    if (type === 'file') emit('uploaded', page)
+}
+async function removeItem(type, item) {
+    if (!item.id) return removeFromLocalList(type, item)
+    if (!props.libraryAttachUrl || !props.libraryTargetType || !props.libraryTargetId) return
+    try {
+        const statusUrl = `${props.libraryAttachUrl}/${type}/${item.id}/zuordnungsstatus?target_type=${encodeURIComponent(props.libraryTargetType)}&target_id=${encodeURIComponent(props.libraryTargetId)}`
+        const response = await fetch(statusUrl, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        if (!response.ok) throw new Error('association-status')
+        const status = await response.json()
+        let permanent = false
+        if (status.association_count <= 1) {
+            if (!window.confirm(de.deleteResourcePermanentlyConfirm)) permanent = false
+            else permanent = true
+        } else if (!window.confirm(de.detachResourceConfirm)) {
+            return
+        }
+        router.post(`${props.libraryAttachUrl}/${type}/${item.id}/trennen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId, permanent }, { preserveScroll: true, onSuccess: page => removeFromLocalList(type, item, page), onError: errors => emit('error', Object.values(errors)[0] || de.deleteAttachmentConfirm) })
+    } catch {
+        emit('error', de.deleteAttachmentConfirm)
+    }
 }
 </script>
 
