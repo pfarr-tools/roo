@@ -356,7 +356,9 @@ it('behält bewusst entfernte Stunden beim Verschieben einer UE entfernt', funct
 
     expect(ScheduledLesson::where('lesson_id', $lessons[0]->id)->count())->toBe(1)
         ->and(ScheduledLesson::where('lesson_id', $lessons[1]->id)->count())->toBe(0)
-        ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->count())->toBe(1);
+        ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->count())->toBe(1)
+        ->and(ScheduledLesson::where('lesson_id', $lessons[0]->id)->value('schedule_slot_id'))->toBe($slots[0]->id)
+        ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->value('schedule_slot_id'))->toBe($slots[1]->id);
 });
 
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
