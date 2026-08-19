@@ -8,12 +8,17 @@ use App\Http\Requests\StorePlannedUnitRequest;
 use App\Http\Requests\UpdateLessonOccurrenceRequest;
 use App\Models\CurriculumTopic;
 use App\Models\GroupYearPlan;
+use App\Models\Lesson;
 use App\Models\LessonOccurrence;
 use App\Models\PlannedUnit;
+use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
+use App\Models\TeachingUnit;
 use App\Models\UnitTemplate;
+use App\Services\YearPlanningWorkspace;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,10 +34,12 @@ class YearPlanController extends Controller
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup): Response
+    public function show(TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): Response
     {
         $this->authorize('view', $teachingGroup);
         $plan = $this->planFor($teachingGroup)->load(['units.template:id,title', 'units.curriculumTopic:id,title', 'units.lessons.occurrences', 'revisions.user:id,name']);
+
+        $workspace->syncSlots($teachingGroup);
 
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots']),
@@ -40,7 +47,83 @@ class YearPlanController extends Controller
             'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
             'checks' => $this->checks($teachingGroup, $plan),
             'calendar' => $this->calendar($teachingGroup),
+            'workspace' => [
+                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,display', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,display'])->get(),
+                'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
+                'coverage' => $workspace->coverage($teachingGroup),
+            ],
         ]);
+    }
+
+    public function takeCurriculumUnit(Request $request, TeachingGroup $teachingGroup, CurriculumTopic $topic, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $curriculumIds = $teachingGroup->curricula()->pluck('curricula.id');
+        abort_unless(CurriculumTopic::whereKey($topic->id)->whereHas('version', fn ($query) => $query->whereIn('curriculum_id', $curriculumIds))->exists(), 422, 'Das Curriculumthema gehört nicht zu dieser Unterrichtsgruppe.');
+        $unit = $workspace->importCurriculumUnit($teachingGroup, $topic->load('competencies'));
+        $plan = $this->planFor($teachingGroup);
+        $this->revise($plan, $request->user()->id, 'teaching_unit_imported', 'Curriculum-UE „'.$unit->title.'“ als eigene UE übernommen.');
+
+        return back()->with('success', 'Die Curriculum-UE wurde als eigene Unterrichtseinheit übernommen.');
+    }
+
+    public function storeTeachingUnit(Request $request, TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
+        $teachingGroup->teachingUnits()->create($data + ['organization_id' => $teachingGroup->organization_id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
+
+        return back()->with('success', 'Eigene Unterrichtseinheit wurde angelegt.');
+    }
+
+    public function updateTeachingUnit(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $teachingUnit->update($request->validate(['title' => ['required', 'string', 'max:255'], 'notes' => ['nullable', 'string']]));
+
+        return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
+    }
+
+    public function storeLesson(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12']]);
+        $teachingUnit->lessons()->create($data + ['position' => ($teachingUnit->lessons()->max('position') ?? 0) + 1]);
+
+        return back()->with('success', 'Stunde wurde angelegt.');
+    }
+
+    public function updateLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $lesson->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string']]));
+
+        return back()->with('success', 'Stunde wurde gespeichert.');
+    }
+
+    public function scheduleLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['schedule_slot_id' => ['nullable', 'integer']]);
+        $slot = ! empty($data['schedule_slot_id']) ? ScheduleSlot::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['schedule_slot_id']) : null;
+        $result = $workspace->scheduleLesson($teachingGroup, $lesson, $slot);
+
+        return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Stunde wurde eingeplant.');
+    }
+
+    public function updateSlot(Request $request, TeachingGroup $teachingGroup, ScheduleSlot $slot): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
+        abort_if($data['status'] !== 'free' && $slot->scheduledLesson()->exists(), 422, 'Ein belegter Termin kann nicht gesperrt werden.');
+        $slot->update($data);
+
+        return back()->with('success', 'Terminstatus wurde gespeichert.');
     }
 
     public function storeUnit(StorePlannedUnitRequest $request, TeachingGroup $teachingGroup): RedirectResponse

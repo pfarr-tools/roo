@@ -56,4 +56,14 @@ class TeachingGroup extends Model
     {
         return $this->hasOne(GroupYearPlan::class);
     }
+
+    public function teachingUnits(): HasMany
+    {
+        return $this->hasMany(TeachingUnit::class);
+    }
+
+    public function scheduleSlots(): HasMany
+    {
+        return $this->hasMany(ScheduleSlot::class);
+    }
 }
