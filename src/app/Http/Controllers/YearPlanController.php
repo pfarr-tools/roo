@@ -67,7 +67,7 @@ class YearPlanController extends Controller
         $workspace->syncSlots($teachingGroup);
         $curriculumColumnPreference = $request->user()->preferences()->where('key', 'year-plan.'.$teachingGroup->id.'.curriculum-column')->first()?->value ?? [];
 
-        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
+        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
         $workspaceUnits->each(fn ($unit) => $unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))));
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
@@ -98,6 +98,7 @@ class YearPlanController extends Controller
                 ->orderBy('title')->get(['id', 'teaching_group_id', 'education_plan_id', 'title', 'notes']),
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
             'competencyOptions' => $competencyOptions,
+            'materialItems' => MaterialItem::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name', 'description']),
             'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),
             'socialForms' => SocialForm::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name']),
         ]);
@@ -180,8 +181,24 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.local_key' => ['nullable', 'string'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000']]);
+        $data['material_items'] = $request->validate(['material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.local_key' => ['nullable', 'string'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string']])['material_items'] ?? [];
+        $data['deleted_resource_link_ids'] = $request->validate(['deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer']])['deleted_resource_link_ids'] ?? [];
+        $data['deleted_material_item_ids'] = $request->validate(['deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']])['deleted_material_item_ids'] ?? [];
         $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes'])->all());
+        foreach ($data['resource_links'] ?? [] as $link) {
+            if (! empty($link['id'])) {
+                ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(['title' => $link['title'], 'url' => $link['url']]);
+            } else {
+                ResourceLink::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $teachingUnit->id, 'title' => $link['title'], 'url' => $link['url']]);
+            }
+        }
+        ResourceLink::where('organization_id', $teachingGroup->organization_id)->where('teaching_unit_id', $teachingUnit->id)->whereIn('id', $data['deleted_resource_link_ids'])->delete();
+        foreach ($data['material_items'] ?? [] as $item) {
+            if (! empty($item['id'])) MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereKey($item['id'])->update(['name' => $item['name'], 'description' => $item['description'] ?? null]);
+            else MaterialItem::firstOrCreate(['organization_id' => $teachingGroup->organization_id, 'name' => $item['name']], ['description' => $item['description'] ?? null]);
+        }
+        MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_material_item_ids'])->delete();
         if (array_key_exists('competency_ids', $data)) {
             $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'])->pluck('id');
             abort_unless($validIds->count() === count($data['competency_ids']), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');

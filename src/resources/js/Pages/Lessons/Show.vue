@@ -67,6 +67,6 @@ const materialChecklistItems = computed(() => [...String(props.lesson.materials 
             </section>
             <section v-else class="card"><div class="card-body"><h2 class="h4">{{ de.lessonObservation }}</h2><p class="text-muted">{{ de.lessonObservationComingSoon }}</p></div></section>
         </div>
-        <LessonEditorModal v-if="editorOpen" :lesson="lesson" :unit="unit" :group-id="group.id" :competency-options="competencyOptions" :competency-text="competencyText" :phase-templates="phaseTemplates" :social-forms="socialForms" :show-phases="false" @close="editorOpen = false" />
+        <LessonEditorModal v-if="editorOpen" :lesson="lesson" :unit="unit" :group-id="group.id" :competency-options="competencyOptions" :competency-text="competencyText" :phase-templates="phaseTemplates" :social-forms="socialForms" :show-phases="false" :show-resources="false" @close="editorOpen = false" />
     </AppShell>
 </template>

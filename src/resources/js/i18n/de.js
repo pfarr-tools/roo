@@ -133,6 +133,7 @@ export default {
     tags: 'Tags',
     tagsHint: 'Mehrere Tags durch Komma trennen',
     attachments: 'Anhänge',
+    attachmentsAndMaterials: 'Anhänge und Materialien',
     addAttachment: 'Anhang hinzufügen',
     download: 'Herunterladen',
     saveDescription: 'Beschreibung speichern',

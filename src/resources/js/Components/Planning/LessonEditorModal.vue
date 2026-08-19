@@ -1,10 +1,11 @@
 <script setup>
 import de from '../../i18n/de'
+import AttachmentList from '../Ui/AttachmentList.vue'
 import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, showPhases: { type: Boolean, default: true } })
+const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -21,6 +22,10 @@ const form = useForm({
 })
 const competencyForm = useForm({ competency_ids: [] })
 const phaseDraft = ref([])
+const resourceLinksDraft = ref([])
+const materialItemsDraft = ref([])
+const deletedResourceLinkIds = ref([])
+const deletedMaterialItemIds = ref([])
 
 function syncLesson(lesson) {
     if (!lesson) return
@@ -36,6 +41,8 @@ function syncLesson(lesson) {
     form.reset()
     competencyForm.competency_ids = lesson.competencies?.map(competency => competency.id) ?? []
     phaseDraft.value = (lesson.phases ?? []).map(phase => ({ ...phase }))
+    resourceLinksDraft.value = [...(lesson.resource_links ?? props.resourceLinks ?? props.unit?.resource_links ?? [])].map(link => ({ ...link }))
+    materialItemsDraft.value = [...(props.materialItems ?? [])].map(item => ({ ...item }))
     unitCompetencies.value = [...(props.unit?.competencies ?? [])]
 }
 
@@ -86,12 +93,14 @@ function save() {
         ...phase,
         social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
     }))
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => emit('close'),
     })
 }
+function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
+function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true }) }
 
 </script>
 
@@ -109,6 +118,7 @@ function save() {
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'metadata' }" type="button" @click="activeTab = 'metadata'">{{ de.unitEditorMetadata }}</button></li>
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'competencies' }" type="button" @click="activeTab = 'competencies'">{{ de.unitEditorCompetencies }}</button></li>
                         <li v-if="showPhases" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'phases' }" type="button" @click="activeTab = 'phases'">{{ de.phases }}</button></li>
+                        <li v-if="showResources" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'resources' }" type="button" @click="activeTab = 'resources'">{{ de.attachmentsAndMaterials }}</button></li>
                     </ul>
 
                     <form @submit.prevent="save">
@@ -139,7 +149,8 @@ function save() {
                             </div>
                         </div>
 
-                        <LessonPhasesTab v-else :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" compact @update:phases="phaseDraft = $event" />
+                        <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" compact @update:phases="phaseDraft = $event" />
+                        <AttachmentList v-else :resources="unit.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :material-text="lesson.materials" :manage="true" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" @delete:resource-link="deletedResourceLinkIds.push($event.id)" @delete:material-item="deletedMaterialItemIds.push($event.id)" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>
