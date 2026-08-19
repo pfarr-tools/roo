@@ -173,5 +173,22 @@ it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
     $this->actingAs($user)->get("/jahresplanung/{$group->id}")
         ->assertInertia(fn ($page) => $page
             ->has('workspace.curricula.0.versions.0.topics', 1)
-            ->where('workspace.curricula.0.versions.0.topics.0.title', 'Passende UE'));
+        ->where('workspace.curricula.0.versions.0.topics.0.title', 'Passende UE'));
+});
+
+it('öffnet die zuletzt verwendete Jahresplanungsgruppe direkt', function () {
+    [$user, $group] = phaseSixOneGroup();
+
+    $this->actingAs($user)->get('/jahresplanung')->assertRedirect("/jahresplanung/{$group->id}");
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}")->assertOk();
+    expect($user->fresh()->last_year_plan_teaching_group_id)->toBe($group->id);
+
+    $secondGroup = TeachingGroup::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $group->school_id,
+        'school_year_id' => $group->school_year_id,
+        'name' => 'Zweite Gruppe',
+    ]);
+    $this->actingAs($user)->get("/jahresplanung/{$secondGroup->id}")->assertOk();
+    $this->actingAs($user)->get('/jahresplanung')->assertRedirect("/jahresplanung/{$secondGroup->id}");
 });

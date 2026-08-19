@@ -28,18 +28,28 @@ use Inertia\Response;
 
 class YearPlanController extends Controller
 {
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
         $organizationId = auth()->user()->organization_id;
+        $groups = TeachingGroup::where('organization_id', $organizationId)->with(['school:id,name', 'schoolYear:id,name'])->with('yearPlan')->orderBy('name')->get();
+
+        if ($groups->isNotEmpty()) {
+            $group = $groups->firstWhere('id', auth()->user()->last_year_plan_teaching_group_id) ?? $groups->first();
+
+            return to_route('year-plans.show', $group);
+        }
 
         return Inertia::render('YearPlans/Index', [
-            'groups' => TeachingGroup::where('organization_id', $organizationId)->with(['school:id,name', 'schoolYear:id,name'])->with('yearPlan')->orderBy('name')->get(),
+            'groups' => $groups,
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): Response
+    public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace): Response
     {
         $this->authorize('view', $teachingGroup);
+        if ($request->user()->last_year_plan_teaching_group_id !== $teachingGroup->id) {
+            $request->user()->update(['last_year_plan_teaching_group_id' => $teachingGroup->id]);
+        }
         $plan = $this->planFor($teachingGroup)->load(['units.template:id,title', 'units.curriculumTopic:id,title', 'units.lessons.occurrences', 'revisions.user:id,name']);
         $gradeLevels = $teachingGroup->gradeLevels()->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter()->values();
 
