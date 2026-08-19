@@ -141,6 +141,7 @@ export default {
     addCompetency: 'Kompetenz hinzufügen',
     removeCompetency: 'Kompetenz entfernen',
     noCompetencies: 'Keine Kompetenzen zugeordnet.',
+    noCompetencyText: 'Keine Kompetenzformulierung hinterlegt.',
     noSourceCurriculum: 'Ohne Vorlage starten',
     unitTitle: 'Titel der Unterrichtseinheit',
     hours: 'Zeitbedarf in Stunden',
