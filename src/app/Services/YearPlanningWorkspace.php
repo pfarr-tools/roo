@@ -118,6 +118,30 @@ class YearPlanningWorkspace
         return ['scheduled' => $selected->count(), 'overflow' => 0];
     }
 
+    public function scheduleUnit(TeachingGroup $group, TeachingUnit $unit, ?ScheduleSlot $start = null): array
+    {
+        abort_unless($unit->teaching_group_id === $group->id, 404);
+        $slots = $this->availableSlots($group);
+        if ($start) {
+            $index = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $start->id);
+            abort_unless($index !== false, 422, 'Der Zielslot ist nicht verfügbar.');
+            $slots = $slots->slice($index)->values();
+        }
+        $scheduled = 0;
+        foreach ($unit->lessons()->orderBy('position')->get() as $lesson) {
+            $selected = $slots->slice($scheduled, $lesson->duration);
+            if ($selected->count() < $lesson->duration) {
+                return ['scheduled' => $scheduled, 'overflow' => $lesson->duration - $selected->count()];
+            }
+            foreach ($selected as $slot) {
+                ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
+                $scheduled++;
+            }
+        }
+
+        return ['scheduled' => $scheduled, 'overflow' => 0];
+    }
+
     public function blockAndReflow(TeachingGroup $group, ScheduleSlot $slot, string $status): array
     {
         $scheduled = $slot->scheduledLesson;

@@ -50,7 +50,7 @@ class YearPlanController extends Controller
             'checks' => $this->checks($teachingGroup, $plan),
             'calendar' => $this->calendar($teachingGroup),
             'workspace' => [
-                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,text', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
+                'units' => $teachingGroup->teachingUnits()->with(['sourceCurriculumTopic:id,title', 'competencies.educationPlanCompetency:id,external_identifier,number,text', 'competencies.curriculumCompetency', 'lessons.competencies', 'lessons.phases', 'lessons.scheduledLessons.slot'])->orderBy('position')->get(),
                 'curricula' => $teachingGroup->curricula()->with(['versions.topics.competencies.educationPlanCompetency:id,text'])->get(),
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
@@ -166,6 +166,16 @@ class YearPlanController extends Controller
         $result = $workspace->scheduleLesson($teachingGroup, $lesson, $slot);
 
         return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Stunde wurde eingeplant.');
+    }
+
+    public function scheduleUnit(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['schedule_slot_id' => ['nullable', 'integer']]);
+        $slot = ! empty($data['schedule_slot_id']) ? ScheduleSlot::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['schedule_slot_id']) : null;
+        $result = $workspace->scheduleUnit($teachingGroup, $teachingUnit, $slot);
+
+        return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Unterrichtseinheit wurde eingeplant.');
     }
 
     public function updateSlot(Request $request, TeachingGroup $teachingGroup, ScheduleSlot $slot): RedirectResponse
