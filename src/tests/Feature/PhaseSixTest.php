@@ -3,6 +3,7 @@
 use App\Models\GroupYearPlan;
 use App\Models\LessonOccurrence;
 use App\Models\Organization;
+use App\Models\PlannedUnit;
 use App\Models\School;
 use App\Models\SchoolPeriod;
 use App\Models\SchoolYear;
@@ -80,4 +81,17 @@ it('keeps actual lesson status separate from planning and protects organizations
     $otherOrganization = Organization::create(['name' => 'Fremd']);
     $otherUser = User::factory()->create(['organization_id' => $otherOrganization->id]);
     $this->actingAs($otherUser)->get("/jahresplanung/{$group->id}")->assertForbidden();
+});
+
+it('splits a planned unit while preserving its original span and recording the change', function () {
+    [$user, , $group] = phaseSixGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", ['title' => 'Großes Thema', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-10', 'planned_hours' => 4]);
+    $unit = PlannedUnit::firstOrFail();
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten/{$unit->id}/teilen", ['split_on' => '2026-09-06'])->assertRedirect();
+
+    expect(PlannedUnit::count())->toBe(2)
+        ->and($unit->fresh()->ends_on->toDateString())->toBe('2026-09-05')
+        ->and(PlannedUnit::orderByDesc('id')->first()->starts_on->toDateString())->toBe('2026-09-06');
+    $this->assertDatabaseHas('plan_revisions', ['action' => 'unit_split']);
 });
