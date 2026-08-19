@@ -101,7 +101,7 @@ class ResourceLibraryController extends Controller
             $matches = $matches->concat(ResourceLink::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('title', 'like', "%{$query}%")->orWhere('url', 'like', "%{$query}%")))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
         }
         if ($type === 'all' || $type === 'material') {
-            $matches = $matches->concat(MaterialItem::where('organization_id', $organizationId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
+            $matches = $matches->concat(MaterialItem::where('organization_id', $organizationId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
         }
 
         if ($request->expectsJson()) return response()->json($matches->values());
@@ -132,7 +132,11 @@ class ResourceLibraryController extends Controller
 
     public function storeMaterial(Request $request): \Illuminate\Http\RedirectResponse
     {
-        MaterialItem::create(['organization_id' => $request->user()->organization_id, ...$request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']])]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000'], 'image' => ['nullable', 'image', 'max:10240']]);
+        $image = $data['image'] ?? null;
+        unset($data['image']);
+        $item = MaterialItem::create(['organization_id' => $request->user()->organization_id, ...$data]);
+        if ($image) $item->update(['image_path' => $image->store('material-items', 'local'), 'image_mime_type' => $image->getMimeType()]);
         return back()->with('success', 'Material wurde zur Bibliothek hinzugefügt.');
     }
 
@@ -170,6 +174,25 @@ class ResourceLibraryController extends Controller
         return back()->with('success', 'Bibliothekseintrag wurde gespeichert.');
     }
 
+    public function uploadMaterialImage(Request $request, int $resource): \Illuminate\Http\RedirectResponse
+    {
+        $item = MaterialItem::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        $data = $request->validate(['image' => ['required', 'image', 'max:10240']]);
+        if ($item->image_path) Storage::disk('local')->delete($item->image_path);
+        $path = $data['image']->store('material-items', 'local');
+        $item->update(['image_path' => $path, 'image_mime_type' => $data['image']->getMimeType()]);
+
+        return back()->with('success', 'Bild wurde gespeichert.');
+    }
+
+    public function materialImage(Request $request, int $resource)
+    {
+        $item = MaterialItem::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        abort_unless($item->image_path && Storage::disk('local')->exists($item->image_path), 404);
+
+        return response()->file(Storage::disk('local')->path($item->image_path), ['Content-Type' => $item->image_mime_type ?: 'application/octet-stream']);
+    }
+
     public function destroyItem(Request $request, string $kind, int $resource): \Illuminate\Http\RedirectResponse
     {
         $item = $this->item($request, $kind, $resource);
@@ -194,7 +217,7 @@ class ResourceLibraryController extends Controller
     private function present($item): array
     {
         $relationships = collect([$item->teachingUnit ?? null, $item->lesson ?? null])->merge($item->teachingUnits ?? [])->merge($item->lessons ?? [])->merge($item->phases ?? [])->map(fn ($relation) => $relation->title ?? $relation->name ?? null)->filter()->unique()->values()->all();
-        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->original_name ?? $item->title ?? $item->name, 'description' => $item->description, 'original_name' => $item->original_name, 'title' => $item->title, 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
+        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->original_name ?? $item->title ?? $item->name, 'description' => $item->description, 'original_name' => $item->original_name, 'title' => $item->title, 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
     }
 
     private function item(Request $request, string $kind, int $id): ResourceReference|ResourceLink|MaterialItem

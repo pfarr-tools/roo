@@ -15,8 +15,8 @@ const editing = ref(null)
 const preview = ref(null)
 const fileForm = useForm({ resource: null, description: '' })
 const resourceForm = useForm({ title: '', url: '', description: '' })
-const materialForm = useForm({ name: '', material_number: '', storage_location: '', description: '' })
-const editForm = useForm({ description: '', title: '', url: '', name: '', material_number: '', storage_location: '' })
+const materialForm = useForm({ name: '', material_number: '', storage_location: '', description: '', image: null })
+const editForm = useForm({ description: '', title: '', url: '', name: '', material_number: '', storage_location: '', image: null })
 const options = [{ value: 'all', label: 'Alle' }, { value: 'file', label: 'Dateien' }, { value: 'resource', label: 'Ressourcen' }, { value: 'material', label: 'Material' }]
 const visibleItems = computed(() => props.items)
 function load() { router.get('/ressourcen/bibliothek', { q: search.value, type: type.value, sort: sort.value, direction: direction.value }, { preserveState: true, replace: true }) }
@@ -26,11 +26,12 @@ function kindLabel(kind) { return kind === 'file' ? 'Datei' : kind === 'resource
 function icon(item) { return item.kind === 'file' ? 'bi-file-earmark' : item.kind === 'resource' ? 'bi-link-45deg' : 'bi-box-seam' }
 function size(bytes) { return !bytes ? '' : bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB` }
 function openAdd(kind) { modal.value = kind }
-function submitAdd() { const form = modal.value === 'file' ? fileForm : modal.value === 'resource' ? resourceForm : materialForm; const url = modal.value === 'file' ? '/ressourcen/bibliothek/dateien' : modal.value === 'resource' ? '/ressourcen/bibliothek/ressourcen' : '/ressourcen/bibliothek/materialien'; form.post(url, { forceFormData: modal.value === 'file', onSuccess: () => { modal.value = null; form.reset() } }) }
-function openEdit(item) { editing.value = item; editForm.defaults({ description: item.description ?? '', title: item.title ?? '', url: item.url ?? '', name: item.name ?? '', material_number: item.material_number ?? '', storage_location: item.storage_location ?? '' }); editForm.reset(); editForm.clearErrors() }
+function submitAdd() { const form = modal.value === 'file' ? fileForm : modal.value === 'resource' ? resourceForm : materialForm; const url = modal.value === 'file' ? '/ressourcen/bibliothek/dateien' : modal.value === 'resource' ? '/ressourcen/bibliothek/ressourcen' : '/ressourcen/bibliothek/materialien'; form.post(url, { forceFormData: modal.value === 'file' || modal.value === 'material', onSuccess: () => { modal.value = null; form.reset() } }) }
+function openEdit(item) { editing.value = item; editForm.defaults({ description: item.description ?? '', title: item.title ?? '', url: item.url ?? '', name: item.name ?? '', material_number: item.material_number ?? '', storage_location: item.storage_location ?? '', image: null }); editForm.reset(); editForm.clearErrors() }
+function uploadMaterialImage(item, file) { if (!file) return; const form = useForm({ image: file }); form.post(`/ressourcen/bibliothek/materialien/${item.id}/bild`, { forceFormData: true, onSuccess: () => { item.image_url = `/ressourcen/bibliothek/materialien/${item.id}/bild` } }) }
 function saveEdit() { editForm.put(`/ressourcen/bibliothek/${editing.value.kind}/${editing.value.id}`, { onSuccess: () => { editing.value = null } }) }
 async function remove(item) { if (await requestConfirmation({ message: 'Diesen Bibliothekseintrag wirklich löschen?' })) router.delete(`/ressourcen/bibliothek/${item.kind}/${item.id}`, { onError: errors => window.alert(Object.values(errors)[0] ?? 'Der Eintrag konnte nicht gelöscht werden.') }) }
-function previewable(item) { return item.kind === 'file' && (item.mime_type?.startsWith('image/') || item.mime_type?.startsWith('video/') || item.mime_type?.startsWith('audio/')) }
+function previewable(item) { return (item.kind === 'file' && (item.mime_type?.startsWith('image/') || item.mime_type?.startsWith('video/') || item.mime_type?.startsWith('audio/'))) || (item.kind === 'material' && item.image_url) }
 </script>
 
 <template>

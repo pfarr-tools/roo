@@ -228,5 +228,6 @@ body {
 .planning-toast-warning { background: var(--bs-warning); color: var(--bs-dark); }
 .planning-toast-error { background: var(--bs-danger); }
 .nested-modal { z-index: 1060; }
+.planning-phases-scroll { max-height: calc(100vh - var(--roo-topbar-height) - 13rem); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 @keyframes planning-toast-in { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 991.98px) { .year-planning-page { height: auto; } .year-planning-grid, .year-planning-grid.curriculum-collapsed { flex: none; grid-template-columns: 1fr; } .planning-column { height: auto; max-height: none; overflow: visible; } .planning-column > div:first-child, .planning-column > p:first-of-type { position: static; } .planning-curricula { order: -1; } .curriculum-rail { width: 100%; height: 2.5rem; writing-mode: horizontal-tb; } }

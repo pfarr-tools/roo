@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/ressourcen/bibliothek/dateien', [ResourceLibraryController::class, 'storeFile'])->name('resources.library.files.store');
     Route::post('/ressourcen/bibliothek/ressourcen', [ResourceLibraryController::class, 'storeResource'])->name('resources.library.resources.store');
     Route::post('/ressourcen/bibliothek/materialien', [ResourceLibraryController::class, 'storeMaterial'])->name('resources.library.materials.store');
+    Route::post('/ressourcen/bibliothek/materialien/{resource}/bild', [ResourceLibraryController::class, 'uploadMaterialImage'])->name('resources.library.materials.image.upload');
+    Route::get('/ressourcen/bibliothek/materialien/{resource}/bild', [ResourceLibraryController::class, 'materialImage'])->name('resources.library.materials.image');
     Route::put('/ressourcen/bibliothek/{kind}/{resource}', [ResourceLibraryController::class, 'updateItem'])->name('resources.library.update');
     Route::delete('/ressourcen/bibliothek/{kind}/{resource}', [ResourceLibraryController::class, 'destroyItem'])->name('resources.library.destroy');
     Route::get('/ressourcen/bibliothek/dateien/{resource}/download', [ResourceLibraryController::class, 'download'])->name('resources.library.files.download');
