@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/jahresplanung/{teachingGroup}/reflow/rueckgaengig', [YearPlanController::class, 'undoLastReflow'])->name('year-plans.reflow.undo');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/einplanen', [YearPlanController::class, 'scheduleLesson'])->name('year-plans.lessons.schedule');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/einplanen', [YearPlanController::class, 'scheduleUnit'])->name('year-plans.teaching-units.schedule');
+    Route::post('/jahresplanung/{teachingGroup}/slots/{scheduleSlot}/einfügen', [YearPlanController::class, 'insertAtSlot'])->name('year-plans.slots.insert');
     Route::delete('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/einplanung', [YearPlanController::class, 'unscheduleUnit'])->name('year-plans.teaching-units.unschedule');
     Route::delete('/jahresplanung/{teachingGroup}/lessons/{lesson}/einplanung', [YearPlanController::class, 'unscheduleLesson'])->name('year-plans.lessons.unschedule');
     Route::put('/jahresplanung/{teachingGroup}/slots/{slot}', [YearPlanController::class, 'updateSlot'])->name('year-plans.slots.update');

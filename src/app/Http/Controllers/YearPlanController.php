@@ -260,6 +260,16 @@ class YearPlanController extends Controller
         return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Unterrichtseinheit wurde eingeplant.');
     }
 
+    public function insertAtSlot(Request $request, TeachingGroup $teachingGroup, ScheduleSlot $scheduleSlot, YearPlanningWorkspace $workspace): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($scheduleSlot->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer']]);
+        $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot);
+
+        return back()->with('success', $data['type'] === 'unit' ? 'Unterrichtseinheit wurde eingefügt.' : 'Stunde wurde eingefügt.');
+    }
+
     public function unscheduleLesson(TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);

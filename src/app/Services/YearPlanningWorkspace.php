@@ -144,6 +144,99 @@ class YearPlanningWorkspace
         return ['scheduled' => $scheduled, 'overflow' => 0];
     }
 
+    /**
+     * Insert a lesson or unit at a calendar position and shift the following
+     * schedule to the right. A lesson may therefore occupy two separate
+     * ranges temporarily; adjacency is derived from the slot order and needs
+     * no additional persisted "part" records.
+     */
+    public function insertAtSlot(TeachingGroup $group, string $type, int $sourceId, ScheduleSlot $target): array
+    {
+        abort_unless($target->teaching_group_id === $group->id, 404);
+
+        $sourceLessons = match ($type) {
+            'lesson' => Lesson::whereKey($sourceId)
+                ->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $group->id))
+                ->get(),
+            'unit' => TeachingUnit::whereKey($sourceId)
+                ->where('teaching_group_id', $group->id)
+                ->with(['lessons' => fn ($query) => $query->orderBy('position')])
+                ->firstOrFail()
+                ->lessons,
+            default => abort(422, 'Ungültiger Einfügetyp.'),
+        };
+        abort_unless($sourceLessons->isNotEmpty(), 404);
+
+        $slots = ScheduleSlot::where('teaching_group_id', $group->id)
+            ->with('scheduledLesson')
+            ->orderBy('date')
+            ->orderBy('period_number')
+            ->get()
+            ->filter(fn (ScheduleSlot $slot) => in_array($slot->status, ['free', 'buffer'], true) || $slot->scheduledLesson)
+            ->values();
+        $targetIndex = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $target->id);
+        abort_unless($targetIndex !== false, 422, 'Der Zielslot ist nicht verfügbar.');
+
+        $block = $sourceLessons->flatMap(fn (Lesson $lesson) => array_fill(0, max(1, (int) $lesson->duration), $lesson->id))->values()->all();
+        $sourceIds = $sourceLessons->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $tokens = $slots->map(fn (ScheduleSlot $slot) => $slot->scheduledLesson?->lesson_id)->all();
+        $sourceIndexes = collect($tokens)->keys()->filter(fn ($index) => in_array((int) ($tokens[$index] ?? 0), $sourceIds, true))->values();
+
+        foreach ($tokens as $index => $lessonId) {
+            if ($lessonId !== null && in_array((int) $lessonId, $sourceIds, true)) {
+                $tokens[$index] = null;
+            }
+        }
+
+        $length = count($block);
+        $sourceBeforeTarget = $sourceIndexes->isNotEmpty() && $sourceIndexes->min() < $targetIndex;
+        if (! $sourceBeforeTarget) {
+            abort_unless($targetIndex + $length <= count($tokens), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            $tail = array_slice($tokens, -$length);
+            abort_unless(collect($tail)->every(fn ($lessonId) => $lessonId === null), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+        } else {
+            $firstSourceIndex = $sourceIndexes->min();
+            $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
+            abort_unless($firstSourceIndex + count($segment) + $length <= count($tokens), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+        }
+
+        return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes): array {
+            if ($sourceBeforeTarget) {
+                $firstSourceIndex = $sourceIndexes->min();
+                $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
+                $insertionIndex = $firstSourceIndex + count($segment);
+                $extra = max(0, $insertionIndex + $length - ($targetIndex + 1));
+                for ($index = count($tokens) - 1; $index >= $targetIndex + 1 + $extra; $index--) {
+                    $tokens[$index] = $tokens[$index - $extra];
+                }
+                for ($index = $firstSourceIndex; $index < $insertionIndex + $length; $index++) {
+                    $tokens[$index] = null;
+                }
+                foreach ($segment as $offset => $lessonId) {
+                    $tokens[$firstSourceIndex + $offset] = $lessonId;
+                }
+                $targetIndex = $insertionIndex;
+            } else {
+                for ($index = count($tokens) - 1; $index >= $targetIndex + $length; $index--) {
+                    $tokens[$index] = $tokens[$index - $length];
+                }
+            }
+            foreach ($block as $offset => $lessonId) {
+                $tokens[$targetIndex + $offset] = $lessonId;
+            }
+
+            $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
+            ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
+            foreach ($tokens as $index => $lessonId) {
+                if ($lessonId !== null) {
+                    ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slots[$index]->id]);
+                }
+            }
+
+            return ['scheduled' => $length, 'overflow' => 0];
+        });
+    }
+
     public function blockAndReflow(TeachingGroup $group, ScheduleSlot $slot, string $status): array
     {
         $scheduled = $slot->scheduledLesson;

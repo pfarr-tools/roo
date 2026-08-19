@@ -20,6 +20,7 @@ use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
 use App\Models\UnitTemplate;
 use App\Models\User;
+use App\Services\YearPlanningWorkspace;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -173,7 +174,7 @@ it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
     $this->actingAs($user)->get("/jahresplanung/{$group->id}")
         ->assertInertia(fn ($page) => $page
             ->has('workspace.curricula.0.versions.0.topics', 1)
-        ->where('workspace.curricula.0.versions.0.topics.0.title', 'Passende UE'));
+            ->where('workspace.curricula.0.versions.0.topics.0.title', 'Passende UE'));
 });
 
 it('öffnet die zuletzt verwendete Jahresplanungsgruppe direkt', function () {
@@ -191,4 +192,29 @@ it('öffnet die zuletzt verwendete Jahresplanungsgruppe direkt', function () {
     ]);
     $this->actingAs($user)->get("/jahresplanung/{$secondGroup->id}")->assertOk();
     $this->actingAs($user)->get('/jahresplanung')->assertRedirect("/jahresplanung/{$secondGroup->id}");
+});
+
+it('fügt Stunden in belegte Slots ein und kann getrennte Teile wieder zusammenführen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unitA = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Zusammenhängende UE', 'position' => 1]);
+    $lessonA = $unitA->lessons()->create(['title' => 'Dreiteilige Stunde', 'position' => 1, 'duration' => 3]);
+    $unitB = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Einfüge-UE', 'position' => 2]);
+    $lessonB = $unitB->lessons()->create(['title' => 'Zwischenstunde', 'position' => 1, 'duration' => 1]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessonA, $slots[0]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessonB, $slots[3]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[1]->id}/einfügen", ['type' => 'unit', 'source_id' => $unitB->id])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($lessonA->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($lessonB->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[2]->id)->value('lesson_id'))->toBe($lessonA->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[3]->id)->value('lesson_id'))->toBe($lessonA->id);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[3]->id}/einfügen", ['type' => 'unit', 'source_id' => $unitB->id])->assertRedirect();
+    expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($lessonA->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($lessonA->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[2]->id)->value('lesson_id'))->toBe($lessonA->id)
+        ->and(ScheduledLesson::where('schedule_slot_id', $slots[3]->id)->value('lesson_id'))->toBe($lessonB->id);
 });
