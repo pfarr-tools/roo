@@ -179,6 +179,7 @@ body {
 .drag-handle { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 1.5rem; color: var(--bs-secondary-color); cursor: grab; }
 .drag-handle:focus-visible, .drag-handle:hover { color: var(--bs-primary); }
 .curriculum-drop-ready { border-radius: .5rem; outline: .2rem dashed rgba(var(--bs-primary-rgb), .55); outline-offset: .35rem; background: rgba(var(--bs-primary-rgb), .04); }
+.unschedule-column-ready { border-radius: .5rem; outline: .2rem dashed rgba(var(--bs-danger-rgb), .6); outline-offset: .35rem; background: rgba(var(--bs-danger-rgb), .04); }
 .unschedule-drop-zone { margin-bottom: .75rem; padding: .65rem .75rem; border: 1px dashed var(--bs-secondary); border-radius: .45rem; color: var(--bs-secondary-color); font-size: .875rem; text-align: center; }
 .unschedule-drop-zone.drop-ready { border-color: var(--bs-danger); background: rgba(var(--bs-danger-rgb), .1); color: var(--bs-danger-text-emphasis); }
 .curriculum-open-button { position: absolute; z-index: 2; top: 0; right: 0; }
