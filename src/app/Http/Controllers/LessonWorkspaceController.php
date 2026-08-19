@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\EducationPlanCompetency;
 use App\Models\LessonTemplate;
+use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
+use App\Models\ResourceLink;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
 use App\Http\Requests\UpdateLessonExecutionRequest;
@@ -30,6 +32,9 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.unit.competencies.curriculumCompetency',
             'scheduledLesson.lesson.phases.socialForm',
+            'scheduledLesson.lesson.phases.resources',
+            'scheduledLesson.lesson.phases.resourceLinks',
+            'scheduledLesson.lesson.phases.materialItems',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.competencies.curriculumCompetency',
         ]);
@@ -41,6 +46,11 @@ class LessonWorkspaceController extends Controller
                 $resource->page_count = $inspector->pageCount(Storage::disk('local')->path($resource->storage_path));
             }
             $resource->setAttribute('display_name', $this->resourceFilename($lesson->unit, $resource));
+        });
+        $lesson->phases->each(function ($phase): void {
+            $phase->setAttribute('resource_ids', $phase->resources->pluck('id')->values());
+            $phase->setAttribute('resource_link_ids', $phase->resourceLinks->pluck('id')->values());
+            $phase->setAttribute('material_item_ids', $phase->materialItems->pluck('id')->values());
         });
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency))
@@ -55,6 +65,10 @@ class LessonWorkspaceController extends Controller
             'unit' => $lesson->unit,
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
+            'materialItems' => MaterialItem::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name', 'description']),
+            'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
+                $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
+            })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'competencyOptions' => EducationPlanCompetency::query()->whereIn('id', $lesson->unit->competencies->pluck('education_plan_competency_id')->filter())->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position'])->get()->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))),
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],

@@ -49,4 +49,9 @@ class TeachingUnit extends Model
     {
         return $this->hasMany(ResourceReference::class);
     }
+
+    public function resourceLinks(): HasMany
+    {
+        return $this->hasMany(ResourceLink::class);
+    }
 }

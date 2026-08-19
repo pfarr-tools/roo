@@ -35,4 +35,14 @@ class Lesson extends Model
     {
         return $this->hasMany(ScheduledLesson::class);
     }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(ResourceReference::class);
+    }
+
+    public function resourceLinks(): HasMany
+    {
+        return $this->hasMany(ResourceLink::class);
+    }
 }

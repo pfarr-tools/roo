@@ -10,10 +10,12 @@ use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Models\MaterialItem;
 use App\Models\Organization;
 use App\Models\ScheduledLesson;
 use App\Models\PhaseTemplate;
 use App\Models\ScheduleSlot;
+use App\Models\ResourceLink;
 use App\Models\School;
 use App\Models\SchoolPeriod;
 use App\Models\SocialForm;
@@ -144,6 +146,28 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     $this->actingAs($user)->put("/unterricht/{$slot->id}/durchfuehrung", ['status' => 'conducted', 'actual_on' => '2026-09-02', 'execution_notes' => 'Gut verlaufen'])->assertRedirect();
     expect($scheduled->fresh()->actual_on->toDateString())->toBe('2026-09-02')->and($scheduled->fresh()->execution_notes)->toBe('Gut verlaufen');
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'unknown'])->assertSessionHasErrors('status');
+});
+
+it('ordnet Dateien, Ressourcen und MaterialItems einer Phase zu', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ressourcen UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Ressourcenstunde', 'position' => 1, 'duration' => 1]);
+    $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
+    $file = $unit->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'test/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'teaching_unit_id' => $unit->id, 'title' => 'Erklärvideo', 'url' => 'https://example.test/video']);
+    $materialItem = MaterialItem::create(['organization_id' => $user->organization_id, 'name' => 'Bibel']);
+
+    $response = $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
+        'title' => $lesson->title,
+        'duration' => 1,
+        'resource_links' => [['id' => $link->id, 'title' => $link->title, 'url' => $link->url]],
+        'phases' => [['id' => $phase->id, 'title' => $phase->title, 'resource_ids' => [$file->id], 'resource_link_ids' => [$link->id], 'material_item_ids' => [$materialItem->id]]],
+    ]);
+    $response->assertRedirect();
+
+    expect($phase->fresh()->resources->pluck('id')->all())->toBe([$file->id])
+        ->and($phase->fresh()->resourceLinks->pluck('id')->all())->toBe([$link->id])
+        ->and($phase->fresh()->materialItems->pluck('id')->all())->toBe([$materialItem->id]);
 });
 
 it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum', function () {
