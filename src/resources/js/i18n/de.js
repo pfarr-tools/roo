@@ -86,6 +86,7 @@ export default {
     lessonTemplates: 'Stunden-Vorlagen',
     lessonTemplate: 'Stunden-Vorlage',
     phaseTemplates: 'Phasen-Vorlagen',
+    phaseTemplatesIntro: 'Wiederverwendbare Phasen für neue Stunden pflegen.',
     phaseTemplate: 'Phasen-Vorlage',
     addPhaseTemplate: 'Phasen-Vorlage anlegen',
     editPhaseTemplate: 'Phasen-Vorlage bearbeiten',

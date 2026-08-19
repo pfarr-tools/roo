@@ -1,7 +1,6 @@
 <script setup>
-import PhaseEditorOffcanvas from './PhaseEditorOffcanvas.vue'
 import de from '../../i18n/de'
-import { router, useForm } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps({ lesson: Object, groupId: [String, Number], phaseTemplates: { type: Array, default: () => [] } })
@@ -9,7 +8,7 @@ const phases = ref([])
 const editing = ref(null)
 const selectedTemplate = ref('')
 const newPhaseTitle = ref('')
-const phaseForm = useForm({ title: '', description: '', materials: '' })
+const phaseForm = ref({ title: '', duration_minutes: null, description: '', materials: '' })
 
 watch(() => props.lesson, lesson => { phases.value = [...(lesson?.phases ?? [])] }, { immediate: true })
 const scheduledLesson = computed(() => props.lesson?.scheduled_lessons?.[0] ?? null)
@@ -30,13 +29,12 @@ function addPhase() {
 }
 
 function editPhase(phase) {
-    editing.value = phase
-    phaseForm.defaults({ title: phase.title ?? '', duration_minutes: phase.duration_minutes ?? null, description: phase.description ?? '', materials: phase.materials ?? '' })
-    phaseForm.reset()
+    editing.value = editing.value === phase.id ? null : phase.id
+    phaseForm.value = { title: phase.title ?? '', duration_minutes: phase.duration_minutes ?? null, description: phase.description ?? '', materials: phase.materials ?? '' }
 }
 
-function savePhase(data) {
-    phaseForm.transform(() => data).put(`/jahresplanung/${props.groupId}/phasen/${editing.value.id}`, { preserveScroll: true, onSuccess: () => { editing.value = null } })
+function savePhase(phase) {
+    router.put(`/jahresplanung/${props.groupId}/phasen/${phase.id}`, phaseForm.value, { preserveScroll: true, onSuccess: () => { editing.value = null } })
 }
 
 function removePhase(phase) {
@@ -81,17 +79,21 @@ function updateStatus(status) {
         </div>
 
         <div v-if="phases.length" class="list-group">
-            <div v-for="(phase, index) in phases" :key="phase.id" class="list-group-item d-flex align-items-center gap-2">
+            <div v-for="(phase, index) in phases" :key="phase.id" class="list-group-item d-flex flex-wrap align-items-center gap-2">
                 <span class="text-muted small" aria-hidden="true">{{ index + 1 }}</span>
-                <div class="flex-grow-1"><strong>{{ phase.title }}</strong><span v-if="phase.duration_minutes" class="small text-muted ms-2">{{ phase.duration_minutes }} {{ de.minutes }}</span><div class="small text-muted text-truncate">{{ phase.description || de.noDescription }}</div></div>
+                <button class="btn btn-sm btn-link text-start flex-grow-1 p-0" type="button" :aria-expanded="editing === phase.id" @click="editPhase(phase)"><strong>{{ phase.title }}</strong><span v-if="phase.duration_minutes" class="small text-muted ms-2">{{ phase.duration_minutes }} {{ de.minutes }}</span><span class="small text-muted d-block text-truncate">{{ phase.description || de.noDescription }}</span></button>
                 <button class="btn btn-sm btn-outline-secondary" type="button" :disabled="index === 0" :aria-label="de.moveUp" @click="movePhase(index, -1)"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
                 <button class="btn btn-sm btn-outline-secondary" type="button" :disabled="index === phases.length - 1" :aria-label="de.moveDown" @click="movePhase(index, 1)"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
-                <button class="btn btn-sm btn-outline-secondary" type="button" :aria-label="de.editPhase" @click="editPhase(phase)"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>
                 <button class="btn btn-sm btn-outline-danger" type="button" :aria-label="de.deletePhase" @click="removePhase(phase)"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                <form v-if="editing === phase.id" class="w-100 border-top pt-3 mt-2" @submit.prevent="savePhase(phase)">
+                    <label class="form-label" :for="`phase-title-${phase.id}`">{{ de.phaseTitle }}</label><input :id="`phase-title-${phase.id}`" v-model="phaseForm.title" class="form-control" required>
+                    <label class="form-label mt-2" :for="`phase-duration-${phase.id}`">{{ de.phaseDuration }}</label><input :id="`phase-duration-${phase.id}`" v-model="phaseForm.duration_minutes" class="form-control" type="number" min="1" max="999">
+                    <label class="form-label mt-2" :for="`phase-description-${phase.id}`">{{ de.description }}</label><textarea :id="`phase-description-${phase.id}`" v-model="phaseForm.description" class="form-control" rows="3"></textarea>
+                    <label class="form-label mt-2" :for="`phase-materials-${phase.id}`">{{ de.materials }}</label><textarea :id="`phase-materials-${phase.id}`" v-model="phaseForm.materials" class="form-control" rows="2"></textarea>
+                    <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-outline-secondary" type="button" @click="editing = null">{{ de.cancel }}</button><button class="btn btn-primary" type="submit">{{ de.saveChanges }}</button></div>
+                </form>
             </div>
         </div>
         <p v-else class="small text-muted">{{ de.noPhases }}</p>
-
-        <PhaseEditorOffcanvas v-if="editing" :phase="editing" @close="editing = null" @save="savePhase" />
     </div>
 </template>

@@ -32,6 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/bildungsplaene/{educationPlan}', [EducationPlanController::class, 'show'])->name('education-plans.show');
     Route::get('/curricula', [CurriculumController::class, 'index'])->name('curricula.index');
     Route::get('/unterrichtseinheiten', [TeachingUnitController::class, 'index'])->name('teaching-units.index');
+    Route::post('/unterrichtseinheiten/phasen-vorlagen', [TeachingUnitController::class, 'storePhaseTemplate'])->name('teaching-units.phase-templates.store');
+    Route::put('/unterrichtseinheiten/phasen-vorlagen/{phaseTemplate}', [TeachingUnitController::class, 'updatePhaseTemplate'])->name('teaching-units.phase-templates.update');
+    Route::delete('/unterrichtseinheiten/phasen-vorlagen/{phaseTemplate}', [TeachingUnitController::class, 'destroyPhaseTemplate'])->name('teaching-units.phase-templates.destroy');
     Route::put('/unterrichtseinheiten/{teachingUnit}', [TeachingUnitController::class, 'update'])->name('teaching-units.update');
     Route::delete('/unterrichtseinheiten/{teachingUnit}', [TeachingUnitController::class, 'destroy'])->name('teaching-units.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
 use App\Models\EducationPlan;
+use App\Models\LessonTemplate;
+use App\Models\PhaseTemplate;
+use App\Http\Requests\StorePhaseTemplateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +32,43 @@ class TeachingUnitController extends Controller
             'units' => $units,
             'educationPlans' => EducationPlan::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->orderBy('title')->get(['id', 'title', 'external_identifier']),
             'filters' => ['q' => $query],
+            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'description', 'material', 'version']),
+            'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
         ]);
+    }
+
+    public function storePhaseTemplate(StorePhaseTemplateRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $this->ensureLessonTemplate($data['lesson_template_id'], $request->user()->organization_id);
+        unset($data['material_items'], $data['social_form']);
+        PhaseTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
+
+        return to_route('teaching-units.index')->with('success', 'Phasen-Vorlage wurde angelegt.');
+    }
+
+    public function updatePhaseTemplate(StorePhaseTemplateRequest $request, PhaseTemplate $phaseTemplate): RedirectResponse
+    {
+        abort_unless($phaseTemplate->organization_id === $request->user()->organization_id && $phaseTemplate->is_active, 404);
+        $data = $request->validated();
+        $this->ensureLessonTemplate($data['lesson_template_id'], $request->user()->organization_id);
+        unset($data['material_items'], $data['social_form']);
+        $phaseTemplate->update($data + ['version' => $phaseTemplate->version + 1]);
+
+        return to_route('teaching-units.index')->with('success', 'Phasen-Vorlage wurde gespeichert.');
+    }
+
+    public function destroyPhaseTemplate(Request $request, PhaseTemplate $phaseTemplate): RedirectResponse
+    {
+        abort_unless($phaseTemplate->organization_id === $request->user()->organization_id && $phaseTemplate->is_active, 404);
+        $phaseTemplate->delete();
+
+        return to_route('teaching-units.index')->with('success', 'Phasen-Vorlage wurde gelöscht.');
+    }
+
+    private function ensureLessonTemplate(int $lessonTemplateId, int $organizationId): void
+    {
+        abort_unless(LessonTemplate::whereKey($lessonTemplateId)->where('organization_id', $organizationId)->where('is_active', true)->exists(), 422);
     }
 
     public function update(Request $request, TeachingUnit $teachingUnit): RedirectResponse
