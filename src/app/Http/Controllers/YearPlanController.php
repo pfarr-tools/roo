@@ -299,15 +299,18 @@ class YearPlanController extends Controller
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'duration' => ['required', 'integer', 'min:1', 'max:12'], 'learning_goals' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'homework' => ['nullable', 'string'], 'assessment_note' => ['nullable', 'string'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.local_key' => ['nullable', 'string', 'max:100'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000'], 'resource_links.*.description' => ['nullable', 'string'], 'phases' => ['sometimes', 'array'], 'phases.*.id' => ['nullable', 'integer'], 'phases.*.phase_template_id' => ['nullable', 'integer', 'exists:phase_templates,id'], 'phases.*.title' => ['required', 'string', 'max:255'], 'phases.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'phases.*.social_form' => ['nullable', 'string', 'max:100'], 'phases.*.teacher_interaction' => ['nullable', 'string'], 'phases.*.learner_activity' => ['nullable', 'string'], 'phases.*.differentiation' => ['nullable', 'string'], 'phases.*.didactic_comment' => ['nullable', 'string'], 'phases.*.materials' => ['nullable', 'string'], 'phases.*.media' => ['nullable', 'string'], 'phases.*.resource_ids' => ['sometimes', 'array'], 'phases.*.resource_link_ids' => ['sometimes', 'array'], 'phases.*.material_item_ids' => ['sometimes', 'array']]);
         $data['material_items'] = $request->validate(['material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.local_key' => ['nullable', 'string', 'max:100'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string']])['material_items'] ?? [];
+        $data['deleted_resource_link_ids'] = $request->validate(['deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer']])['deleted_resource_link_ids'] ?? [];
+        $data['deleted_material_item_ids'] = $request->validate(['deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']])['deleted_material_item_ids'] ?? [];
         $phaseTemplateIds = collect($data['phases'] ?? [])->pluck('phase_template_id')->filter()->unique();
         abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
         DB::transaction(function () use ($data, $lesson, $teachingGroup): void {
-            $lesson->update(collect($data)->except(['competency_ids', 'phases', 'resource_links'])->all());
+            $lesson->update(collect($data)->except(['competency_ids', 'phases', 'resource_links', 'material_items', 'deleted_resource_link_ids', 'deleted_material_item_ids'])->all());
             $resourceLinkIds = [];
             $materialItemIdsByKey = [];
             foreach ($data['material_items'] ?? [] as $item) {
                 if (! empty($item['id'])) {
                     $existing = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereKey($item['id'])->firstOrFail();
+                    $existing->update(['name' => $item['name'], 'description' => $item['description'] ?? null]);
                     $materialItemIdsByKey[$item['local_key'] ?? 'id-'.$existing->id] = $existing->id;
                 } else {
                     $created = MaterialItem::firstOrCreate(['organization_id' => $teachingGroup->organization_id, 'name' => $item['name']], ['description' => $item['description'] ?? null]);
@@ -319,12 +322,17 @@ class YearPlanController extends Controller
                     $existing = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->where(function ($query) use ($lesson): void {
                         $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
                     })->firstOrFail();
+                    $existing->update(['title' => $link['title'], 'url' => $link['url']]);
                     $resourceLinkIds[$link['local_key'] ?? 'id-'.$existing->id] = $existing->id;
                 } else {
                     $created = ResourceLink::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? null]);
                     $resourceLinkIds[$link['local_key'] ?? 'id-'.$created->id] = $created->id;
                 }
             }
+            ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_resource_link_ids'])->where(function ($query) use ($lesson): void {
+                $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
+            })->delete();
+            MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_material_item_ids'])->delete();
             if (array_key_exists('phases', $data)) {
                 $phases = collect($data['phases']);
                 $existingIds = $lesson->phases()->pluck('id');
@@ -340,7 +348,7 @@ class YearPlanController extends Controller
                         $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
                     })->pluck('id')->all();
                     abort_unless(count($validResourceIds) === count($resourceIds) && count($validMaterialItemIds) === count($materialItemSelection) && count($validResourceLinkIds) === count($resourceLinkPhaseIds), 422, 'Eine Ressource gehört nicht zu dieser Unterrichtseinheit.');
-                    $attributes = collect($phase)->except(['id', 'local_key', 'resource_ids', 'resource_link_ids', 'material_item_ids'])->merge(['position' => $position + 1])->all();
+                    $attributes = collect($phase)->except(['id', 'local_key', 'resource_ids', 'resource_link_ids', 'material_item_ids', 'materials', 'media'])->merge(['position' => $position + 1, 'materials' => null, 'media' => null])->all();
                     $socialFormName = trim((string) ($attributes['social_form'] ?? ''));
                     unset($attributes['social_form']);
                     $attributes['social_form_id'] = $socialFormName === '' ? null : SocialForm::firstOrCreate(['organization_id' => $lesson->unit->organization_id, 'name' => $socialFormName])->id;

@@ -11,7 +11,7 @@ const resourceLinks = computed(() => props.resourceLinks)
 const editing = ref(null)
 const selectedTemplate = ref('')
 const newPhaseTitle = ref('')
-const phaseForm = ref({ title: '', duration_minutes: null, social_form: '', teacher_interaction: '', learner_activity: '', differentiation: '', didactic_comment: '', materials: '', media: '', resource_ids: [], resource_link_ids: [], material_item_ids: [] })
+const phaseForm = ref({ title: '', duration_minutes: null, social_form: '', teacher_interaction: '', learner_activity: '', differentiation: '', didactic_comment: '', resource_ids: [], resource_link_ids: [], material_item_ids: [] })
 
 watch(() => props.phases, value => { phases.value = value.map(phase => ({ ...phase })) }, { immediate: true })
 watch(phaseForm, value => {
@@ -43,8 +43,6 @@ function addPhase() {
         learner_activity: template?.learner_activity ?? '',
         differentiation: template?.differentiation ?? '',
         didactic_comment: template?.didactic_comment ?? '',
-        materials: template?.material ?? '',
-        media: template?.media ?? '',
         resource_ids: [], resource_link_ids: [], material_item_ids: [],
     })
     emit('update:phases', phases.value)
@@ -54,14 +52,14 @@ function addPhase() {
 function editPhase(phase) {
     const key = phase.id ?? phase.local_key
     editing.value = editing.value === key ? null : key
-    phaseForm.value = { title: phase.title ?? '', duration_minutes: phase.duration_minutes ?? null, social_form: phase.social_form?.name ?? phase.social_form ?? '', teacher_interaction: phase.teacher_interaction ?? '', learner_activity: phase.learner_activity ?? '', differentiation: phase.differentiation ?? '', didactic_comment: phase.didactic_comment ?? '', materials: phase.materials ?? '', media: phase.media ?? '', resource_ids: [...(phase.resource_ids ?? [])], resource_link_ids: [...(phase.resource_link_ids ?? [])], material_item_ids: [...(phase.material_item_ids ?? [])] }
+    phaseForm.value = { title: phase.title ?? '', duration_minutes: phase.duration_minutes ?? null, social_form: phase.social_form?.name ?? phase.social_form ?? '', teacher_interaction: phase.teacher_interaction ?? '', learner_activity: phase.learner_activity ?? '', differentiation: phase.differentiation ?? '', didactic_comment: phase.didactic_comment ?? '', resource_ids: [...(phase.resource_ids ?? [])], resource_link_ids: [...(phase.resource_link_ids ?? [])], material_item_ids: [...(phase.material_item_ids ?? [])] }
 }
 
 function phaseMaterialMedia(phase) {
     const files = (phase.resource_ids ?? []).map(id => props.resources.find(resource => String(resource.id) === String(id))?.display_name || props.resources.find(resource => String(resource.id) === String(id))?.original_name).filter(Boolean)
     const links = (phase.resource_link_ids ?? []).map(id => props.resourceLinks.find(link => String(link.id || link.local_key) === String(id))?.title).filter(Boolean)
     const items = (phase.material_item_ids ?? []).map(id => props.materialItems.find(item => String(item.id) === String(id))?.name).filter(Boolean)
-    return [...[phase.materials, phase.media], ...files, ...links, ...items].filter(Boolean).join(' / ') || '–'
+    return [...files, ...links, ...items].filter(Boolean).join('\n') || '–'
 }
 
 function removePhase(phase) {
@@ -125,7 +123,7 @@ function savePhaseAsTemplate(phase) {
                 <div v-if="editing === (phase.id ?? phase.local_key)" class="border-top pt-3 mt-3">
                     <label class="form-label" :for="`phase-title-${phaseKey(phase)}`">{{ de.phaseTitle }}</label><input :id="`phase-title-${phaseKey(phase)}`" v-model="phaseForm.title" class="form-control" required>
                     <div class="row g-2"><div class="col-md-6"><label class="form-label mt-2" :for="`phase-duration-${phaseKey(phase)}`">{{ de.phaseDuration }}</label><input :id="`phase-duration-${phaseKey(phase)}`" v-model="phaseForm.duration_minutes" class="form-control" type="number" min="1" max="999"></div><div class="col-md-6"><label class="form-label mt-2" :for="`phase-social-form-${phaseKey(phase)}`">{{ de.socialForm }}</label><input :id="`phase-social-form-${phaseKey(phase)}`" v-model="phaseForm.social_form" class="form-control" list="lesson-social-forms" :placeholder="de.socialFormPlaceholder"><datalist id="lesson-social-forms"><option v-for="socialForm in socialForms" :key="socialForm.id" :value="socialForm.name"></option></datalist></div></div>
-                    <div class="row g-2"><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-teacher-interaction-${phaseKey(phase)}`">{{ de.teacherInteraction }}</label><textarea :id="`phase-teacher-interaction-${phaseKey(phase)}`" v-model="phaseForm.teacher_interaction" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-learner-activity-${phaseKey(phase)}`">{{ de.learnerActivity }}</label><textarea :id="`phase-learner-activity-${phaseKey(phase)}`" v-model="phaseForm.learner_activity" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-differentiation-${phaseKey(phase)}`">{{ de.differentiation }}</label><textarea :id="`phase-differentiation-${phaseKey(phase)}`" v-model="phaseForm.differentiation" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-didactic-comment-${phaseKey(phase)}`">{{ de.didacticComment }}</label><textarea :id="`phase-didactic-comment-${phaseKey(phase)}`" v-model="phaseForm.didactic_comment" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-materials-${phaseKey(phase)}`">{{ de.materials }}</label><textarea :id="`phase-materials-${phaseKey(phase)}`" v-model="phaseForm.materials" class="form-control" rows="2"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-media-${phaseKey(phase)}`">{{ de.media }}</label><textarea :id="`phase-media-${phaseKey(phase)}`" v-model="phaseForm.media" class="form-control" rows="2"></textarea></div></div>
+                    <div class="row g-2"><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-teacher-interaction-${phaseKey(phase)}`">{{ de.teacherInteraction }}</label><textarea :id="`phase-teacher-interaction-${phaseKey(phase)}`" v-model="phaseForm.teacher_interaction" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-learner-activity-${phaseKey(phase)}`">{{ de.learnerActivity }}</label><textarea :id="`phase-learner-activity-${phaseKey(phase)}`" v-model="phaseForm.learner_activity" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-differentiation-${phaseKey(phase)}`">{{ de.differentiation }}</label><textarea :id="`phase-differentiation-${phaseKey(phase)}`" v-model="phaseForm.differentiation" class="form-control" rows="3"></textarea></div><div class="col-lg-6"><label class="form-label mt-2" :for="`phase-didactic-comment-${phaseKey(phase)}`">{{ de.didacticComment }}</label><textarea :id="`phase-didactic-comment-${phaseKey(phase)}`" v-model="phaseForm.didactic_comment" class="form-control" rows="3"></textarea></div></div>
                     <PhaseResourcePicker :resources="resources" :resource-links="resourceLinks" :material-items="materialItems" :selected-resource-ids="phaseForm.resource_ids" :selected-resource-link-ids="phaseForm.resource_link_ids" :selected-material-item-ids="phaseForm.material_item_ids" @update:resource-ids="phaseForm.resource_ids = $event" @update:resource-link-ids="phaseForm.resource_link_ids = $event" @update:material-item-ids="phaseForm.material_item_ids = $event" />
                     <div class="small text-muted mt-3">{{ de.phaseChangesSavedWithLesson }}</div>
                 </div>

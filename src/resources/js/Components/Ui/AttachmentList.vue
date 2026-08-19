@@ -1,38 +1,29 @@
 <script setup>
 import de from '../../i18n/de'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
 const props = defineProps({ resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, materialText: { type: String, default: '' }, downloadBaseUrl: { type: String, required: true }, uploadUrl: { type: String, default: '' }, uploadLessonId: { type: [String, Number], default: null }, manage: { type: Boolean, default: false } })
-const emit = defineEmits(['update', 'delete', 'update:resource-links', 'update:material-items', 'error'])
-const descriptions = ref({})
+const emit = defineEmits(['update', 'delete', 'update:resource-links', 'update:material-items', 'delete:resource-link', 'delete:material-item', 'error'])
 const previewResource = ref(null)
 const activeAdd = ref(null)
+const editingItem = ref(null)
+const editingType = ref(null)
+const editingForm = ref({ description: '', title: '', url: '', name: '' })
 const resourceUpload = useForm({ resource: null, description: '', lesson_id: props.uploadLessonId })
-const resourceLinkForm = ref({ title: '', url: '', description: '' })
+const resourceLinkForm = ref({ title: '', url: '' })
 const materialItemForm = ref({ name: '', description: '' })
-const materialTextItems = () => String(props.materialText ?? '').split('\n').map(item => item.trim()).filter(Boolean)
+const materialTextItems = computed(() => String(props.materialText ?? '').split('\n').map(item => item.trim()).filter(Boolean))
+const hasItems = computed(() => props.resources.length || props.resourceLinks.length || props.materialItems.length || materialTextItems.value.length)
 
-const iconFor = resource => {
-    if (resource.original_name?.toLowerCase().endsWith('.wscdoc')) return 'bi-file-earmark-richtext'
-    if (resource.mime_type === 'application/pdf') return 'bi-file-earmark-pdf'
-    if (resource.mime_type?.startsWith('image/')) return 'bi-file-earmark-image'
-    if (resource.mime_type?.includes('word')) return 'bi-file-earmark-word'
-    if (resource.mime_type?.includes('presentation')) return 'bi-file-earmark-slides'
-    return 'bi-file-earmark'
-}
-const sizeFor = bytes => {
-    if (!bytes) return '0 KB'
-    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-const descriptionFor = resource => descriptions.value[resource.id] ?? resource.description ?? ''
 const isWscDoc = resource => resource.original_name?.toLowerCase().endsWith('.wscdoc')
-const fileTypeFor = resource => isWscDoc(resource) ? de.worksheetCrafter : (resource.mime_type || 'Datei')
+const iconFor = resource => isWscDoc(resource) ? 'bi-file-earmark-richtext' : resource.mime_type === 'application/pdf' ? 'bi-file-earmark-pdf' : resource.mime_type?.startsWith('image/') ? 'bi-file-earmark-image' : resource.mime_type?.includes('word') ? 'bi-file-earmark-word' : resource.mime_type?.includes('presentation') ? 'bi-file-earmark-slides' : 'bi-file-earmark'
+const sizeFor = bytes => !bytes ? '0 KB' : bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 const isPreviewable = resource => isWscDoc(resource) || resource.mime_type?.startsWith('image/') || resource.mime_type?.startsWith('video/') || resource.mime_type?.startsWith('audio/')
 const previewKind = resource => isWscDoc(resource) || resource.mime_type?.startsWith('image/') ? 'image' : resource.mime_type?.startsWith('video/') ? 'video' : 'audio'
+const fileTypeFor = resource => isWscDoc(resource) ? de.worksheetCrafter : (resource.mime_type || 'Datei')
 const pageLabel = resource => resource.page_count === 1 ? de.page : de.pages
-function saveDescription(resource) { emit('update', resource, descriptionFor(resource)) }
+
 function uploadFile() {
     if (!resourceUpload.resource || !props.uploadUrl) return
     resourceUpload.submit('post', props.uploadUrl, { forceFormData: true, preserveScroll: true, onSuccess: () => { resourceUpload.reset('resource', 'description'); activeAdd.value = null }, onError: errors => emit('error', Object.values(errors)[0] || de.uploadAttachmentError) })
@@ -40,7 +31,7 @@ function uploadFile() {
 function addResourceLink() {
     if (!resourceLinkForm.value.title.trim() || !resourceLinkForm.value.url.trim()) return
     emit('update:resource-links', [...props.resourceLinks, { local_key: `new-link-${Date.now()}`, ...resourceLinkForm.value }])
-    resourceLinkForm.value = { title: '', url: '', description: '' }
+    resourceLinkForm.value = { title: '', url: '' }
     activeAdd.value = null
 }
 function addMaterialItem() {
@@ -49,42 +40,44 @@ function addMaterialItem() {
     materialItemForm.value = { name: '', description: '' }
     activeAdd.value = null
 }
+function openEdit(type, item) {
+    editingType.value = type
+    editingItem.value = item
+    editingForm.value = { description: item.description ?? '', title: item.title ?? '', url: item.url ?? '', name: item.name ?? '' }
+}
+function closeEdit() { editingItem.value = null; editingType.value = null }
+function saveEdit() {
+    if (editingType.value === 'file') emit('update', editingItem.value, editingForm.value.description)
+    if (editingType.value === 'resource') emit('update:resource-links', props.resourceLinks.map(item => item === editingItem.value ? { ...item, title: editingForm.value.title, url: editingForm.value.url } : item))
+    if (editingType.value === 'material') emit('update:material-items', props.materialItems.map(item => item === editingItem.value ? { ...item, name: editingForm.value.name, description: editingForm.value.description } : item))
+    closeEdit()
+}
+function removeItem(type, item) {
+    if (!window.confirm(de.deleteAttachmentConfirm)) return
+    if (type === 'file') emit('delete', item)
+    if (type === 'resource') { emit('update:resource-links', props.resourceLinks.filter(candidate => candidate !== item)); if (item.id) emit('delete:resource-link', item) }
+    if (type === 'material') { emit('update:material-items', props.materialItems.filter(candidate => candidate !== item)); if (item.id) emit('delete:material-item', item) }
+}
 </script>
 
 <template>
     <div v-if="manage" class="d-flex flex-wrap gap-2 mb-3">
-        <button class="btn btn-sm btn-outline-primary" type="button" @click="activeAdd = activeAdd === 'file' ? null : 'file'"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.addFile }}</button>
-        <button class="btn btn-sm btn-outline-secondary" type="button" @click="activeAdd = activeAdd === 'resource' ? null : 'resource'"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ de.addResource }}</button>
-        <button class="btn btn-sm btn-outline-secondary" type="button" @click="activeAdd = activeAdd === 'material' ? null : 'material'"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>{{ de.addMaterial }}</button>
+        <button class="btn btn-sm btn-outline-primary" type="button" @click="activeAdd = 'file'"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.addFile }}</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" @click="activeAdd = 'resource'"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ de.addResource }}</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" @click="activeAdd = 'material'"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>{{ de.addMaterial }}</button>
     </div>
-    <div v-if="activeAdd === 'file'" class="roo-modal-backdrop" role="presentation" @click.self="activeAdd = null"><form class="roo-modal card border-0" enctype="multipart/form-data" @submit.prevent="uploadFile"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addFile }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><label class="form-label" for="resource-list-file">{{ de.chooseFile }}</label><input id="resource-list-file" class="form-control form-control-sm" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt,.md,.wscdoc" @change="resourceUpload.resource = $event.target.files?.[0] ?? null"><div v-if="resourceUpload.errors.resource" class="invalid-feedback d-block">{{ resourceUpload.errors.resource }}</div><button class="btn btn-sm btn-primary mt-3" type="submit" :disabled="!resourceUpload.resource || resourceUpload.processing">{{ de.uploadAttachment }}</button></div></form></div>
-    <div v-if="activeAdd === 'resource'" class="roo-modal-backdrop" role="presentation" @click.self="activeAdd = null"><form class="roo-modal card border-0" @submit.prevent="addResourceLink"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addResource }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><div class="row g-2"><div class="col-md-4"><label class="form-label" for="resource-list-title">{{ de.resourceTitle }}</label><input id="resource-list-title" v-model="resourceLinkForm.title" class="form-control form-control-sm" required></div><div class="col-md-5"><label class="form-label" for="resource-list-url">{{ de.resourceUrl }}</label><input id="resource-list-url" v-model="resourceLinkForm.url" class="form-control form-control-sm" type="url" required></div><div class="col-md-3"><label class="form-label" for="resource-list-description">{{ de.description }}</label><input id="resource-list-description" v-model="resourceLinkForm.description" class="form-control form-control-sm"></div></div><button class="btn btn-sm btn-primary mt-3" type="submit">{{ de.saveChanges }}</button></div></form></div>
-    <div v-if="activeAdd === 'material'" class="roo-modal-backdrop" role="presentation" @click.self="activeAdd = null"><form class="roo-modal card border-0" @submit.prevent="addMaterialItem"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addMaterial }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><div class="row g-2"><div class="col-md-5"><label class="form-label" for="resource-list-material">{{ de.materialItem }}</label><input id="resource-list-material" v-model="materialItemForm.name" class="form-control form-control-sm" required></div><div class="col-md-7"><label class="form-label" for="resource-list-material-description">{{ de.description }}</label><input id="resource-list-material-description" v-model="materialItemForm.description" class="form-control form-control-sm"></div></div><button class="btn btn-sm btn-primary mt-3" type="submit">{{ de.saveChanges }}</button></div></form></div>
-    <div v-if="props.resources.length" class="attachment-list">
-        <article v-for="resource in props.resources" :key="resource.id" class="attachment-item">
-            <i class="bi fs-4 text-primary" :class="iconFor(resource)" aria-hidden="true"></i>
-            <div class="flex-grow-1 min-w-0">
-                <div class="d-flex flex-wrap align-items-baseline gap-2">
-                    <strong class="text-break">{{ resource.display_name || resource.original_name }}</strong>
-                    <span class="small text-muted">{{ fileTypeFor(resource) }} · {{ sizeFor(resource.size) }}<span v-if="isWscDoc(resource) && resource.page_count"> ({{ resource.page_count }} {{ pageLabel(resource) }})</span></span>
-                </div>
-                <div class="input-group input-group-sm mt-2">
-                    <input :value="descriptionFor(resource)" class="form-control" type="text" placeholder="Beschreibung" @input="descriptions[resource.id] = $event.target.value" @keydown.enter.prevent="saveDescription(resource)">
-                    <button class="btn btn-outline-secondary" type="button" title="Beschreibung speichern" @click="saveDescription(resource)"><i class="bi bi-check2" aria-hidden="true"></i></button>
-                </div>
-            </div>
-            <div class="d-flex gap-1 align-self-start">
-                <button v-if="isPreviewable(resource)" class="btn btn-sm btn-outline-primary" type="button" title="Vorschau öffnen" :aria-label="`Vorschau: ${resource.original_name}`" @click="previewResource = resource"><i class="bi bi-eye" aria-hidden="true"></i></button>
-                <a class="btn btn-sm btn-outline-secondary" :href="`${props.downloadBaseUrl}/${resource.id}/download`" title="Herunterladen" :aria-label="`Herunterladen: ${resource.original_name}`"><i class="bi bi-download" aria-hidden="true"></i></a>
-                <button class="btn btn-sm btn-outline-danger" type="button" title="Löschen" :aria-label="`Löschen: ${resource.original_name}`" @click="emit('delete', resource)"><i class="bi bi-trash" aria-hidden="true"></i></button>
-            </div>
-        </article>
+    <div v-if="activeAdd" class="roo-modal-backdrop" role="presentation" @click.self="activeAdd = null">
+        <form v-if="activeAdd === 'file'" class="roo-modal card border-0" enctype="multipart/form-data" @submit.prevent="uploadFile"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addFile }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><label class="form-label" for="resource-list-file">{{ de.chooseFile }}</label><input id="resource-list-file" class="form-control" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt,.md,.wscdoc" @change="resourceUpload.resource = $event.target.files?.[0] ?? null"><label class="form-label mt-3" for="resource-list-file-description">{{ de.description }}</label><textarea id="resource-list-file-description" v-model="resourceUpload.description" class="form-control" rows="3"></textarea><div v-if="resourceUpload.errors.resource" class="invalid-feedback d-block">{{ resourceUpload.errors.resource }}</div><button class="btn btn-primary mt-3" type="submit" :disabled="!resourceUpload.resource || resourceUpload.processing">{{ de.uploadAttachment }}</button></div></form>
+        <form v-else-if="activeAdd === 'resource'" class="roo-modal card border-0" @submit.prevent="addResourceLink"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addResource }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><label class="form-label" for="resource-list-title">{{ de.resourceTitle }}</label><input id="resource-list-title" v-model="resourceLinkForm.title" class="form-control" required><label class="form-label mt-3" for="resource-list-url">{{ de.resourceUrl }}</label><input id="resource-list-url" v-model="resourceLinkForm.url" class="form-control" type="url" required><button class="btn btn-primary mt-3" type="submit">{{ de.saveChanges }}</button></div></form>
+        <form v-else class="roo-modal card border-0" @submit.prevent="addMaterialItem"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.addMaterial }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="activeAdd = null"></button></div><label class="form-label" for="resource-list-material">{{ de.materialItem }}</label><input id="resource-list-material" v-model="materialItemForm.name" class="form-control" required><label class="form-label mt-3" for="resource-list-material-description">{{ de.description }}</label><textarea id="resource-list-material-description" v-model="materialItemForm.description" class="form-control" rows="3"></textarea><button class="btn btn-primary mt-3" type="submit">{{ de.saveChanges }}</button></div></form>
     </div>
-    <div v-if="props.resourceLinks.length || props.materialItems.length || materialTextItems().length" class="list-group mb-3">
-        <div v-for="item in materialTextItems()" :key="`text-${item}`" class="list-group-item small"><i class="bi bi-box-seam me-2" aria-hidden="true"></i>{{ item }}</div>
-        <div v-for="link in props.resourceLinks" :key="link.id || link.local_key" class="list-group-item small"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i><strong>{{ link.title }}</strong><a class="d-block ms-4 text-break" :href="link.url" target="_blank" rel="noreferrer">{{ link.url }}</a></div>
-        <div v-for="item in props.materialItems" :key="item.id || item.local_key" class="list-group-item small"><i class="bi bi-box-seam me-2" aria-hidden="true"></i><strong>{{ item.name }}</strong><span v-if="item.description" class="d-block ms-4 text-muted">{{ item.description }}</span></div>
+    <div v-if="hasItems" class="list-group">
+        <div v-for="item in materialTextItems" :key="`text-${item}`" class="list-group-item d-flex align-items-start gap-2 py-2"><i class="bi bi-box-seam mt-1" aria-hidden="true"></i><span>{{ item }}</span></div>
+        <article v-for="resource in resources" :key="resource.id" class="list-group-item d-flex align-items-start gap-2 py-2"><i class="bi fs-5 text-primary mt-1" :class="iconFor(resource)" aria-hidden="true"></i><span class="flex-grow-1 min-w-0"><strong class="text-break">{{ resource.display_name || resource.original_name }}</strong><span class="d-block small text-muted">{{ fileTypeFor(resource) }} · {{ sizeFor(resource.size) }}<span v-if="isWscDoc(resource) && resource.page_count"> ({{ resource.page_count }} {{ pageLabel(resource) }})</span></span><span v-if="resource.description" class="d-block small text-muted text-pre-wrap mt-1">{{ resource.description }}</span></span><span class="d-flex gap-1"><button v-if="isPreviewable(resource)" class="btn btn-sm btn-outline-primary" type="button" title="Vorschau öffnen" @click="previewResource = resource"><i class="bi bi-eye" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-secondary" type="button" title="Bearbeiten" @click="openEdit('file', resource)"><i class="bi bi-pencil" aria-hidden="true"></i></button><a class="btn btn-sm btn-outline-secondary" :href="`${downloadBaseUrl}/${resource.id}/download`" title="Herunterladen"><i class="bi bi-download" aria-hidden="true"></i></a><button class="btn btn-sm btn-outline-danger" type="button" title="Löschen" @click="removeItem('file', resource)"><i class="bi bi-trash" aria-hidden="true"></i></button></span></article>
+        <article v-for="link in resourceLinks" :key="link.id || link.local_key" class="list-group-item d-flex align-items-start gap-2 py-2"><i class="bi bi-link-45deg mt-1" aria-hidden="true"></i><span class="flex-grow-1 min-w-0"><strong class="text-break">{{ link.title }}</strong><a class="d-block small text-break" :href="link.url" target="_blank" rel="noreferrer">{{ link.url }}</a></span><span class="d-flex gap-1"><button class="btn btn-sm btn-outline-secondary" type="button" title="Bearbeiten" @click="openEdit('resource', link)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" title="Löschen" @click="removeItem('resource', link)"><i class="bi bi-trash" aria-hidden="true"></i></button></span></article>
+        <article v-for="item in materialItems" :key="item.id || item.local_key" class="list-group-item d-flex align-items-start gap-2 py-2"><i class="bi bi-box-seam mt-1" aria-hidden="true"></i><span class="flex-grow-1 min-w-0"><strong class="text-break">{{ item.name }}</strong><span v-if="item.description" class="d-block small text-muted text-pre-wrap">{{ item.description }}</span></span><span class="d-flex gap-1"><button class="btn btn-sm btn-outline-secondary" type="button" title="Bearbeiten" @click="openEdit('material', item)"><i class="bi bi-pencil" aria-hidden="true"></i></button><button class="btn btn-sm btn-outline-danger" type="button" title="Löschen" @click="removeItem('material', item)"><i class="bi bi-trash" aria-hidden="true"></i></button></span></article>
     </div>
-    <p v-else-if="!props.resources.length && !props.resourceLinks.length && !props.materialItems.length && !materialTextItems().length" class="small text-muted">Noch keine Anhänge vorhanden.</p>
-    <div v-if="previewResource" class="roo-modal-backdrop" role="presentation" @click.self="previewResource = null"><section class="roo-modal attachment-preview-modal" role="dialog" aria-modal="true" :aria-label="`Vorschau: ${previewResource.original_name}`"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0 text-break">{{ previewResource.original_name }}</h2><button class="btn-close" type="button" aria-label="Schließen" @click="previewResource = null"></button></div><img v-if="previewKind(previewResource) === 'image'" class="attachment-preview-image" :src="`${props.downloadBaseUrl}/${previewResource.id}/preview`" :alt="previewResource.original_name"><video v-else-if="previewKind(previewResource) === 'video'" class="attachment-preview-media" controls :src="`${props.downloadBaseUrl}/${previewResource.id}/preview`"></video><audio v-else class="w-100" controls :src="`${props.downloadBaseUrl}/${previewResource.id}/preview`"></audio></div></div></section></div>
+    <p v-else class="small text-muted">Noch keine Anhänge vorhanden.</p>
+    <div v-if="editingItem" class="roo-modal-backdrop" role="presentation" @click.self="closeEdit"><form class="roo-modal card border-0" @submit.prevent="saveEdit"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0">{{ de.edit }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="closeEdit"></button></div><template v-if="editingType === 'file'"><label class="form-label" for="resource-edit-description">{{ de.description }}</label><textarea id="resource-edit-description" v-model="editingForm.description" class="form-control" rows="4"></textarea></template><template v-else-if="editingType === 'resource'"><label class="form-label" for="resource-edit-title">{{ de.resourceTitle }}</label><input id="resource-edit-title" v-model="editingForm.title" class="form-control" required><label class="form-label mt-3" for="resource-edit-url">{{ de.resourceUrl }}</label><input id="resource-edit-url" v-model="editingForm.url" class="form-control" type="url" required></template><template v-else><label class="form-label" for="material-edit-name">{{ de.materialItem }}</label><input id="material-edit-name" v-model="editingForm.name" class="form-control" required><label class="form-label mt-3" for="material-edit-description">{{ de.description }}</label><textarea id="material-edit-description" v-model="editingForm.description" class="form-control" rows="3"></textarea></template><button class="btn btn-primary mt-3" type="submit">{{ de.saveChanges }}</button></div></form></div>
+    <div v-if="previewResource" class="roo-modal-backdrop" role="presentation" @click.self="previewResource = null"><section class="roo-modal attachment-preview-modal" role="dialog" aria-modal="true" :aria-label="`Vorschau: ${previewResource.original_name}`"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h6 mb-0 text-break">{{ previewResource.original_name }}</h2><button class="btn-close" type="button" aria-label="Schließen" @click="previewResource = null"></button></div><img v-if="previewKind(previewResource) === 'image'" class="attachment-preview-image" :src="`${downloadBaseUrl}/${previewResource.id}/preview`" :alt="previewResource.original_name"><video v-else-if="previewKind(previewResource) === 'video'" class="attachment-preview-media" controls :src="`${downloadBaseUrl}/${previewResource.id}/preview`"></video><audio v-else class="w-100" controls :src="`${downloadBaseUrl}/${previewResource.id}/preview`"></audio></div></div></section></div>
 </template>
