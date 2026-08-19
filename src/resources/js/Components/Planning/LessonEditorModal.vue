@@ -47,6 +47,21 @@ const availableCompetencies = computed(() => {
     return (props.competencyOptions ?? []).filter(option => !selected.has(option.id) && (!query || props.competencyText(option).toLowerCase().includes(query))).slice(0, 50)
 })
 
+const competencyKind = competency => competency.education_plan_competency?.area?.kind || competency.curriculum_competency?.competency_kind || 'content'
+const processCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) === 'process'))
+const contentCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) !== 'process'))
+const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {
+    const represented = lesson.id === props.lesson?.id
+        ? competencyForm.competency_ids.includes(competency.id)
+        : (lesson.competencies ?? []).some(item => item.id === competency.id)
+    return total + (represented ? Number(lesson.duration ?? 0) : 0)
+}, 0)
+const competencyCardStyle = competency => {
+    const totalHours = (props.unit?.lessons ?? []).reduce((total, lesson) => total + Number(lesson.duration ?? 0), 0)
+    const ratio = totalHours ? Math.min(1, competencyHours(competency) / totalHours) : 0
+    return { backgroundColor: `rgba(var(--bs-primary-rgb), ${0.05 + ratio * 0.2})` }
+}
+
 function addCompetency(option) {
     router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { education_plan_competency_id: option.id }, {
         preserveState: true,
@@ -120,13 +135,9 @@ function savePhase() {
 
                         <div v-else-if="activeTab === 'competencies'">
                             <p class="small text-muted">{{ de.lessonCompetenciesHint }}</p>
-                            <div v-if="unitCompetencies.length" class="row g-2">
-                                <div v-for="competency in unitCompetencies" :key="competency.id" class="col-md-6">
-                                    <label class="form-check border rounded p-2 ps-5 h-100">
-                                        <input v-model="competencyForm.competency_ids" class="form-check-input" type="checkbox" :value="competency.id">
-                                        <span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.fromLesson }}</span></span>
-                                    </label>
-                                </div>
+                            <div v-if="unitCompetencies.length" class="row g-4">
+                                <div class="col-md-6"><h3 class="h6">{{ de.editProcessCompetencies }}</h3><div v-if="processCompetencies.length" class="row g-2"><div v-for="competency in processCompetencies" :key="competency.id" class="col-12"><label class="form-check border rounded p-2 ps-5 h-100" :style="competencyCardStyle(competency)"><input v-model="competencyForm.competency_ids" class="form-check-input" type="checkbox" :value="competency.id"><span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.fromLesson }}</span></span></label></div></div><p v-else class="small text-muted">{{ de.noCompetencies }}</p></div>
+                                <div class="col-md-6"><h3 class="h6">{{ de.editContentCompetencies }}</h3><div v-if="contentCompetencies.length" class="row g-2"><div v-for="competency in contentCompetencies" :key="competency.id" class="col-12"><label class="form-check border rounded p-2 ps-5 h-100" :style="competencyCardStyle(competency)"><input v-model="competencyForm.competency_ids" class="form-check-input" type="checkbox" :value="competency.id"><span class="form-check-label small">{{ competencyText(competency) }} <span v-if="competency.is_secondary" class="badge text-bg-light">{{ de.fromLesson }}</span></span></label></div></div><p v-else class="small text-muted">{{ de.noCompetencies }}</p></div>
                             </div>
                             <p v-else class="small text-muted">{{ de.noCompetencies }}</p>
                             <div class="position-relative mt-4">
