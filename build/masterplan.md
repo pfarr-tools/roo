@@ -302,6 +302,10 @@ Vorhandene Einheiten und Stunden aus früheren Jahren strukturiert übernehmen.
 
 ## Phase 6 – Jahresplanung
 
+Fortschritt: `[x]` Jahrespläne, visuelle Zeitachse, Ferien-/Ausnahmetage,
+Drag-and-drop und Tastaturverschiebung, Teilung, Stunden-Erzeugung,
+Durchführungsstatus, Planungsprüfungen und Revisionshistorie sind umgesetzt.
+
 ### Ziel
 
 Unterrichtseinheiten visuell über das Schuljahr verteilen.
