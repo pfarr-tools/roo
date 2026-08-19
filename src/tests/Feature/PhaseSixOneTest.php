@@ -361,6 +361,27 @@ it('behält bewusst entfernte Stunden beim Verschieben einer UE entfernt', funct
         ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->value('schedule_slot_id'))->toBe($slots[1]->id);
 });
 
+it('verschiebt eine UE mit der tatsächlichen Reihenfolge ihrer geplanten Stunden', function () {
+    [$user, $group, , $year] = phaseSixOneGroup();
+    $year->update(['ends_on' => '2026-10-31']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Umsortierte UE', 'position' => 1]);
+    $lessons = collect(range(1, 3))->map(fn (int $position) => $unit->lessons()->create(['title' => 'Stunde '.$position, 'position' => $position, 'duration' => 1]));
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessons[1], $slots[0]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessons[0], $slots[1]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessons[2], $slots[2]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[4]->id}/einfügen", [
+        'type' => 'unit',
+        'source_id' => $unit->id,
+    ])->assertRedirect();
+
+    expect(ScheduledLesson::where('lesson_id', $lessons[1]->id)->value('schedule_slot_id'))->toBe($slots[4]->id)
+        ->and(ScheduledLesson::where('lesson_id', $lessons[0]->id)->value('schedule_slot_id'))->toBe($slots[5]->id)
+        ->and(ScheduledLesson::where('lesson_id', $lessons[2]->id)->value('schedule_slot_id'))->toBe($slots[6]->id);
+});
+
 it('fragt beim Einfügen einer späteren Stunde nach dem Nachrücken und verschiebt den Rest nach oben', function () {
     [$user, $group, , $year] = phaseSixOneGroup();
     $year->update(['ends_on' => '2026-10-31']);
