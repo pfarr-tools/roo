@@ -288,6 +288,26 @@ it('verschiebt Inhalte um fixierte Stunden herum', function () {
         ->and(ScheduledLesson::where('lesson_id', $units[0]->id)->value('schedule_slot_id'))->toBe($slots[2]->id);
 });
 
+it('verschiebt eine UE um ihre fixierte Stunde herum', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $fixedUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Teilfixierte UE', 'position' => 1]);
+    $fixedLesson = $fixedUnit->lessons()->create(['title' => 'Fixierte Stunde', 'position' => 1, 'duration' => 1]);
+    $movableLesson = $fixedUnit->lessons()->create(['title' => 'Verschiebbare Stunde', 'position' => 2, 'duration' => 1]);
+    $otherUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Andere UE', 'position' => 2]);
+    $otherLesson = $otherUnit->lessons()->create(['title' => 'Andere Stunde', 'position' => 1, 'duration' => 1]);
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $otherLesson, $slots[0]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $fixedLesson, $slots[1]);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $movableLesson, $slots[3]);
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[0]->id}/einfügen", ['type' => 'unit', 'source_id' => $fixedUnit->id])->assertRedirect();
+
+    expect(ScheduledLesson::where('lesson_id', $fixedLesson->id)->value('schedule_slot_id'))->toBe($slots[1]->id)
+        ->and(ScheduledLesson::where('lesson_id', $movableLesson->id)->value('schedule_slot_id'))->toBe($slots[0]->id)
+        ->and(ScheduledLesson::where('lesson_id', $otherLesson->id)->value('schedule_slot_id'))->toBe($slots[2]->id);
+});
+
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
     [$user, $group] = phaseSixOneGroup();
     $units = collect(['Bereits geplant', 'Zweite UE', 'Dritte UE'])->map(function (string $title, int $index) use ($group, $user) {

@@ -232,11 +232,16 @@ class YearPlanningWorkspace
         $targetIndex = $slots->search(fn (ScheduleSlot $slot) => $slot->id === $target->id);
         abort_unless($targetIndex !== false, 422, 'Der Zielslot ist nicht verfügbar.');
 
-        $block = $sourceLessons->flatMap(fn (Lesson $lesson) => array_fill(0, max(1, (int) $lesson->duration), $lesson->id))->values()->all();
-        $sourceIds = $sourceLessons->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $pinnedSourceIds = $slots->filter(fn (ScheduleSlot $slot) => $slot->is_pinned && $slot->scheduledLesson && $sourceLessons->contains('id', $slot->scheduledLesson->lesson_id))->pluck('scheduledLesson.lesson_id')->map(fn ($id) => (int) $id)->all();
+        abort_unless($type === 'unit' || $pinnedSourceIds === [], 422, 'Eine fixierte Stunde kann nicht einzeln verschoben werden.');
+        $movableSourceLessons = $sourceLessons->reject(fn (Lesson $lesson) => in_array((int) $lesson->id, $pinnedSourceIds, true));
+        $block = $movableSourceLessons->flatMap(fn (Lesson $lesson) => array_fill(0, max(1, (int) $lesson->duration), $lesson->id))->values()->all();
+        $sourceIds = $movableSourceLessons->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if ($block === []) {
+            return ['scheduled' => 0, 'overflow' => 0];
+        }
         abort_unless(! $target->is_pinned, 422, 'Der Zielslot ist fixiert.');
         if ($slots->contains(fn (ScheduleSlot $slot) => $slot->is_pinned)) {
-            abort_unless(! $slots->contains(fn (ScheduleSlot $slot) => $slot->is_pinned && $slot->scheduledLesson && in_array((int) $slot->scheduledLesson->lesson_id, $sourceIds, true)), 422, 'Eine fixierte Stunde kann nicht verschoben werden.');
             $movableIndexes = $slots->keys()->filter(fn (int $index) => ! $slots[$index]->is_pinned)->values()->all();
             $targetMovableIndex = array_search($targetIndex, $movableIndexes, true);
             abort_unless($targetMovableIndex !== false, 422, 'Der Zielslot ist fixiert.');
