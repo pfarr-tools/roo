@@ -7,6 +7,7 @@ use App\Models\TeachingUnit;
 use App\Models\EducationPlan;
 use App\Models\LessonTemplate;
 use App\Models\PhaseTemplate;
+use App\Models\SocialForm;
 use App\Http\Requests\StorePhaseTemplateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,8 +33,9 @@ class TeachingUnitController extends Controller
             'units' => $units,
             'educationPlans' => EducationPlan::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->orderBy('title')->get(['id', 'title', 'external_identifier']),
             'filters' => ['q' => $query],
-            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'material', 'version']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'version']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
+            'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -41,7 +43,9 @@ class TeachingUnitController extends Controller
     {
         $data = $request->validated();
         $this->ensureLessonTemplate($data['lesson_template_id'], $request->user()->organization_id);
-        unset($data['material_items'], $data['social_form']);
+        unset($data['material_items']);
+        $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
+        unset($data['social_form']);
         PhaseTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
 
         return to_route('teaching-units.index')->with('success', 'Phasen-Vorlage wurde angelegt.');
@@ -52,7 +56,9 @@ class TeachingUnitController extends Controller
         abort_unless($phaseTemplate->organization_id === $request->user()->organization_id && $phaseTemplate->is_active, 404);
         $data = $request->validated();
         $this->ensureLessonTemplate($data['lesson_template_id'], $request->user()->organization_id);
-        unset($data['material_items'], $data['social_form']);
+        unset($data['material_items']);
+        $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
+        unset($data['social_form']);
         $phaseTemplate->update($data + ['version' => $phaseTemplate->version + 1]);
 
         return to_route('teaching-units.index')->with('success', 'Phasen-Vorlage wurde gespeichert.');
@@ -69,6 +75,17 @@ class TeachingUnitController extends Controller
     private function ensureLessonTemplate(int $lessonTemplateId, int $organizationId): void
     {
         abort_unless(LessonTemplate::whereKey($lessonTemplateId)->where('organization_id', $organizationId)->where('is_active', true)->exists(), 422);
+    }
+
+    private function resolveSocialForm(?string $name): ?int
+    {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        return SocialForm::firstOrCreate(['organization_id' => auth()->user()->organization_id, 'name' => $name])->id;
     }
 
     public function update(Request $request, TeachingUnit $teachingUnit): RedirectResponse

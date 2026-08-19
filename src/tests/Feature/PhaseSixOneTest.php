@@ -192,6 +192,34 @@ it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', funct
     expect($phase->fresh()->position)->toBe(2);
 });
 
+it('speichert alle Phasenfelder auch über die UE-Phasenvorlagenverwaltung', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
+
+    $this->actingAs($user)->post('/unterrichtseinheiten/phasen-vorlagen', [
+        'lesson_template_id' => $lessonTemplate->id,
+        'title' => 'Gesprächsrunde',
+        'duration_minutes' => 10,
+        'social_form' => 'Sitzkreis',
+        'teacher_interaction' => 'Frageimpuls',
+        'learner_activity' => 'Erzählen',
+        'differentiation' => 'Satzstarter',
+        'didactic_comment' => 'Erfahrungen sammeln',
+        'material' => 'Karten',
+        'media' => 'Dokumentenkamera',
+    ])->assertRedirect();
+
+    $template = PhaseTemplate::where('title', 'Gesprächsrunde')->firstOrFail();
+    expect($template->socialForm->name)->toBe('Sitzkreis')
+        ->and($template->teacher_interaction)->toBe('Frageimpuls')
+        ->and($template->learner_activity)->toBe('Erzählen')
+        ->and($template->differentiation)->toBe('Satzstarter')
+        ->and($template->didactic_comment)->toBe('Erfahrungen sammeln')
+        ->and($template->material)->toBe('Karten')
+        ->and($template->media)->toBe('Dokumentenkamera');
+});
+
 it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', function () {
     [$user, $group] = phaseSixOneGroup();
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ritual UE', 'position' => 1]);
