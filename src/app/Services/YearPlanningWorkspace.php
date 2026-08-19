@@ -118,6 +118,24 @@ class YearPlanningWorkspace
         return ['scheduled' => $selected->count(), 'overflow' => 0];
     }
 
+    public function blockAndReflow(TeachingGroup $group, ScheduleSlot $slot, string $status): array
+    {
+        $scheduled = $slot->scheduledLesson;
+        $lesson = $scheduled?->lesson;
+        $slot->update(['status' => $status]);
+        if (! $lesson) {
+            return ['scheduled' => 0, 'overflow' => 0];
+        }
+        ScheduledLesson::where('lesson_id', $lesson->id)->delete();
+        $available = $this->availableSlots($group)->filter(fn (ScheduleSlot $candidate) => $candidate->date->toDateString() > $slot->date->toDateString() || ($candidate->date->toDateString() === $slot->date->toDateString() && $candidate->period_number > $slot->period_number))->values();
+        $selected = $available->take($lesson->duration);
+        foreach ($selected as $candidate) {
+            ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $candidate->id]);
+        }
+
+        return ['scheduled' => $selected->count(), 'overflow' => max(0, $lesson->duration - $selected->count())];
+    }
+
     public function coverage(TeachingGroup $group): array
     {
         $units = $group->teachingUnits()->with(['competencies', 'lessons.competencies'])->get();

@@ -56,6 +56,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
     Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');
     Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
+    Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten', [YearPlanController::class, 'storeTeachingUnit'])->name('year-plans.teaching-units.store');
+    Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}', [YearPlanController::class, 'updateTeachingUnit'])->name('year-plans.teaching-units.update');
+    Route::post('/jahresplanung/{teachingGroup}/curriculum-themen/{topic}/uebernehmen', [YearPlanController::class, 'takeCurriculumUnit'])->name('year-plans.curriculum-topics.take');
+    Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden', [YearPlanController::class, 'storeLesson'])->name('year-plans.lessons.store');
+    Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'updateLesson'])->name('year-plans.lessons.update');
+    Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
+    Route::put('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'updatePhase'])->name('year-plans.phases.update');
+    Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/einplanen', [YearPlanController::class, 'scheduleLesson'])->name('year-plans.lessons.schedule');
+    Route::put('/jahresplanung/{teachingGroup}/slots/{slot}', [YearPlanController::class, 'updateSlot'])->name('year-plans.slots.update');
     Route::post('/jahresplanung/{teachingGroup}/einheiten', [YearPlanController::class, 'storeUnit'])->name('year-plans.units.store');
     Route::put('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}', [YearPlanController::class, 'updateUnit'])->name('year-plans.units.update');
     Route::post('/jahresplanung/{teachingGroup}/einheiten/{plannedUnit}/teilen', [YearPlanController::class, 'splitUnit'])->name('year-plans.units.split');

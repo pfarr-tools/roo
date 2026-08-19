@@ -10,6 +10,7 @@ use App\Models\CurriculumTopic;
 use App\Models\GroupYearPlan;
 use App\Models\Lesson;
 use App\Models\LessonOccurrence;
+use App\Models\LessonPhase;
 use App\Models\PlannedUnit;
 use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
@@ -53,6 +54,7 @@ class YearPlanController extends Controller
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $workspace->coverage($teachingGroup),
             ],
+            'groupOptions' => TeachingGroup::where('organization_id', auth()->user()->organization_id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
         ]);
     }
 
@@ -105,6 +107,27 @@ class YearPlanController extends Controller
         return back()->with('success', 'Stunde wurde gespeichert.');
     }
 
+    public function updateLessonCompetencies(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['competency_ids' => ['array'], 'competency_ids.*' => ['integer']]);
+        $validIds = $lesson->unit->competencies()->whereIn('id', $data['competency_ids'] ?? [])->pluck('id');
+        abort_unless($validIds->count() === count($data['competency_ids'] ?? []), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
+        $lesson->competencies()->sync($validIds);
+
+        return back()->with('success', 'Kompetenzen der Stunde wurden gespeichert.');
+    }
+
+    public function updatePhase(Request $request, TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'description' => ['nullable', 'string'], 'materials' => ['nullable', 'string']]));
+
+        return back()->with('success', 'Phase wurde gespeichert.');
+    }
+
     public function scheduleLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, YearPlanningWorkspace $workspace): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -120,7 +143,12 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
-        abort_if($data['status'] !== 'free' && $slot->scheduledLesson()->exists(), 422, 'Ein belegter Termin kann nicht gesperrt werden.');
+        if ($data['status'] !== 'free' && $slot->scheduledLesson()->exists()) {
+            $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status']);
+            $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null]);
+
+            return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Ausfall gespeichert und nachfolgende Stunde verschoben.');
+        }
         $slot->update($data);
 
         return back()->with('success', 'Terminstatus wurde gespeichert.');

@@ -8,6 +8,7 @@ use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
+use App\Models\Lesson;
 use App\Models\Organization;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
@@ -74,4 +75,19 @@ it('erzeugt Slots ohne schulfreie Tage und plant eine mehrstündige Lesson', fun
     $slot = ScheduleSlot::orderBy('date')->firstOrFail();
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanen", ['schedule_slot_id' => $slot->id])->assertRedirect();
     expect(ScheduledLesson::where('lesson_id', $lesson->id)->count())->toBe(2);
+});
+
+it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten", ['title' => 'Reflow UE']);
+    $unit = TeachingUnit::firstOrFail();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}/stunden", ['title' => 'Stunde', 'duration' => 1]);
+    $lesson = Lesson::firstOrFail();
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slot = ScheduleSlot::orderBy('date')->firstOrFail();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanen", ['schedule_slot_id' => $slot->id]);
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slot->id}", ['status' => 'absent'])->assertRedirect();
+
+    expect(ScheduledLesson::firstOrFail()->schedule_slot_id)->not->toBe($slot->id)
+        ->and($slot->fresh()->status)->toBe('absent');
 });
