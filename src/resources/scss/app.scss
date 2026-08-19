@@ -168,6 +168,8 @@ body {
 .planning-card.unit-tone-5, .planning-slot.unit-tone-5 { --unit-accent: var(--bs-secondary); --unit-background: rgba(var(--bs-secondary-rgb), .1); }
 .planning-card[class*="unit-tone-"], .planning-slot[class*="unit-tone-"] { background-color: var(--unit-background); border-left: .3rem solid var(--unit-accent); }
 .planning-slot.drop-ready { border-color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .12); box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .16); }
+.planning-slot .dropdown { position: relative; z-index: 3; }
+.planning-slot .dropdown-menu { z-index: 1050; }
 .planning-slot.drop-preview { position: relative; border-top: .2rem solid var(--bs-primary); transform: translateY(.1rem); }
 .planning-slot.drop-preview::after { content: '↓'; position: absolute; right: .5rem; top: -.85rem; color: var(--bs-primary); font-weight: 700; }
 .planning-slot.drop-insert { outline: .2rem dashed var(--bs-success); background: rgba(var(--bs-success-rgb), .14); }
@@ -175,6 +177,10 @@ body {
 .planning-slot.slot-blocked { opacity: .75; }
 .lesson-row { padding: .55rem 0; border-top: 1px solid var(--bs-border-color); cursor: grab; }
 .lesson-row.drop-ready { background: rgba(var(--bs-primary-rgb), .12); box-shadow: inset 0 .2rem 0 var(--bs-primary); }
+.planning-card.unit-drop-before, .planning-card.unit-drop-after { position: relative; }
+.planning-card.unit-drop-before::before, .planning-card.unit-drop-after::after { content: ''; position: absolute; left: .25rem; right: .25rem; height: .25rem; border-radius: 999px; background: var(--bs-primary); box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .16); pointer-events: none; z-index: 2; }
+.planning-card.unit-drop-before::before { top: -.35rem; }
+.planning-card.unit-drop-after::after { bottom: -.35rem; }
 .planning-card.plan-state-planned { box-shadow: inset 0 0 0 1px rgba(var(--bs-success-rgb), .4); }
 .planning-card.plan-state-partial { box-shadow: inset 0 0 0 1px rgba(var(--bs-warning-rgb), .5); }
 .planning-card.plan-state-not-planned { box-shadow: inset 0 0 0 1px rgba(var(--bs-secondary-rgb), .35); }
