@@ -62,7 +62,7 @@ function selectLibraryItem(item) {
     if (item.kind === 'material') emit('update:material-items', [...props.materialItems, { ...item, local_key: `library-material-${item.id}` }])
     if (item.kind === 'file') {
         if (!props.libraryAttachUrl || !props.libraryTargetType || !props.libraryTargetId) return
-        router.post(`${props.libraryAttachUrl}/${item.id}`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page) })
+        router.post(`${props.libraryAttachUrl}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page) })
     }
     activeAdd.value = null
 }

@@ -24,7 +24,7 @@ function resourceBaseUrl() { return `/jahresplanung/${editing.value.group.id}/ei
 function libraryAttachUrl() { return `/jahresplanung/${editing.value.group.id}/ressourcen` }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`${resourceBaseUrl()}/${resource.id}`, { preserveScroll: true, onSuccess: refreshEditingUnit }) }
 function deleteResource(resource) { router.delete(`${resourceBaseUrl()}/${resource.id}`, { preserveScroll: true, onSuccess: refreshEditingUnit }) }
-function refreshEditingUnit(response) { const updated = response?.props?.units?.find(unit => unit.id === editing.value?.id); if (updated) editing.value = updated }
+function refreshEditingUnit(response) { const units = response?.props?.units ?? response?.props?.workspace?.units ?? []; const updated = units.find(unit => unit.id === editing.value?.id); if (updated) editing.value = updated }
 function remove(unit) { if (window.confirm(de.deleteUnitConfirm)) router.delete(`/unterrichtseinheiten/${unit.id}`) }
 function editTemplate(template) { templateEditing.value = template; templateForm.defaults({ lesson_template_id: template.lesson_template_id, title: template.title, duration_minutes: template.duration_minutes, social_form: template.social_form?.name ?? '', teacher_interaction: template.teacher_interaction ?? '', learner_activity: template.learner_activity ?? '', differentiation: template.differentiation ?? '', didactic_comment: template.didactic_comment ?? '', material: template.material ?? '', media: template.media ?? '' }); templateForm.reset(); templateForm.clearErrors() }
 function newTemplate() { templateEditing.value = {}; templateForm.reset(); templateForm.clearErrors() }
