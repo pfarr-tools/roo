@@ -27,6 +27,7 @@ Route::get('/', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
+    Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/schulen', [SchoolController::class, 'index'])->name('schools.index');
     Route::get('/schulen/{school}', [SchoolController::class, 'show'])->name('schools.show');
