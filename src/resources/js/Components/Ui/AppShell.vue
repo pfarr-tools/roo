@@ -25,7 +25,7 @@ const moduleGroups = [
         { label: labels.curricula, icon: 'bi-diagram-3', url: '/curricula', enabled: true },
         { label: labels.teachingUnits, icon: 'bi-collection', url: '/unterrichtseinheiten', enabled: true },
         { label: labels.library, icon: 'bi-folder2-open', url: '/ressourcen/bibliothek', enabled: true },
-        { label: labels.songs, icon: 'bi-music-note-beamed', enabled: false },
+        { label: labels.songs, icon: 'bi-music-note-beamed', url: '/lieder', enabled: true },
     ] },
     { title: labels.assessment, items: [
         { label: labels.observations, icon: 'bi-eye', enabled: false },
