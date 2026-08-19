@@ -349,6 +349,11 @@ Bildungsplandaten bleiben dabei unverändert.
 
 ## Phase 7 – Stundeneditor und Durchführung
 
+Fortschritt: `[~]` Statusmodell, Phasenbearbeitung, Vorlagenübernahme,
+Phasensortierung, Zeitprüfung und die Statusführung im Stundeneditor sind
+umgesetzt. Durchführungsnotizen, Materiallisten sowie Präsentations- und
+Nachplanungsansichten folgen in den nächsten vertikalen Schnitten.
+
 ### Ziel
 
 Einzelne Stunden schnell vorbereiten und im Unterricht verwenden.

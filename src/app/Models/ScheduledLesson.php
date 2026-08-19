@@ -9,6 +9,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['lesson_id', 'schedule_slot_id', 'status'])]
 class ScheduledLesson extends Model
 {
+    public const STATUS_ASSIGNED = 'assigned';
+
+    public const STATUS_PLANNED = 'planned';
+
+    public const STATUS_READY = 'ready';
+
+    public const STATUS_CONDUCTED = 'conducted';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_POSTPONED = 'postponed';
+
+    public static function statuses(): array
+    {
+        return [self::STATUS_ASSIGNED, self::STATUS_PLANNED, self::STATUS_READY, self::STATUS_CONDUCTED, self::STATUS_CANCELLED, self::STATUS_POSTPONED];
+    }
+
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);

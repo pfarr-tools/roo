@@ -6,6 +6,8 @@ use App\Http\Requests\InterruptPlannedUnitRequest;
 use App\Http\Requests\SplitPlannedUnitRequest;
 use App\Http\Requests\StorePlannedUnitRequest;
 use App\Http\Requests\UpdateLessonOccurrenceRequest;
+use App\Http\Requests\StoreLessonPhaseRequest;
+use App\Http\Requests\UpdateScheduledLessonStatusRequest;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumEducationPlanBinding;
 use App\Models\EducationPlanCompetency;
@@ -15,6 +17,7 @@ use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
 use App\Models\PlannedUnit;
 use App\Models\ScheduledLesson;
+use App\Models\PhaseTemplate;
 use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
@@ -81,6 +84,7 @@ class YearPlanController extends Controller
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
             'competencyOptions' => EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
                 ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text']),
+            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'description', 'material']),
         ]);
     }
 
@@ -349,9 +353,66 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'description' => ['nullable', 'string'], 'materials' => ['nullable', 'string']]));
+        $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'description' => ['nullable', 'string'], 'materials' => ['nullable', 'string']]));
 
         return back()->with('success', 'Phase wurde gespeichert.');
+    }
+
+    public function storePhase(StoreLessonPhaseRequest $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validated();
+        $template = ! empty($data['phase_template_id'])
+            ? PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->findOrFail($data['phase_template_id'])
+            : null;
+        $lesson->phases()->create([
+            'phase_template_id' => $template?->id,
+            'title' => $data['title'] ?? $template->title,
+            'position' => ($lesson->phases()->max('position') ?? 0) + 1,
+            'duration_minutes' => $data['duration_minutes'] ?? $template?->duration_minutes,
+            'description' => $data['description'] ?? $template?->description,
+            'materials' => $data['materials'] ?? $template?->material,
+        ]);
+        $lesson->scheduledLessons()->where('status', ScheduledLesson::STATUS_ASSIGNED)->update(['status' => ScheduledLesson::STATUS_PLANNED]);
+
+        return back()->with('success', 'Phase wurde hinzugefügt.');
+    }
+
+    public function destroyPhase(TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $phase->delete();
+
+        return back()->with('success', 'Phase wurde entfernt.');
+    }
+
+    public function reorderPhases(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $data = $request->validate(['phase_ids' => ['required', 'array'], 'phase_ids.*' => ['integer']]);
+        $allowed = $lesson->phases()->pluck('id')->sort()->values()->all();
+        abort_unless($allowed === collect($data['phase_ids'])->sort()->values()->all(), 422, 'Die Phasen gehören nicht vollständig zu dieser Stunde.');
+        foreach ($data['phase_ids'] as $position => $phaseId) {
+            $lesson->phases()->whereKey($phaseId)->update(['position' => $position + 1]);
+        }
+
+        return back()->with('success', 'Reihenfolge der Phasen wurde gespeichert.');
+    }
+
+    public function updateScheduledLessonStatus(UpdateScheduledLessonStatusRequest $request, TeachingGroup $teachingGroup, ScheduledLesson $scheduledLesson): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($scheduledLesson->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        $status = $request->validated()['status'];
+        if (in_array($status, [ScheduledLesson::STATUS_PLANNED, ScheduledLesson::STATUS_READY], true) && ! $scheduledLesson->lesson->phases()->exists()) {
+            abort(422, 'Eine Stunde benötigt mindestens eine Phase für diesen Status.');
+        }
+        $scheduledLesson->update(['status' => $status]);
+
+        return back()->with('success', 'Stundenstatus wurde gespeichert.');
     }
 
     public function reorderLessons(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse

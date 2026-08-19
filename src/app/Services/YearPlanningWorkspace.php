@@ -117,7 +117,7 @@ class YearPlanningWorkspace
                 $lessonCopy = $copy->lessons()->create($lesson->only(['title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes']));
                 $lessonCopy->competencies()->sync(collect($lesson->competencies)->map(fn ($competency) => $competencies[$competency->id]?->id)->filter()->all());
                 foreach ($lesson->phases as $phase) {
-                    $lessonCopy->phases()->create($phase->only(['title', 'position', 'description', 'materials']));
+                    $lessonCopy->phases()->create($phase->only(['title', 'position', 'duration_minutes', 'description', 'materials']));
                 }
             }
 
