@@ -196,6 +196,7 @@ export default {
     account: 'Profil und Kontoeinstellungen',
     organization: 'Organisation',
     content: 'Inhalte',
+    teaching: 'Unterricht',
     planning: 'Planung',
     planningModule: 'Jahresplanung',
     yearPlans: 'Jahresplanung',

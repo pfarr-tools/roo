@@ -12,9 +12,14 @@ use App\Http\Controllers\TeachingUnitController;
 use App\Http\Controllers\TeachingUnitResourceController;
 use App\Http\Controllers\YearPlanController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    if ($request->user()) {
+        return to_route('dashboard');
+    }
+
     return Inertia::render('Welcome');
 })->name('home');
 

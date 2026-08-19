@@ -118,6 +118,14 @@ body {
 .lesson-row.lesson-drop-before::before { top: -.1rem; }
 .lesson-row.lesson-drop-after::after { bottom: -.1rem; }
 .attachment-preview-modal { width: min(58rem, 100%); }
+.dashboard-lesson-card { padding: .65rem; border: 1px solid transparent; border-radius: .7rem; background: rgba(255,255,255,.55); }
+.dashboard-lesson-card + .dashboard-lesson-card { margin-top: .5rem; }
+.dashboard-lesson-card-planned { border-color: rgba(40,122,89,.35); background: rgba(40,122,89,.08); }
+.dashboard-lesson-card-unplanned { border-color: rgba(234,165,31,.65); background: rgba(234,165,31,.14); }
+.dashboard-lesson-card-clickable { cursor: pointer; }
+.dashboard-lesson-card-clickable:hover, .dashboard-lesson-card-clickable:focus-visible { border-color: var(--roo-orange-dark); box-shadow: 0 .2rem .65rem rgba(60, 37, 13, .1); outline: 0; }
+.dashboard-lesson-header { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; white-space: nowrap; }
+.dashboard-lesson-info { padding-top: .5rem; }
 .attachment-preview-image, .attachment-preview-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; object-fit: contain; }
 .roo-modal { width: min(100%, 46rem); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: var(--roo-cream); box-shadow: 0 1rem 3rem rgba(0,0,0,.2); }
 .roo-curriculum-board .card { background: rgba(255,255,255,.72); }

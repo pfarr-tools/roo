@@ -13,6 +13,12 @@ it('shows the German login page', function () {
         ->assertInertia(fn (Assert $page) => $page->component('Auth/Login'));
 });
 
+it('redirects authenticated users from the home page to the dashboard', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/')->assertRedirect('/dashboard');
+});
+
 it('registers a user and redirects to the dashboard', function () {
     $this->withoutMiddleware();
 

@@ -11,6 +11,9 @@ const mobileSidebarOpen = ref(false)
 const labels = de
 const sidebarExpanded = computed(() => sidebarPinned.value || sidebarHovered.value || mobileSidebarOpen.value)
 const moduleGroups = [
+    { title: labels.teaching, items: [
+        { label: labels.planningModule, icon: 'bi-calendar-range', url: '/jahresplanung', enabled: true },
+    ] },
     { title: labels.organization, items: [
         { label: labels.schools, icon: 'bi-building', url: '/schulen', enabled: true },
         { label: labels.teachingGroups, icon: 'bi-people', url: '/unterrichtsgruppen', enabled: true },
@@ -22,9 +25,6 @@ const moduleGroups = [
         { label: labels.teachingUnits, icon: 'bi-collection', url: '/unterrichtseinheiten', enabled: true },
         { label: labels.resources, icon: 'bi-folder2-open', enabled: false },
         { label: labels.songs, icon: 'bi-music-note-beamed', enabled: false },
-    ] },
-    { title: labels.planning, items: [
-        { label: labels.planningModule, icon: 'bi-calendar-range', url: '/jahresplanung', enabled: true },
     ] },
     { title: labels.assessment, items: [
         { label: labels.observations, icon: 'bi-eye', enabled: false },

@@ -38,21 +38,46 @@ class DashboardController extends Controller
         $weekOptions = $weekOptions->sortKeys()->values();
         $schoolYearIds = $schoolYears->filter(fn (SchoolYear $year) => $year->starts_on->lte($selectedMonday->addDays(4)) && $year->ends_on->gte($selectedMonday))->pluck('id');
         $groups = $request->user()->organization_id
-            ? TeachingGroup::where('organization_id', $organizationId)->whereIn('school_year_id', $schoolYearIds)->with(['school:id,name', 'schoolYear:id,name', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at'])->get()
+            ? TeachingGroup::where('organization_id', $organizationId)->whereIn('school_year_id', $schoolYearIds)->with([
+                'school:id,name,slug,short_name',
+                'schoolYear:id,name',
+                'schoolPeriods:id,school_id,period_number,starts_at,ends_at',
+                'scheduleSlots' => fn ($query) => $query->whereBetween('date', [$selectedMonday->toDateString(), $selectedMonday->addDays(4)->toDateString()])->with('scheduledLesson.lesson.unit:id,title'),
+            ])->get()
             : collect();
         $days = collect(range(1, 5))->map(function (int $weekday) use ($selectedMonday, $groups): array {
             $date = $selectedMonday->addDays($weekday - 1);
             $entries = $groups->flatMap(function ($group) use ($weekday, $date) {
                 return $group->schoolPeriods->filter(fn ($period) => (int) $period->pivot->weekday === $weekday)->map(fn ($period): array => [
+                    'schedule_slot' => $group->scheduleSlots->first(fn ($slot) => $slot->date->toDateString() === $date->toDateString() && $slot->period_number === $period->period_number),
                     'period_number' => $period->period_number,
                     'starts_at' => $period->starts_at->format('H:i'),
                     'ends_at' => $period->ends_at->format('H:i'),
                     'group_name' => $group->name,
                     'group_id' => $group->id,
                     'school_name' => $group->school->name,
+                    'school_short_name' => $group->school->short_name,
+                    'school_slug' => $group->school->slug,
                     'school_year_name' => $group->schoolYear->name,
                     'date' => $date->toDateString(),
-                ]);
+                ])->map(function (array $entry): array {
+                    $slot = $entry['schedule_slot'];
+                    $scheduledLesson = $slot?->scheduledLesson;
+                    $lesson = $scheduledLesson?->lesson;
+
+                    return array_merge($entry, [
+                        'schedule_slot_id' => $slot?->id,
+                        'schedule_slot' => null,
+                        'lesson' => $lesson ? [
+                            'id' => $lesson->id,
+                            'title' => $lesson->title,
+                            'duration' => $lesson->duration,
+                            'unit_id' => $lesson->unit?->id,
+                            'unit_title' => $lesson->unit?->title,
+                            'status' => $scheduledLesson->status,
+                        ] : null,
+                    ]);
+                });
             })->sortBy('period_number')->values();
 
             return ['weekday' => $weekday, 'date' => $date->toDateString(), 'label' => $date->locale('de')->isoFormat('dddd'), 'entries' => $entries];
