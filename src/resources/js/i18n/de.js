@@ -234,6 +234,8 @@ export default {
     moveFollowingIntoSpace: 'Folgende Stunden in den freien Termin verschieben',
     keepFree: 'Freiraum erhalten',
     keepSpaceEmpty: 'Freien Termin vorerst leer lassen',
+    duplicateLessonConfirm: 'Die Stunde „{title}“ ist bereits eingeplant. Soll sie trotzdem ein weiteres Mal eingeplant werden?',
+    duplicateUnitConfirm: 'Die Unterrichtseinheit „{title}“ enthält bereits eingeplante Stunden. Soll sie trotzdem ein weiteres Mal eingeplant werden?',
     removeAffected: 'Betroffene Planung entfernen',
     noTeachingUnits: 'Noch keine eigenen Unterrichtseinheiten.',
     noLessons: 'Noch keine Stunden.',
