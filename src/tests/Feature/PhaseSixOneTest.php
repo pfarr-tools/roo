@@ -259,10 +259,33 @@ it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'absent', 'reflow_mode' => 'remove'])->assertRedirect();
     expect(ScheduledLesson::where('lesson_id', $lessonA->id)->count())->toBe(0);
 
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertStatus(422);
+    app(YearPlanningWorkspace::class)->scheduleLesson($group, $lessonB, $slots[1]);
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
     expect($slots[1]->fresh()->is_pinned)->toBeTrue();
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => false])->assertRedirect();
     expect($slots[1]->fresh()->is_pinned)->toBeFalse();
+});
+
+it('verschiebt Inhalte um fixierte Stunden herum', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $units = collect(['Erste UE', 'Fixierte UE', 'Zu verschiebende UE'])->map(function (string $title, int $index) use ($group, $user) {
+        $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => $title, 'position' => $index + 1]);
+        $lesson = $unit->lessons()->create(['title' => $title.' – Stunde', 'position' => 1, 'duration' => 1]);
+
+        return $lesson;
+    });
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    foreach ([0, 1, 3] as $index => $slotIndex) {
+        app(YearPlanningWorkspace::class)->scheduleLesson($group, $units[$index], $slots[$slotIndex]);
+    }
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[1]->id}", ['status' => 'free', 'is_pinned' => true])->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/slots/{$slots[0]->id}/einfügen", ['type' => 'lesson', 'source_id' => $units[2]->id])->assertRedirect();
+
+    expect(ScheduledLesson::where('lesson_id', $units[1]->id)->value('schedule_slot_id'))->toBe($slots[1]->id)
+        ->and(ScheduledLesson::where('lesson_id', $units[2]->id)->value('schedule_slot_id'))->toBe($slots[0]->id)
+        ->and(ScheduledLesson::where('lesson_id', $units[0]->id)->value('schedule_slot_id'))->toBe($slots[2]->id);
 });
 
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {

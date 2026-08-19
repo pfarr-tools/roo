@@ -93,7 +93,7 @@ class YearPlanningWorkspace
 
     public function availableSlots(TeachingGroup $group): Collection
     {
-        return $this->syncSlots($group)->filter(fn (ScheduleSlot $slot) => $slot->status === 'free' && ! $slot->scheduledLesson()->exists())->values();
+        return $this->syncSlots($group)->filter(fn (ScheduleSlot $slot) => $slot->status === 'free' && ! $slot->is_pinned && ! $slot->scheduledLesson()->exists())->values();
     }
 
     public function scheduleLesson(TeachingGroup $group, Lesson $lesson, ?ScheduleSlot $start = null): array
@@ -205,7 +205,7 @@ class YearPlanningWorkspace
      * ranges temporarily; adjacency is derived from the slot order and needs
      * no additional persisted "part" records.
      */
-    public function insertAtSlot(TeachingGroup $group, string $type, int $sourceId, ScheduleSlot $target): array
+    public function insertAtSlot(TeachingGroup $group, string $type, int $sourceId, ScheduleSlot $target, bool $allowOverflow = false): array
     {
         abort_unless($target->teaching_group_id === $group->id, 404);
 
@@ -235,10 +235,57 @@ class YearPlanningWorkspace
         $block = $sourceLessons->flatMap(fn (Lesson $lesson) => array_fill(0, max(1, (int) $lesson->duration), $lesson->id))->values()->all();
         $sourceIds = $sourceLessons->pluck('id')->map(fn ($id) => (int) $id)->all();
         abort_unless(! $target->is_pinned, 422, 'Der Zielslot ist fixiert.');
-        $freeRun = $slots->slice($targetIndex)->takeWhile(fn (ScheduleSlot $candidate) => ! $candidate->is_pinned && (! $candidate->scheduledLesson || in_array((int) $candidate->scheduledLesson->lesson_id, $sourceIds, true)))->count();
+        if ($slots->contains(fn (ScheduleSlot $slot) => $slot->is_pinned)) {
+            abort_unless(! $slots->contains(fn (ScheduleSlot $slot) => $slot->is_pinned && $slot->scheduledLesson && in_array((int) $slot->scheduledLesson->lesson_id, $sourceIds, true)), 422, 'Eine fixierte Stunde kann nicht verschoben werden.');
+            $movableIndexes = $slots->keys()->filter(fn (int $index) => ! $slots[$index]->is_pinned)->values()->all();
+            $targetMovableIndex = array_search($targetIndex, $movableIndexes, true);
+            abort_unless($targetMovableIndex !== false, 422, 'Der Zielslot ist fixiert.');
+            $movableTokens = array_map(fn (int $index) => $slots[$index]->scheduledLesson?->lesson_id, $movableIndexes);
+            $movableTokens = array_map(fn ($lessonId) => in_array((int) $lessonId, $sourceIds, true) ? null : $lessonId, $movableTokens);
+            $freeRun = 0;
+            for ($index = $targetMovableIndex; $index < count($movableTokens) && $movableTokens[$index] === null; $index++) {
+                $freeRun++;
+            }
+            if (! $target->scheduledLesson && $freeRun >= count($block)) {
+                return DB::transaction(function () use ($sourceIds, $block, $slots, $movableIndexes, $targetMovableIndex): array {
+                    ScheduledLesson::whereIn('lesson_id', $sourceIds)->delete();
+                    foreach ($block as $offset => $lessonId) {
+                        ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slots[$movableIndexes[$targetMovableIndex + $offset]]->id]);
+                    }
+
+                    return ['scheduled' => count($block), 'overflow' => 0];
+                });
+            }
+            $length = count($block);
+            array_splice($movableTokens, $targetMovableIndex, 0, $block);
+            $overflow = count(array_filter(array_slice($movableTokens, count($movableIndexes)), fn ($lessonId) => $lessonId !== null));
+            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            $movableTokens = array_slice($movableTokens, 0, count($movableIndexes));
+
+            return DB::transaction(function () use ($group, $slots, $movableIndexes, $movableTokens, $length, $overflow): array {
+                $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
+                ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
+                foreach ($movableTokens as $index => $lessonId) {
+                    if ($lessonId !== null) {
+                        ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slots[$movableIndexes[$index]]->id]);
+                    }
+                }
+                foreach ($slots->filter(fn (ScheduleSlot $slot) => $slot->is_pinned && $slot->scheduledLesson) as $slot) {
+                    ScheduledLesson::create(['lesson_id' => $slot->scheduledLesson->lesson_id, 'schedule_slot_id' => $slot->id]);
+                }
+
+                return ['scheduled' => $length - $overflow, 'overflow' => $overflow];
+            });
+        }
+        $sourceIndexes = $slots->keys()->filter(fn ($index) => in_array((int) ($slots[$index]->scheduledLesson?->lesson_id ?? 0), $sourceIds, true))->values();
+        $firstSourceIndex = $sourceIndexes->min();
+        abort_unless($firstSourceIndex === null || ! $slots->slice($firstSourceIndex + 1, max(0, $targetIndex - $firstSourceIndex))->contains(fn (ScheduleSlot $slot) => $slot->is_pinned), 422, 'Eine fixierte Stunde kann nicht verschoben werden.');
         $nextPinned = $slots->slice($targetIndex)->search(fn (ScheduleSlot $candidate) => $candidate->is_pinned);
-        abort_unless($nextPinned === false || $freeRun >= count($block), 422, 'Die Einfügung würde eine fixierte Stunde verschieben.');
-        if (! $target->scheduledLesson && $freeRun >= count($block)) {
+        if ($nextPinned !== false) {
+            $beforePinned = $slots->slice($targetIndex, $nextPinned)->filter(fn (ScheduleSlot $candidate) => ! $candidate->scheduledLesson || in_array((int) $candidate->scheduledLesson->lesson_id, $sourceIds, true));
+            abort_unless($beforePinned->count() >= count($block), 422, 'Die Einfügung würde eine fixierte Stunde verschieben.');
+        }
+        if (! $target->scheduledLesson && ($nextPinned === false || $slots->slice($targetIndex, $nextPinned)->count() >= count($block))) {
             return DB::transaction(function () use ($sourceIds, $block, $slots, $targetIndex): array {
                 ScheduledLesson::whereIn('lesson_id', $sourceIds)->delete();
                 foreach ($block as $offset => $lessonId) {
@@ -249,6 +296,7 @@ class YearPlanningWorkspace
             });
         }
         $tokens = $slots->map(fn (ScheduleSlot $slot) => $slot->scheduledLesson?->lesson_id)->all();
+        $overflow = 0;
         $sourceIndexes = collect($tokens)->keys()->filter(fn ($index) => in_array((int) ($tokens[$index] ?? 0), $sourceIds, true))->values();
 
         foreach ($tokens as $index => $lessonId) {
@@ -260,16 +308,19 @@ class YearPlanningWorkspace
         $length = count($block);
         $sourceBeforeTarget = $sourceIndexes->isNotEmpty() && $sourceIndexes->min() < $targetIndex;
         if (! $sourceBeforeTarget) {
-            abort_unless($targetIndex + $length <= count($tokens), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            $overflow = max(0, $targetIndex + $length - count($tokens)) + collect(array_slice($tokens, max($targetIndex, count($tokens) - $length)))->filter()->count();
+            abort_unless($allowOverflow || $overflow === 0, 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
             $tail = array_slice($tokens, -$length);
-            abort_unless(collect($tail)->every(fn ($lessonId) => $lessonId === null), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            if (! $allowOverflow) {
+                abort_unless(collect($tail)->every(fn ($lessonId) => $lessonId === null), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
+            }
         } else {
             $firstSourceIndex = $sourceIndexes->min();
             $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
             abort_unless($firstSourceIndex + count($segment) + $length <= count($tokens), 422, 'Für diese Einfügung sind nicht genügend Termine vorhanden.');
         }
 
-        return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes): array {
+        return DB::transaction(function () use ($group, $slots, $tokens, $block, $targetIndex, $length, $sourceBeforeTarget, $sourceIndexes, $overflow): array {
             if ($sourceBeforeTarget) {
                 $firstSourceIndex = $sourceIndexes->min();
                 $segment = array_values(array_filter(array_slice($tokens, $firstSourceIndex, $targetIndex - $firstSourceIndex + 1), fn ($lessonId) => $lessonId !== null));
@@ -291,18 +342,21 @@ class YearPlanningWorkspace
                 }
             }
             foreach ($block as $offset => $lessonId) {
+                if (! isset($slots[$targetIndex + $offset])) {
+                    continue;
+                }
                 $tokens[$targetIndex + $offset] = $lessonId;
             }
 
             $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
             ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
-            foreach ($tokens as $index => $lessonId) {
+            foreach (array_slice($tokens, 0, count($slots)) as $index => $lessonId) {
                 if ($lessonId !== null) {
                     ScheduledLesson::create(['lesson_id' => $lessonId, 'schedule_slot_id' => $slots[$index]->id]);
                 }
             }
 
-            return ['scheduled' => $length, 'overflow' => 0];
+            return ['scheduled' => $length - $overflow, 'overflow' => $overflow];
         });
     }
 
@@ -331,7 +385,7 @@ class YearPlanningWorkspace
             $length = $barrier === false ? $allSlots->count() - $start : $barrier;
             $segment = $allSlots->slice($start, $length)->values();
             $tokens = $segment->map(fn (ScheduleSlot $slot) => $slot->scheduledLesson?->lesson_id)->filter()->values();
-            $eligible = $segment->filter(fn (ScheduleSlot $slot) => in_array($slot->status, ['free', 'buffer'], true))->values();
+            $eligible = $segment->filter(fn (ScheduleSlot $slot) => ! $slot->is_pinned && in_array($slot->status, ['free', 'buffer'], true))->values();
             $preserved = $allSlots->reject(fn (ScheduleSlot $slot) => $segment->contains('id', $slot->id))->filter(fn (ScheduleSlot $slot) => $slot->scheduledLesson)->map(fn (ScheduleSlot $slot) => [$slot->scheduledLesson->lesson_id, $slot->id]);
             $assignments = $preserved->concat($eligible->take($tokens->count())->values()->map(fn (ScheduleSlot $slot, int $index) => [$tokens[$index], $slot->id]));
             $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
@@ -364,9 +418,9 @@ class YearPlanningWorkspace
             abort_unless($changedIndex !== false, 404);
 
             $nextPinned = $allSlots->slice($changedIndex + 1)->search(fn (ScheduleSlot $candidate) => $candidate->is_pinned);
-            $segmentLength = $nextPinned === false ? $allSlots->count() - $changedIndex : $nextPinned + 1;
+            $segmentLength = $nextPinned === false ? $allSlots->count() - $changedIndex : $nextPinned;
             $segmentSlots = $allSlots->slice($changedIndex, $segmentLength)->values();
-            $eligible = $segmentSlots->filter(fn (ScheduleSlot $candidate) => in_array($candidate->status, ['free', 'buffer'], true))->values();
+            $eligible = $segmentSlots->filter(fn (ScheduleSlot $candidate) => ! $candidate->is_pinned && in_array($candidate->status, ['free', 'buffer'], true))->values();
             $suffixSlots = $segmentSlots;
             $suffixLessonIds = $suffixSlots->map(fn (ScheduleSlot $candidate) => $candidate->scheduledLesson?->lesson_id)->filter()->values();
             $suffixEligible = $eligible;
@@ -375,7 +429,13 @@ class YearPlanningWorkspace
                 ->map(fn (ScheduleSlot $candidate) => [$candidate->scheduledLesson->lesson_id, $candidate->id])
                 ->values();
             $suffixAssignments = $suffixEligible->take($suffixLessonIds->count())->values()->map(fn (ScheduleSlot $candidate, int $index) => [$suffixLessonIds[$index], $candidate->id]);
-            $assignments = $prefixAssignments->concat($suffixAssignments)->values();
+            $pinnedAssignments = $allSlots->filter(fn (ScheduleSlot $candidate) => $candidate->is_pinned && $candidate->scheduledLesson)
+                ->map(fn (ScheduleSlot $candidate) => [$candidate->scheduledLesson->lesson_id, $candidate->id])
+                ->values();
+            $outsideAssignments = $allSlots->reject(fn (ScheduleSlot $candidate) => $segmentSlots->contains('id', $candidate->id) || ! $candidate->scheduledLesson)
+                ->map(fn (ScheduleSlot $candidate) => [$candidate->scheduledLesson->lesson_id, $candidate->id])
+                ->values();
+            $assignments = $prefixAssignments->concat($suffixAssignments)->concat($outsideAssignments)->concat($pinnedAssignments)->unique(fn (array $assignment) => $assignment[1])->values();
             $lessonIds = $group->teachingUnits()->with('lessons')->get()->flatMap->lessons->pluck('id');
             ScheduledLesson::whereIn('lesson_id', $lessonIds)->delete();
             foreach ($assignments as [$lessonId, $slotId]) {

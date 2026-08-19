@@ -300,8 +300,8 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($scheduleSlot->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer']]);
-        $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot);
+        $data = $request->validate(['type' => ['required', 'in:lesson,unit'], 'source_id' => ['required', 'integer'], 'allow_overflow' => ['sometimes', 'boolean']]);
+        $result = $workspace->insertAtSlot($teachingGroup, $data['type'], (int) $data['source_id'], $scheduleSlot, (bool) ($data['allow_overflow'] ?? false));
 
         return back()->with('success', $data['type'] === 'unit' ? 'Unterrichtseinheit wurde eingefügt.' : 'Stunde wurde eingefügt.');
     }
@@ -331,6 +331,7 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'is_pinned' => ['sometimes', 'boolean'], 'reflow_mode' => ['sometimes', 'in:move,remove']]);
+        abort_unless(! ($data['is_pinned'] ?? false) || $slot->scheduledLesson()->exists(), 422, 'Nur belegte Stunden können fixiert werden.');
         $wasAvailable = in_array($slot->status, ['free', 'buffer'], true);
         $previousStatus = $slot->status;
         $willBeAvailable = in_array($data['status'], ['free', 'buffer'], true);
