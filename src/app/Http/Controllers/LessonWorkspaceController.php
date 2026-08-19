@@ -7,6 +7,8 @@ use App\Models\LessonTemplate;
 use App\Models\PhaseTemplate;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
+use App\Http\Requests\UpdateLessonExecutionRequest;
+use App\Models\ScheduledLesson;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,5 +39,16 @@ class LessonWorkspaceController extends Controller
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'competencyOptions' => EducationPlanCompetency::query()->whereIn('id', $lesson->unit->competencies->pluck('education_plan_competency_id')->filter())->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position'])->get(),
         ]);
+    }
+
+    public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): \Illuminate\Http\RedirectResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        $scheduledLesson = $scheduleSlot->scheduledLesson;
+        abort_unless($scheduledLesson, 404);
+        $scheduledLesson->update($request->validated());
+
+        return back()->with('success', 'Durchführung wurde gespeichert.');
     }
 }

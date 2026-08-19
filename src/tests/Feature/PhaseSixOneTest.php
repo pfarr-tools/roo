@@ -130,7 +130,6 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     app(YearPlanningWorkspace::class)->scheduleLesson($group, $lesson, $slot);
     $scheduled = ScheduledLesson::firstOrFail();
     $this->actingAs($user)->get("/unterricht/{$slot->id}")->assertOk();
-
     expect($scheduled->status)->toBe('assigned');
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['title' => 'Einstieg'])->assertRedirect();
     expect($scheduled->fresh()->status)->toBe('planned');
@@ -140,6 +139,8 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
         ->and($phase->fresh()->duration_minutes)->toBe(15);
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'ready'])->assertRedirect();
     expect($scheduled->fresh()->status)->toBe('ready');
+    $this->actingAs($user)->put("/unterricht/{$slot->id}/durchfuehrung", ['status' => 'conducted', 'actual_on' => '2026-09-02', 'execution_notes' => 'Gut verlaufen'])->assertRedirect();
+    expect($scheduled->fresh()->actual_on->toDateString())->toBe('2026-09-02')->and($scheduled->fresh()->execution_notes)->toBe('Gut verlaufen');
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'unknown'])->assertSessionHasErrors('status');
 });
 

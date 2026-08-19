@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['lesson_id', 'schedule_slot_id', 'status'])]
+#[Fillable(['lesson_id', 'schedule_slot_id', 'status', 'actual_on', 'execution_notes'])]
 class ScheduledLesson extends Model
 {
+    protected function casts(): array
+    {
+        return ['actual_on' => 'date'];
+    }
     public const STATUS_ASSIGNED = 'assigned';
 
     public const STATUS_PLANNED = 'planned';
