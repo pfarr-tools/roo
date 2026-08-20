@@ -112,6 +112,10 @@ body {
 .songbook-editor-grid { min-width: 0; }
 .songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
 .song-image-column { overflow-y: auto; }
+.song-library-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 2rem; }
+.roo-library-modal-backdrop { z-index: 1060; }
+.roo-library-image-modal { width: min(40rem, calc(100vw - 2rem)); }
+.song-image-column > h4:nth-of-type(2), .song-image-column > h4:nth-of-type(2) ~ * { display: none; }
 .song-canvas { width: 420px; height: 595.28px; flex: 0 0 auto; overflow: hidden; }
 .song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }

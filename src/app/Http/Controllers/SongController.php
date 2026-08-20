@@ -145,7 +145,9 @@ class SongController extends Controller
     {
         $this->authorizeVersion($request, $songVersion);
         abort_unless($songVersion->generated_sheet_path, 404);
-        return Storage::disk('local')->download($songVersion->generated_sheet_path, Str::slug($songVersion->song->title).'.pdf');
+        abort_unless(Storage::disk('local')->exists($songVersion->generated_sheet_path), 404);
+        abort_if(Storage::disk('local')->size($songVersion->generated_sheet_path) === 0, 500, 'Das erzeugte Liedblatt ist leer.');
+        return response()->download(Storage::disk('local')->path($songVersion->generated_sheet_path), Str::slug($songVersion->song->title).'.pdf', ['Content-Type' => 'application/pdf']);
     }
 
     public function image(Request $request, SongVersion $songVersion, SongImage $songImage)
