@@ -524,6 +524,7 @@ function beginInteraction(type, event, image, corner = null) {
         y: image.y,
         width: image.width,
         height: image.height,
+        aspectRatio: image.width / image.height,
         rotation: image.rotation ?? 0,
         centerX,
         centerY,
@@ -558,8 +559,16 @@ function continueInteraction(event) {
     if (state.type === "resize") {
         const west = state.corner.includes("w");
         const north = state.corner.includes("n");
-        const width = Math.max(20, state.width + (west ? -dx : dx));
-        const height = Math.max(20, state.height + (north ? -dy : dy));
+        let width = Math.max(20, state.width + (west ? -dx : dx));
+        let height = Math.max(20, state.height + (north ? -dy : dy));
+
+        if (!event.shiftKey) {
+            if (Math.abs(dx) >= Math.abs(dy)) {
+                height = Math.max(20, width / state.aspectRatio);
+            } else {
+                width = Math.max(20, height * state.aspectRatio);
+            }
+        }
 
         state.image.width = width;
         state.image.height = height;
@@ -584,8 +593,11 @@ function continueInteraction(event) {
         event.clientY - state.centerY,
         event.clientX - state.centerX,
     );
-    state.image.rotation =
+    const rotation =
         state.rotation + ((angle - state.startAngle) * 180) / Math.PI;
+    state.image.rotation = event.shiftKey
+        ? Math.round(rotation / 15) * 15
+        : rotation;
 }
 function endInteraction() {
     interaction.value = null;
