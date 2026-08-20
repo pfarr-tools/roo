@@ -74,6 +74,7 @@ it('speichert Liedteile mit Kehrvers und stellt das Gruppenliederbuch als Stunde
 });
 
 it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lieder', function () {
+    Storage::fake('local');
     $organization = Organization::create(['name' => 'Liedpflege Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $song = Song::create(['organization_id' => $organization->id, 'title' => 'Alter Titel']);
@@ -90,6 +91,7 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
     ])->assertRedirect();
 
     expect($song->fresh()->title)->toBe('Neuer Titel')->and($version->fresh()->parts)->toHaveCount(1)->and($version->fresh()->parts->first()->content)->toBe('Nur ein aktualisierter Teil');
+    expect($version->fresh()->generated_sheet_path)->not->toBeNull();
     $this->actingAs($user)->delete("/lieder/{$song->id}")->assertRedirect();
     expect(Song::find($song->id))->toBeNull();
 

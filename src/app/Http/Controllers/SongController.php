@@ -83,7 +83,7 @@ class SongController extends Controller
         return back()->with('success', 'Liedblatt wurde hochgeladen.');
     }
 
-    public function updateVersion(Request $request, SongVersion $songVersion): RedirectResponse
+    public function updateVersion(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter): RedirectResponse
     {
         $this->authorizeEditableVersion($request, $songVersion);
         $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'language' => ['required', 'string', 'max:10'], 'song' => ['sometimes', 'array'], 'song.title' => ['required_with:song', 'string', 'max:255'], 'song.composer' => ['nullable', 'string', 'max:255'], 'song.author' => ['nullable', 'string', 'max:255'], 'song.copyright_notice' => ['nullable', 'string', 'max:255'], 'song.age_group' => ['nullable', 'string', 'max:255'], 'song.topics' => ['nullable', 'string', 'max:255'], 'song.notes' => ['nullable', 'string'], 'parts' => ['sometimes', 'array'], 'parts.*.id' => ['nullable', 'integer'], 'parts.*.content' => ['required', 'string'], 'parts.*.is_refrain' => ['sometimes', 'boolean'], 'layout_data' => ['nullable', 'array']]);
@@ -96,6 +96,11 @@ class SongController extends Controller
                 $lockedVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false])->all());
             }
         });
+        $songVersion->refresh();
+        $oldPath = $songVersion->generated_sheet_path;
+        $newPath = $exporter->generateSongVersion($songVersion);
+        $songVersion->update(['generated_sheet_path' => $newPath, 'generated_sheet_at' => now()]);
+        if ($oldPath) Storage::disk('local')->delete($oldPath);
         return back()->with('success', 'Liedfassung wurde gespeichert.');
     }
 
