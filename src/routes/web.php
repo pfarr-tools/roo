@@ -40,7 +40,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
-    Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::get('/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::get('/ressourcen/bibliothek', ResourceLibraryController::class);
     Route::get('/lieder', [SongController::class, 'index'])->name('songs.index');
     Route::post('/lieder', [SongController::class, 'store'])->name('songs.store');
     Route::delete('/lieder/{song}', [SongController::class, 'destroy'])->name('songs.destroy');

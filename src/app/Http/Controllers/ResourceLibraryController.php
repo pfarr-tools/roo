@@ -138,7 +138,7 @@ class ResourceLibraryController extends Controller
             $matches = $matches->concat(MaterialItem::where('organization_id', $organizationId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
         }
         if ($type === 'all' || $type === 'song') {
-            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with('song:id,title,author,composer')->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
+            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with(['song:id,organization_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
         if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
             $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
@@ -258,7 +258,16 @@ class ResourceLibraryController extends Controller
     private function present($item): array
     {
         $relationships = collect([$item->teachingUnit ?? null, $item->lesson ?? null])->merge($item->teachingUnits ?? [])->merge($item->lessons ?? [])->merge($item->phases ?? [])->map(fn ($relation) => $relation->title ?? $relation->name ?? null)->filter()->unique()->values()->all();
-        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
+        $songDescription = $item->kind === 'song' ? $this->songCredits($item) : null;
+        return ['id' => $item->id, 'song_id' => $item->song?->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $songDescription ?? $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString(), 'can_delete' => $item->kind === 'song' ? $item->song?->organization_id === auth()->user()->organization_id : null, 'generated_sheet_path' => $item->generated_sheet_path, 'generated_sheet_a4_path' => $item->generated_sheet_a4_path, 'sheet_id' => $item->sheet?->id];
+    }
+
+    private function songCredits(SongVersion $version): string
+    {
+        $author = trim((string) $version->song?->author);
+        $composer = trim((string) $version->song?->composer);
+        if ($author !== '' && $composer !== '' && mb_strtolower($author) === mb_strtolower($composer)) return 'Text & Musik: '.$author;
+        return collect([$author !== '' ? 'Text: '.$author : null, $composer !== '' ? 'Musik: '.$composer : null])->filter()->implode(' / ');
     }
 
     private function item(Request $request, string $kind, int $id): ResourceReference|ResourceLink|MaterialItem|SongVersion|GroupSongbook

@@ -4,6 +4,7 @@ use App\Models\MaterialItem;
 use App\Models\Organization;
 use App\Models\ResourceLink;
 use App\Models\ResourceReference;
+use App\Models\Song;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +29,25 @@ it('shows the complete organization library and protects its CRUD actions', func
     $this->actingAs($user)->get('/ressourcen/bibliothek?q=Erzählkarten&type=material')->assertInertia(fn ($page) => $page->has('items', 1));
     $this->actingAs($user)->get('/ressourcen/bibliothek/dateien/'.$reference->id.'/download')->assertOk();
     expect(ResourceLink::where('organization_id', $organization->id)->count())->toBe(2);
+});
+
+it('zeigt Lieder mit Musikcredits in der Bibliothek', function () {
+    $organization = Organization::create(['name' => 'Lieder Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $version = Song::create([
+        'organization_id' => $organization->id,
+        'title' => 'Unser Lied',
+        'author' => 'Ada Text',
+        'composer' => 'Ben Musik',
+    ])->versions()->create(['name' => 'Standardfassung']);
+
+    $this->actingAs($user)->get('/bibliothek')->assertInertia(fn ($page) => $page
+        ->where('items.0.kind', 'song')
+        ->where('items.0.name', 'Unser Lied')
+        ->where('items.0.description', 'Text: Ada Text / Musik: Ben Musik')
+        ->where('counts.song', 1));
+
+    expect($version->fresh()->song->title)->toBe('Unser Lied');
 });
 
 it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien', function () {
