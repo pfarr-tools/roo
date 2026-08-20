@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['song_id', 'name', 'language', 'lyrics', 'notation', 'chords', 'rights_status', 'rights_note', 'text_export_allowed', 'metadata_export_allowed', 'layout_data', 'generated_sheet_path', 'generated_sheet_at'])]
+#[Fillable(['song_id', 'name', 'language', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed', 'layout_data', 'generated_sheet_path', 'generated_sheet_at'])]
 class SongVersion extends Model
 {
     protected $casts = ['layout_data' => 'array', 'generated_sheet_at' => 'datetime'];

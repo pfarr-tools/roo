@@ -21,7 +21,7 @@ it('legt ein Lied mit Fassung und A5-Liedblatt an', function () {
     $user = User::factory()->create(['organization_id' => $organization->id]);
 
     $this->actingAs($user)->post('/lieder', [
-        'title' => 'Geh aus, mein Herz', 'version_name' => 'A5-Fassung', 'rights_status' => 'cleared',
+        'title' => 'Geh aus, mein Herz', 'version_name' => 'A5-Fassung',
         'text_export_allowed' => true, 'sheet' => UploadedFile::fake()->create('liedblatt.pdf', 20, 'application/pdf'),
     ])->assertRedirect();
 
@@ -38,7 +38,7 @@ it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und füh
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $lesson = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Lied UE', 'position' => 1])->lessons()->create(['title' => 'Liedstunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Singen', 'position' => 1]);
-    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Dona nobis pacem'])->versions()->create(['name' => 'Standardfassung']);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Dona nobis pacem'])->versions()->create(['name' => 'Fassung']);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/song/{$version->id}/zuordnen", ['target_type' => 'phase', 'target_id' => $phase->id])->assertRedirect();
 

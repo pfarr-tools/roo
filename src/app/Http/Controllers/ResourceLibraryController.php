@@ -145,7 +145,7 @@ class ResourceLibraryController extends Controller
             if ($book) $matches->push($book->setAttribute('kind', 'songbook'));
         }
 
-        if ($request->expectsJson()) return response()->json($matches->values()->map(fn ($item) => $item->kind === 'song' ? ['id' => $item->id, 'kind' => 'song', 'name' => $item->song?->title, 'title' => $item->song?->title, 'version' => $item->name, 'rights_status' => $item->rights_status] : ($item->kind === 'songbook' ? ['id' => $item->id, 'kind' => 'songbook', 'name' => 'Gruppenliederbuch', 'title' => 'Gruppenliederbuch', 'entries_count' => $item->entries_count] : $item)));
+        if ($request->expectsJson()) return response()->json($matches->values()->map(fn ($item) => $item->kind === 'song' ? ['id' => $item->id, 'kind' => 'song', 'name' => $item->song?->title, 'title' => $item->song?->title, 'version' => $item->name] : ($item->kind === 'songbook' ? ['id' => $item->id, 'kind' => 'songbook', 'name' => 'Gruppenliederbuch', 'title' => 'Gruppenliederbuch', 'entries_count' => $item->entries_count] : $item)));
 
         $items = $matches->sortBy(fn ($item) => Str::lower((string) ($item->getAttribute($sort) ?? $item->getAttribute('name') ?? $item->getAttribute('title') ?? $item->getAttribute('original_name'))), SORT_NATURAL, $direction === 'desc')->values()->map(fn ($item) => $this->present($item));
 

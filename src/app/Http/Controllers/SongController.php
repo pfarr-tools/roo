@@ -47,14 +47,13 @@ class SongController extends Controller
             'age_group' => ['nullable', 'string', 'max:255'], 'topics' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'], 'version_name' => ['required', 'string', 'max:255'],
             'lyrics' => ['nullable', 'string'], 'notation' => ['nullable', 'string'], 'chords' => ['nullable', 'string'],
-            'rights_status' => ['required', 'in:unknown,cleared,restricted,licensed'],
-            'rights_note' => ['nullable', 'string'], 'text_export_allowed' => ['sometimes', 'boolean'],
+            'text_export_allowed' => ['sometimes', 'boolean'],
             'metadata_export_allowed' => ['sometimes', 'boolean'],
             'sheet' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
         $song = Song::create(collect($data)->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
-        $version = $song->versions()->create(collect($data)->only(['version_name', 'lyrics', 'notation', 'chords', 'rights_status', 'rights_note', 'text_export_allowed', 'metadata_export_allowed'])->merge(['name' => $data['version_name']])->all());
+        $version = $song->versions()->create(collect($data)->only(['version_name', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed'])->merge(['name' => $data['version_name']])->all());
         if ($request->hasFile('sheet')) $this->storeSheet($version, $request->file('sheet'));
 
         return back()->with('success', 'Lied wurde gespeichert.');
