@@ -21,15 +21,17 @@ class SongController extends Controller
     public function index(Request $request): Response
     {
         $query = trim((string) $request->query('q', ''));
+        $sort = in_array($request->query('sort'), ['title', 'author'], true) ? $request->query('sort') : 'title';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
         $songs = Song::where(fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
             ->with(['versions.song:id,organization_id,title,composer,author,copyright_notice,age_group,topics,notes', 'versions.sheet', 'versions.parts', 'versions.images'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))
-            ->orderBy('title')->get();
+            ->orderBy($sort, $direction)->get();
 
         $songs->each(fn (Song $song) => $song->setAttribute('can_delete', $song->organization_id === $request->user()->organization_id));
 
         return Inertia::render('Songs/Index', [
             'songs' => $songs,
-            'filters' => ['q' => $query],
+            'filters' => ['q' => $query, 'sort' => $sort, 'direction' => $direction],
             'libraryImages' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
             'songStyles' => collect(config('songs'))->only([
                 'title_font_family', 'title_font_size', 'title_font_weight',
