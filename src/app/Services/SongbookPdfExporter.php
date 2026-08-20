@@ -12,22 +12,23 @@ use Throwable;
 
 class SongbookPdfExporter
 {
-    public function generateSongVersion(SongVersion $version): string
+    public function generateSongVersion(SongVersion $version, ?string $author = null): string
     {
-        return $this->generateSongVersionFormat($version, 'a5');
+        return $this->generateSongVersionFormat($version, 'a5', $author);
     }
 
-    public function generateSongVersionA4(SongVersion $version): string
+    public function generateSongVersionA4(SongVersion $version, ?string $author = null): string
     {
-        return $this->generateSongVersionFormat($version, 'a4');
+        return $this->generateSongVersionFormat($version, 'a4', $author);
     }
 
-    private function generateSongVersionFormat(SongVersion $version, string $format): string
+    private function generateSongVersionFormat(SongVersion $version, string $format, ?string $author): string
     {
         $temporary = storage_path('app/temporary/song-'.$format.'-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
         $version->load(['song', 'parts', 'images']);
         $pdf = $this->renderVersion($temporary, 0, $version, $format);
+        $this->writePdfMetadata($pdf, $version->song->title, $author, $this->creditsText($version));
         $stored = 'songs/generated/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($stored, File::get($pdf));
         File::deleteDirectory($temporary);
@@ -81,7 +82,7 @@ class SongbookPdfExporter
         $imageCredits = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): ?string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
             $credit = trim((string) ($image['credits'] ?? ''));
-            return $record && $credit !== '' ? e($credit) : null;
+            return $record && $credit !== '' ? $credit : null;
         })->filter()->values();
         $credits = $this->renderCredits($version, $imageCredits->all());
         $page = '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits;
@@ -91,20 +92,53 @@ class SongbookPdfExporter
 
     private function renderCredits(SongVersion $version, array $imageCredits = []): string
     {
+        $text = $this->creditsText($version, $imageCredits);
+        return $text !== '' ? '<div class="song-credits">'.nl2br(e($text)).'</div>' : '';
+    }
+
+    private function creditsText(SongVersion $version, array $imageCredits = []): string
+    {
         $author = trim((string) $version->song->author);
         $composer = trim((string) $version->song->composer);
         $copyright = trim((string) $version->song->copyright_notice);
         $credit = $author !== '' && $composer !== '' && mb_strtolower($author) === mb_strtolower($composer)
-            ? 'Text &amp; Musik: '.e($author)
-            : collect([$author !== '' ? 'Text: '.e($author) : null, $composer !== '' ? 'Musik: '.e($composer) : null])->filter()->implode(' / ');
-        if ($copyright !== '') $credit .= ($credit !== '' ? '. ' : '').e($copyright);
+            ? 'Text & Musik: '.$author
+            : collect([$author !== '' ? 'Text: '.$author : null, $composer !== '' ? 'Musik: '.$composer : null])->filter()->implode(' / ');
+        if ($copyright !== '') $credit .= ($credit !== '' ? '. ' : '').$copyright;
         $lines = array_filter([$credit, $imageCredits !== [] ? ($this->imageCreditLabel($imageCredits).' '.implode(' · ', $imageCredits)) : null]);
-        return $lines !== [] ? '<div class="song-credits">'.implode('<br>', $lines).'</div>' : '';
+        return implode("\n", $lines);
     }
 
     private function imageCreditLabel(array $credits): string
     {
         return count($credits) === 1 ? 'Bild:' : 'Bilder:';
+    }
+
+    private function writePdfMetadata(string $pdfPath, string $title, ?string $author, string $subject): void
+    {
+        $pdf = File::get($pdfPath);
+        preg_match_all('/(\d+)\s+0\s+obj\b/', $pdf, $objects);
+        $objectNumber = ((int) (max($objects[1] ?? [0]))) + 1;
+        $trailerPosition = strrpos($pdf, 'trailer');
+        $startxrefPosition = strrpos($pdf, 'startxref');
+        if ($trailerPosition === false || $startxrefPosition === false) return;
+        $trailer = substr($pdf, $trailerPosition, $startxrefPosition - $trailerPosition);
+        preg_match('/\/Root\s+(\d+)\s+0\s+R/', $trailer, $root);
+        preg_match('/startxref\s+(\d+)/', substr($pdf, $startxrefPosition), $previous);
+        if (! isset($root[1], $previous[1])) return;
+
+        $object = $objectNumber." 0 obj\n<< /Title ".$this->pdfMetadataString($title)." /Author ".$this->pdfMetadataString((string) $author)." /Subject ".$this->pdfMetadataString($subject)." /Creator ".$this->pdfMetadataString('Roo')." /Producer ".$this->pdfMetadataString('Roo')." >>\nendobj\n";
+        $objectOffset = strlen($pdf);
+        $pdf .= $object;
+        $xrefOffset = strlen($pdf);
+        $pdf .= "xref\n".$objectNumber." 1\n".sprintf('%010d 00000 n ', $objectOffset)."\ntrailer\n<< /Size ".($objectNumber + 1).' /Root '.$root[1].' 0 R /Info '.$objectNumber.' 0 R /Prev '.$previous[1]." >>\nstartxref\n".$xrefOffset."\n%%EOF\n";
+        File::put($pdfPath, $pdf);
+    }
+
+    private function pdfMetadataString(string $value): string
+    {
+        $encoded = mb_convert_encoding($value, 'UTF-16BE', 'UTF-8');
+        return '<'.strtoupper(bin2hex("\xFE\xFF".$encoded)).'>';
     }
 
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string

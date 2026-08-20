@@ -92,6 +92,8 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
 
     expect($song->fresh()->title)->toBe('Neuer Titel')->and($version->fresh()->parts)->toHaveCount(1)->and($version->fresh()->parts->first()->content)->toBe('Nur ein aktualisierter Teil');
     expect($version->fresh()->generated_sheet_path)->not->toBeNull()->and($version->fresh()->generated_sheet_a4_path)->not->toBeNull();
+    $generated = Storage::disk('local')->get($version->fresh()->generated_sheet_path);
+    expect($generated)->toContain('/Title <FEFF')->toContain('/Author <FEFF')->toContain('/Subject <FEFF')->toContain('/Creator <FEFF');
     $a4Response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt/a4");
     $a4Response->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($a4Response->headers->get('content-disposition'))->toContain('Neuer Titel.pdf');
