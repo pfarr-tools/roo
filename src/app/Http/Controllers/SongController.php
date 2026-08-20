@@ -127,6 +127,9 @@ class SongController extends Controller
         abort_unless($songImage->song_version_id === $songVersion->id, 404);
         Storage::disk('local')->delete($songImage->storage_path);
         $songImage->delete();
+        $layout = $songVersion->layout_data ?? [];
+        $layout['images'] = collect($layout['images'] ?? [])->reject(fn (array $image): bool => (int) ($image['id'] ?? 0) === $songImage->id)->values()->all();
+        $songVersion->update(['layout_data' => $layout]);
 
         return back()->with('success', 'Bild wurde gelöscht.');
     }

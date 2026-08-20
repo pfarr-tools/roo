@@ -148,6 +148,7 @@ it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', funct
     $imageResponse->assertOk();
     expect($imageResponse->headers->get('cache-control'))->toContain('no-store');
 
+    $version->update(['layout_data' => ['images' => [['id' => $image->id, 'x' => 20, 'y' => 20]]]]);
     $this->actingAs($user)->delete("/lieder/fassungen/{$version->id}/bilder/{$image->id}")->assertRedirect();
-    expect($version->fresh()->images)->toBeEmpty();
+    expect($version->fresh()->images)->toBeEmpty()->and($version->fresh()->layout_data['images'])->toBeEmpty();
 });
