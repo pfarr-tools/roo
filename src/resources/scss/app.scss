@@ -109,6 +109,9 @@ body {
 .editor-tab-content { min-height: 0; flex: 1; }
 .song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
 .song-preview-pane { min-width: 0; overflow-x: hidden; overflow-y: auto; }
+.songbook-editor-grid { min-width: 0; }
+.songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
+.song-image-column { overflow-y: auto; }
 .song-canvas { width: 420px; height: 595.28px; flex: 0 0 auto; overflow: hidden; }
 .song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
