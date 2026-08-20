@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/lieder/fassungen/{songVersion}/bilder/{songImage}', [SongController::class, 'image'])->name('songs.images.show');
     Route::delete('/lieder/fassungen/{songVersion}/bilder/{songImage}', [SongController::class, 'destroyImage'])->name('songs.images.destroy');
     Route::post('/lieder/fassungen/{songVersion}/liedblatt/erzeugen', [SongController::class, 'generateSheet'])->name('songs.sheets.generate');
+    Route::get('/lieder/fassungen/{songVersion}/liedblatt/erzeugt/a4', [SongController::class, 'generatedSheet'])->defaults('format', 'a4')->name('songs.sheets.generated-a4');
     Route::get('/lieder/fassungen/{songVersion}/liedblatt/erzeugt', [SongController::class, 'generatedSheet'])->name('songs.sheets.generated');
     Route::post('/ressourcen/bibliothek/dateien', [ResourceLibraryController::class, 'storeFile'])->name('resources.library.files.store');
     Route::post('/ressourcen/bibliothek/ressourcen', [ResourceLibraryController::class, 'storeResource'])->name('resources.library.resources.store');

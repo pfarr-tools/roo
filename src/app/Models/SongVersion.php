@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['song_id', 'name', 'language', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed', 'layout_data', 'generated_sheet_path', 'generated_sheet_at'])]
+#[Fillable(['song_id', 'name', 'language', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed', 'layout_data', 'generated_sheet_path', 'generated_sheet_at', 'generated_sheet_a4_path', 'generated_sheet_a4_at'])]
 class SongVersion extends Model
 {
-    protected $casts = ['layout_data' => 'array', 'generated_sheet_at' => 'datetime'];
+    protected $casts = ['layout_data' => 'array', 'generated_sheet_at' => 'datetime', 'generated_sheet_a4_at' => 'datetime'];
     public function song(): BelongsTo { return $this->belongsTo(Song::class); }
     public function sheet(): HasOne { return $this->hasOne(SongSheet::class); }
     public function unitSongs(): BelongsToMany { return $this->belongsToMany(TeachingUnit::class, 'unit_songs'); }

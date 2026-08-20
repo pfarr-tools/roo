@@ -67,6 +67,7 @@ class SongController extends Controller
         foreach ($song->versions as $version) {
             if ($version->sheet) Storage::disk('local')->delete($version->sheet->storage_path);
             if ($version->generated_sheet_path) Storage::disk('local')->delete($version->generated_sheet_path);
+            if ($version->generated_sheet_a4_path) Storage::disk('local')->delete($version->generated_sheet_a4_path);
             foreach ($version->images as $image) Storage::disk('local')->delete($image->storage_path);
         }
         $song->delete();
@@ -96,11 +97,7 @@ class SongController extends Controller
                 $lockedVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false])->all());
             }
         });
-        $songVersion->refresh();
-        $oldPath = $songVersion->generated_sheet_path;
-        $newPath = $exporter->generateSongVersion($songVersion);
-        $songVersion->update(['generated_sheet_path' => $newPath, 'generated_sheet_at' => now()]);
-        if ($oldPath) Storage::disk('local')->delete($oldPath);
+        $this->regenerateSheets($songVersion->refresh(), $exporter);
         return back()->with('success', 'Liedfassung wurde gespeichert.');
     }
 
@@ -142,28 +139,39 @@ class SongController extends Controller
     public function generateSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter): RedirectResponse
     {
         $this->authorizeEditableVersion($request, $songVersion);
-        $path = $exporter->generateSongVersion($songVersion);
-        if ($songVersion->generated_sheet_path) Storage::disk('local')->delete($songVersion->generated_sheet_path);
-        $songVersion->update(['generated_sheet_path' => $path, 'generated_sheet_at' => now()]);
+        $this->regenerateSheets($songVersion, $exporter);
         return back()->with('success', 'A5-Liedblatt wurde erzeugt.');
     }
 
-    public function generatedSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter)
+    public function generatedSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter, string $format = 'a5')
     {
         $this->authorizeVersion($request, $songVersion);
-        abort_unless($songVersion->generated_sheet_path, 404);
-        abort_unless(Storage::disk('local')->exists($songVersion->generated_sheet_path), 404);
-        if (! $this->isValidPdf($songVersion->generated_sheet_path)) {
-            $path = $exporter->generateSongVersion($songVersion);
-            if ($songVersion->generated_sheet_path) Storage::disk('local')->delete($songVersion->generated_sheet_path);
-            $songVersion->update(['generated_sheet_path' => $path, 'generated_sheet_at' => now()]);
+        abort_unless(in_array($format, ['a5', 'a4'], true), 404);
+        $pathColumn = $format === 'a4' ? 'generated_sheet_a4_path' : 'generated_sheet_path';
+        $path = $songVersion->{$pathColumn};
+        if (! $path || ! Storage::disk('local')->exists($path) || ! $this->isValidPdf($path)) {
+            $this->regenerateSheets($songVersion, $exporter);
+            $songVersion->refresh();
+            $path = $songVersion->{$pathColumn};
         }
-        return response()->download(Storage::disk('local')->path($songVersion->generated_sheet_path), Str::slug($songVersion->song->title).'.pdf', [
+        return response()->download(Storage::disk('local')->path($path), Str::slug($songVersion->song->title).($format === 'a4' ? '-a4' : '').'.pdf', [
             'Content-Type' => 'application/pdf',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => '0',
         ]);
+    }
+
+    private function regenerateSheets(SongVersion $version, SongbookPdfExporter $exporter): void
+    {
+        $version->load(['song', 'parts', 'images']);
+        $oldA5Path = $version->generated_sheet_path;
+        $oldA4Path = $version->generated_sheet_a4_path;
+        $a5Path = $exporter->generateSongVersion($version);
+        $a4Path = $exporter->generateSongVersionA4($version);
+        $version->update(['generated_sheet_path' => $a5Path, 'generated_sheet_at' => now(), 'generated_sheet_a4_path' => $a4Path, 'generated_sheet_a4_at' => now()]);
+        if ($oldA5Path) Storage::disk('local')->delete($oldA5Path);
+        if ($oldA4Path) Storage::disk('local')->delete($oldA4Path);
     }
 
     private function isValidPdf(string $path): bool

@@ -14,10 +14,20 @@ class SongbookPdfExporter
 {
     public function generateSongVersion(SongVersion $version): string
     {
-        $temporary = storage_path('app/temporary/song-'.Str::uuid());
+        return $this->generateSongVersionFormat($version, 'a5');
+    }
+
+    public function generateSongVersionA4(SongVersion $version): string
+    {
+        return $this->generateSongVersionFormat($version, 'a4');
+    }
+
+    private function generateSongVersionFormat(SongVersion $version, string $format): string
+    {
+        $temporary = storage_path('app/temporary/song-'.$format.'-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
         $version->load(['song', 'parts', 'images']);
-        $pdf = $this->renderVersion($temporary, 0, $version, 'a5');
+        $pdf = $this->renderVersion($temporary, 0, $version, $format);
         $stored = 'songs/generated/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($stored, File::get($pdf));
         File::deleteDirectory($temporary);
@@ -74,7 +84,9 @@ class SongbookPdfExporter
             return $record && $credit !== '' ? e($credit) : null;
         })->filter()->values();
         $credits = $this->renderCredits($version, $imageCredits->all());
-        return $this->htmlPage($directory, $version->song->title, '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits, $format, 'song-'.$number);
+        $page = '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits;
+        $content = $format === 'a4' ? '<div class="a4-copy a4-copy-left">'.$page.'</div><div class="a4-copy a4-copy-right">'.$page.'</div>' : $page;
+        return $this->htmlPage($directory, $version->song->title, $content, $format, 'song-'.$number);
     }
 
     private function renderCredits(SongVersion $version, array $imageCredits = []): string
@@ -97,14 +109,16 @@ class SongbookPdfExporter
 
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
-        $pageWidth = $format === 'a5' ? '148mm' : '210mm';
-        $pageHeight = $format === 'a5' ? '210mm' : '297mm';
+        $pageWidth = $format === 'a5' ? '148mm' : '297mm';
+        $pageHeight = $format === 'a5' ? '210mm' : '210mm';
         $size = $pageWidth.' '.$pageHeight;
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
         $bottom = config('songs.page_margin_bottom_mm', 17);
         $left = config('songs.page_margin_left_mm', 20);
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'px;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm;overflow:hidden}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'px;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'px;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11px}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $canvasPadding = $format === 'a4' ? 'padding:0' : 'padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm';
+        $copyCss = $format === 'a4' ? '.a4-copy{position:absolute;top:0;width:148mm;height:210mm;padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm;overflow:hidden}.a4-copy-left{left:0}.a4-copy-right{left:149mm}' : '';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'px;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'px;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'px;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11px}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';
