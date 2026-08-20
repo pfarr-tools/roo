@@ -41,11 +41,15 @@ it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und füh
     $lesson = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Lied UE', 'position' => 1])->lessons()->create(['title' => 'Liedstunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Singen', 'position' => 1]);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Dona nobis pacem'])->versions()->create(['name' => 'Fassung']);
+    $version->chordSets()->create(['instrument' => 'Ukulele']);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/song/{$version->id}/zuordnen", ['target_type' => 'phase', 'target_id' => $phase->id])->assertRedirect();
 
     expect($phase->fresh()->songs->pluck('id')->all())->toBe([$version->id])
         ->and($group->fresh()->songbook->entries->first()->song_number)->toBe(1);
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
+        ->where('songbookVersions.0.id', $version->id)
+        ->where('songbookVersions.0.chord_sets.0.instrument', 'Ukulele'));
 });
 
 it('stellt ein über die Ressourcenbibliothek zugeordnetes Lied im Unterrichtsarbeitsraum und im Phasenpicker bereit', function () {

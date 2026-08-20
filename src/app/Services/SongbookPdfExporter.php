@@ -95,7 +95,7 @@ class SongbookPdfExporter
             $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
                 ? $book->title_page_a4_path
                 : $book->title_page_path;
-            if ($format === 'chord-sheet') $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title');
+            if ($format === 'chord-sheet') $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title', true);
             elseif (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
             else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
         }
@@ -222,23 +222,38 @@ class SongbookPdfExporter
         return $this->htmlPage($directory, $version->song->title.' – '.$set->instrument, $content, 'a4-chord', $name);
     }
 
-    private function portraitA4Page(string $directory, string $sourcePath, string $name): string
+    private function portraitA4Page(string $directory, string $sourcePath, string $name, bool $cropLeftHalf = false): string
     {
         $pages = [];
         if (str_ends_with(strtolower($sourcePath), '.pdf')) {
             $pageCount = $this->pdfPageCount($sourcePath);
+            $cropLandscape = $cropLeftHalf || $this->pdfIsLandscape($sourcePath);
             for ($page = 1; $page <= $pageCount; $page++) {
                 $imagePath = $directory.'/'.$name.'-portrait-'.$page;
                 (new Process(['pdftoppm', '-f', (string) $page, '-l', (string) $page, '-singlefile', '-png', $sourcePath, $imagePath]))->mustRun();
-                $pages[] = $this->htmlPage($directory, 'A4-Hochformat', '<img class="title-image" src="'.e($imagePath.'.png').'">', 'a4-chord', $name.'-portrait-page-'.$page);
+                $image = $cropLandscape
+                    ? '<div class="portrait-crop-left"><img class="title-image" src="'.e($imagePath.'.png').'"></div>'
+                    : '<img class="title-image" src="'.e($imagePath.'.png').'">';
+                $pages[] = $this->htmlPage($directory, 'A4-Hochformat', $image, 'a4-image', $name.'-portrait-page-'.$page);
             }
         } else {
-            $pages[] = $this->htmlPage($directory, 'A4-Hochformat', '<img class="title-image" src="'.e($sourcePath).'">', 'a4-chord', $name.'-portrait-page-1');
+            $dimensions = @getimagesize($sourcePath);
+            $image = ($cropLeftHalf || (is_array($dimensions) && ($dimensions[0] ?? 0) > ($dimensions[1] ?? 0)))
+                ? '<div class="portrait-crop-left"><img class="title-image" src="'.e($sourcePath).'"></div>'
+                : '<img class="title-image" src="'.e($sourcePath).'">';
+            $pages[] = $this->htmlPage($directory, 'A4-Hochformat', $image, 'a4-image', $name.'-portrait-page-1');
         }
         $output = $directory.'/'.$name.'-portrait.pdf';
         if (count($pages) === 1) File::copy($pages[0], $output);
         else (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
         return $output;
+    }
+
+    private function pdfIsLandscape(string $path): bool
+    {
+        $output = (new Process(['pdfinfo', $path]))->mustRun()->getOutput();
+        preg_match('/^Page size:\s+([0-9.]+) x ([0-9.]+)/m', $output, $matches);
+        return isset($matches[1], $matches[2]) && (float) $matches[1] > (float) $matches[2];
     }
 
     private function renderChordPart($part, $chords): string
@@ -276,7 +291,9 @@ class SongbookPdfExporter
     /** Add print-only markings to an existing PDF without rasterizing it. */
     private function overlaySongNumber(string $directory, string $sourcePath, int $number, string $format, string $name, ?string $imprint = null): string
     {
-        $pageFormat = $format === 'a4' && str_contains($sourcePath, 'generated') ? 'a4' : 'a5';
+        $pageFormat = $format === 'chord-sheet'
+            ? 'chord-sheet'
+            : ($format === 'a4' && str_contains($sourcePath, 'generated') ? 'a4' : 'a5');
         $pageCount = $this->pdfPageCount($sourcePath);
         $stampedPages = [];
 
@@ -307,9 +324,10 @@ class SongbookPdfExporter
         $isPortraitA4 = $pageFormat === 'chord-sheet';
         $pageWidth = $isPortraitA4 ? '210mm' : ($pageFormat === 'a4' ? '297mm' : '148mm');
         $pageHeight = $isPortraitA4 ? '297mm' : '210mm';
+        $paperSize = $isPortraitA4 ? 'A4 portrait' : ($pageFormat === 'a4' ? 'A4 landscape' : 'A5 portrait');
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
-        $left = config('songs.page_margin_left_mm', 20);
+        $left = 14;
         $bottom = config('songs.page_margin_bottom_mm', 17);
         $font = config('songs.title_font_family', 'Comic Neue');
         $size = config('songs.title_font_size', 24);
@@ -328,7 +346,7 @@ class SongbookPdfExporter
                 ? '<span class="imprint imprint-left">'.e($imprint).'</span><span class="imprint imprint-right">'.e($imprint).'</span>'
                 : '<span class="imprint imprint-a5">'.e($imprint).'</span>'))
             : '';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$pageWidth.' '.$pageHeight.';margin:0}*{box-sizing:border-box}html,body{width:'.$pageWidth.';height:'.$pageHeight.';margin:0;background:transparent;overflow:hidden}.number{position:absolute;top:calc('.$top.'mm - 4pt);font-family:"'.$font.'";font-size:'.$size.'pt;font-weight:'.$weight.';line-height:1;text-align:right}.number-a5{right:'.$right.'mm;width:20mm}.number-portrait{right:'.$right.'mm;width:20mm}.number-left,.number-right{width:20mm}.number-left{left:'.(148 - $right - 20).'mm}.number-right{right:'.$right.'mm}.imprint{position:absolute;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.imprint-a5,.imprint-left{left:'.$left.'mm}.imprint-portrait{left:calc('.$left.'mm - 6pt)}.imprint-right{left:'.(149 + $left).'mm}</style></head><body>'.$numberMarkup.$imprintMarkup.'</body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$paperSize.';margin:0}*{box-sizing:border-box}html,body{width:'.$pageWidth.';height:'.$pageHeight.';margin:0;background:transparent;overflow:hidden}.number{position:absolute;top:calc('.$top.'mm + 2pt);font-family:"'.$font.'";font-size:'.$size.'pt;font-weight:'.$weight.';line-height:1;text-align:right}.number-a5{right:'.$right.'mm;width:20mm}.number-portrait{right:'.$right.'mm;width:20mm}.number-left,.number-right{width:20mm}.number-left{left:'.(148 - $right - 20).'mm}.number-right{right:'.$right.'mm}.imprint{position:absolute;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.imprint-a5,.imprint-left{left:'.$left.'mm}.imprint-portrait{left:calc('.$left.'mm + 6pt)}.imprint-right{left:'.(149 + $left).'mm}</style></head><body>'.$numberMarkup.$imprintMarkup.'</body></html>';
         $htmlPath = $directory.'/'.$name.'-overlay.html';
         File::put($htmlPath, $html);
         (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-overlay-profile-'.$name, '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
@@ -389,20 +407,21 @@ class SongbookPdfExporter
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
         $isChordSheet = $format === 'a4-chord';
-        $pageWidth = $isChordSheet ? '210mm' : ($format === 'a5' ? '148mm' : '297mm');
-        $pageHeight = $isChordSheet ? '297mm' : '210mm';
-        $size = $pageWidth.' '.$pageHeight;
+        $isPortraitImage = $format === 'a4-image';
+        $pageWidth = ($isChordSheet || $isPortraitImage) ? '210mm' : ($format === 'a5' ? '148mm' : '297mm');
+        $pageHeight = ($isChordSheet || $isPortraitImage) ? '297mm' : '210mm';
+        $size = ($isChordSheet || $isPortraitImage) ? 'A4 portrait' : ($format === 'a4' ? 'A4 landscape' : 'A5 portrait');
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
         $bottom = config('songs.page_margin_bottom_mm', 17);
         $left = config('songs.page_margin_left_mm', 20);
-        $canvasPadding = $format === 'a4' ? 'padding:0' : 'padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm';
+        $canvasPadding = ($format === 'a4' || $isPortraitImage) ? 'padding:0' : 'padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm';
         $copyCss = $format === 'a4' ? '.a4-copy{position:absolute;top:0;width:148mm;height:210mm;padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm;overflow:hidden}.a4-copy-left{left:0}.a4-copy-right{left:149mm}' : '';
         $titleFont = config('songs.title_font_family', 'Comic Neue');
         $titleSize = config('songs.title_font_size', 24);
         $titleWeight = config('songs.title_font_weight', 'bold');
         $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-line{position:relative;min-height:calc(1.25em + 15pt);padding-top:15pt;line-height:1.25;white-space:nowrap}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;top:-15pt;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;top:auto;margin-bottom:.25rem}' : '';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}.portrait-crop-left{width:100%;height:100%;overflow:hidden}.portrait-crop-left .title-image{width:200%;max-width:none;object-fit:fill}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';

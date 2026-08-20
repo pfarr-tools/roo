@@ -18,6 +18,7 @@ use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\PhaseTemplate;
 use App\Models\SongVersion;
+use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -40,14 +41,22 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup): Response
+    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets']);
         $organizationId = auth()->user()->organization_id;
+        $songbookVersions = $teachingGroup->songbook
+            ? $contentsResolver->resolve($teachingGroup->songbook)
+                ->map(fn ($entry) => $entry->songVersion)
+                ->filter()
+                ->unique('id')
+                ->values()
+            : collect();
 
         return Inertia::render('TeachingGroups/Show', [
             'group' => $teachingGroup,
+            'songbookVersions' => $songbookVersions,
             'students' => Student::where('organization_id', $organizationId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
             'curricula' => Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->orderBy('title')->get(['id', 'title']),
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),

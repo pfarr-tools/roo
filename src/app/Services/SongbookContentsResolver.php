@@ -19,10 +19,10 @@ class SongbookContentsResolver
     public function resolve(GroupSongbook $book, ?string $throughDate = null, ?string $afterDate = null): Collection
     {
         $book->load([
-            'entries.songVersion.song', 'entries.songVersion.sheet', 'entries.songVersion.parts', 'entries.songVersion.images',
-            'group.teachingUnits.songs.song', 'group.teachingUnits.songs.sheet', 'group.teachingUnits.songs.parts', 'group.teachingUnits.songs.images',
-            'group.teachingUnits.lessons.songs.song', 'group.teachingUnits.lessons.songs.sheet', 'group.teachingUnits.lessons.songs.parts', 'group.teachingUnits.lessons.songs.images',
-            'group.teachingUnits.lessons.phases.songs.song', 'group.teachingUnits.lessons.phases.songs.sheet', 'group.teachingUnits.lessons.phases.songs.parts', 'group.teachingUnits.lessons.phases.songs.images',
+            'entries.songVersion.song', 'entries.songVersion.sheet', 'entries.songVersion.parts', 'entries.songVersion.images', 'entries.songVersion.chordSets',
+            'group.teachingUnits.songs.song', 'group.teachingUnits.songs.sheet', 'group.teachingUnits.songs.parts', 'group.teachingUnits.songs.images', 'group.teachingUnits.songs.chordSets',
+            'group.teachingUnits.lessons.songs.song', 'group.teachingUnits.lessons.songs.sheet', 'group.teachingUnits.lessons.songs.parts', 'group.teachingUnits.lessons.songs.images', 'group.teachingUnits.lessons.songs.chordSets',
+            'group.teachingUnits.lessons.phases.songs.song', 'group.teachingUnits.lessons.phases.songs.sheet', 'group.teachingUnits.lessons.phases.songs.parts', 'group.teachingUnits.lessons.phases.songs.images', 'group.teachingUnits.lessons.phases.songs.chordSets',
             'group.teachingUnits.lessons.scheduledLessons.slot',
         ]);
 
