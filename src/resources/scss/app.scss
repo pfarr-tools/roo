@@ -131,10 +131,10 @@ body {
 .song-preview-credits { white-space: pre-line; }
 .song-preview-credits { position: absolute; right: .75rem; bottom: .75rem; max-width: 85%; }
 .song-preview-image-credits { display: none; }
-.list-group-item:has(> div > button[title="Lied löschen"]) { display: flex; align-items: center; flex-wrap: nowrap; gap: .5rem; }
-.list-group-item:has(> div > button[title="Lied löschen"]) > div { display: contents; }
-.list-group-item:has(> div > button[title="Lied löschen"]) > div > button[title="Lied löschen"] { order: 99; margin-left: auto !important; }
-.list-group-item:has(> div > button[title="Lied löschen"]) > div > span { min-width: 0; }
+.song-index-row { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(16rem, 1.5fr) auto; align-items: center; gap: 1rem; }
+.song-index-title, .song-index-credits { min-width: 0; }
+.song-index-actions { display: flex; justify-content: flex-end; gap: .35rem; white-space: nowrap; }
+@media (max-width: 767.98px) { .song-index-row { grid-template-columns: 1fr auto; } .song-index-credits { grid-column: 1 / -1; grid-row: 2; } .song-index-actions { grid-column: 2; grid-row: 1; } }
 .song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; cursor: move; }
 .song-image-selection.selected { border-color: var(--bs-primary); }
 .song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }
