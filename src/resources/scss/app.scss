@@ -106,13 +106,22 @@ body {
 .roo-profile-dropdown a:hover, .roo-profile-dropdown button:hover { background: var(--roo-sand); }
 .roo-modal-backdrop { position: fixed; z-index: 1050; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(23,25,28,.55); }
 .roo-modal-wide { width: min(58rem, 100%); max-height: min(90vh, 52rem); overflow-y: auto; }
-.roo-modal-song-editor { width: min(82rem, calc(100vw - 2rem)); max-height: 94vh; }
 .editor-tab-content { min-height: 0; flex: 1; }
 .song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
-.song-preview-pane { overflow: auto; }
-.song-preview-title { font-family: 'Neue Comic', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
+.song-preview-pane { min-width: 0; overflow-x: hidden; overflow-y: auto; }
+.song-canvas { width: 420px; height: 595.28px; flex: 0 0 auto; overflow: hidden; }
+.song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
-.song-preview-refrain { font-family: 'Neue Comic', sans-serif; font-size: 14px; font-weight: 400; }
+.song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
+.song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; }
+.song-image-selection.selected { border-color: var(--bs-primary); }
+.song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }
+.image-handle { position: absolute; z-index: 3; width: .7rem; height: .7rem; padding: 0; border: 1px solid var(--bs-primary); border-radius: 50%; background: #fff; }
+.resize-handle.nw { top: -.35rem; left: -.35rem; cursor: nwse-resize; }
+.resize-handle.ne { top: -.35rem; right: -.35rem; cursor: nesw-resize; }
+.resize-handle.sw { bottom: -.35rem; left: -.35rem; cursor: nesw-resize; }
+.resize-handle.se { right: -.35rem; bottom: -.35rem; cursor: nwse-resize; }
+.rotate-handle { top: -1.8rem; left: calc(50% - .35rem); cursor: grab; }
 .unit-editor-tabs { overflow-x: auto; flex-wrap: nowrap; }
 .unit-editor-tabs .nav-link { white-space: nowrap; }
 .attachment-list { display: grid; gap: .75rem; }
@@ -135,6 +144,7 @@ body {
 .dashboard-lesson-info { padding-top: .5rem; }
 .attachment-preview-image, .attachment-preview-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; object-fit: contain; }
 .roo-modal { width: min(100%, 46rem); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: var(--roo-cream); box-shadow: 0 1rem 3rem rgba(0,0,0,.2); }
+.roo-modal-song-editor { width: min(96vw, 110rem) !important; max-width: none; max-height: 94vh; overflow-x: hidden; }
 .roo-curriculum-board .card { background: rgba(255,255,255,.72); }
 .roo-curriculum-board article.card { border-color: #e4d3bb; background: #fff8ed; box-shadow: 0 .25rem .75rem rgba(60,37,13,.08) !important; }
 

@@ -83,7 +83,12 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
         'parts' => [['content' => "Zeile eins\nZeile zwei", 'is_refrain' => true]],
     ])->assertRedirect();
 
-    expect($song->fresh()->title)->toBe('Neuer Titel')->and($version->fresh()->parts->first()->content)->toContain("\n");
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", [
+        'name' => 'Fassung', 'language' => 'de',
+        'parts' => [['content' => 'Nur ein aktualisierter Teil', 'is_refrain' => false]],
+    ])->assertRedirect();
+
+    expect($song->fresh()->title)->toBe('Neuer Titel')->and($version->fresh()->parts)->toHaveCount(1)->and($version->fresh()->parts->first()->content)->toBe('Nur ein aktualisierter Teil');
     $this->actingAs($user)->delete("/lieder/{$song->id}")->assertRedirect();
     expect(Song::find($song->id))->toBeNull();
 

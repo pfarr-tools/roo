@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +26,15 @@ class SongController extends Controller
 
         $songs->each(fn (Song $song) => $song->setAttribute('can_delete', $song->organization_id === $request->user()->organization_id));
 
-        return Inertia::render('Songs/Index', ['songs' => $songs, 'filters' => ['q' => $query]]);
+        return Inertia::render('Songs/Index', [
+            'songs' => $songs,
+            'filters' => ['q' => $query],
+            'songStyles' => collect(config('songs'))->only([
+                'title_font_family', 'title_font_size', 'title_font_weight',
+                'text_font_family', 'text_font_size', 'text_font_weight',
+                'refrain_font_family', 'refrain_font_size', 'refrain_font_weight',
+            ])->all(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -77,12 +86,15 @@ class SongController extends Controller
     {
         $this->authorizeEditableVersion($request, $songVersion);
         $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'language' => ['required', 'string', 'max:10'], 'song' => ['sometimes', 'array'], 'song.title' => ['required_with:song', 'string', 'max:255'], 'song.composer' => ['nullable', 'string', 'max:255'], 'song.author' => ['nullable', 'string', 'max:255'], 'song.copyright_notice' => ['nullable', 'string', 'max:255'], 'song.age_group' => ['nullable', 'string', 'max:255'], 'song.topics' => ['nullable', 'string', 'max:255'], 'song.notes' => ['nullable', 'string'], 'parts' => ['sometimes', 'array'], 'parts.*.id' => ['nullable', 'integer'], 'parts.*.content' => ['required', 'string'], 'parts.*.is_refrain' => ['sometimes', 'boolean'], 'layout_data' => ['nullable', 'array']]);
-        $songVersion->update(collect($data)->only(['name', 'language', 'layout_data'])->all());
-        if (isset($data['song'])) $songVersion->song->update(collect($data['song'])->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->all());
-        if (array_key_exists('parts', $data)) {
-            $songVersion->parts()->delete();
-            $songVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false])->all());
-        }
+        DB::transaction(function () use ($data, $songVersion): void {
+            $lockedVersion = SongVersion::query()->lockForUpdate()->findOrFail($songVersion->id);
+            $lockedVersion->update(collect($data)->only(['name', 'language', 'layout_data'])->all());
+            if (isset($data['song'])) $lockedVersion->song->update(collect($data['song'])->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->all());
+            if (array_key_exists('parts', $data)) {
+                $lockedVersion->parts()->delete();
+                $lockedVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false])->all());
+            }
+        });
         return back()->with('success', 'Liedfassung wurde gespeichert.');
     }
 
