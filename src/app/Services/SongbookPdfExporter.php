@@ -25,6 +25,26 @@ class SongbookPdfExporter
         return $this->generateSongVersionFormat($version, 'a4', $author);
     }
 
+    /** @return array<string, string> */
+    public function generateSongVersionChordSheets(SongVersion $version, ?string $author = null): array
+    {
+        $temporary = storage_path('app/temporary/song-chords-'.Str::uuid());
+        File::ensureDirectoryExists($temporary);
+        $version->load(['song', 'parts', 'chordSets.chords']);
+        $paths = [];
+        foreach ($version->chordSets as $set) {
+            $instrument = trim((string) $set->instrument);
+            if ($instrument === '') continue;
+            $pdf = $this->renderChordVersion($temporary, $version, $set, 'chords-'.$set->id);
+            $this->writePdfMetadata($pdf, $version->song->title.' – '.$instrument, $author, $this->creditsText($version));
+            $stored = 'songs/generated/'.Str::uuid().'.pdf';
+            Storage::disk('local')->put($stored, File::get($pdf));
+            $paths[$instrument] = $stored;
+        }
+        File::deleteDirectory($temporary);
+        return $paths;
+    }
+
     public function generateTitlePageA4(string $sourcePath): string
     {
         $temporary = storage_path('app/temporary/title-page-a4-'.Str::uuid());
@@ -62,32 +82,35 @@ class SongbookPdfExporter
         return $stored;
     }
 
-    public function export(GroupSongbook $book, string $format = 'a5', ?string $throughDate = null, ?string $afterDate = null): string
+    public function export(GroupSongbook $book, string $format = 'a5', ?string $throughDate = null, ?string $afterDate = null, ?string $instrument = null): string
     {
         $entries = $this->contentsResolver->resolve($book, $throughDate, $afterDate);
         $imprint = $this->imprintText($book);
         $temporary = storage_path('app/temporary/songbook-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
         $pages = [];
+        $pageFormat = $format === 'chord-sheet' ? 'a4' : $format;
         if ($afterDate === null && $book->title_page_path && Storage::disk('local')->exists($book->title_page_path)) {
-            $titlePagePath = $format === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
+            $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
                 ? $book->title_page_a4_path
                 : $book->title_page_path;
             if (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
-            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $format, 'title');
+            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $pageFormat, 'title');
         }
         foreach ($entries as $entry) {
             $version = $entry->songVersion;
-            $sourcePath = $format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
+            $sourcePath = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument])
+                ? $version->generated_chord_sheet_paths[$instrument]
+                : ($format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
                 ? $version->generated_sheet_a4_path
                 : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
                     ? $version->generated_sheet_path
-                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null));
+                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null)));
             $pages[] = $sourcePath
-                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $entry->song_number, $format, 'song-'.$entry->song_number, $imprint)
-                : $this->renderVersion($temporary, $entry->song_number, $version, $format, $imprint);
+                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $entry->song_number, $pageFormat, 'song-'.$entry->song_number, $imprint)
+                : $this->renderVersion($temporary, $entry->song_number, $version, $format === 'chord-sheet' ? 'a4' : $format, $imprint);
         }
-        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $format, 'empty');
+        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $pageFormat, 'empty');
         $output = $temporary.'/songbook.pdf';
         try {
             (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
@@ -102,7 +125,7 @@ class SongbookPdfExporter
         return $stored;
     }
 
-    public function exportSongs(Collection $versions, string $format = 'a5', ?GroupSongbook $book = null): string
+    public function exportSongs(Collection $versions, string $format = 'a5', ?GroupSongbook $book = null, ?string $instrument = null): string
     {
         $temporary = storage_path('app/temporary/hour-songs-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
@@ -113,15 +136,17 @@ class SongbookPdfExporter
         $pages = $versions->values()->map(function (SongVersion $version) use ($temporary, $format, $numberByVersion, $imprint): string {
             $entry = $numberByVersion->get($version->id);
             $number = $entry?->song_number ?? 0;
-            $sourcePath = $format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
+            $sourcePath = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument])
+                ? $version->generated_chord_sheet_paths[$instrument]
+                : ($format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
                 ? $version->generated_sheet_a4_path
                 : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
                     ? $version->generated_sheet_path
-                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null));
+                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null)));
 
             return $sourcePath
                 ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $number, $format, 'song-'.$version->id, $imprint)
-                : $this->renderVersion($temporary, $number, $version, $format, $imprint);
+                : $this->renderVersion($temporary, $number, $version, $format === 'chord-sheet' ? 'a4' : $format, $imprint);
         })->all();
         if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Keine neuen Lieder', '<p>Für diese Stunde sind keine neuen Lieder zugeordnet.</p>', $format, 'empty');
         $output = $temporary.'/songs.pdf';
@@ -172,6 +197,33 @@ class SongbookPdfExporter
         if ($imprint !== null) $page .= '<div class="song-imprint">'.e($imprint).'</div>';
         $content = $format === 'a4' ? '<div class="a4-copy a4-copy-left">'.$page.'</div><div class="a4-copy a4-copy-right">'.$page.'</div>' : $page;
         return $this->htmlPage($directory, $version->song->title, $content, $format, 'song-'.$number);
+    }
+
+    private function renderChordVersion(string $directory, SongVersion $version, $set, string $name): string
+    {
+        $parts = $version->parts->map(fn ($part): string => $this->renderChordPart($part, $set->chords))->implode('');
+        $heading = '<div class="song-heading"><h1>'.e($version->song->title).'</h1></div>';
+        $credits = $this->renderCredits($version);
+        $content = $heading.'<div class="chord-instrument">'.e((string) $set->instrument).($set->key_signature ? ' · '.e((string) $set->key_signature) : '').'</div>'.$parts.$credits;
+        return $this->htmlPage($directory, $version->song->title.' – '.$set->instrument, $content, 'a4-chord', $name);
+    }
+
+    private function renderChordPart($part, $chords): string
+    {
+        $lines = preg_split('/\R/u', (string) $part->content) ?: [''];
+        $markup = '<section class="part chord-part'.($part->is_refrain ? ' refrain' : '').'">';
+        foreach ($lines as $lineNumber => $line) {
+            $lineChords = $chords->where('song_part_id', $part->id)->where('line_number', $lineNumber)->where('repetition', 0)->keyBy('character_offset');
+            $characters = preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $markup .= '<div class="chord-line">';
+            foreach ($characters as $offset => $character) {
+                $chord = $lineChords->get($offset);
+                $markup .= '<span class="chord-character">'.($chord ? '<span class="chord">'.e($chord->chord).'</span>' : '').($character === ' ' ? '&nbsp;' : e($character)).'</span>';
+            }
+            if ($line === '' && ($chord = $lineChords->get(0))) $markup .= '<span class="chord chord-empty">'.e($chord->chord).'</span>';
+            $markup .= '</div>';
+        }
+        return $markup.'</section>';
     }
 
     private function imprintText(GroupSongbook $book): string
@@ -294,8 +346,9 @@ class SongbookPdfExporter
 
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
+        $isChordSheet = $format === 'a4-chord';
         $pageWidth = $format === 'a5' ? '148mm' : '297mm';
-        $pageHeight = $format === 'a5' ? '210mm' : '210mm';
+        $pageHeight = '210mm';
         $size = $pageWidth.' '.$pageHeight;
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
@@ -306,7 +359,8 @@ class SongbookPdfExporter
         $titleFont = config('songs.title_font_family', 'Comic Neue');
         $titleSize = config('songs.title_font_size', 24);
         $titleWeight = config('songs.title_font_weight', 'bold');
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-line{position:relative;min-height:1.55em;white-space:nowrap}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;bottom:1.05em;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;bottom:auto;margin-bottom:.25rem}' : '';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.($isChordSheet ? 'Atkinson Hyperlegible Next' : config('songs.text_font_family', 'Atkinson Hyperlegible Next')).'";font-size:'.($isChordSheet ? '10' : config('songs.text_font_size', 14)).'pt;font-weight:'.($isChordSheet ? 'normal' : config('songs.text_font_weight', 'normal')).';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';

@@ -31,7 +31,7 @@ class SongbookController extends Controller
     public function export(Request $request, TeachingGroup $teachingGroup, SongbookPdfExporter $exporter)
     {
         $this->authorize('view', $teachingGroup);
-        $data = $request->validate(['format' => ['required', 'in:a5,a4,brochure,new'], 'through_date' => ['nullable', 'date'], 'from_date' => ['nullable', 'date']]);
+        $data = $request->validate(['format' => ['required', 'in:a5,a4,chord-sheet,brochure,new'], 'instrument' => ['nullable', 'string', 'max:100'], 'through_date' => ['nullable', 'date'], 'from_date' => ['nullable', 'date']]);
         $book = $teachingGroup->songbook()->firstOrCreate([]);
         $after = null;
         if ($data['format'] === 'new') {
@@ -39,7 +39,8 @@ class SongbookController extends Controller
             $format = 'a5';
         } else $format = $data['format'];
         if (($data['from_date'] ?? null) !== null) $after = $data['from_date'].' 00:00:00';
-        $path = $exporter->export($book, $format, $data['through_date'] ?? null, $after);
+        abort_if($data['format'] === 'chord-sheet' && blank($data['instrument'] ?? null), 422, 'Für ein Akkordblatt muss ein Instrument ausgewählt werden.');
+        $path = $exporter->export($book, $format, $data['through_date'] ?? null, $after, $data['instrument'] ?? null);
         $export = $book->exports()->create(['format' => $data['format'], 'through_date' => $data['through_date'] ?? null, 'storage_path' => $path, 'entry_count' => $book->entries()->when($data['through_date'] ?? null, fn ($query) => $query->whereDate('added_at', '<=', $data['through_date']))->when($data['from_date'] ?? null, fn ($query) => $query->where('added_at', '>', $data['from_date'].' 00:00:00'))->count()]);
         $book->checkpoints()->create(['printed_at' => now(), 'entry_count' => $export->entry_count]);
         return Storage::disk('local')->download($path, 'Gruppenliederbuch-'.$format.'.pdf');

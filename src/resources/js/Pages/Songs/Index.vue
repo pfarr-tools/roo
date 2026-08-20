@@ -670,8 +670,8 @@ function closeEditor() {
                     :disabled="editor.processing || form.processing"
                     @click="saveEditor"
                 >
-                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i
-                    >Speichern
+                    <span v-if="editor.processing || form.processing" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span><i v-else class="bi bi-check-lg me-1" aria-hidden="true"></i
+                    >{{ editor.processing || form.processing ? "PDF wird vorbereitet …" : "Speichern" }}
                 </button>
             </div></template
         >

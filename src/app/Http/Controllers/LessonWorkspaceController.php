@@ -120,14 +120,16 @@ class LessonWorkspaceController extends Controller
     {
         $group = $scheduleSlot->group;
         $this->authorize('view', $group);
-        $format = $request->validate(['format' => ['required', 'in:a4,a5']])['format'];
+        $data = $request->validate(['format' => ['required', 'in:a4,a5,chord-sheet'], 'instrument' => ['nullable', 'string', 'max:100']]);
+        abort_if($data['format'] === 'chord-sheet' && blank($data['instrument'] ?? null), 422, 'Für ein Akkordblatt muss ein Instrument ausgewählt werden.');
+        $format = $data['format'];
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
         $book = $group->songbook()->firstOrCreate([]);
         $versions = $contents->resolveLessonSongs($book, $lesson);
         abort_if($versions->isEmpty(), 422, 'Für diese Stunde sind keine neuen Lieder zugeordnet.');
 
-        $path = $exporter->exportSongs($versions, $format, $book);
+        $path = $exporter->exportSongs($versions, $format, $book, $data['instrument'] ?? null);
         return Storage::disk('local')->download($path, 'Neue-Lieder-Stunde-'.$scheduleSlot->date->format('Y-m-d').'-'.$format.'.pdf');
     }
 }

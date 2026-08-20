@@ -12,7 +12,7 @@ const searchResults = ref([])
 const searching = ref(false)
 const exporting = ref(false)
 const toastMessage = ref('')
-const printForm = ref({ format: 'a4', scope: 'whole', date: '' })
+const printForm = ref({ format: 'a4', instrument: '', scope: 'whole', date: '' })
 const titlePageForm = useForm({ title_page: null })
 function songbookEntries() {
     return props.group.songbook?.entries ?? []
@@ -94,6 +94,7 @@ function saveSongbook() {
 
 async function printSongbook() {
     const query = new URLSearchParams({ format: printForm.value.format })
+    if (printForm.value.format === 'chord-sheet') query.set('instrument', printForm.value.instrument.trim())
     if (printForm.value.scope === 'through') query.set('through_date', printForm.value.date)
     if (printForm.value.scope === 'from') query.set('from_date', printForm.value.date)
     exporting.value = true
@@ -202,10 +203,11 @@ onBeforeUnmount(() => clearTimeout(searchTimer))
         <section class="roo-modal" role="dialog" aria-modal="true" aria-labelledby="songbook-print-title">
             <div class="card border-0"><div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3"><h2 id="songbook-print-title" class="h5 mb-0">Gruppenliederbuch drucken</h2><button class="btn-close" type="button" aria-label="Schließen" @click="showPrintModal = false"></button></div>
-                <fieldset class="mb-3"><legend class="h6">Format</legend><label class="form-check"><input v-model="printForm.format" class="form-check-input" type="radio" value="a4"><span class="form-check-label">A4 quer (zwei A5-Kopien je Seite)</span></label><label class="form-check"><input v-model="printForm.format" class="form-check-input" type="radio" value="a5"><span class="form-check-label">A5</span></label></fieldset>
+                <fieldset class="mb-3"><legend class="h6">Format</legend><label class="form-check"><input v-model="printForm.format" class="form-check-input" type="radio" value="a4"><span class="form-check-label">A4 quer (zwei A5-Kopien je Seite)</span></label><label class="form-check"><input v-model="printForm.format" class="form-check-input" type="radio" value="a5"><span class="form-check-label">A5</span></label><label class="form-check"><input v-model="printForm.format" class="form-check-input" type="radio" value="chord-sheet"><span class="form-check-label">Akkordblatt (A4 hoch)</span></label></fieldset>
+                <div v-if="printForm.format === 'chord-sheet'" class="mb-3"><label class="form-label" for="songbook-print-instrument">Instrument</label><input id="songbook-print-instrument" v-model="printForm.instrument" class="form-control" placeholder="z. B. Gitarre" required></div>
                 <fieldset class="mb-3"><legend class="h6">Umfang</legend><label class="form-check"><input v-model="printForm.scope" class="form-check-input" type="radio" value="whole"><span class="form-check-label">Gesamtes Liederbuch</span></label><label class="form-check"><input v-model="printForm.scope" class="form-check-input" type="radio" value="through"><span class="form-check-label">Bis einschließlich einer Stunde mit neuen Liedern</span></label><label class="form-check"><input v-model="printForm.scope" class="form-check-input" type="radio" value="from"><span class="form-check-label">Neue Lieder ab einer Stunde</span></label></fieldset>
                 <div v-if="printForm.scope !== 'whole'" class="mb-3"><label class="form-label" for="songbook-print-date">Stunde mit neuen Liedern</label><select id="songbook-print-date" v-model="printForm.date" class="form-select"><option value="">Bitte auswählen</option><option v-for="date in availableDates" :key="date" :value="date">{{ formatDate(date) }}</option></select></div>
-                <div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" @click="showPrintModal = false">Abbrechen</button><button class="btn btn-primary" type="button" :disabled="exporting || (printForm.scope !== 'whole' && !printForm.date)" @click="printSongbook"><span v-if="exporting" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>{{ exporting ? 'PDF wird erstellt …' : 'Druck starten' }}</button></div>
+                <div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" @click="showPrintModal = false">Abbrechen</button><button class="btn btn-primary" type="button" :disabled="exporting || (printForm.scope !== 'whole' && !printForm.date) || (printForm.format === 'chord-sheet' && !printForm.instrument.trim())" @click="printSongbook"><span v-if="exporting" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>{{ exporting ? 'PDF wird erstellt …' : 'Druck starten' }}</button></div>
             </div></div>
         </section>
     </div>

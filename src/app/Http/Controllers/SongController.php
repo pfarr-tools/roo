@@ -46,7 +46,7 @@ class SongController extends Controller
         ];
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SongbookPdfExporter $exporter): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'], 'composer' => ['nullable', 'string', 'max:255'],
@@ -64,6 +64,7 @@ class SongController extends Controller
         if ($request->hasFile('sheet')) {
             $this->storeSheet($version, $request->file('sheet'));
         }
+        $this->regenerateSheets($version, $exporter, $request->user()->name);
 
         return to_route('songs.versions.edit', $version)->with('success', 'Lied wurde gespeichert.');
     }
@@ -82,6 +83,9 @@ class SongController extends Controller
             }
             if ($version->generated_sheet_a4_path) {
                 Storage::disk('local')->delete($version->generated_sheet_a4_path);
+            }
+            foreach ($version->generated_chord_sheet_paths ?? [] as $path) {
+                Storage::disk('local')->delete($path);
             }
             foreach ($version->images as $image) {
                 Storage::disk('local')->delete($image->storage_path);
@@ -203,28 +207,51 @@ class SongController extends Controller
         ]);
     }
 
+    public function generatedChordSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter, string $instrument)
+    {
+        $this->authorizeVersion($request, $songVersion);
+        $path = $songVersion->generated_chord_sheet_paths[$instrument] ?? null;
+        if (! $path || ! Storage::disk('local')->exists($path) || ! $this->isValidPdf($path)) {
+            $this->regenerateSheets($songVersion, $exporter, $request->user()->name);
+            $songVersion->refresh();
+            $path = $songVersion->generated_chord_sheet_paths[$instrument] ?? null;
+        }
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return response()->download(Storage::disk('local')->path($path), $this->songSheetFilename($songVersion->song->title, 'chord-sheet', $instrument), [
+            'Content-Type' => 'application/pdf',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     private function regenerateSheets(SongVersion $version, SongbookPdfExporter $exporter, ?string $author = null): void
     {
         $version->load(['song', 'parts', 'images']);
         $oldA5Path = $version->generated_sheet_path;
         $oldA4Path = $version->generated_sheet_a4_path;
+        $oldChordPaths = $version->generated_chord_sheet_paths ?? [];
         $a5Path = $exporter->generateSongVersion($version, $author);
         $a4Path = $exporter->generateSongVersionA4($version, $author);
-        $version->update(['generated_sheet_path' => $a5Path, 'generated_sheet_at' => now(), 'generated_sheet_a4_path' => $a4Path, 'generated_sheet_a4_at' => now()]);
+        $chordPaths = $exporter->generateSongVersionChordSheets($version, $author);
+        $version->update(['generated_sheet_path' => $a5Path, 'generated_sheet_at' => now(), 'generated_sheet_a4_path' => $a4Path, 'generated_sheet_a4_at' => now(), 'generated_chord_sheet_paths' => $chordPaths, 'generated_chord_sheet_at' => now()]);
         if ($oldA5Path) {
             Storage::disk('local')->delete($oldA5Path);
         }
         if ($oldA4Path) {
             Storage::disk('local')->delete($oldA4Path);
         }
+        foreach ($oldChordPaths as $path) {
+            Storage::disk('local')->delete($path);
+        }
     }
 
-    private function songSheetFilename(string $title, string $format): string
+    private function songSheetFilename(string $title, string $format, ?string $instrument = null): string
     {
         $safeTitle = preg_replace('/[<>:"\/\\|?*\x00-\x1F]/u', '-', $title) ?: 'Lied';
         $safeTitle = rtrim(trim($safeTitle), '. ');
 
-        return ($safeTitle !== '' ? $safeTitle : 'Lied').($format === 'a5' ? ' A5' : '').'.pdf';
+        $suffix = $format === 'a5' ? ' A5' : ($format === 'chord-sheet' ? ' Akkordblatt'.($instrument ? ' '.$instrument : '') : '');
+        return ($safeTitle !== '' ? $safeTitle : 'Lied').$suffix.'.pdf';
     }
 
     private function isValidPdf(string $path): bool

@@ -153,6 +153,7 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
 });
 
 it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function () {
+    Storage::fake('local');
     $organization = Organization::create(['name' => 'Akkord Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Akkordlied'])->versions()->create(['name' => 'Gitarrenfassung']);
@@ -174,6 +175,10 @@ it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function ()
         ->and($version->fresh()->chordSets->first()->key_signature)->toBe('G-Dur')
         ->and($version->fresh()->chordSets->first()->chords)->toHaveCount(3)
         ->and($version->fresh()->chordSets->first()->chords->firstWhere('repetition', 1)->chord)->toBe('Em');
+    expect($version->fresh()->generated_chord_sheet_paths)->toHaveKey('Gitarre');
+    $response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt/akkord/Gitarre");
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    expect($response->headers->get('content-disposition'))->toContain('Akkordblatt Gitarre.pdf');
 });
 
 it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
