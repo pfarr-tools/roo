@@ -402,6 +402,12 @@ class YearPlanController extends Controller
                     if ($savedPhase instanceof LessonPhase) $savedPhase->resourceLinks()->sync($validResourceLinkIds);
                     if ($savedPhase instanceof LessonPhase) $savedPhase->materialItems()->sync($validMaterialItemIds);
                     if ($savedPhase instanceof LessonPhase) $savedPhase->songs()->sync($validSongIds);
+                    if ($validSongIds !== []) {
+                        $songbook = $teachingGroup->songbook()->firstOrCreate([]);
+                        foreach ($validSongIds as $songId) {
+                            $songbook->entries()->firstOrCreate(['song_version_id' => $songId], ['song_number' => ((int) $songbook->entries()->max('song_number')) + 1, 'added_at' => now()]);
+                        }
+                    }
                 }
                 if ($phases->isNotEmpty()) $lesson->scheduledLessons()->where('status', ScheduledLesson::STATUS_ASSIGNED)->update(['status' => ScheduledLesson::STATUS_PLANNED]);
             }
