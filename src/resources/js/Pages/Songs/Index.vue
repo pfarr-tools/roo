@@ -57,6 +57,8 @@ function startPartDrag(index, event) { draggedPartIndex.value = index; event.dat
 function dropPart(index) { if (draggedPartIndex.value === null || draggedPartIndex.value === index) return; const parts = [...editor.parts], [part] = parts.splice(draggedPartIndex.value, 1); parts.splice(index, 0, part); editor.parts = parts; draggedPartIndex.value = null }
 function removePart(index) { editor.parts.splice(index, 1) }
 function imageStyle(image) { return { left: 0, top: 0, width: `${image.width}px`, height: `${image.height}px`, transform: `rotate(${image.rotation}deg) scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})` } }
+function removeSelectedImage() { if (selectedImage.value) { editor.layout_data = { ...editor.layout_data, images: editor.layout_data.images.filter(image => image.id !== selectedImage.value.id) }; activeImageId.value = null } }
+function handleImageKeydown(event) { if ((event.key === 'Delete' || event.key === 'Backspace') && selectedImage.value) { event.preventDefault(); removeSelectedImage() } }
 window.addEventListener('keydown', handleImageKeydown)
 if (props.songVersion) openEditor(props.songVersion)
 else {
@@ -65,13 +67,6 @@ else {
     editor.reset()
 }
 function closeEditor() { router.visit('/bibliothek') }
-if (new URLSearchParams(window.location.search).get('create') === '1') modal.value = true
-const editVersionId = new URLSearchParams(window.location.search).get('edit')
-if (editVersionId) {
-    const version = props.songs.flatMap(song => song.versions ?? []).find(item => String(item.id) === editVersionId)
-    if (version) openEditor(version)
-}
-async function removeSong(song) { if (await requestConfirmation({ message: `„${song.title}“ wirklich löschen?` })) router.delete(`/lieder/${song.id}`) }
 </script>
 
 <template>
