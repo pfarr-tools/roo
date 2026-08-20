@@ -89,13 +89,14 @@ class SongbookPdfExporter
         $temporary = storage_path('app/temporary/songbook-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
         $pages = [];
-        $pageFormat = $format === 'chord-sheet' ? 'a4' : $format;
+        $pageFormat = $format === 'chord-sheet' ? 'chord-sheet' : $format;
+        $titlePageFormat = $format === 'chord-sheet' ? 'a4' : $format;
         if ($afterDate === null && $book->title_page_path && Storage::disk('local')->exists($book->title_page_path)) {
             $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
                 ? $book->title_page_a4_path
                 : $book->title_page_path;
             if (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
-            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $pageFormat, 'title');
+            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
         }
         foreach ($entries as $entry) {
             $version = $entry->songVersion;
@@ -110,7 +111,7 @@ class SongbookPdfExporter
                 ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $entry->song_number, $pageFormat, 'song-'.$entry->song_number, $imprint)
                 : $this->renderVersion($temporary, $entry->song_number, $version, $format === 'chord-sheet' ? 'a4' : $format, $imprint);
         }
-        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $pageFormat, 'empty');
+        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $titlePageFormat, 'empty');
         $output = $temporary.'/songbook.pdf';
         try {
             (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
@@ -212,16 +213,19 @@ class SongbookPdfExporter
     {
         $lines = preg_split('/\R/u', (string) $part->content) ?: [''];
         $markup = '<section class="part chord-part'.($part->is_refrain ? ' refrain' : '').'">';
-        foreach ($lines as $lineNumber => $line) {
-            $lineChords = $chords->where('song_part_id', $part->id)->where('line_number', $lineNumber)->where('repetition', 0)->keyBy('character_offset');
-            $characters = preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            $markup .= '<div class="chord-line">';
-            foreach ($characters as $offset => $character) {
-                $chord = $lineChords->get($offset);
-                $markup .= '<span class="chord-character">'.($chord ? '<span class="chord">'.e($chord->chord).'</span>' : '').($character === ' ' ? '&nbsp;' : e($character)).'</span>';
+        $repetitions = $part->is_repeated ? max(2, (int) ($part->repeat_count ?? 2)) : 1;
+        for ($repetition = 0; $repetition < $repetitions; $repetition++) {
+            foreach ($lines as $lineNumber => $line) {
+                $lineChords = $chords->where('song_part_id', $part->id)->where('line_number', $lineNumber)->where('repetition', $repetition)->keyBy('character_offset');
+                $characters = preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $markup .= '<div class="chord-line">';
+                foreach ($characters as $offset => $character) {
+                    $chord = $lineChords->get($offset);
+                    $markup .= '<span class="chord-character">'.($chord ? '<span class="chord">'.e($chord->chord).'</span>' : '').($character === ' ' ? '&nbsp;' : e($character)).'</span>';
+                }
+                if ($line === '' && ($chord = $lineChords->get(0))) $markup .= '<span class="chord chord-empty">'.e($chord->chord).'</span>';
+                $markup .= '</div>';
             }
-            if ($line === '' && ($chord = $lineChords->get(0))) $markup .= '<span class="chord chord-empty">'.e($chord->chord).'</span>';
-            $markup .= '</div>';
         }
         return $markup.'</section>';
     }
@@ -268,7 +272,9 @@ class SongbookPdfExporter
 
     private function renderPrintOverlay(string $directory, string $pdfPath, int $number, string $pageFormat, ?string $imprint, string $name): void
     {
-        $pageWidth = $pageFormat === 'a4' ? '297mm' : '148mm';
+        $isPortraitA4 = $pageFormat === 'chord-sheet';
+        $pageWidth = $isPortraitA4 ? '210mm' : ($pageFormat === 'a4' ? '297mm' : '148mm');
+        $pageHeight = $isPortraitA4 ? '297mm' : '210mm';
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
         $left = config('songs.page_margin_left_mm', 20);
@@ -277,16 +283,20 @@ class SongbookPdfExporter
         $size = config('songs.title_font_size', 24);
         $weight = config('songs.title_font_weight', 'bold');
         $numberMarkup = $number > 0
-            ? ($pageFormat === 'a4'
+            ? ($isPortraitA4
+                ? '<span class="number number-portrait">'.$number.'</span>'
+                : ($pageFormat === 'a4'
                 ? '<span class="number number-left">'.$number.'</span><span class="number number-right">'.$number.'</span>'
-                : '<span class="number number-a5">'.$number.'</span>')
+                : '<span class="number number-a5">'.$number.'</span>'))
             : '';
         $imprintMarkup = $imprint !== null
-            ? ($pageFormat === 'a4'
+            ? ($isPortraitA4
+                ? '<span class="imprint imprint-portrait">'.e($imprint).'</span>'
+                : ($pageFormat === 'a4'
                 ? '<span class="imprint imprint-left">'.e($imprint).'</span><span class="imprint imprint-right">'.e($imprint).'</span>'
-                : '<span class="imprint imprint-a5">'.e($imprint).'</span>')
+                : '<span class="imprint imprint-a5">'.e($imprint).'</span>'))
             : '';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$pageWidth.' 210mm;margin:0}*{box-sizing:border-box}html,body{width:'.$pageWidth.';height:210mm;margin:0;background:transparent;overflow:hidden}.number{position:absolute;top:'.$top.'mm;font-family:"'.$font.'";font-size:'.$size.'pt;font-weight:'.$weight.';line-height:1;text-align:right}.number-a5{right:'.$right.'mm;width:20mm}.number-left,.number-right{width:20mm}.number-left{left:'.(148 - $right - 20).'mm}.number-right{right:'.$right.'mm}.imprint{position:absolute;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.imprint-a5,.imprint-left{left:'.$left.'mm}.imprint-right{left:'.(149 + $left).'mm}</style></head><body>'.$numberMarkup.$imprintMarkup.'</body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$pageWidth.' '.$pageHeight.';margin:0}*{box-sizing:border-box}html,body{width:'.$pageWidth.';height:'.$pageHeight.';margin:0;background:transparent;overflow:hidden}.number{position:absolute;top:'.$top.'mm;font-family:"'.$font.'";font-size:'.$size.'pt;font-weight:'.$weight.';line-height:1;text-align:right}.number-a5{right:'.$right.'mm;width:20mm}.number-portrait{right:'.$right.'mm;width:20mm}.number-left,.number-right{width:20mm}.number-left{left:'.(148 - $right - 20).'mm}.number-right{right:'.$right.'mm}.imprint{position:absolute;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.imprint-a5,.imprint-left,.imprint-portrait{left:'.$left.'mm}.imprint-right{left:'.(149 + $left).'mm}</style></head><body>'.$numberMarkup.$imprintMarkup.'</body></html>';
         $htmlPath = $directory.'/'.$name.'-overlay.html';
         File::put($htmlPath, $html);
         (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-overlay-profile-'.$name, '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
@@ -347,8 +357,8 @@ class SongbookPdfExporter
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
         $isChordSheet = $format === 'a4-chord';
-        $pageWidth = $format === 'a5' ? '148mm' : '297mm';
-        $pageHeight = '210mm';
+        $pageWidth = $isChordSheet ? '210mm' : ($format === 'a5' ? '148mm' : '297mm');
+        $pageHeight = $isChordSheet ? '297mm' : '210mm';
         $size = $pageWidth.' '.$pageHeight;
         $top = config('songs.page_margin_top_mm', 17);
         $right = config('songs.page_margin_right_mm', 17);
@@ -359,8 +369,8 @@ class SongbookPdfExporter
         $titleFont = config('songs.title_font_family', 'Comic Neue');
         $titleSize = config('songs.title_font_size', 24);
         $titleWeight = config('songs.title_font_weight', 'bold');
-        $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-line{position:relative;min-height:1.55em;white-space:nowrap}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;bottom:1.05em;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;bottom:auto;margin-bottom:.25rem}' : '';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.($isChordSheet ? 'Atkinson Hyperlegible Next' : config('songs.text_font_family', 'Atkinson Hyperlegible Next')).'";font-size:'.($isChordSheet ? '10' : config('songs.text_font_size', 14)).'pt;font-weight:'.($isChordSheet ? 'normal' : config('songs.text_font_weight', 'normal')).';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-line{position:relative;min-height:calc(1.25em + 15pt);padding-top:15pt;line-height:1.25;white-space:nowrap}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;top:0;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;top:auto;margin-bottom:.25rem}' : '';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';
