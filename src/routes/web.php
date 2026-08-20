@@ -15,6 +15,7 @@ use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\SongController;
 use App\Http\Controllers\SongbookController;
 use App\Http\Controllers\YearPlanController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,6 +30,8 @@ Route::get('/', function (Request $request) {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');

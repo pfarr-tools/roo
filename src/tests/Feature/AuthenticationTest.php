@@ -58,3 +58,29 @@ it('protects the dashboard and allows an authenticated user to log out', functio
     $this->post('/logout', ['_token' => csrf_token()])->assertRedirect('/');
     $this->assertGuest();
 });
+
+it('shows and updates the profile without exposing integration keys', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/profil')
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Profile/Show')
+            ->where('user.email', $user->email)
+            ->where('integrations.openai', false)
+            ->where('integrations.flux', false)
+            ->missing('user.openai_api_key')
+            ->missing('user.flux_api_key'));
+
+    $this->actingAs($user)->put('/profil', [
+        'name' => 'Erika Neu',
+        'email' => 'erika-neu@example.test',
+        'openai_api_key' => 'openai-secret',
+        'flux_api_key' => 'flux-secret',
+    ])->assertRedirect('/profil');
+
+    $user->refresh();
+    expect($user->openai_api_key)->toBe('openai-secret')
+        ->and($user->flux_api_key)->toBe('flux-secret');
+    $this->assertDatabaseMissing('users', ['openai_api_key' => 'openai-secret']);
+});

@@ -75,7 +75,7 @@ defineProps({
                         </form>
                         <details v-if="authenticated" class="roo-profile-menu">
                             <summary class="btn btn-sm btn-light d-flex align-items-center gap-2"><span class="roo-avatar">R</span><span class="d-none d-sm-inline">Profil</span><i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
-                            <div class="roo-profile-dropdown"><a href="/dashboard"><i class="bi bi-person" aria-hidden="true"></i>Profil</a><a href="/dashboard"><i class="bi bi-gear" aria-hidden="true"></i>Einstellungen</a><form method="post" action="/logout"><input type="hidden" name="_token" :value="csrfToken"><button type="submit"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Abmelden</button></form></div>
+                            <div class="roo-profile-dropdown"><a href="/profil"><i class="bi bi-person" aria-hidden="true"></i>Profil</a><a href="/profil"><i class="bi bi-gear" aria-hidden="true"></i>Einstellungen</a><form method="post" action="/logout"><input type="hidden" name="_token" :value="csrfToken"><button type="submit"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Abmelden</button></form></div>
                         </details>
                         <img v-else-if="showBrand" class="roo-brand-mark" :src="icon" alt="">
                     </div>
