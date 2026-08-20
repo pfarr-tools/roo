@@ -451,7 +451,7 @@ export default {
     noPeriods: 'Für diese Schule ist noch kein Stundenraster hinterlegt.',
     weekdays: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'],
     resources: 'Bibliothek',
-    library: 'Material',
+    library: 'Bibliothek',
     songs: 'Lieder',
     lessons: 'Unterrichtsstunden',
     assessment: 'Beobachtung und Bewertung',

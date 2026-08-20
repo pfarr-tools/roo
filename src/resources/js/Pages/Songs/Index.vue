@@ -60,6 +60,7 @@ function endInteraction() { interaction.value = null; window.removeEventListener
 function removeSelectedImage() { if (selectedImage.value) { editor.layout_data = { ...editor.layout_data, images: editor.layout_data.images.filter(image => image.id !== selectedImage.value.id) }; activeImageId.value = null } }
 function handleImageKeydown(event) { if ((event.key === 'Delete' || event.key === 'Backspace') && selectedImage.value) { event.preventDefault(); removeSelectedImage() } }
 window.addEventListener('keydown', handleImageKeydown)
+if (new URLSearchParams(window.location.search).get('create') === '1') modal.value = true
 const editVersionId = new URLSearchParams(window.location.search).get('edit')
 if (editVersionId) {
     const version = props.songs.flatMap(song => song.versions ?? []).find(item => String(item.id) === editVersionId)
