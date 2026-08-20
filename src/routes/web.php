@@ -16,6 +16,7 @@ use App\Http\Controllers\SongController;
 use App\Http\Controllers\SongbookController;
 use App\Http\Controllers\YearPlanController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FluxController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,6 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/flux/credits', [FluxController::class, 'credits'])->name('flux.credits');
+    Route::post('/flux/generate', [FluxController::class, 'generate'])->name('flux.generate');
+    Route::get('/flux/poll', [FluxController::class, 'poll'])->name('flux.poll');
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');

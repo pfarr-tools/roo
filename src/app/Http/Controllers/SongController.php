@@ -33,6 +33,7 @@ class SongController extends Controller
             'songs' => $songs,
             'filters' => ['q' => $query, 'sort' => $sort, 'direction' => $direction],
             'libraryImages' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
+            'flux' => ['enabled' => filled($request->user()->flux_api_key), 'userName' => $request->user()->name, 'models' => config('flux.models')],
             'songStyles' => collect(config('songs'))->only([
                 'title_font_family', 'title_font_size', 'title_font_weight',
                 'text_font_family', 'text_font_size', 'text_font_weight',
