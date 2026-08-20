@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
+    Route::put('/unterricht/{scheduleSlot}/beobachtungen', [LessonWorkspaceController::class, 'updateObservations'])->name('lessons.observations.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/bibliothek', ResourceLibraryController::class)->name('resources.library');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class);

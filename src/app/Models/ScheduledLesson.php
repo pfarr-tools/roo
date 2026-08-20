@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['lesson_id', 'schedule_slot_id', 'status', 'actual_on', 'execution_notes'])]
 class ScheduledLesson extends Model
@@ -38,5 +39,20 @@ class ScheduledLesson extends Model
     public function slot(): BelongsTo
     {
         return $this->belongsTo(ScheduleSlot::class, 'schedule_slot_id');
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function observations(): HasMany
+    {
+        return $this->hasMany(Observation::class);
+    }
+
+    public function competenceEvidences(): HasMany
+    {
+        return $this->hasMany(CompetenceEvidence::class);
     }
 }

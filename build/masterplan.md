@@ -447,6 +447,10 @@ möglich.
 
 ## Phase 9 – Beobachtungen
 
+Fortschritt: `[~]` Der erste vertikale Schnitt ist umgesetzt: Beobachtungen,
+Anwesenheit und kompetenzbezogene Nachweise können im Arbeitsraum einer
+konkreten Stunde gruppenbezogen erfasst und gespeichert werden.
+
 ### Ziel
 
 Während oder direkt nach jeder Stunde schnell Beobachtungen erfassen.

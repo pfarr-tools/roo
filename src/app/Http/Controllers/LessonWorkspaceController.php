@@ -11,12 +11,17 @@ use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
 use App\Http\Requests\UpdateLessonExecutionRequest;
 use App\Models\ScheduledLesson;
+use App\Models\ObservationType;
+use App\Models\AttendanceRecord;
+use App\Models\Observation;
+use App\Models\CompetenceEvidence;
 use App\Services\CompetencyResolver;
 use App\Services\WscDocInspector;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,6 +66,16 @@ class LessonWorkspaceController extends Controller
             $phase->setAttribute('material_item_ids', $phase->materialItems->pluck('id')->values());
             $phase->setAttribute('song_ids', $phase->songs->pluck('id')->values());
         });
+        $scheduledLesson = $scheduleSlot->scheduledLesson;
+        $groupStudents = $group->students()->orderBy('last_name')->orderBy('first_name')->get(['students.id', 'first_name', 'last_name', 'class_name']);
+        $observationTypes = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
+            ->where('is_active', true)->orderBy('position')->orderBy('label')->get(['id', 'label', 'symbol', 'color']);
+        if ($observationTypes->isEmpty()) {
+            $defaults = [['label' => 'Material fehlt', 'symbol' => 'M'], ['label' => 'Hausaufgabe fehlt', 'symbol' => 'H'], ['label' => 'Mitarbeit', 'symbol' => '★']];
+            foreach ($defaults as $position => $default) {
+                $observationTypes->push(ObservationType::firstOrCreate(['organization_id' => $request->user()->organization_id, 'label' => $default['label']], $default + ['position' => $position]));
+            }
+        }
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency))
             ->groupBy('kind')
@@ -82,7 +97,54 @@ class LessonWorkspaceController extends Controller
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'competencyOptions' => EducationPlanCompetency::query()->whereIn('id', $lesson->unit->competencies->pluck('education_plan_competency_id')->filter())->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position'])->get()->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))),
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
+            'observationStudents' => $groupStudents,
+            'observationTypes' => $observationTypes,
+            'attendanceRecords' => $scheduledLesson->attendanceRecords()->get(['student_id', 'status', 'note']),
+            'observations' => $scheduledLesson->observations()->get(['student_id', 'observation_type_id', 'note']),
+            'competenceEvidences' => $scheduledLesson->competenceEvidences()->get(['student_id', 'teaching_unit_competency_id', 'scale', 'note']),
         ]);
+    }
+
+    public function updateObservations(Request $request, ScheduleSlot $scheduleSlot)
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('view', $group);
+        $scheduledLesson = $scheduleSlot->scheduledLesson;
+        abort_unless($scheduledLesson, 404);
+        $students = $group->students()->pluck('students.id');
+        $data = $request->validate([
+            'students' => ['required', 'array'],
+            'students.*.student_id' => ['required', 'integer'],
+            'students.*.attendance' => ['nullable', 'in:present,absent,late'],
+            'students.*.note' => ['nullable', 'string', 'max:2000'],
+            'students.*.observation_type_ids' => ['sometimes', 'array'],
+            'students.*.observation_type_ids.*' => ['integer'],
+            'students.*.evidences' => ['sometimes', 'array'],
+            'students.*.evidences.*.competency_id' => ['required', 'integer'],
+            'students.*.evidences.*.scale' => ['nullable', 'string', 'max:32'],
+            'students.*.evidences.*.note' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $studentIds = collect($data['students'])->pluck('student_id');
+        abort_unless($studentIds->unique()->count() === $studentIds->count() && $studentIds->diff($students)->isEmpty(), 422);
+        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->pluck('id');
+        $competencyIds = $scheduledLesson->lesson->competencies()->pluck('teaching_unit_competencies.id');
+
+        DB::transaction(function () use ($data, $scheduledLesson, $typeIds, $competencyIds): void {
+            foreach ($data['students'] as $student) {
+                AttendanceRecord::updateOrCreate(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id']], ['status' => $student['attendance'] ?? 'present', 'note' => $student['note'] ?? null]);
+                Observation::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student['student_id'])->delete();
+                foreach (collect($student['observation_type_ids'] ?? [])->intersect($typeIds) as $typeId) {
+                    Observation::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'observation_type_id' => $typeId, 'note' => $student['note'] ?? null]);
+                }
+                CompetenceEvidence::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student['student_id'])->delete();
+                foreach ($student['evidences'] ?? [] as $evidence) {
+                    if ($competencyIds->contains($evidence['competency_id'])) {
+                        CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'teaching_unit_competency_id' => $evidence['competency_id'], 'scale' => $evidence['scale'] ?? null, 'note' => $evidence['note'] ?? null]);
+                    }
+                }
+            }
+        });
+        return back()->with('success', 'Beobachtungen wurden gespeichert.');
     }
 
     private function resourceFilename($unit, $resource): string
