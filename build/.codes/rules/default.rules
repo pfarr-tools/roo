@@ -28,6 +28,11 @@ prefix_rule(
     decision = "allow",
 )
 
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+)
+
 
 prefix_rule(
     pattern = ["git", "diff", "--check"],
