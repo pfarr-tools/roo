@@ -28,6 +28,18 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 - Karten in Planungs- und Zuordnungsansichten, insbesondere Curriculum-
   Drag-and-drop-Spalten und Unterrichtseinheiten, erhalten eine dezente
   Hintergrundfläche und ausreichenden Kontrast zum Seitenhintergrund.
+- Mehrteilige Bearbeitungs- und Arbeitsseiten verwenden ein einheitliches
+  Tab-Muster: Tab-Kopfzeile und Tab-Inhalte sind getrennt, jeder Tab besitzt
+  eine stabile technische ID und die Kopfzeile verweist über `aria-controls`
+  auf genau ein sichtbares Panel.
+- Tab-Kopfzeilen stehen im Seiteninhalt direkt unter dem Seiten- bzw.
+  Objektkopf, nicht als konkurrierende Umschaltung in der Topbar. Die Topbar
+  enthält nur Aktionen, die für den aktuell aktiven Tab gelten.
+- Tabs werden als wiederverwendbare UI-Komponenten umgesetzt. Der aktive Tab
+  wird zentral gesteuert; Inhalte bleiben in eigenen Panels und werden beim
+  Umschalten nicht zerstört, damit ungespeicherte Formulareingaben erhalten
+  bleiben. Auf kleinen Bildschirmen dürfen Tab-Kopfzeilen horizontal
+  scrollen.
 
 ---
 

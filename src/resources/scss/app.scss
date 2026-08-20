@@ -154,6 +154,8 @@ body {
 .rotate-handle { top: -1.8rem; left: calc(50% - .35rem); cursor: grab; }
 .unit-editor-tabs { overflow-x: auto; flex-wrap: nowrap; }
 .unit-editor-tabs .nav-link { white-space: nowrap; }
+.roo-tab-headers { overflow-x: auto; flex-wrap: nowrap; margin-bottom: 1.5rem; }
+.roo-tab-headers .nav-link { white-space: nowrap; }
 .attachment-list { display: grid; gap: .75rem; }
 .attachment-item { display: flex; align-items: flex-start; gap: .75rem; padding: .75rem; border: 1px solid var(--bs-border-color); border-radius: .6rem; background: #fff; }
 .attachment-item .input-group { max-width: 42rem; }
