@@ -22,3 +22,13 @@ auch auf bereits erzeugte oder hochgeladene Liedblatt-PDFs als Druck-Overlay
 gesetzt. Das Overlay wird als transparenter Vektor-PDF-Stempel erzeugt und mit
 `pdftk-java` auf die vorhandenen Seiten gesetzt; einzelne Liedblatt-Dateien
 bleiben dadurch unverändert und werden nicht rasterisiert.
+
+## Akkorde
+
+Eine Liedfassung kann mehrere Akkordsätze besitzen, jeweils mit einem
+Instrument und einer optionalen Bezeichnung (etwa „Capo 2“). Einzelne Akkorde
+werden relational mit Liedteil, Zeilennummer und Zeichenposition gespeichert.
+Damit können Akkorde im Editor direkt über dem jeweiligen Textzeichen gesetzt
+werden, ohne Liedtext und Akkordnotation in einem unvalidierten Freitextfeld zu
+vermischen. Akkordsätze gehören zur Liedfassung und werden nicht global oder
+an eine konkrete Unterrichtsgruppe gebunden.

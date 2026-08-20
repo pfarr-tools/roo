@@ -1,19 +1,19 @@
 <?php
 
-use App\Models\LessonPhase;
 use App\Models\Organization;
+use App\Models\ResourceReference;
+use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
-use App\Models\ScheduleSlot;
 use App\Models\Song;
 use App\Models\SongVersion;
-use App\Models\ScheduledLesson;
-use App\Models\ResourceReference;
 use App\Models\TeachingGroup;
 use App\Models\User;
+use App\Services\SongbookContentsResolver;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -109,9 +109,11 @@ it('speichert Liedteile mit Kehrvers und Nummerierung und stellt das Gruppenlied
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Lied mit Teilen'])->versions()->create(['name' => 'Schulfassung']);
-    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", ['name' => 'Schulfassung', 'language' => 'de', 'parts' => [['title' => 'Strophe 1', 'content' => 'Text', 'is_refrain' => false, 'is_numbered' => true], ['title' => 'Kehrvers', 'content' => 'Wiederholung', 'is_refrain' => true, 'is_numbered' => true, 'number' => 4], ['title' => 'Strophe 2', 'content' => 'Weiter', 'is_refrain' => false, 'is_numbered' => true]]])->assertRedirect();
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", ['name' => 'Schulfassung', 'language' => 'de', 'parts' => [['title' => 'Strophe 1', 'content' => 'Text', 'is_refrain' => false, 'is_numbered' => true, 'is_repeated' => true, 'repeat_count' => 3], ['title' => 'Kehrvers', 'content' => 'Wiederholung', 'is_refrain' => true, 'is_numbered' => true, 'number' => 4], ['title' => 'Strophe 2', 'content' => 'Weiter', 'is_refrain' => false, 'is_numbered' => true]]])->assertRedirect();
     expect($version->fresh()->parts)->toHaveCount(3)
         ->and($version->fresh()->parts->first()->is_numbered)->toBeTrue()
+        ->and($version->fresh()->parts->first()->is_repeated)->toBeTrue()
+        ->and($version->fresh()->parts->first()->repeat_count)->toBe(3)
         ->and($version->fresh()->parts->get(1)->number)->toBe(4)
         ->and($version->fresh()->parts->last()->is_refrain)->toBeFalse();
     $group->songbook()->create();
@@ -150,6 +152,30 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
     expect(Song::find($global->id))->not->toBeNull();
 });
 
+it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function () {
+    $organization = Organization::create(['name' => 'Akkord Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Akkordlied'])->versions()->create(['name' => 'Gitarrenfassung']);
+    $part = $version->parts()->create(['content' => "Geh mit mir\nins Licht", 'position' => 1]);
+
+    $this->actingAs($user)->get("/bibliothek/lied/{$version->id}")->assertInertia(fn ($page) => $page->where('songVersion.chord_sets', []));
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", [
+        'name' => 'Gitarrenfassung', 'language' => 'de',
+        'parts' => [['id' => $part->id, 'content' => $part->content, 'is_refrain' => false]],
+        'chord_sets' => [['instrument' => 'Gitarre', 'name' => 'Capo 2', 'key_signature' => 'G-Dur', 'chords' => [
+            ['song_part_id' => $part->id, 'line_number' => 0, 'character_offset' => 0, 'chord' => 'G'],
+            ['song_part_id' => $part->id, 'line_number' => 1, 'character_offset' => 3, 'chord' => 'C'],
+            ['song_part_id' => $part->id, 'line_number' => 0, 'repetition' => 1, 'character_offset' => 0, 'chord' => 'Em'],
+        ]]],
+    ])->assertRedirect();
+
+    expect($version->fresh()->chordSets)->toHaveCount(1)
+        ->and($version->fresh()->chordSets->first()->instrument)->toBe('Gitarre')
+        ->and($version->fresh()->chordSets->first()->key_signature)->toBe('G-Dur')
+        ->and($version->fresh()->chordSets->first()->chords)->toHaveCount(3)
+        ->and($version->fresh()->chordSets->first()->chords->firstWhere('repetition', 1)->chord)->toBe('Em');
+});
+
 it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'PDF Organisation']);
@@ -186,7 +212,7 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
     expect($book->fresh()->entries)->toHaveCount(1)->and($book->fresh()->entries->pluck('song_version_id')->all())->not->toContain($phaseVersion->id)
         ->and($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
 
-    $newSongs = app(App\Services\SongbookContentsResolver::class)->resolve($book->fresh(), null, now()->subDay()->toDateString());
+    $newSongs = app(SongbookContentsResolver::class)->resolve($book->fresh(), null, now()->subDay()->toDateString());
     expect($newSongs->pluck('song_version_id')->all())->not->toContain($version->id)->toContain($phaseVersion->id);
 });
 

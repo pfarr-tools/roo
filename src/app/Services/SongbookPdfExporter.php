@@ -147,7 +147,8 @@ class SongbookPdfExporter
                 $previousNumber = $number;
             }
             $prefix = $number === null ? '' : $number.'. ';
-            return '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($prefix.$part->content).'</section>';
+            $repeatSuffix = $part->is_repeated ? ' ('.($part->repeat_count ?? 2).'x)' : '';
+            return '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($prefix.$part->content.$repeatSuffix).'</section>';
         })->implode('');
         if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {

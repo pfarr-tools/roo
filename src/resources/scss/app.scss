@@ -117,6 +117,16 @@ body {
 .song-preview-pane { min-width: 0; overflow-x: hidden; overflow-y: auto; }
 .songbook-editor-grid { min-width: 0; }
 .song-part-number { width: 4.5rem; }
+.chord-editor { min-height: 24rem; }
+.chord-toolbar { background: #fffdf8; }
+.chord-line-editor { max-height: 46vh; overflow: auto; background: #fffdf8; }
+.chord-character-row { display: flex; align-items: flex-end; flex-wrap: wrap; }
+.chord-character { min-width: 1.1rem; padding: 0 .12rem; border: 0; border-bottom: 1px solid transparent; background: transparent; font: inherit; line-height: 1.4; }
+.chord-character:hover, .chord-character.selected { border-bottom-color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .1); }
+.chord-character-hovered { background: rgba(199,104,8,.12); }
+.chord-character-saved-hovered { background: rgba(var(--bs-primary-rgb), .18); outline: 1px solid rgba(var(--bs-primary-rgb), .45); }
+.chord-above { display: block; min-height: 1.1rem; color: var(--roo-orange-dark); font-size: .7rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.chord-above-preview { color: var(--bs-primary); }
 .songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
 .song-image-column { overflow-y: auto; }
 .song-library-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 2rem; }
