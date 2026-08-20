@@ -3,7 +3,7 @@ import { confirmationState, closeConfirmation } from '../../utils/confirmation'
 </script>
 
 <template>
-    <div v-if="confirmationState.open" class="roo-modal-backdrop" role="presentation" @click.self="closeConfirmation(false)">
+    <div v-if="confirmationState.open" class="roo-modal-backdrop roo-confirmation-modal-backdrop" role="presentation" @click.self="closeConfirmation(false)">
         <section class="roo-modal card border-0" role="alertdialog" aria-modal="true" :aria-label="confirmationState.title">
             <div class="card-body">
                 <h2 class="h5">{{ confirmationState.title }}</h2>

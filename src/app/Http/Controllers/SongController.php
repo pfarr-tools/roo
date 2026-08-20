@@ -22,7 +22,7 @@ class SongController extends Controller
     {
         $query = trim((string) $request->query('q', ''));
         $songs = Song::where(fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
-            ->with(['versions.song:id,title', 'versions.sheet', 'versions.parts', 'versions.images'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))
+            ->with(['versions.song:id,organization_id,title,composer,author,copyright_notice,age_group,topics,notes', 'versions.sheet', 'versions.parts', 'versions.images'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))
             ->orderBy('title')->get();
 
         $songs->each(fn (Song $song) => $song->setAttribute('can_delete', $song->organization_id === $request->user()->organization_id));

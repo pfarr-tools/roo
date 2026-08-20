@@ -105,6 +105,7 @@ body {
 .roo-profile-dropdown a, .roo-profile-dropdown button { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .55rem .65rem; border: 0; border-radius: .5rem; color: var(--bs-body-color); background: transparent; text-align: left; text-decoration: none; }
 .roo-profile-dropdown a:hover, .roo-profile-dropdown button:hover { background: var(--roo-sand); }
 .roo-modal-backdrop { position: fixed; z-index: 1050; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(23,25,28,.55); }
+.roo-confirmation-modal-backdrop { z-index: 1100; }
 .roo-modal-wide { width: min(58rem, 100%); max-height: min(90vh, 52rem); overflow-y: auto; }
 .editor-tab-content { min-height: 0; flex: 1; }
 .song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
