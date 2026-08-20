@@ -154,7 +154,7 @@ class SongController extends Controller
             $songVersion->refresh();
             $path = $songVersion->{$pathColumn};
         }
-        return response()->download(Storage::disk('local')->path($path), Str::slug($songVersion->song->title).($format === 'a4' ? '-a4' : '').'.pdf', [
+        return response()->download(Storage::disk('local')->path($path), $this->songSheetFilename($songVersion->song->title, $format), [
             'Content-Type' => 'application/pdf',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
@@ -172,6 +172,13 @@ class SongController extends Controller
         $version->update(['generated_sheet_path' => $a5Path, 'generated_sheet_at' => now(), 'generated_sheet_a4_path' => $a4Path, 'generated_sheet_a4_at' => now()]);
         if ($oldA5Path) Storage::disk('local')->delete($oldA5Path);
         if ($oldA4Path) Storage::disk('local')->delete($oldA4Path);
+    }
+
+    private function songSheetFilename(string $title, string $format): string
+    {
+        $safeTitle = preg_replace('/[<>:"\/\\|?*\x00-\x1F]/u', '-', $title) ?: 'Lied';
+        $safeTitle = rtrim(trim($safeTitle), '. ');
+        return ($safeTitle !== '' ? $safeTitle : 'Lied').($format === 'a5' ? ' A5' : '').'.pdf';
     }
 
     private function isValidPdf(string $path): bool
