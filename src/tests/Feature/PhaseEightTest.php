@@ -193,11 +193,11 @@ it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', funct
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Bildlied'])->versions()->create(['name' => 'Fassung']);
 
-    $this->actingAs($user)->post('/ressourcen/bibliothek/dateien', ['resource' => UploadedFile::fake()->image('quelle.png')])->assertRedirect();
+    $this->actingAs($user)->post('/ressourcen/bibliothek/dateien', ['resource' => UploadedFile::fake()->image('quelle.png'), 'copyrights' => 'Bibliothek / Ada Beispiel'])->assertRedirect();
     $resource = ResourceReference::firstOrFail();
     $this->actingAs($user)->post("/lieder/fassungen/{$version->id}/bilder/bibliothek", ['resource_id' => $resource->id])->assertRedirect();
     $image = $version->fresh()->images->firstOrFail();
-    expect($image->original_name)->toBe('quelle.png');
+    expect($image->original_name)->toBe('quelle.png')->and($image->copyrights)->toBe('Bibliothek / Ada Beispiel');
 
     Storage::disk('local')->put('songs/images/cache.png', 'image-data');
     $image->update(['storage_path' => 'songs/images/cache.png', 'mime_type' => 'image/png']);

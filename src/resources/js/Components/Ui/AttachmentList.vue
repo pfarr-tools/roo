@@ -15,8 +15,8 @@ const libraryItems = ref([])
 let librarySearchTimer = null
 const editingItem = ref(null)
 const editingType = ref(null)
-const editingForm = ref({ description: '', title: '', url: '', name: '', material_number: '', storage_location: '' })
-const resourceUpload = useForm({ resource: null, description: '', lesson_id: props.uploadLessonId })
+const editingForm = ref({ description: '', copyrights: '', title: '', url: '', name: '', material_number: '', storage_location: '' })
+const resourceUpload = useForm({ resource: null, description: '', copyrights: '', lesson_id: props.uploadLessonId })
 const resourceLinkForm = ref({ title: '', url: '' })
 const materialItemForm = ref({ name: '', material_number: '', storage_location: '', description: '' })
 const materialTextItems = computed(() => String(props.materialText ?? '').split('\n').map(item => item.trim()).filter(Boolean))
@@ -91,11 +91,11 @@ function selectLibraryItem(item) {
 function openEdit(type, item) {
     editingType.value = type
     editingItem.value = item
-    editingForm.value = { description: item.description ?? '', title: item.title ?? '', url: item.url ?? '', name: item.name ?? '', material_number: item.material_number ?? '', storage_location: item.storage_location ?? '' }
+    editingForm.value = { description: item.description ?? '', copyrights: item.copyrights ?? '', title: item.title ?? '', url: item.url ?? '', name: item.name ?? '', material_number: item.material_number ?? '', storage_location: item.storage_location ?? '' }
 }
 function closeEdit() { editingItem.value = null; editingType.value = null }
 function saveEdit() {
-    if (editingType.value === 'file') emit('update', editingItem.value, editingForm.value.description)
+    if (editingType.value === 'file') emit('update', editingItem.value, editingForm.value.description, editingForm.value.copyrights)
     if (editingType.value === 'resource') emit('update:resource-links', props.resourceLinks.map(item => item === editingItem.value ? { ...item, title: editingForm.value.title, url: editingForm.value.url } : item))
     if (editingType.value === 'material') emit('update:material-items', props.materialItems.map(item => item === editingItem.value ? { ...item, name: editingForm.value.name, material_number: editingForm.value.material_number, storage_location: editingForm.value.storage_location, description: editingForm.value.description } : item))
     closeEdit()

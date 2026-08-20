@@ -129,7 +129,7 @@ class ResourceLibraryController extends Controller
         $matches = collect();
 
         if ($type === 'all' || $type === 'file') {
-            $matches = $matches->concat(ResourceReference::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where('original_name', 'like', "%{$query}%"))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
+            $matches = $matches->concat(ResourceReference::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where('original_name', 'like', "%{$query}%"))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'copyrights', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
         }
         if ($type === 'all' || $type === 'resource') {
             $matches = $matches->concat(ResourceLink::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('title', 'like', "%{$query}%")->orWhere('url', 'like', "%{$query}%")))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
@@ -158,10 +158,10 @@ class ResourceLibraryController extends Controller
 
     public function storeFile(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $data = $request->validate(['resource' => ['required', 'file', 'max:51200'], 'description' => ['nullable', 'string', 'max:1000']]);
+        $data = $request->validate(['resource' => ['required', 'file', 'max:51200'], 'description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']]);
         $file = $data['resource'];
         $path = $file->storeAs('library', Str::uuid().($file->getClientOriginalExtension() ? '.'.$file->getClientOriginalExtension() : ''), 'local');
-        ResourceReference::create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'description' => $data['description'] ?? null, 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'checksum' => hash_file('sha256', $file->getRealPath()), 'security_status' => 'pending', 'source' => 'user_upload', 'version' => 1]);
+        ResourceReference::create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'description' => $data['description'] ?? null, 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'checksum' => hash_file('sha256', $file->getRealPath()), 'security_status' => 'pending', 'source' => 'user_upload', 'version' => 1]);
         return back()->with('success', 'Datei wurde zur Bibliothek hinzugefügt.');
     }
 
@@ -207,7 +207,7 @@ class ResourceLibraryController extends Controller
     {
         $item = $this->item($request, $kind, $resource);
         $rules = match ($kind) {
-            'file' => ['description' => ['nullable', 'string', 'max:1000']],
+            'file' => ['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']],
             'resource' => ['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']],
             'material' => ['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']],
         };
@@ -258,7 +258,7 @@ class ResourceLibraryController extends Controller
     private function present($item): array
     {
         $relationships = collect([$item->teachingUnit ?? null, $item->lesson ?? null])->merge($item->teachingUnits ?? [])->merge($item->lessons ?? [])->merge($item->phases ?? [])->map(fn ($relation) => $relation->title ?? $relation->name ?? null)->filter()->unique()->values()->all();
-        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $item->description ?? $item->song?->copyright_notice, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
+        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
     }
 
     private function item(Request $request, string $kind, int $id): ResourceReference|ResourceLink|MaterialItem|SongVersion|GroupSongbook

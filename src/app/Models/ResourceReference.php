@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['organization_id', 'teaching_unit_id', 'lesson_id', 'unit_template_id', 'lesson_template_id', 'phase_template_id', 'original_name', 'description', 'storage_path', 'mime_type', 'size', 'page_count', 'checksum', 'security_status', 'source', 'version'])]
+#[Fillable(['organization_id', 'teaching_unit_id', 'lesson_id', 'unit_template_id', 'lesson_template_id', 'phase_template_id', 'original_name', 'description', 'copyrights', 'storage_path', 'mime_type', 'size', 'page_count', 'checksum', 'security_status', 'source', 'version'])]
 class ResourceReference extends Model
 {
     public function organization(): BelongsTo

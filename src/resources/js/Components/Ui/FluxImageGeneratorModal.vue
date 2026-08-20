@@ -9,7 +9,7 @@ const props = defineProps({
     userName: { type: String, default: '' },
     models: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['close', 'selected', 'toast'])
+const emit = defineEmits(['close', 'selected', 'library', 'toast'])
 const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 const prompt = ref(''), model = ref('flux2-flex'), count = ref(1), removeWhite = ref(false), ratio = ref('1:1'), size = ref('1024'), credits = ref(null), results = ref([]), generating = ref(false), error = ref(''), previewResult = ref(null)
 const ratios = [{ value: '1:1', label: 'Quadrat (1:1)' }, { value: '4:3', label: 'Querformat (4:3)' }, { value: '3:4', label: 'Hochformat (3:4)' }, { value: '16:9', label: 'Breit (16:9)' }, { value: '9:16', label: 'Hoch (9:16)' }]
@@ -54,6 +54,10 @@ async function choose(result) {
     try { const blob = await toPng(result.src, removeWhite.value); previewResult.value = null; emit('selected', { blob, filename: 'flux-' + Date.now() + '.png', credits: modelLabel.value + ' / Black Forest Labs / ' + props.userName }); emit('close') } catch { error.value = 'Das FLUX-Bild konnte nicht verarbeitet werden.' }
 }
 function toPng(src, eraseWhite) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight; const context = canvas.getContext('2d'); context.drawImage(image, 0, 0); if (eraseWhite) { const pixels = context.getImageData(0, 0, canvas.width, canvas.height); for (let index = 0; index < pixels.data.length; index += 4) { if (pixels.data[index] > 245 && pixels.data[index + 1] > 245 && pixels.data[index + 2] > 245) pixels.data[index + 3] = 0 } context.putImageData(pixels, 0, 0) } canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG konnte nicht erstellt werden.')), 'image/png') }; image.onerror = reject; image.src = src }) }
+async function addToLibrary(result) {
+    if (!result.src || generating.value) return
+    try { const blob = await toPng(result.src, removeWhite.value); previewResult.value = null; emit('library', { blob, filename: 'flux-' + Date.now() + '.png', description: prompt.value.trim(), copyrights: modelLabel.value + ' / Black Forest Labs / ' + props.userName }) } catch { error.value = 'Das FLUX-Bild konnte nicht verarbeitet werden.' }
+}
 </script>
 
 <template>
@@ -74,7 +78,7 @@ function toPng(src, eraseWhite) { return new Promise((resolve, reject) => { cons
     </div>
     <div v-if="previewResult" class="roo-modal-backdrop flux-preview-backdrop" @click.self="previewResult = null">
         <section class="roo-modal card flux-preview-modal" role="dialog" aria-modal="true" aria-labelledby="flux-preview-title">
-            <div class="card-body d-flex flex-column gap-3"><div class="d-flex justify-content-between align-items-center"><h2 id="flux-preview-title" class="h5 mb-0">{{ previewResult.label }}</h2><button class="btn-close" type="button" aria-label="Schließen" @click="previewResult = null"></button></div><img :src="previewResult.src" class="flux-preview-image" alt="FLUX-Vorschau"><div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" @click="previewResult = null">Schließen</button><button class="btn btn-primary" type="button" @click="choose(previewResult)">Dieses Bild übernehmen</button></div></div>
+            <div class="card-body d-flex flex-column gap-3"><div class="d-flex justify-content-between align-items-center"><h2 id="flux-preview-title" class="h5 mb-0">{{ previewResult.label }}</h2><button class="btn-close" type="button" aria-label="Schließen" @click="previewResult = null"></button></div><img :src="previewResult.src" class="flux-preview-image" alt="FLUX-Vorschau"><div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" @click="addToLibrary(previewResult)">Zur Bibliothek hinzufügen</button><button class="btn btn-outline-secondary" type="button" @click="previewResult = null">Schließen</button><button class="btn btn-primary" type="button" @click="choose(previewResult)">Dieses Bild übernehmen</button></div></div>
         </section>
     </div>
 </template>

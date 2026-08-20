@@ -77,7 +77,7 @@ class LessonTemplateController extends Controller
         $this->ensureVisible($lessonTemplate);
         $file = $request->file('resource');
         $path = $file->store('lesson-templates/'.$lessonTemplate->id, 'local');
-        $lessonTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+        $lessonTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
 
         return to_route('lesson-templates.index')->with('success', 'Anhang wurde hochgeladen.');
     }

@@ -83,6 +83,7 @@ class UnitTemplateController extends Controller
         $unitTemplate->resources()->create([
             'organization_id' => $request->user()->organization_id,
             'original_name' => $file->getClientOriginalName(),
+            'copyrights' => $request->input('copyrights'),
             'storage_path' => $path,
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),

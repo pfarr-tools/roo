@@ -107,8 +107,8 @@ class SongController extends Controller
     public function uploadImages(Request $request, SongVersion $songVersion): RedirectResponse
     {
         $this->authorizeEditableVersion($request, $songVersion);
-        $data = $request->validate(['images' => ['required', 'array', 'max:20'], 'images.*' => ['image', 'max:10240']]);
-        foreach ($data['images'] as $image) $songVersion->images()->create(['original_name' => $image->getClientOriginalName(), 'storage_path' => $image->store('songs/images', 'local'), 'mime_type' => $image->getMimeType(), 'size' => $image->getSize()]);
+        $data = $request->validate(['images' => ['required', 'array', 'max:20'], 'images.*' => ['image', 'max:10240'], 'copyrights' => ['nullable', 'string', 'max:1000']]);
+        foreach ($data['images'] as $image) $songVersion->images()->create(['original_name' => $image->getClientOriginalName(), 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $image->store('songs/images', 'local'), 'mime_type' => $image->getMimeType(), 'size' => $image->getSize()]);
         return back()->with('success', 'Bilder wurden hinzugefügt.');
     }
 
@@ -121,7 +121,7 @@ class SongController extends Controller
         $extension = pathinfo($resource->original_name, PATHINFO_EXTENSION);
         $path = 'songs/images/'.Str::uuid().($extension ? '.'.$extension : '');
         Storage::disk('local')->copy($resource->storage_path, $path);
-        $songVersion->images()->create(['original_name' => $resource->original_name, 'storage_path' => $path, 'mime_type' => $resource->mime_type, 'size' => Storage::disk('local')->size($path)]);
+        $songVersion->images()->create(['original_name' => $resource->original_name, 'copyrights' => $resource->copyrights, 'storage_path' => $path, 'mime_type' => $resource->mime_type, 'size' => Storage::disk('local')->size($path)]);
 
         return back()->with('success', 'Bild wurde aus der Bibliothek übernommen.');
     }

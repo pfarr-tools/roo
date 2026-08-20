@@ -92,7 +92,7 @@ class PhaseTemplateController extends Controller
         $this->ensureVisible($phaseTemplate);
         $file = $request->file('resource');
         $path = $file->store('phase-templates/'.$phaseTemplate->id, 'local');
-        $phaseTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+        $phaseTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
 
         return to_route('phase-templates.index')->with('success', 'Anhang wurde hochgeladen.');
     }

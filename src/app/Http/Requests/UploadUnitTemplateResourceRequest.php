@@ -13,7 +13,7 @@ class UploadUnitTemplateResourceRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['resource' => [
+        return ['copyrights' => ['nullable', 'string', 'max:1000'], 'resource' => [
             'required',
             'file',
             'max:20480',

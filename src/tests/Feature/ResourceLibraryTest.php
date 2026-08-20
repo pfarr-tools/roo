@@ -29,3 +29,19 @@ it('shows the complete organization library and protects its CRUD actions', func
     $this->actingAs($user)->get('/ressourcen/bibliothek/dateien/'.$reference->id.'/download')->assertOk();
     expect(ResourceLink::where('organization_id', $organization->id)->count())->toBe(2);
 });
+
+it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Copyright Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/dateien', [
+        'resource' => UploadedFile::fake()->image('flux.png'),
+        'description' => 'Eine freundliche Strichzeichnung',
+        'copyrights' => 'FLUX.2 [flex] / Black Forest Labs / Ada Beispiel',
+    ])->assertRedirect();
+
+    $resource = ResourceReference::firstOrFail();
+    expect($resource->description)->toBe('Eine freundliche Strichzeichnung')
+        ->and($resource->copyrights)->toBe('FLUX.2 [flex] / Black Forest Labs / Ada Beispiel');
+});

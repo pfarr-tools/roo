@@ -101,7 +101,7 @@ function save() {
         onSuccess: () => emit('close'),
     })
 }
-function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
+function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
 function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
 function updatePreparationStatus() {
     if (!props.executionUrl || !preparationStatus.value) return

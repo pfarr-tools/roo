@@ -68,7 +68,7 @@ function refreshResources(page) {
 }
 function markConducted() { executionForm.status = 'conducted'; if (!executionForm.actual_on) executionForm.actual_on = String(props.slot.date).slice(0, 10); saveExecution() }
 function addToast(type, message) { const id = ++toastId; toastMessages.value.push({ id, type, message }); window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 5000) }
-function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description } }) }
+function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
 async function deleteResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
 const statusLabel = status => ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed }[status] ?? status)
 const phaseMinutes = phase => Number(phase.duration_minutes || 0)

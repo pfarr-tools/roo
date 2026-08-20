@@ -30,6 +30,7 @@ class TeachingUnitResourceController extends Controller
             'lesson_id' => $this->lessonId($request, $teachingUnit),
             'original_name' => $file->getClientOriginalName(),
             'description' => $request->input('description'),
+            'copyrights' => $request->input('copyrights'),
             'storage_path' => $path,
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
@@ -47,7 +48,7 @@ class TeachingUnitResourceController extends Controller
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
-        $resource->update($request->validate(['description' => ['nullable', 'string', 'max:1000']]));
+        $resource->update($request->validate(['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']]));
 
         return back()->with('success', 'Beschreibung des Anhangs wurde gespeichert.');
     }
