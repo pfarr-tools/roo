@@ -37,6 +37,7 @@ const activeSetIndex = ref(0),
     selected = ref(null),
     hovered = ref(null),
     hoveredSource = ref(null),
+    eraserActive = ref(false),
     quickChord = ref(null),
     root = ref("C"),
     accidental = ref(""),
@@ -132,7 +133,11 @@ function selectPosition(line, characterOffset) {
         repetition: line.repetition,
         characterOffset,
     };
-    saveChord();
+    if (eraserActive.value) {
+        removeChordAtSelectedPosition();
+    } else {
+        saveChord();
+    }
 }
 function hoverPosition(line, characterOffset) {
     hovered.value = {
@@ -165,9 +170,25 @@ function isHovered(line, characterOffset) {
     );
 }
 function displayedChord(line, item) {
+    if (eraserActive.value && isHovered(line, item.index)) {
+        return normalizeChord(chordAt(line, item.index)?.chord ?? "");
+    }
+
     return isHovered(line, item.index) && hoveredSource.value === "text"
         ? currentChord.value
         : normalizeChord(item.chord);
+}
+function chordAt(line, characterOffset) {
+    return chordsAt(line).find(
+        (chord) => chord.character_offset === characterOffset,
+    );
+}
+function isEraserPreview(line, characterOffset) {
+    return (
+        eraserActive.value &&
+        isHovered(line, characterOffset) &&
+        Boolean(chordAt(line, characterOffset))
+    );
 }
 function saveChord() {
     if (!activeSet.value || !selected.value || !currentChord.value) return;
@@ -194,6 +215,7 @@ function saveChord() {
     );
 }
 function chooseRoot(value) {
+    eraserActive.value = false;
     quickChord.value = null;
     root.value = value;
     accidental.value = "";
@@ -202,23 +224,31 @@ function chooseRoot(value) {
     extension.value = "";
 }
 function chooseMinor() {
+    eraserActive.value = false;
     quickChord.value = null;
     minor.value = !minor.value;
 }
 function chooseAccidental(value) {
+    eraserActive.value = false;
     quickChord.value = null;
     accidental.value = accidental.value === value ? "" : value;
 }
 function chooseSus(value) {
+    eraserActive.value = false;
     quickChord.value = null;
     sus.value = sus.value === value ? "" : value;
 }
 function chooseExtension(value) {
+    eraserActive.value = false;
     quickChord.value = null;
     extension.value = extension.value === value ? "" : value;
 }
 function chooseQuickChord(chord) {
+    eraserActive.value = false;
     quickChord.value = chord;
+}
+function toggleEraser() {
+    eraserActive.value = !eraserActive.value;
 }
 function handleKeyboardShortcut(event) {
     const target = event.target;
@@ -230,6 +260,11 @@ function handleKeyboardShortcut(event) {
     }
 
     const plain = !event.altKey && !event.ctrlKey && !event.metaKey;
+    if (plain && event.key === "Delete") {
+        toggleEraser();
+        event.preventDefault();
+        return;
+    }
     const rootKeys = ["A", "B", "C", "D", "E", "F", "G"];
     if (
         plain &&
@@ -275,6 +310,24 @@ function removeChord(chord) {
                       chords: set.chords.filter((item) => item !== chord),
                   }
                 : set,
+        ),
+    );
+}
+function removeChordAtSelectedPosition() {
+    if (!activeSet.value || !selected.value) return;
+
+    const chords = (activeSet.value.chords ?? []).filter(
+        (chord) =>
+            !(
+                chord.song_part_id === selected.value.partId &&
+                chord.line_number === selected.value.lineNumber &&
+                (chord.repetition ?? 0) === selected.value.repetition &&
+                chord.character_offset === selected.value.characterOffset
+            ),
+    );
+    updateSets(
+        props.modelValue.map((set, index) =>
+            index === activeSetIndex.value ? { ...set, chords } : set,
         ),
     );
 }
@@ -393,8 +446,20 @@ function textParts(line) {
             >
                 <div class="d-flex flex-wrap align-items-center gap-1">
                     <span class="small fw-semibold me-1">{{
-                        currentChord
+                        eraserActive ? "Radierer" : currentChord
                     }}</span>
+                    <button
+                        class="btn btn-sm"
+                        :class="
+                            eraserActive ? 'btn-danger' : 'btn-outline-danger'
+                        "
+                        type="button"
+                        title="Radierer (Entf)"
+                        :aria-pressed="eraserActive"
+                        @click="toggleEraser"
+                    >
+                        <i class="bi bi-eraser me-1"></i>Radierer
+                    </button>
                     <button
                         v-for="note in ['A', 'B', 'C', 'D', 'E', 'F', 'G']"
                         :key="note"
@@ -487,7 +552,7 @@ function textParts(line) {
                 <div class="small text-muted mt-2" aria-label="Tastaturkürzel">
                     Tastenkürzel: A–G Grundton (B = B♮) · M Moll · N ♮ · # ♯ ·
                     Umschalt+B ♭ · 2/4 sus · 0 ohne Zahl · 6/7/9 · Umschalt+1 11
-                    · Umschalt+3 13
+                    · Umschalt+3 13 · Entf Radierer
                 </div>
             </div>
             <div class="chord-line-editor border rounded p-3">
@@ -532,6 +597,8 @@ function textParts(line) {
                                         line,
                                         item.index,
                                     ),
+                                    'chord-above-eraser-preview':
+                                        isEraserPreview(line, item.index),
                                 }"
                                 >{{ displayedChord(line, item) }}</span
                             ><span>{{

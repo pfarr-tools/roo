@@ -127,6 +127,7 @@ body {
 .chord-character-saved-hovered { background: rgba(var(--bs-primary-rgb), .18); outline: 1px solid rgba(var(--bs-primary-rgb), .45); }
 .chord-above { display: block; min-height: 1.1rem; color: var(--roo-orange-dark); font-size: .7rem; font-weight: 700; line-height: 1; white-space: nowrap; }
 .chord-above-preview { color: var(--bs-primary); }
+.chord-above-eraser-preview { color: var(--bs-danger) !important; text-decoration: line-through; }
 .songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
 .song-image-column { overflow-y: auto; }
 .song-library-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 2rem; }
