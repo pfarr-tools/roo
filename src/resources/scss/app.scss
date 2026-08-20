@@ -182,6 +182,9 @@ body {
 .roo-modal-song-editor { width: min(96vw, 110rem) !important; max-width: none; max-height: 94vh; overflow-x: hidden; }
 .flux-generator-modal { width: min(52rem, calc(100vw - 2rem)); max-height: 94vh; overflow-y: auto; }
 .flux-result-image { aspect-ratio: 1; width: 100%; object-fit: contain; background: repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 50% / 1rem 1rem; }
+.flux-preview-backdrop { z-index: 1400; }
+.flux-preview-modal { width: min(90vw, 70rem); max-height: 94vh; }
+.flux-preview-image { display: block; width: 100%; max-height: 75vh; object-fit: contain; background: repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 50% / 1rem 1rem; }
 .roo-curriculum-board .card { background: rgba(255,255,255,.72); }
 .roo-curriculum-board article.card { border-color: #e4d3bb; background: #fff8ed; box-shadow: 0 .25rem .75rem rgba(60,37,13,.08) !important; }
 
