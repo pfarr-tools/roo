@@ -172,7 +172,12 @@ class SongController extends Controller
     {
         $this->authorizeVersion($request, $songVersion);
         abort_unless($songImage->song_version_id === $songVersion->id, 404);
-        return response()->file(Storage::disk('local')->path($songImage->storage_path), ['Content-Type' => $songImage->mime_type ?: 'application/octet-stream']);
+        return response()->file(Storage::disk('local')->path($songImage->storage_path), [
+            'Content-Type' => $songImage->mime_type ?: 'application/octet-stream',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     public function downloadSheet(Request $request, SongVersion $songVersion)

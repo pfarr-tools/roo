@@ -142,6 +142,12 @@ it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', funct
     $image = $version->fresh()->images->firstOrFail();
     expect($image->original_name)->toBe('quelle.png');
 
+    Storage::disk('local')->put('songs/images/cache.png', 'image-data');
+    $image->update(['storage_path' => 'songs/images/cache.png', 'mime_type' => 'image/png']);
+    $imageResponse = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/bilder/{$image->id}?v={$image->updated_at->timestamp}");
+    $imageResponse->assertOk();
+    expect($imageResponse->headers->get('cache-control'))->toContain('no-store');
+
     $this->actingAs($user)->delete("/lieder/fassungen/{$version->id}/bilder/{$image->id}")->assertRedirect();
     expect($version->fresh()->images)->toBeEmpty();
 });
