@@ -81,4 +81,9 @@ class TeachingGroup extends Model
     {
         return $this->hasMany(Assessment::class);
     }
+
+    public function reportPeriods(): HasMany
+    {
+        return $this->hasMany(ReportPeriod::class);
+    }
 }

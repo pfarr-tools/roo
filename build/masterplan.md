@@ -520,6 +520,10 @@ Kompetenzorientierte Lernstandserhebungen erstellen und Ergebnisse bewerten.
 
 ## Phase 11 – Endbewertung und Textbausteine
 
+Fortschritt: `[~]` Bewertungszeiträume und bearbeitbare Schüler:innen-
+Bewertungsentwürfe mit explizitem Entwurfs-/Bestätigungsstatus sind als
+Grundlage vorhanden. Textbausteinverwaltung und Vorschlagslogik folgen.
+
 ### Ziel
 
 Aus Nachweisen einen transparenten, bearbeitbaren Bewertungsentwurf erstellen.

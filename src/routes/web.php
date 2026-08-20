@@ -16,6 +16,7 @@ use App\Http\Controllers\SongController;
 use App\Http\Controllers\SongbookController;
 use App\Http\Controllers\YearPlanController;
 use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FluxController;
 use Illuminate\Support\Facades\Route;
@@ -145,6 +146,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'index'])->name('assessments.index');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'store'])->name('assessments.store');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/aufgaben/{assessmentTask}/ergebnisse', [AssessmentController::class, 'updateResult'])->name('assessments.results.update');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.index');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'songbookTitlePage'])->name('teaching-groups.songbook.title-page');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/songs', [TeachingGroupController::class, 'searchSongbookSongs'])->name('teaching-groups.songbook.songs.search');
