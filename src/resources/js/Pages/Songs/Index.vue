@@ -493,6 +493,100 @@ function imageStyle(image) {
         transform: `rotate(${image.rotation}deg) scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
     };
 }
+function beginInteraction(type, event, image, corner = null) {
+    event.preventDefault();
+    activeImageId.value = image.id;
+
+    const selection = event.currentTarget.closest(
+        ".song-image-selection",
+    );
+    const selectionRect = selection?.getBoundingClientRect();
+    const centerX = selectionRect
+        ? selectionRect.left + selectionRect.width / 2
+        : image.x + image.width / 2;
+    const centerY = selectionRect
+        ? selectionRect.top + selectionRect.height / 2
+        : image.y + image.height / 2;
+
+    interaction.value = {
+        type,
+        corner,
+        image,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: image.x,
+        y: image.y,
+        width: image.width,
+        height: image.height,
+        rotation: image.rotation ?? 0,
+        centerX,
+        centerY,
+        startAngle: Math.atan2(
+            event.clientY - centerY,
+            event.clientX - centerX,
+        ),
+    };
+    window.addEventListener("pointermove", continueInteraction);
+    window.addEventListener("pointerup", endInteraction, { once: true });
+    window.addEventListener("pointercancel", endInteraction, { once: true });
+}
+function continueInteraction(event) {
+    const state = interaction.value;
+    if (!state) return;
+
+    const dx = event.clientX - state.startX;
+    const dy = event.clientY - state.startY;
+
+    if (state.type === "move") {
+        state.image.x = Math.max(
+            0,
+            Math.min(canvas.width - state.width, state.x + dx),
+        );
+        state.image.y = Math.max(
+            0,
+            Math.min(canvas.height - state.height, state.y + dy),
+        );
+        return;
+    }
+
+    if (state.type === "resize") {
+        const west = state.corner.includes("w");
+        const north = state.corner.includes("n");
+        const width = Math.max(20, state.width + (west ? -dx : dx));
+        const height = Math.max(20, state.height + (north ? -dy : dy));
+
+        state.image.width = width;
+        state.image.height = height;
+        state.image.x = Math.max(
+            0,
+            Math.min(
+                canvas.width - width,
+                west ? state.x + state.width - width : state.x,
+            ),
+        );
+        state.image.y = Math.max(
+            0,
+            Math.min(
+                canvas.height - height,
+                north ? state.y + state.height - height : state.y,
+            ),
+        );
+        return;
+    }
+
+    const angle = Math.atan2(
+        event.clientY - state.centerY,
+        event.clientX - state.centerX,
+    );
+    state.image.rotation =
+        state.rotation + ((angle - state.startAngle) * 180) / Math.PI;
+}
+function endInteraction() {
+    interaction.value = null;
+    window.removeEventListener("pointermove", continueInteraction);
+    window.removeEventListener("pointerup", endInteraction);
+    window.removeEventListener("pointercancel", endInteraction);
+}
 function removeSelectedImage() {
     if (selectedImage.value) {
         editor.layout_data = {
