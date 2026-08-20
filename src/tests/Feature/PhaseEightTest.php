@@ -103,12 +103,13 @@ it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
     $organization = Organization::create(['name' => 'PDF Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'PDF Lied'])->versions()->create(['name' => 'Fassung']);
-    Storage::disk('local')->put('songs/generated/old.pdf', "%PDF-1.4\nstartxref\n%%EOF");
+    Storage::disk('local')->put('songs/generated/old.pdf', "%PDF-1.4\nstartxref\n123\n%%EOF\n/FontName /DejaVuSans");
     $version->update(['generated_sheet_path' => 'songs/generated/old.pdf']);
 
     $response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt");
 
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    expect($response->headers->get('cache-control'))->toContain('no-store');
     $generated = Storage::disk('local')->get($version->fresh()->generated_sheet_path);
     expect($generated)->toStartWith('%PDF-')->toContain('%%EOF');
 });

@@ -151,14 +151,22 @@ class SongController extends Controller
             if ($songVersion->generated_sheet_path) Storage::disk('local')->delete($songVersion->generated_sheet_path);
             $songVersion->update(['generated_sheet_path' => $path, 'generated_sheet_at' => now()]);
         }
-        return response()->download(Storage::disk('local')->path($songVersion->generated_sheet_path), Str::slug($songVersion->song->title).'.pdf', ['Content-Type' => 'application/pdf']);
+        return response()->download(Storage::disk('local')->path($songVersion->generated_sheet_path), Str::slug($songVersion->song->title).'.pdf', [
+            'Content-Type' => 'application/pdf',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     private function isValidPdf(string $path): bool
     {
         if (! Storage::disk('local')->exists($path) || Storage::disk('local')->size($path) < 100) return false;
         $contents = Storage::disk('local')->get($path);
-        return str_starts_with($contents, '%PDF-') && preg_match('/startxref\s+\d+\s+%%EOF/s', $contents) === 1;
+        return str_starts_with($contents, '%PDF-')
+            && preg_match('/startxref\s+\d+\s+%%EOF/s', $contents) === 1
+            && str_contains($contents, 'ComicNeue')
+            && str_contains($contents, 'AtkinsonHyperlegibleNext');
     }
 
     public function image(Request $request, SongVersion $songVersion, SongImage $songImage)
