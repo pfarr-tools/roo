@@ -10,6 +10,7 @@ use App\Models\TeachingUnit;
 use App\Models\Lesson;
 use App\Models\LessonPhase;
 use App\Models\SongVersion;
+use App\Models\GroupSongbook;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -44,6 +45,9 @@ class ResourceLibraryController extends Controller
         if ($kind === 'song') {
             $target = $data['target_type'] === 'unit' ? TeachingUnit::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['target_id']) : ($data['target_type'] === 'lesson' ? Lesson::whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->findOrFail($data['target_id']) : $this->phaseTarget($teachingGroup, $data['target_id']));
             $target->songs()->detach($item->id);
+        } elseif ($kind === 'songbook') {
+            $target = $data['target_type'] === 'phase' ? $this->phaseTarget($teachingGroup, $data['target_id']) : ($data['target_type'] === 'lesson' ? Lesson::whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->findOrFail($data['target_id']) : TeachingUnit::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['target_id']));
+            $target->songbooks()->detach($item->id);
         } elseif ($kind === 'file' || $kind === 'resource') {
             if ($data['target_type'] === 'phase') $this->phaseTarget($teachingGroup, $data['target_id'])->resources()->detach($item->id);
             else $item->update($data['target_type'] === 'lesson' ? ['lesson_id' => null] : ['teaching_unit_id' => null]);
@@ -88,6 +92,12 @@ class ResourceLibraryController extends Controller
             return back()->with('success', 'Lied wurde zugeordnet.');
         }
 
+        if ($kind === 'songbook') {
+            $target = $data['target_type'] === 'unit' ? TeachingUnit::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['target_id']) : ($data['target_type'] === 'lesson' ? Lesson::whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->findOrFail($data['target_id']) : $this->phaseTarget($teachingGroup, $data['target_id']));
+            $target->songbooks()->syncWithoutDetaching([$item->id]);
+            return back()->with('success', 'Gruppenliederbuch wurde zugeordnet.');
+        }
+
         if ($data['target_type'] === 'unit') {
             $target = TeachingUnit::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['target_id']);
             if ($kind === 'material') $target->materialItems()->syncWithoutDetaching([$item->id]);
@@ -105,13 +115,17 @@ class ResourceLibraryController extends Controller
         return back()->with('success', 'Element wurde zugeordnet.');
     }
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, ?TeachingGroup $teachingGroup = null)
     {
         $query = trim((string) $request->query('q', ''));
         $type = (string) $request->query('type', 'all');
         $sort = (string) $request->query('sort', 'name');
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
         $organizationId = $request->user()->organization_id;
+        if ($teachingGroup) {
+            $this->authorize('view', $teachingGroup);
+            abort_unless($teachingGroup->organization_id === $organizationId, 404);
+        }
         $matches = collect();
 
         if ($type === 'all' || $type === 'file') {
@@ -126,8 +140,12 @@ class ResourceLibraryController extends Controller
         if ($type === 'all' || $type === 'song') {
             $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with('song:id,title,author,composer')->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
+        if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
+            $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
+            if ($book) $matches->push($book->setAttribute('kind', 'songbook'));
+        }
 
-        if ($request->expectsJson()) return response()->json($matches->values()->map(fn ($item) => $item->kind === 'song' ? ['id' => $item->id, 'kind' => 'song', 'name' => $item->song?->title, 'title' => $item->song?->title, 'version' => $item->name, 'rights_status' => $item->rights_status] : $item));
+        if ($request->expectsJson()) return response()->json($matches->values()->map(fn ($item) => $item->kind === 'song' ? ['id' => $item->id, 'kind' => 'song', 'name' => $item->song?->title, 'title' => $item->song?->title, 'version' => $item->name, 'rights_status' => $item->rights_status] : ($item->kind === 'songbook' ? ['id' => $item->id, 'kind' => 'songbook', 'name' => 'Gruppenliederbuch', 'title' => 'Gruppenliederbuch', 'entries_count' => $item->entries_count] : $item)));
 
         $items = $matches->sortBy(fn ($item) => Str::lower((string) ($item->getAttribute($sort) ?? $item->getAttribute('name') ?? $item->getAttribute('title') ?? $item->getAttribute('original_name'))), SORT_NATURAL, $direction === 'desc')->values()->map(fn ($item) => $this->present($item));
 
@@ -240,26 +258,29 @@ class ResourceLibraryController extends Controller
     private function present($item): array
     {
         $relationships = collect([$item->teachingUnit ?? null, $item->lesson ?? null])->merge($item->teachingUnits ?? [])->merge($item->lessons ?? [])->merge($item->phases ?? [])->map(fn ($relation) => $relation->title ?? $relation->name ?? null)->filter()->unique()->values()->all();
-        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->song?->title ?? $item->original_name ?? $item->title ?? $item->name, 'description' => $item->description ?? $item->song?->copyright_notice, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title, 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
+        return ['id' => $item->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $item->description ?? $item->song?->copyright_notice, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString()];
     }
 
-    private function item(Request $request, string $kind, int $id): ResourceReference|ResourceLink|MaterialItem|SongVersion
+    private function item(Request $request, string $kind, int $id): ResourceReference|ResourceLink|MaterialItem|SongVersion|GroupSongbook
     {
         $model = match ($kind) {
             'file' => ResourceReference::class,
             'resource' => ResourceLink::class,
             'material' => MaterialItem::class,
             'song' => SongVersion::class,
+            'songbook' => GroupSongbook::class,
             default => abort(404),
         };
 
         if ($kind === 'song') return $model::whereKey($id)->whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->findOrFail($id);
+        if ($kind === 'songbook') return $model::whereKey($id)->whereHas('group', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->findOrFail($id);
         return $model::where('organization_id', $request->user()->organization_id)->findOrFail($id);
     }
 
-    private function associationCount(ResourceReference|ResourceLink|MaterialItem|SongVersion $item, string $kind): int
+    private function associationCount(ResourceReference|ResourceLink|MaterialItem|SongVersion|GroupSongbook $item, string $kind): int
     {
         if ($kind === 'song') return $item->unitSongs()->count() + $item->lessonSongs()->count() + $item->phaseSongs()->count();
+        if ($kind === 'songbook') return $item->teachingUnits()->count() + $item->lessons()->count() + $item->phases()->count();
         if ($kind === 'file') return (int) ($item->teaching_unit_id !== null || $item->lesson_id !== null) + $item->phases()->count();
         if ($kind === 'resource') return (int) ($item->teaching_unit_id !== null) + (int) ($item->lesson_id !== null) + $item->phases()->count();
 

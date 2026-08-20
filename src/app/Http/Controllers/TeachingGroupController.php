@@ -17,6 +17,7 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\PhaseTemplate;
+use App\Models\SongVersion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -50,6 +51,7 @@ class TeachingGroupController extends Controller
             'curricula' => Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->orderBy('title')->get(['id', 'title']),
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),
             'ritualPhaseTemplates' => PhaseTemplate::where('organization_id', $organizationId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
+            'songVersions' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with('song:id,title')->orderBy('name')->get(),
         ]);
     }
 

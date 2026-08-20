@@ -67,4 +67,9 @@ class TeachingUnit extends Model
     {
         return $this->belongsToMany(SongVersion::class, 'unit_songs')->withPivot('position')->withTimestamps();
     }
+
+    public function songbooks(): BelongsToMany
+    {
+        return $this->belongsToMany(GroupSongbook::class, 'teaching_unit_songbooks')->withTimestamps();
+    }
 }

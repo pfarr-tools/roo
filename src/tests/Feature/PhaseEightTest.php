@@ -58,3 +58,32 @@ it('schützt und speichert die Titelseite des Gruppenliederbuchs', function () {
     expect($book->title_page_original_name)->toBe('titelseite.pdf');
     Storage::disk('local')->assertExists($book->title_page_path);
 });
+
+it('speichert Liedteile mit Kehrvers und stellt das Gruppenliederbuch als Stundenressource bereit', function () {
+    $organization = Organization::create(['name' => 'Editor Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Editor Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Lied mit Teilen'])->versions()->create(['name' => 'Schulfassung']);
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", ['name' => 'Schulfassung', 'language' => 'de', 'parts' => [['title' => 'Strophe 1', 'content' => 'Text', 'is_refrain' => false], ['title' => 'Kehrvers', 'content' => 'Wiederholung', 'is_refrain' => true]]])->assertRedirect();
+    expect($version->fresh()->parts)->toHaveCount(2)->and($version->fresh()->parts->last()->is_refrain)->toBeTrue();
+    $group->songbook()->create();
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}/ressourcen", ['Accept' => 'application/json'])->assertOk()->assertJsonFragment(['kind' => 'songbook']);
+});
+
+it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Export Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Export Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a']);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Exportlied'])->versions()->create(['name' => 'Fassung']);
+    $book = $group->songbook()->create();
+    $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => '2026-09-01']);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=a5&through_date=2026-09-30");
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    expect($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
+});
