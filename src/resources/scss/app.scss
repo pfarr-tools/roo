@@ -125,6 +125,10 @@ body {
 .song-image-column > h4:nth-of-type(2), .song-image-column > h4:nth-of-type(2) ~ * { display: none; }
 .song-canvas { width: 420px; height: 595.28px; flex: 0 0 auto; overflow: hidden; }
 .song-canvas > .p-3 { padding: 48.24px 48.24px 48.24px 56.76px !important; }
+.song-hole-hints { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.song-hole-hint { position: absolute; left: 25.7px; width: 17px; height: 17px; border: 1px solid rgba(108, 117, 125, .35); border-radius: 50%; transform: translateY(-50%); }
+.song-hole-hint:first-child { top: 184.2px; }
+.song-hole-hint:last-child { top: 410.8px; }
 .song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 24px; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 10.51px; font-weight: 400; white-space: pre-wrap; margin-bottom: 15px; }
 .song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 10.51px; font-weight: 400; }
