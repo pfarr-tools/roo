@@ -113,6 +113,7 @@ body {
 .songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
 .song-image-column { overflow-y: auto; }
 .song-library-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 2rem; }
+.song-image-remove-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 5rem; }
 .roo-library-modal-backdrop { z-index: 1060; }
 .roo-library-image-modal { width: min(40rem, calc(100vw - 2rem)); }
 .song-image-column > h4:nth-of-type(2), .song-image-column > h4:nth-of-type(2) ~ * { display: none; }

@@ -12,6 +12,7 @@ ENV COMPOSER_HOME=/tmp/composer \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        chromium \
         curl \
         git \
         unzip \

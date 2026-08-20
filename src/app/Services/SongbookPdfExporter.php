@@ -116,11 +116,11 @@ class SongbookPdfExporter
             '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
             '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
             '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-            '<< /Length '.strlen($commands).' >>\nstream\n'.$commands.'\nendstream',
+            "<< /Length ".strlen($commands)." >>\nstream\n".$commands."\nendstream",
         ];
         $pdf = "%PDF-1.4\n";
         $offsets = [0];
-        foreach ($objects as $number => $object) { $offsets[] = strlen($pdf); $pdf .= ($number + 1).' 0 obj\n'.$object."\nendobj\n"; }
+        foreach ($objects as $number => $object) { $offsets[] = strlen($pdf); $pdf .= ($number + 1)." 0 obj\n".$object."\nendobj\n"; }
         $xref = strlen($pdf);
         $pdf .= "xref\n0 ".(count($objects) + 1)."\n0000000000 65535 f \n";
         foreach (array_slice($offsets, 1) as $offset) $pdf .= sprintf("%010d 00000 n \n", $offset);
