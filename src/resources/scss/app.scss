@@ -163,7 +163,7 @@ body {
 .resize-handle.ne { top: -.35rem; right: -.35rem; cursor: nesw-resize; }
 .resize-handle.sw { bottom: -.35rem; left: -.35rem; cursor: nesw-resize; }
 .resize-handle.se { right: -.35rem; bottom: -.35rem; cursor: nwse-resize; }
-.rotate-handle { top: -2rem; left: calc(50% - .55rem); width: 1.1rem; height: 1.1rem; border-radius: .25rem; cursor: grab; }
+.rotate-handle { top: -2rem; left: calc(50% - .55rem); width: 1.1rem; height: 1.1rem; border: 0; border-radius: .25rem; background: transparent; color: var(--bs-primary); cursor: grab; }
 .rotate-handle i { font-size: .8rem; line-height: 1; }
 .unit-editor-tabs { overflow-x: auto; flex-wrap: nowrap; }
 .unit-editor-tabs .nav-link { white-space: nowrap; }

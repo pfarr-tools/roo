@@ -955,12 +955,15 @@ function closeEditor() {
                                     @pointerdown.stop="
                                         beginInteraction('move', $event, image)
                                     "
+                                    @click.stop="activeImageId = image.id"
                                 >
                                     <img
                                         :src="imageUrl(image.id)"
                                         :style="imageStyle(image)"
                                         alt=""
-                                    /><button
+                                    /><template
+                                        v-if="activeImageId === image.id"
+                                    ><button
                                         v-for="corner in [
                                             'nw',
                                             'ne',
@@ -979,8 +982,9 @@ function closeEditor() {
                                                 corner,
                                             )
                                         "
-                                    ></button
+                                    ></button></template
                                     ><button
+                                        v-if="activeImageId === image.id"
                                         class="image-handle rotate-handle"
                                         type="button"
                                         title="Bild drehen"
