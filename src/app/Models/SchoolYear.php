@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['organization_id', 'school_id', 'name', 'slug', 'starts_on', 'ends_on', 'timezone'])]
+#[Fillable(['organization_id', 'school_id', 'name', 'slug', 'starts_on', 'ends_on', 'second_half_start_on', 'timezone'])]
 class SchoolYear extends Model
 {
     protected static function booted(): void
@@ -32,7 +32,7 @@ class SchoolYear extends Model
 
     protected function casts(): array
     {
-        return ['starts_on' => 'date', 'ends_on' => 'date'];
+        return ['starts_on' => 'date', 'ends_on' => 'date', 'second_half_start_on' => 'date'];
     }
 
     public function organization(): BelongsTo

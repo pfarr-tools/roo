@@ -66,3 +66,13 @@ it('verhindert Beobachtungen für fremde Gruppen', function () {
     ])->assertStatus(422);
     expect(AttendanceRecord::count())->toBe(0);
 });
+
+it('speichert den konfigurierbaren Beginn des zweiten Halbjahres', function () {
+    $fixture = observationFixture();
+
+    $this->actingAs($fixture['user'])->put("/schulen/{$fixture['group']->school->slug}/{$fixture['group']->schoolYear->slug}", [
+        'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'second_half_start_on' => '2027-02-01', 'timezone' => 'Europe/Berlin',
+    ])->assertRedirect();
+
+    expect($fixture['group']->schoolYear->fresh()->second_half_start_on->toDateString())->toBe('2027-02-01');
+});

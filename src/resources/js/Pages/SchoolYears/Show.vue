@@ -7,9 +7,11 @@ import de from '../../i18n/de'
 const props = defineProps({ schoolYear: Object, days: Array })
 const editingDay = ref(null)
 const dayForm = useForm({ kind: '', label: '', notes: '' })
+const yearForm = useForm({ starts_on: String(props.schoolYear.starts_on).slice(0, 10), ends_on: String(props.schoolYear.ends_on).slice(0, 10), second_half_start_on: props.schoolYear.second_half_start_on ? String(props.schoolYear.second_half_start_on).slice(0, 10) : '', timezone: props.schoolYear.timezone })
 
 const baseUrl = `/schulen/${props.schoolYear.school.slug}/${props.schoolYear.slug}`
 function importHolidays() { useForm({}).post(`${baseUrl}/ferien/importieren`) }
+function saveYear() { yearForm.put(baseUrl) }
 function editDay(day) {
     editingDay.value = day
     dayForm.kind = day.kind
@@ -33,6 +35,7 @@ function formatDate(value) { const date = String(value).slice(0, 10).split('-');
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ schoolYear.school.name }} – {{ schoolYear.name }}</h1>
             <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
+            <form class="card mb-4" @submit.prevent="saveYear"><div class="card-body"><h2 class="h5">Schuljahreszeiträume</h2><div class="row g-3"><div class="col-md-4"><label class="form-label" for="year-start">Beginn</label><input id="year-start" v-model="yearForm.starts_on" type="date" class="form-control" required></div><div class="col-md-4"><label class="form-label" for="year-end">Ende</label><input id="year-end" v-model="yearForm.ends_on" type="date" class="form-control" required></div><div class="col-md-4"><label class="form-label" for="half-year-start">Beginn 2. Halbjahr</label><input id="half-year-start" v-model="yearForm.second_half_start_on" type="date" class="form-control"><div class="form-text">Für automatische Auswertungen; leer bedeutet nicht festgelegt.</div></div></div><div class="text-end mt-3"><button class="btn btn-primary" type="submit" :disabled="yearForm.processing">{{ de.save }}</button></div></div></form>
             <h2 class="h5 mt-5">{{ de.calendar }}</h2>
             <div class="table-responsive"><table class="table table-sm align-middle">
                 <thead><tr><th>{{ de.date }}</th><th>{{ de.status }}</th><th>{{ de.label }}</th><th>{{ de.dayNotes }}</th><th></th></tr></thead>
