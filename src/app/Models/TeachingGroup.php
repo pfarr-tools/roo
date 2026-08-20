@@ -76,4 +76,9 @@ class TeachingGroup extends Model
     {
         return $this->hasOne(GroupSongbook::class);
     }
+
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class);
+    }
 }
