@@ -95,21 +95,28 @@ class SongbookPdfExporter
             $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
                 ? $book->title_page_a4_path
                 : $book->title_page_path;
-            if (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
+            if ($format === 'chord-sheet') $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title');
+            elseif (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
             else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
         }
         foreach ($entries as $entry) {
             $version = $entry->songVersion;
-            $sourcePath = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument])
+            $hasChordSheet = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument]);
+            $sourcePath = $hasChordSheet
                 ? $version->generated_chord_sheet_paths[$instrument]
                 : ($format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
                 ? $version->generated_sheet_a4_path
-                : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
+                : (($format !== 'a4' || $format === 'chord-sheet') && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
                     ? $version->generated_sheet_path
                     : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null)));
+            if ($format === 'chord-sheet' && ! $hasChordSheet && $sourcePath) {
+                $sourcePath = $this->portraitA4Page($temporary, Storage::disk('local')->path($sourcePath), 'song-'.$entry->song_number);
+            } elseif ($format === 'chord-sheet' && ! $hasChordSheet) {
+                $sourcePath = $this->portraitA4Page($temporary, $this->renderVersion($temporary, $entry->song_number, $version, 'a5'), 'song-'.$entry->song_number);
+            }
             $pages[] = $sourcePath
-                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $entry->song_number, $pageFormat, 'song-'.$entry->song_number, $imprint)
-                : $this->renderVersion($temporary, $entry->song_number, $version, $format === 'chord-sheet' ? 'a4' : $format, $imprint);
+                ? $this->overlaySongNumber($temporary, is_string($sourcePath) ? (str_starts_with($sourcePath, '/') ? $sourcePath : Storage::disk('local')->path($sourcePath)) : $sourcePath, $entry->song_number, $pageFormat, 'song-'.$entry->song_number, $imprint)
+                : $this->renderVersion($temporary, $entry->song_number, $version, $format === 'chord-sheet' ? 'a4-chord' : $format, $imprint);
         }
         if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $titlePageFormat, 'empty');
         $output = $temporary.'/songbook.pdf';
@@ -137,17 +144,23 @@ class SongbookPdfExporter
         $pages = $versions->values()->map(function (SongVersion $version) use ($temporary, $format, $numberByVersion, $imprint): string {
             $entry = $numberByVersion->get($version->id);
             $number = $entry?->song_number ?? 0;
-            $sourcePath = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument])
+            $hasChordSheet = $format === 'chord-sheet' && $instrument && ($version->generated_chord_sheet_paths[$instrument] ?? null) && Storage::disk('local')->exists($version->generated_chord_sheet_paths[$instrument]);
+            $sourcePath = $hasChordSheet
                 ? $version->generated_chord_sheet_paths[$instrument]
                 : ($format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
                 ? $version->generated_sheet_a4_path
                 : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
                     ? $version->generated_sheet_path
                     : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null)));
+            if ($format === 'chord-sheet' && ! $hasChordSheet && $sourcePath) {
+                $sourcePath = $this->portraitA4Page($temporary, Storage::disk('local')->path($sourcePath), 'song-'.$version->id);
+            } elseif ($format === 'chord-sheet' && ! $hasChordSheet) {
+                $sourcePath = $this->portraitA4Page($temporary, $this->renderVersion($temporary, $number, $version, 'a5'), 'song-'.$version->id);
+            }
 
             return $sourcePath
-                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $number, $format, 'song-'.$version->id, $imprint)
-                : $this->renderVersion($temporary, $number, $version, $format === 'chord-sheet' ? 'a4' : $format, $imprint);
+                ? $this->overlaySongNumber($temporary, str_starts_with($sourcePath, '/') ? $sourcePath : Storage::disk('local')->path($sourcePath), $number, $format, 'song-'.$version->id, $imprint)
+                : $this->renderVersion($temporary, $number, $version, $format === 'chord-sheet' ? 'a4-chord' : $format, $imprint);
         })->all();
         if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Keine neuen Lieder', '<p>Für diese Stunde sind keine neuen Lieder zugeordnet.</p>', $format, 'empty');
         $output = $temporary.'/songs.pdf';
@@ -207,6 +220,25 @@ class SongbookPdfExporter
         $credits = $this->renderCredits($version);
         $content = $heading.'<div class="chord-instrument">'.e((string) $set->instrument).($set->key_signature ? ' · '.e((string) $set->key_signature) : '').'</div>'.$parts.$credits;
         return $this->htmlPage($directory, $version->song->title.' – '.$set->instrument, $content, 'a4-chord', $name);
+    }
+
+    private function portraitA4Page(string $directory, string $sourcePath, string $name): string
+    {
+        $pages = [];
+        if (str_ends_with(strtolower($sourcePath), '.pdf')) {
+            $pageCount = $this->pdfPageCount($sourcePath);
+            for ($page = 1; $page <= $pageCount; $page++) {
+                $imagePath = $directory.'/'.$name.'-portrait-'.$page;
+                (new Process(['pdftoppm', '-f', (string) $page, '-l', (string) $page, '-singlefile', '-png', $sourcePath, $imagePath]))->mustRun();
+                $pages[] = $this->htmlPage($directory, 'A4-Hochformat', '<img class="title-image" src="'.e($imagePath.'.png').'">', 'a4-chord', $name.'-portrait-page-'.$page);
+            }
+        } else {
+            $pages[] = $this->htmlPage($directory, 'A4-Hochformat', '<img class="title-image" src="'.e($sourcePath).'">', 'a4-chord', $name.'-portrait-page-1');
+        }
+        $output = $directory.'/'.$name.'-portrait.pdf';
+        if (count($pages) === 1) File::copy($pages[0], $output);
+        else (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
+        return $output;
     }
 
     private function renderChordPart($part, $chords): string

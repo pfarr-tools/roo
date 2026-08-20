@@ -214,8 +214,10 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=a5&through_date=2026-09-30");
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    $chordResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=chord-sheet&instrument=Gitarre&through_date=2026-09-30");
+    $chordResponse->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($book->fresh()->entries)->toHaveCount(1)->and($book->fresh()->entries->pluck('song_version_id')->all())->not->toContain($phaseVersion->id)
-        ->and($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
+        ->and($book->fresh()->exports)->toHaveCount(2)->and($book->fresh()->checkpoints)->toHaveCount(2);
 
     $newSongs = app(SongbookContentsResolver::class)->resolve($book->fresh(), null, now()->subDay()->toDateString());
     expect($newSongs->pluck('song_version_id')->all())->not->toContain($version->id)->toContain($phaseVersion->id);
