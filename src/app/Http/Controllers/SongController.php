@@ -93,14 +93,14 @@ class SongController extends Controller
     public function updateVersion(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter): RedirectResponse
     {
         $this->authorizeEditableVersion($request, $songVersion);
-        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'language' => ['required', 'string', 'max:10'], 'song' => ['sometimes', 'array'], 'song.title' => ['required_with:song', 'string', 'max:255'], 'song.composer' => ['nullable', 'string', 'max:255'], 'song.author' => ['nullable', 'string', 'max:255'], 'song.copyright_notice' => ['nullable', 'string', 'max:255'], 'song.age_group' => ['nullable', 'string', 'max:255'], 'song.topics' => ['nullable', 'string', 'max:255'], 'song.notes' => ['nullable', 'string'], 'parts' => ['sometimes', 'array'], 'parts.*.id' => ['nullable', 'integer'], 'parts.*.content' => ['required', 'string'], 'parts.*.is_refrain' => ['sometimes', 'boolean'], 'layout_data' => ['nullable', 'array']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'language' => ['required', 'string', 'max:10'], 'song' => ['sometimes', 'array'], 'song.title' => ['required_with:song', 'string', 'max:255'], 'song.composer' => ['nullable', 'string', 'max:255'], 'song.author' => ['nullable', 'string', 'max:255'], 'song.copyright_notice' => ['nullable', 'string', 'max:255'], 'song.age_group' => ['nullable', 'string', 'max:255'], 'song.topics' => ['nullable', 'string', 'max:255'], 'song.notes' => ['nullable', 'string'], 'parts' => ['sometimes', 'array'], 'parts.*.id' => ['nullable', 'integer'], 'parts.*.content' => ['required', 'string'], 'parts.*.is_refrain' => ['sometimes', 'boolean'], 'parts.*.is_numbered' => ['sometimes', 'boolean'], 'parts.*.number' => ['nullable', 'integer', 'min:1'], 'layout_data' => ['nullable', 'array']]);
         DB::transaction(function () use ($data, $songVersion): void {
             $lockedVersion = SongVersion::query()->lockForUpdate()->findOrFail($songVersion->id);
             $lockedVersion->update(collect($data)->only(['name', 'language', 'layout_data'])->all());
             if (isset($data['song'])) $lockedVersion->song->update(collect($data['song'])->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->all());
             if (array_key_exists('parts', $data)) {
                 $lockedVersion->parts()->delete();
-                $lockedVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false])->all());
+                $lockedVersion->parts()->createMany(collect($data['parts'])->values()->map(fn (array $part, int $position): array => ['content' => $part['content'], 'position' => $position + 1, 'is_refrain' => $part['is_refrain'] ?? false, 'is_numbered' => $part['is_numbered'] ?? false, 'number' => $part['number'] ?? null])->all());
             }
         });
         $this->regenerateSheets($songVersion->refresh(), $exporter, $request->user()->name);

@@ -116,6 +116,7 @@ body {
 .song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
 .song-preview-pane { min-width: 0; overflow-x: hidden; overflow-y: auto; }
 .songbook-editor-grid { min-width: 0; }
+.song-part-number { width: 4.5rem; }
 .songbook-editor-column { min-width: 0; max-height: calc(94vh - 13rem); }
 .song-image-column { overflow-y: auto; }
 .song-library-launcher { position: fixed; z-index: 1052; right: 2rem; bottom: 2rem; }

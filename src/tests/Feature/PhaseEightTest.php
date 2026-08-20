@@ -102,15 +102,18 @@ it('zeigt gespeicherte Ausgangslieder wieder in der Gruppenansicht an', function
         ->where('group.songbook.entries.0.song_version.song.title', 'Ausgangslied'));
 });
 
-it('speichert Liedteile mit Kehrvers und stellt das Gruppenliederbuch als Stundenressource bereit', function () {
+it('speichert Liedteile mit Kehrvers und Nummerierung und stellt das Gruppenliederbuch als Stundenressource bereit', function () {
     $organization = Organization::create(['name' => 'Editor Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $school = School::create(['organization_id' => $organization->id, 'name' => 'Editor Schule']);
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Lied mit Teilen'])->versions()->create(['name' => 'Schulfassung']);
-    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", ['name' => 'Schulfassung', 'language' => 'de', 'parts' => [['title' => 'Strophe 1', 'content' => 'Text', 'is_refrain' => false], ['title' => 'Kehrvers', 'content' => 'Wiederholung', 'is_refrain' => true]]])->assertRedirect();
-    expect($version->fresh()->parts)->toHaveCount(2)->and($version->fresh()->parts->last()->is_refrain)->toBeTrue();
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", ['name' => 'Schulfassung', 'language' => 'de', 'parts' => [['title' => 'Strophe 1', 'content' => 'Text', 'is_refrain' => false, 'is_numbered' => true], ['title' => 'Kehrvers', 'content' => 'Wiederholung', 'is_refrain' => true, 'is_numbered' => true, 'number' => 4], ['title' => 'Strophe 2', 'content' => 'Weiter', 'is_refrain' => false, 'is_numbered' => true]]])->assertRedirect();
+    expect($version->fresh()->parts)->toHaveCount(3)
+        ->and($version->fresh()->parts->first()->is_numbered)->toBeTrue()
+        ->and($version->fresh()->parts->get(1)->number)->toBe(4)
+        ->and($version->fresh()->parts->last()->is_refrain)->toBeFalse();
     $group->songbook()->create();
     $this->actingAs($user)->get("/jahresplanung/{$group->id}/ressourcen", ['Accept' => 'application/json'])->assertOk()->assertJsonFragment(['kind' => 'songbook']);
 });

@@ -139,7 +139,16 @@ class SongbookPdfExporter
 
     private function renderVersion(string $directory, int $number, SongVersion $version, string $format, ?string $imprint = null): string
     {
-        $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($part->content).'</section>')->implode('');
+        $previousNumber = 0;
+        $parts = $version->parts->map(function ($part) use (&$previousNumber): string {
+            $number = null;
+            if ($part->is_numbered) {
+                $number = $part->number ?? $previousNumber + 1;
+                $previousNumber = $number;
+            }
+            $prefix = $number === null ? '' : $number.'. ';
+            return '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($prefix.$part->content).'</section>';
+        })->implode('');
         if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
