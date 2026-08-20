@@ -493,6 +493,12 @@ function imageStyle(image) {
         transform: `rotate(${image.rotation}deg) scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
     };
 }
+function rotateHandleStyle(image) {
+    return {
+        transform: `rotate(${image.rotation ?? 0}deg)`,
+        transformOrigin: `50% calc(50% + ${image.height / 2}px + 1.45rem)`,
+    };
+}
 function beginInteraction(type, event, image, corner = null) {
     event.preventDefault();
     activeImageId.value = image.id;
@@ -977,6 +983,9 @@ function closeEditor() {
                                     ><button
                                         class="image-handle rotate-handle"
                                         type="button"
+                                        title="Bild drehen"
+                                        aria-label="Bild drehen"
+                                        :style="rotateHandleStyle(image)"
                                         @pointerdown.stop="
                                             beginInteraction(
                                                 'rotate',
@@ -984,7 +993,12 @@ function closeEditor() {
                                                 image,
                                             )
                                         "
-                                    ></button>
+                                    >
+                                        <i
+                                            class="bi bi-arrow-repeat"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </button>
                                 </div>
                                 <div
                                     v-if="imageCredits.length"
