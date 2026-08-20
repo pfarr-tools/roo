@@ -122,6 +122,9 @@ body {
 .song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
 .song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
+.song-preview-credits, .song-preview-image-credits { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 8px; font-weight: 400; text-align: right; }
+.song-preview-credits { margin: -.75rem 0 1.25rem; }
+.song-preview-image-credits { position: absolute; right: .75rem; bottom: .75rem; max-width: 85%; }
 .song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; cursor: move; }
 .song-image-selection.selected { border-color: var(--bs-primary); }
 .song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }

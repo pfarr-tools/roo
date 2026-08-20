@@ -141,13 +141,24 @@ class SongController extends Controller
         return back()->with('success', 'A5-Liedblatt wurde erzeugt.');
     }
 
-    public function generatedSheet(Request $request, SongVersion $songVersion)
+    public function generatedSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter)
     {
         $this->authorizeVersion($request, $songVersion);
         abort_unless($songVersion->generated_sheet_path, 404);
         abort_unless(Storage::disk('local')->exists($songVersion->generated_sheet_path), 404);
-        abort_if(Storage::disk('local')->size($songVersion->generated_sheet_path) === 0, 500, 'Das erzeugte Liedblatt ist leer.');
+        if (! $this->isValidPdf($songVersion->generated_sheet_path)) {
+            $path = $exporter->generateSongVersion($songVersion);
+            if ($songVersion->generated_sheet_path) Storage::disk('local')->delete($songVersion->generated_sheet_path);
+            $songVersion->update(['generated_sheet_path' => $path, 'generated_sheet_at' => now()]);
+        }
         return response()->download(Storage::disk('local')->path($songVersion->generated_sheet_path), Str::slug($songVersion->song->title).'.pdf', ['Content-Type' => 'application/pdf']);
+    }
+
+    private function isValidPdf(string $path): bool
+    {
+        if (! Storage::disk('local')->exists($path) || Storage::disk('local')->size($path) < 100) return false;
+        $contents = Storage::disk('local')->get($path);
+        return str_starts_with($contents, '%PDF-') && str_contains($contents, '%%EOF');
     }
 
     public function image(Request $request, SongVersion $songVersion, SongImage $songImage)

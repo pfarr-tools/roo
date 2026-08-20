@@ -94,7 +94,8 @@ class SongbookPdfExporter
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';
         try {
-            (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
+            (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-profile', '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
+            if (! File::exists($pdfPath) || File::size($pdfPath) < 100 || substr((string) File::get($pdfPath), 0, 5) !== '%PDF-') throw new \RuntimeException('Chromium erzeugte keine gültige PDF-Datei.');
         } catch (Throwable) {
             $this->minimalPdf($pdfPath, str_replace(['<br>', '<br/>', '<br />'], "\n", strip_tags($content)));
         }
