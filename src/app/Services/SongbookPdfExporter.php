@@ -56,8 +56,8 @@ class SongbookPdfExporter
 
     private function renderVersion(string $directory, int $number, SongVersion $version, string $format): string
     {
-        $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.nl2br(e($part->content)).'</section>')->implode('');
-        if ($parts === '') $parts = '<div>'.nl2br(e((string) $version->lyrics)).'</div>';
+        $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($part->content).'</section>')->implode('');
+        if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
         $credits = $this->renderCredits($version);
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
@@ -71,7 +71,7 @@ class SongbookPdfExporter
             return $record && $credit !== '' ? e($credit) : null;
         })->filter()->values();
         $imageCreditBlock = $imageCredits->isNotEmpty() ? '<div class="image-credits"><strong>'.($imageCredits->count() === 1 ? 'Bild:' : 'Bilder:').'</strong> '.$imageCredits->implode(' · ').'</div>' : '';
-        return $this->htmlPage($directory, $version->song->title, '<div class="song-number">'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits.$imageCreditBlock, $format, 'song-'.$number);
+        return $this->htmlPage($directory, $version->song->title, '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits.$imageCreditBlock, $format, 'song-'.$number);
     }
 
     private function renderCredits(SongVersion $version): string
@@ -89,7 +89,7 @@ class SongbookPdfExporter
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
         $size = $format === 'a5' ? '148mm 210mm' : '210mm 297mm';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>@page{size:'.$size.';margin:'.config('songs.page_margin_mm', 12).'mm}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';position:relative;margin:0;min-height:100%}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'pt;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0}.song-credits{position:absolute;right:0;bottom:0;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right}.image-credits{position:absolute;right:0;bottom:8mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:90%;}.part{margin:0 0 7mm;white-space:normal}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11pt}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body>'.$content.'</body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'px;font-weight:'.config('songs.text_font_weight', 'normal').';width:559.37px;height:793.7px;position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:420px;height:595.28px;padding:16px;overflow:hidden;transform:scale(1.332);transform-origin:top left}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'px;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:12px;bottom:12px;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right}.image-credits{position:absolute;right:12px;bottom:35px;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'px;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11px}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';
@@ -100,6 +100,20 @@ class SongbookPdfExporter
             $this->minimalPdf($pdfPath, str_replace(['<br>', '<br/>', '<br />'], "\n", strip_tags($content)));
         }
         return $pdfPath;
+    }
+
+    private function fontFaceCss(): string
+    {
+        $fonts = [
+            ['Comic Neue', 400, 'ComicNeue-Regular.ttf', 'truetype'],
+            ['Comic Neue', 700, 'ComicNeue-Bold.ttf', 'truetype'],
+            ['Atkinson Hyperlegible Next', 400, 'AtkinsonHyperlegibleNext-Regular.otf', 'opentype'],
+            ['Atkinson Hyperlegible Next', 700, 'AtkinsonHyperlegibleNext-Bold.otf', 'opentype'],
+        ];
+        return collect($fonts)->map(function (array $font): string {
+            $path = resource_path('fonts/'.$font[2]);
+            return is_file($path) ? '@font-face{font-family:"'.$font[0].'";font-style:normal;font-weight:'.$font[1].';src:url("data:font/'.$font[3].';base64,'.base64_encode((string) file_get_contents($path)).'") format("'.$font[3].'");}' : '';
+        })->implode('');
     }
 
     private function minimalPdf(string $path, string $text): void

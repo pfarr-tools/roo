@@ -18,6 +18,11 @@ $card-box-shadow: 0 .5rem 1.5rem rgba(60, 37, 13, .06);
 
 @import "bootstrap/scss/bootstrap";
 
+@font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 400; src: url('../fonts/ComicNeue-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 700; src: url('../fonts/ComicNeue-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; font-style: normal; font-weight: 400; src: url('../fonts/AtkinsonHyperlegibleNext-Regular.otf') format('opentype'); }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; font-style: normal; font-weight: 700; src: url('../fonts/AtkinsonHyperlegibleNext-Bold.otf') format('opentype'); }
+
 :root {
     --roo-sidebar-width: 18rem;
     --roo-sidebar-collapsed-width: 4.6rem;
@@ -123,8 +128,8 @@ body {
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
 .song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
 .song-preview-credits, .song-preview-image-credits { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 8px; font-weight: 400; text-align: right; }
-.song-preview-credits { margin: -.75rem 0 1.25rem; }
-.song-preview-image-credits { position: absolute; right: .75rem; bottom: .75rem; max-width: 85%; }
+.song-preview-credits { position: absolute; right: .75rem; bottom: .75rem; max-width: 85%; }
+.song-preview-image-credits { position: absolute; right: .75rem; bottom: 2.2rem; max-width: 85%; }
 .song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; cursor: move; }
 .song-image-selection.selected { border-color: var(--bs-primary); }
 .song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }
