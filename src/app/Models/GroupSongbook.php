@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['teaching_group_id', 'title_page_path', 'title_page_original_name', 'title_page_mime_type', 'title_page_size'])]
+#[Fillable(['teaching_group_id', 'title_page_path', 'title_page_a4_path', 'title_page_original_name', 'title_page_mime_type', 'title_page_size'])]
 class GroupSongbook extends Model
 {
     public function group(): BelongsTo { return $this->belongsTo(TeachingGroup::class, 'teaching_group_id'); }

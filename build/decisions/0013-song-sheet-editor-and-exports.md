@@ -17,3 +17,8 @@ Lieder in ihrer gruppenspezifischen Nummerierung auf. Ein Datum begrenzt die
 Auswahl. Druckstände werden gespeichert, sodass der Export „neu“ nur seit dem
 letzten Druck hinzugekommene Einträge berücksichtigt. A5 ist das Primärformat;
 A4 und Broschüre verwenden denselben Inhalt mit eigenem Ausgabeformat.
+Die gruppenspezifische Nummer wird beim Zusammenstellen des Liederbuch-PDFs
+auch auf bereits erzeugte oder hochgeladene Liedblatt-PDFs als Druck-Overlay
+gesetzt. Das Overlay wird als transparenter Vektor-PDF-Stempel erzeugt und mit
+`pdftk-java` auf die vorhandenen Seiten gesetzt; einzelne Liedblatt-Dateien
+bleiben dadurch unverändert und werden nicht rasterisiert.

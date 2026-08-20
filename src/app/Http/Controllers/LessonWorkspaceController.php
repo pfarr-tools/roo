@@ -13,6 +13,8 @@ use App\Http\Requests\UpdateLessonExecutionRequest;
 use App\Models\ScheduledLesson;
 use App\Services\CompetencyResolver;
 use App\Services\WscDocInspector;
+use App\Services\SongbookContentsResolver;
+use App\Services\SongbookPdfExporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -31,6 +33,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.unit.materialItems',
             'scheduledLesson.lesson.resources',
             'scheduledLesson.lesson.materialItems',
+            'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.unit.competencies.curriculumCompetency',
@@ -38,6 +41,8 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.phases.resources',
             'scheduledLesson.lesson.phases.resourceLinks',
             'scheduledLesson.lesson.phases.materialItems',
+            'scheduledLesson.lesson.phases.songs.song:id,title,author,composer,copyright_notice',
+            'scheduledLesson.lesson.phases.songs.parts',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.competencies.curriculumCompetency',
         ]);
@@ -54,6 +59,7 @@ class LessonWorkspaceController extends Controller
             $phase->setAttribute('resource_ids', $phase->resources->pluck('id')->values());
             $phase->setAttribute('resource_link_ids', $phase->resourceLinks->pluck('id')->values());
             $phase->setAttribute('material_item_ids', $phase->materialItems->pluck('id')->values());
+            $phase->setAttribute('song_ids', $phase->songs->pluck('id')->values());
         });
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency))
@@ -69,6 +75,7 @@ class LessonWorkspaceController extends Controller
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
             'materialItems' => $lesson->unit->materialItems->merge($lesson->materialItems)->unique('id')->values(),
+            'songs' => \App\Models\SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
             'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
@@ -107,5 +114,20 @@ class LessonWorkspaceController extends Controller
         $scheduledLesson->update($request->validated());
 
         return back()->with('success', 'Durchführung wurde gespeichert.');
+    }
+
+    public function exportSongs(Request $request, ScheduleSlot $scheduleSlot, SongbookContentsResolver $contents, SongbookPdfExporter $exporter)
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('view', $group);
+        $format = $request->validate(['format' => ['required', 'in:a4,a5']])['format'];
+        $lesson = $scheduleSlot->scheduledLesson?->lesson;
+        abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
+        $book = $group->songbook()->firstOrCreate([]);
+        $versions = $contents->resolveLessonSongs($book, $lesson);
+        abort_if($versions->isEmpty(), 422, 'Für diese Stunde sind keine neuen Lieder zugeordnet.');
+
+        $path = $exporter->exportSongs($versions, $format, $book);
+        return Storage::disk('local')->download($path, 'Neue-Lieder-Stunde-'.$scheduleSlot->date->format('Y-m-d').'-'.$format.'.pdf');
     }
 }

@@ -384,7 +384,7 @@ class YearPlanController extends Controller
                         $validResourceIds = collect($validResourceIds)->merge($phaseResourceIds)->unique()->values()->all();
                     }
                     $validMaterialItemIds = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $materialItemSelection)->pluck('id')->all();
-                    $songSelection = collect($phase['song_ids'] ?? [])->filter('is_numeric')->map(fn ($id) => (int) $id)->values()->all();
+                    $songSelection = collect($phase['song_ids'] ?? [])->filter(fn ($id): bool => is_numeric($id))->map(fn ($id) => (int) $id)->values()->all();
                     $validSongIds = SongVersion::whereIn('id', $songSelection)->whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $teachingGroup->organization_id))->pluck('id')->all();
                     $validResourceLinkIds = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $resourceLinkPhaseIds)->where(function ($query) use ($lesson): void {
                         $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);

@@ -30,6 +30,7 @@ Route::get('/', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
+    Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class)->name('resources.library');
@@ -131,6 +132,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
     Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'songbookTitlePage'])->name('teaching-groups.songbook.title-page');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/songs', [TeachingGroupController::class, 'searchSongbookSongs'])->name('teaching-groups.songbook.songs.search');
     Route::put('/unterrichtsgruppen/{teachingGroup}/liederbuch/lieder', [SongbookController::class, 'updateSongs'])->name('teaching-groups.songbook.songs.update');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/export', [SongbookController::class, 'export'])->name('teaching-groups.songbook.export');
     Route::put('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'update'])->name('teaching-groups.update');

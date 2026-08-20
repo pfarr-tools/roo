@@ -393,6 +393,7 @@ in den Anhängen nutzt weiterhin die JSON-Variante derselben Route.
 
 ## Phase 8 – Liedersammlung und Gruppenliederbuch
 
+
 ### Ziel
 
 Lieder verwalten und für jede Gruppe ein wachsendes A5-Liederbuch erzeugen.
@@ -456,6 +457,10 @@ Während oder direkt nach jeder Stunde schnell Beobachtungen erfassen.
 - Mehrfachaktion für mehrere Schüler:innen
 - kompetenzbezogener Nachweis
 - mobil und auf Tablet optimiert
+
+Beim Schuljahr muss der Beginn des 2. Halbjahres konfiguriert werden.
+
+Mündlicher Stand seit Beginn/Halbjahr automatisch aufgrund der Beobachtungen, aber auch bearbeitbar.
 
 ### Regel
 

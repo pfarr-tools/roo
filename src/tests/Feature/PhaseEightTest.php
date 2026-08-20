@@ -4,8 +4,10 @@ use App\Models\LessonPhase;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\ScheduleSlot;
 use App\Models\Song;
 use App\Models\SongVersion;
+use App\Models\ScheduledLesson;
 use App\Models\ResourceReference;
 use App\Models\TeachingGroup;
 use App\Models\User;
@@ -46,6 +48,32 @@ it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und füh
         ->and($group->fresh()->songbook->entries->first()->song_number)->toBe(1);
 });
 
+it('stellt ein über die Ressourcenbibliothek zugeordnetes Lied im Unterrichtsarbeitsraum und im Phasenpicker bereit', function () {
+    $organization = Organization::create(['name' => 'Unterrichtslied Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Unterrichtslied Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $lesson = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Lied UE', 'position' => 1])->lessons()->create(['title' => 'Liedstunde', 'position' => 1, 'duration' => 1]);
+    $phase = $lesson->phases()->create(['title' => 'Singen', 'position' => 1]);
+    $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
+    ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Komm, wir singen', 'author' => 'Ada Text', 'composer' => 'Ben Musik'])->versions()->create(['name' => 'Fassung']);
+    $version->parts()->create(['title' => 'Strophe 1', 'content' => 'Großer Liedtext', 'position' => 1]);
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/song/{$version->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/song/{$version->id}/zuordnen", ['target_type' => 'phase', 'target_id' => $phase->id])->assertRedirect();
+
+    expect($lesson->fresh()->songs->pluck('id')->all())->toBe([$version->id]);
+    $this->actingAs($user)->get("/unterricht/{$slot->id}")->assertInertia(fn ($page) => $page
+        ->where('lesson.songs.0.id', $version->id)
+        ->where('lesson.songs.0.song.title', 'Komm, wir singen')
+        ->where('lesson.songs.0.song.author', 'Ada Text')
+        ->where('lesson.phases.0.song_ids.0', $version->id)
+        ->where('lesson.phases.0.songs.0.parts.0.content', 'Großer Liedtext')
+        ->where('songs.0.id', $version->id));
+});
+
 it('schützt und speichert die Titelseite des Gruppenliederbuchs', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'Titelseiten Organisation']);
@@ -58,6 +86,20 @@ it('schützt und speichert die Titelseite des Gruppenliederbuchs', function () {
     $book = $group->fresh()->songbook;
     expect($book->title_page_original_name)->toBe('titelseite.pdf');
     Storage::disk('local')->assertExists($book->title_page_path);
+});
+
+it('zeigt gespeicherte Ausgangslieder wieder in der Gruppenansicht an', function () {
+    $organization = Organization::create(['name' => 'Ausgangslieder Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Ausgangslieder Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4c']);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Ausgangslied'])->versions()->create(['name' => 'Standard']);
+
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/liederbuch/lieder", ['song_version_ids' => [$version->id]])->assertRedirect();
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
+        ->where('group.songbook.entries.0.song_version_id', $version->id)
+        ->where('group.songbook.entries.0.song_version.song.title', 'Ausgangslied'));
 });
 
 it('speichert Liedteile mit Kehrvers und stellt das Gruppenliederbuch als Stundenressource bereit', function () {
@@ -130,12 +172,19 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a']);
     $version = Song::create(['organization_id' => $organization->id, 'title' => 'Exportlied'])->versions()->create(['name' => 'Fassung']);
+    $lesson = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Exportstunde', 'position' => 1])->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
+    $phaseVersion = Song::create(['organization_id' => $organization->id, 'title' => 'Stundenlied'])->versions()->create(['name' => 'Fassung']);
+    $lesson->phases()->create(['title' => 'Singen', 'position' => 1])->songs()->attach($phaseVersion->id);
     $book = $group->songbook()->create();
     $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => '2026-09-01']);
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=a5&through_date=2026-09-30");
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
-    expect($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
+    expect($book->fresh()->entries)->toHaveCount(1)->and($book->fresh()->entries->pluck('song_version_id')->all())->not->toContain($phaseVersion->id)
+        ->and($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
+
+    $newSongs = app(App\Services\SongbookContentsResolver::class)->resolve($book->fresh(), null, now()->subDay()->toDateString());
+    expect($newSongs->pluck('song_version_id')->all())->not->toContain($version->id)->toContain($phaseVersion->id);
 });
 
 it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', function () {

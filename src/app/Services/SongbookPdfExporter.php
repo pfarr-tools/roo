@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\GroupSongbook;
 use App\Models\SongVersion;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,6 +13,8 @@ use Throwable;
 
 class SongbookPdfExporter
 {
+    public function __construct(private readonly SongbookContentsResolver $contentsResolver) {}
+
     public function generateSongVersion(SongVersion $version, ?string $author = null): string
     {
         return $this->generateSongVersionFormat($version, 'a5', $author);
@@ -20,6 +23,30 @@ class SongbookPdfExporter
     public function generateSongVersionA4(SongVersion $version, ?string $author = null): string
     {
         return $this->generateSongVersionFormat($version, 'a4', $author);
+    }
+
+    public function generateTitlePageA4(string $sourcePath): string
+    {
+        $temporary = storage_path('app/temporary/title-page-a4-'.Str::uuid());
+        File::ensureDirectoryExists($temporary);
+        $source = Storage::disk('local')->path($sourcePath);
+        $image = $source;
+
+        try {
+            if (str_ends_with(strtolower($sourcePath), '.pdf')) {
+                (new Process(['pdftoppm', '-f', '1', '-singlefile', '-png', $source, $temporary.'/title']))->mustRun();
+                $image = $temporary.'/title.png';
+            }
+            $pdf = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e($image).'">', 'a4', 'title-page-a4');
+        } catch (Throwable) {
+            $pdf = $source;
+        }
+
+        $stored = 'songs/generated/'.Str::uuid().'.pdf';
+        Storage::disk('local')->put($stored, File::get($pdf));
+        File::deleteDirectory($temporary);
+
+        return $stored;
     }
 
     private function generateSongVersionFormat(SongVersion $version, string $format, ?string $author): string
@@ -37,18 +64,28 @@ class SongbookPdfExporter
 
     public function export(GroupSongbook $book, string $format = 'a5', ?string $throughDate = null, ?string $afterDate = null): string
     {
-        $book->load(['entries' => fn ($query) => $query->when($throughDate, fn ($nested) => $nested->whereDate('added_at', '<=', $throughDate))->when($afterDate, fn ($nested) => $nested->where('added_at', '>', $afterDate)), 'entries.songVersion.song', 'entries.songVersion.sheet', 'entries.songVersion.parts', 'entries.songVersion.images']);
+        $entries = $this->contentsResolver->resolve($book, $throughDate, $afterDate);
+        $imprint = $this->imprintText($book);
         $temporary = storage_path('app/temporary/songbook-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
         $pages = [];
-        if ($book->title_page_path && Storage::disk('local')->exists($book->title_page_path)) {
-            if (str_ends_with(strtolower($book->title_page_path), '.pdf')) $pages[] = Storage::disk('local')->path($book->title_page_path);
-            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($book->title_page_path)).'">', $format, 'title');
+        if ($afterDate === null && $book->title_page_path && Storage::disk('local')->exists($book->title_page_path)) {
+            $titlePagePath = $format === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
+                ? $book->title_page_a4_path
+                : $book->title_page_path;
+            if (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
+            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $format, 'title');
         }
-        foreach ($book->entries as $entry) {
+        foreach ($entries as $entry) {
             $version = $entry->songVersion;
-            if ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path)) $pages[] = Storage::disk('local')->path($version->sheet->storage_path);
-            else $pages[] = $this->renderVersion($temporary, $entry->song_number, $version, $format);
+            $sourcePath = $format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
+                ? $version->generated_sheet_a4_path
+                : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
+                    ? $version->generated_sheet_path
+                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null));
+            $pages[] = $sourcePath
+                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $entry->song_number, $format, 'song-'.$entry->song_number, $imprint)
+                : $this->renderVersion($temporary, $entry->song_number, $version, $format, $imprint);
         }
         if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $format, 'empty');
         $output = $temporary.'/songbook.pdf';
@@ -65,7 +102,42 @@ class SongbookPdfExporter
         return $stored;
     }
 
-    private function renderVersion(string $directory, int $number, SongVersion $version, string $format): string
+    public function exportSongs(Collection $versions, string $format = 'a5', ?GroupSongbook $book = null): string
+    {
+        $temporary = storage_path('app/temporary/hour-songs-'.Str::uuid());
+        File::ensureDirectoryExists($temporary);
+        $numberByVersion = $book
+            ? $this->contentsResolver->resolve($book)->keyBy('song_version_id')
+            : collect();
+        $imprint = $book ? $this->imprintText($book) : null;
+        $pages = $versions->values()->map(function (SongVersion $version) use ($temporary, $format, $numberByVersion, $imprint): string {
+            $entry = $numberByVersion->get($version->id);
+            $number = $entry?->song_number ?? 0;
+            $sourcePath = $format === 'a4' && $version->generated_sheet_a4_path && Storage::disk('local')->exists($version->generated_sheet_a4_path)
+                ? $version->generated_sheet_a4_path
+                : ($format !== 'a4' && $version->generated_sheet_path && Storage::disk('local')->exists($version->generated_sheet_path)
+                    ? $version->generated_sheet_path
+                    : ($version->sheet && Storage::disk('local')->exists($version->sheet->storage_path) ? $version->sheet->storage_path : null));
+
+            return $sourcePath
+                ? $this->overlaySongNumber($temporary, Storage::disk('local')->path($sourcePath), $number, $format, 'song-'.$version->id, $imprint)
+                : $this->renderVersion($temporary, $number, $version, $format, $imprint);
+        })->all();
+        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Keine neuen Lieder', '<p>Für diese Stunde sind keine neuen Lieder zugeordnet.</p>', $format, 'empty');
+        $output = $temporary.'/songs.pdf';
+        try {
+            (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
+        } catch (Throwable) {
+            if (count($pages) === 1) File::copy($pages[0], $output);
+            else $this->minimalPdf($output, 'Der Export benötigt pdfunite oder Chromium für die Zusammenstellung mehrerer Seiten.');
+        }
+        $stored = 'exports/songbooks/'.Str::uuid().'.pdf';
+        Storage::disk('local')->put($stored, File::get($output));
+        File::deleteDirectory($temporary);
+        return $stored;
+    }
+
+    private function renderVersion(string $directory, int $number, SongVersion $version, string $format, ?string $imprint = null): string
     {
         $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($part->content).'</section>')->implode('');
         if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
@@ -85,9 +157,78 @@ class SongbookPdfExporter
             return $record && $credit !== '' ? $credit : null;
         })->filter()->values();
         $credits = $this->renderCredits($version, $imageCredits->all());
-        $page = '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits;
+        $heading = '<div class="song-heading"><h1>'.e($version->song->title).'</h1><span class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</span></div>';
+        $page = $heading.$parts.$images.$credits;
+        if ($imprint !== null) $page .= '<div class="song-imprint">'.e($imprint).'</div>';
         $content = $format === 'a4' ? '<div class="a4-copy a4-copy-left">'.$page.'</div><div class="a4-copy a4-copy-right">'.$page.'</div>' : $page;
         return $this->htmlPage($directory, $version->song->title, $content, $format, 'song-'.$number);
+    }
+
+    private function imprintText(GroupSongbook $book): string
+    {
+        $book->loadMissing('group.school', 'group.schoolYear');
+        $group = $book->group;
+
+        return collect([$group?->school?->name, $group?->schoolYear?->name, $group?->name])
+            ->map(fn (?string $value): string => trim((string) $value))
+            ->filter()
+            ->implode(' ');
+    }
+
+    /** Add print-only markings to an existing PDF without rasterizing it. */
+    private function overlaySongNumber(string $directory, string $sourcePath, int $number, string $format, string $name, ?string $imprint = null): string
+    {
+        $pageFormat = $format === 'a4' && str_contains($sourcePath, 'generated') ? 'a4' : 'a5';
+        $pageCount = $this->pdfPageCount($sourcePath);
+        $stampedPages = [];
+
+        for ($page = 1; $page <= $pageCount; $page++) {
+            $sourcePage = $directory.'/'.$name.'-source-'.$page.'.pdf';
+            $overlay = $directory.'/'.$name.'-overlay-'.$page.'.pdf';
+            $stampedPage = $directory.'/'.$name.'-stamped-'.$page.'.pdf';
+            (new Process(['pdftk', $sourcePath, 'cat', (string) $page, 'output', $sourcePage]))->mustRun();
+            $this->renderPrintOverlay($directory, $overlay, $page === 1 ? $number : 0, $pageFormat, $imprint, $name.'-'.$page);
+            (new Process(['pdftk', $sourcePage, 'stamp', $overlay, 'output', $stampedPage]))->mustRun();
+            $stampedPages[] = $stampedPage;
+        }
+
+        $output = $directory.'/'.$name.'-stamped.pdf';
+        (new Process(array_merge(['pdfunite'], $stampedPages, [$output])))->mustRun();
+        return $output;
+    }
+
+    private function pdfPageCount(string $path): int
+    {
+        $result = (new Process(['pdfinfo', $path]))->mustRun()->getOutput();
+        preg_match('/^Pages:\s+(\d+)$/m', $result, $matches);
+        return max(1, (int) ($matches[1] ?? 1));
+    }
+
+    private function renderPrintOverlay(string $directory, string $pdfPath, int $number, string $pageFormat, ?string $imprint, string $name): void
+    {
+        $pageWidth = $pageFormat === 'a4' ? '297mm' : '148mm';
+        $top = config('songs.page_margin_top_mm', 17);
+        $right = config('songs.page_margin_right_mm', 17);
+        $left = config('songs.page_margin_left_mm', 20);
+        $bottom = config('songs.page_margin_bottom_mm', 17);
+        $font = config('songs.title_font_family', 'Comic Neue');
+        $size = config('songs.title_font_size', 24);
+        $weight = config('songs.title_font_weight', 'bold');
+        $numberMarkup = $number > 0
+            ? ($pageFormat === 'a4'
+                ? '<span class="number number-left">'.$number.'</span><span class="number number-right">'.$number.'</span>'
+                : '<span class="number number-a5">'.$number.'</span>')
+            : '';
+        $imprintMarkup = $imprint !== null
+            ? ($pageFormat === 'a4'
+                ? '<span class="imprint imprint-left">'.e($imprint).'</span><span class="imprint imprint-right">'.e($imprint).'</span>'
+                : '<span class="imprint imprint-a5">'.e($imprint).'</span>')
+            : '';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$pageWidth.' 210mm;margin:0}*{box-sizing:border-box}html,body{width:'.$pageWidth.';height:210mm;margin:0;background:transparent;overflow:hidden}.number{position:absolute;top:'.$top.'mm;font-family:"'.$font.'";font-size:'.$size.'pt;font-weight:'.$weight.';line-height:1;text-align:right}.number-a5{right:'.$right.'mm;width:20mm}.number-left,.number-right{width:20mm}.number-left{left:'.(148 - $right - 20).'mm}.number-right{right:'.$right.'mm}.imprint{position:absolute;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.imprint-a5,.imprint-left{left:'.$left.'mm}.imprint-right{left:'.(149 + $left).'mm}</style></head><body>'.$numberMarkup.$imprintMarkup.'</body></html>';
+        $htmlPath = $directory.'/'.$name.'-overlay.html';
+        File::put($htmlPath, $html);
+        (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-overlay-profile-'.$name, '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
+        if (! File::exists($pdfPath) || File::size($pdfPath) < 100) throw new \RuntimeException('Die PDF-Druckmarkierung konnte nicht erzeugt werden.');
     }
 
     private function renderCredits(SongVersion $version, array $imageCredits = []): string
@@ -152,7 +293,10 @@ class SongbookPdfExporter
         $left = config('songs.page_margin_left_mm', 20);
         $canvasPadding = $format === 'a4' ? 'padding:0' : 'padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm';
         $copyCss = $format === 'a4' ? '.a4-copy{position:absolute;top:0;width:148mm;height:210mm;padding:'.$top.'mm '.$right.'mm '.$bottom.'mm '.$left.'mm;overflow:hidden}.a4-copy-left{left:0}.a4-copy-right{left:149mm}' : '';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'pt;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11pt}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $titleFont = config('songs.title_font_family', 'Comic Neue');
+        $titleSize = config('songs.title_font_size', 24);
+        $titleWeight = config('songs.title_font_weight', 'bold');
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';

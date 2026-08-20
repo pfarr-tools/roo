@@ -15,6 +15,7 @@ RUN apt-get update \
         chromium \
         curl \
         git \
+        pdftk-java \
         unzip \
         libcurl4-openssl-dev \
         libicu-dev \
@@ -24,6 +25,7 @@ RUN apt-get update \
         libpq-dev \
         libwebp-dev \
         libzip-dev \
+        poppler-utils \
         postgresql-client \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \

@@ -18,6 +18,7 @@ use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\PhaseTemplate;
 use App\Models\SongVersion;
+use App\Services\SongbookPdfExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -55,14 +56,16 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function uploadSongbookTitlePage(Request $request, TeachingGroup $teachingGroup): \Illuminate\Http\RedirectResponse
+    public function uploadSongbookTitlePage(Request $request, TeachingGroup $teachingGroup, SongbookPdfExporter $exporter): \Illuminate\Http\RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['title_page' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200']]);
         $book = $teachingGroup->songbook()->firstOrCreate([]);
         if ($book->title_page_path) Storage::disk('local')->delete($book->title_page_path);
+        if ($book->title_page_a4_path) Storage::disk('local')->delete($book->title_page_a4_path);
         $file = $data['title_page'];
-        $book->update(['title_page_path' => $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local'), 'title_page_original_name' => $file->getClientOriginalName(), 'title_page_mime_type' => $file->getMimeType(), 'title_page_size' => $file->getSize()]);
+        $titlePagePath = $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local');
+        $book->update(['title_page_path' => $titlePagePath, 'title_page_a4_path' => $exporter->generateTitlePageA4($titlePagePath), 'title_page_original_name' => $file->getClientOriginalName(), 'title_page_mime_type' => $file->getMimeType(), 'title_page_size' => $file->getSize()]);
         return back()->with('success', 'Titelseite des Liederbuchs wurde gespeichert.');
     }
 
@@ -72,6 +75,21 @@ class TeachingGroupController extends Controller
         $book = $teachingGroup->songbook;
         abort_unless($book?->title_page_path, 404);
         return response()->file(Storage::disk('local')->path($book->title_page_path), ['Content-Type' => $book->title_page_mime_type ?: 'application/octet-stream']);
+    }
+
+    public function searchSongbookSongs(Request $request, TeachingGroup $teachingGroup)
+    {
+        $this->authorize('view', $teachingGroup);
+        $query = trim((string) $request->query('q', ''));
+        abort_if(mb_strlen($query) < 2, 422, 'Die Suche benötigt mindestens zwei Zeichen.');
+
+        return SongVersion::query()
+            ->join('songs', 'songs.id', '=', 'song_versions.song_id')
+            ->whereHas('song', fn ($song) => $song->where(fn ($scope) => $scope->whereNull('organization_id')->orWhere('organization_id', $teachingGroup->organization_id))->where('title', 'like', "%{$query}%"))
+            ->with('song:id,title')
+            ->orderBy('songs.title')
+            ->limit(20)
+            ->get(['song_versions.id', 'song_versions.song_id', 'song_versions.name']);
     }
 
     public function updateRituals(UpdateTeachingGroupRitualsRequest $request, TeachingGroup $teachingGroup): RedirectResponse
