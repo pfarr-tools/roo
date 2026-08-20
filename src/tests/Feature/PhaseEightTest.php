@@ -72,6 +72,26 @@ it('speichert Liedteile mit Kehrvers und stellt das Gruppenliederbuch als Stunde
     $this->actingAs($user)->get("/jahresplanung/{$group->id}/ressourcen", ['Accept' => 'application/json'])->assertOk()->assertJsonFragment(['kind' => 'songbook']);
 });
 
+it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lieder', function () {
+    $organization = Organization::create(['name' => 'Liedpflege Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $song = Song::create(['organization_id' => $organization->id, 'title' => 'Alter Titel']);
+    $version = $song->versions()->create(['name' => 'Fassung']);
+
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", [
+        'name' => 'Fassung', 'language' => 'de', 'song' => ['title' => 'Neuer Titel', 'composer' => 'Komponist'],
+        'parts' => [['content' => "Zeile eins\nZeile zwei", 'is_refrain' => true]],
+    ])->assertRedirect();
+
+    expect($song->fresh()->title)->toBe('Neuer Titel')->and($version->fresh()->parts->first()->content)->toContain("\n");
+    $this->actingAs($user)->delete("/lieder/{$song->id}")->assertRedirect();
+    expect(Song::find($song->id))->toBeNull();
+
+    $global = Song::create(['title' => 'Globales Lied']);
+    $this->actingAs($user)->delete("/lieder/{$global->id}")->assertNotFound();
+    expect(Song::find($global->id))->not->toBeNull();
+});
+
 it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'Export Organisation']);

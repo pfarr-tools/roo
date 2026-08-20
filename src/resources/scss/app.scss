@@ -106,6 +106,13 @@ body {
 .roo-profile-dropdown a:hover, .roo-profile-dropdown button:hover { background: var(--roo-sand); }
 .roo-modal-backdrop { position: fixed; z-index: 1050; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(23,25,28,.55); }
 .roo-modal-wide { width: min(58rem, 100%); max-height: min(90vh, 52rem); overflow-y: auto; }
+.roo-modal-song-editor { width: min(82rem, calc(100vw - 2rem)); max-height: 94vh; }
+.editor-tab-content { min-height: 0; flex: 1; }
+.song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
+.song-preview-pane { overflow: auto; }
+.song-preview-title { font-family: 'Neue Comic', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
+.song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
+.song-preview-refrain { font-family: 'Neue Comic', sans-serif; font-size: 14px; font-weight: 400; }
 .unit-editor-tabs { overflow-x: auto; flex-wrap: nowrap; }
 .unit-editor-tabs .nav-link { white-space: nowrap; }
 .attachment-list { display: grid; gap: .75rem; }
