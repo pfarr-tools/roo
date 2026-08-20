@@ -58,19 +58,38 @@ class SongbookPdfExporter
     {
         $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.nl2br(e($part->content)).'</section>')->implode('');
         if ($parts === '') $parts = '<div>'.nl2br(e((string) $version->lyrics)).'</div>';
+        $credits = $this->renderCredits($version);
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
             if (! $record || ! Storage::disk('local')->exists($record->storage_path)) return '';
             $transform = 'rotate('.((float) ($image['rotation'] ?? 0)).'deg) scale('.(($image['flipX'] ?? false) ? -1 : 1).', '.(($image['flipY'] ?? false) ? -1 : 1).')';
             return '<img class="placed-image" src="'.e(Storage::disk('local')->path($record->storage_path)).'" style="left:'.((float) ($image['x'] ?? 20)).'px;top:'.((float) ($image['y'] ?? 20)).'px;width:'.((float) ($image['width'] ?? 100)).'px;height:'.((float) ($image['height'] ?? 100)).'px;transform:'.$transform.'">';
         })->implode('');
-        return $this->htmlPage($directory, $version->song->title, '<div class="song-number">'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images, $format, 'song-'.$number);
+        $imageCredits = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): ?string {
+            $record = $version->images->firstWhere('id', $image['id'] ?? null);
+            $credit = trim((string) ($image['credits'] ?? ''));
+            return $record && $credit !== '' ? e($credit) : null;
+        })->filter()->values();
+        $imageCreditBlock = $imageCredits->isNotEmpty() ? '<div class="image-credits"><strong>'.($imageCredits->count() === 1 ? 'Bild:' : 'Bilder:').'</strong> '.$imageCredits->implode(' · ').'</div>' : '';
+        return $this->htmlPage($directory, $version->song->title, '<div class="song-number">'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits.$imageCreditBlock, $format, 'song-'.$number);
+    }
+
+    private function renderCredits(SongVersion $version): string
+    {
+        $author = trim((string) $version->song->author);
+        $composer = trim((string) $version->song->composer);
+        $copyright = trim((string) $version->song->copyright_notice);
+        $credit = $author !== '' && $composer !== '' && mb_strtolower($author) === mb_strtolower($composer)
+            ? 'Text &amp; Musik: '.e($author)
+            : collect([$author !== '' ? 'Text: '.e($author) : null, $composer !== '' ? 'Musik: '.e($composer) : null])->filter()->implode(' / ');
+        if ($copyright !== '') $credit .= ($credit !== '' ? '. ' : '').e($copyright);
+        return $credit !== '' ? '<div class="song-credits">'.$credit.'</div>' : '';
     }
 
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
         $size = $format === 'a5' ? '148mm 210mm' : '210mm 297mm';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>@page{size:'.$size.';margin:'.config('songs.page_margin_mm', 12).'mm}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';position:relative;margin:0}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'pt;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 12mm}.part{margin:0 0 7mm;white-space:normal}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11pt}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body>'.$content.'</body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>@page{size:'.$size.';margin:'.config('songs.page_margin_mm', 12).'mm}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';position:relative;margin:0;min-height:100%}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'pt;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0}.song-credits{position:absolute;right:0;bottom:0;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right}.image-credits{position:absolute;right:0;bottom:8mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:90%;}.part{margin:0 0 7mm;white-space:normal}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11pt}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body>'.$content.'</body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';

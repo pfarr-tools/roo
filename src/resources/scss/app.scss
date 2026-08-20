@@ -116,7 +116,7 @@ body {
 .song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 2rem; }
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
 .song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
-.song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; }
+.song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; cursor: move; }
 .song-image-selection.selected { border-color: var(--bs-primary); }
 .song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }
 .image-handle { position: absolute; z-index: 3; width: .7rem; height: .7rem; padding: 0; border: 1px solid var(--bs-primary); border-radius: 50%; background: #fff; }

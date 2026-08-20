@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SongVersion;
 use App\Models\SongImage;
 use App\Models\Song;
+use App\Models\ResourceReference;
 use App\Services\SongbookPdfExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class SongController extends Controller
         return Inertia::render('Songs/Index', [
             'songs' => $songs,
             'filters' => ['q' => $query],
+            'libraryImages' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
             'songStyles' => collect(config('songs'))->only([
                 'title_font_family', 'title_font_size', 'title_font_weight',
                 'text_font_family', 'text_font_size', 'text_font_weight',
@@ -104,6 +106,30 @@ class SongController extends Controller
         $data = $request->validate(['images' => ['required', 'array', 'max:20'], 'images.*' => ['image', 'max:10240']]);
         foreach ($data['images'] as $image) $songVersion->images()->create(['original_name' => $image->getClientOriginalName(), 'storage_path' => $image->store('songs/images', 'local'), 'mime_type' => $image->getMimeType(), 'size' => $image->getSize()]);
         return back()->with('success', 'Bilder wurden hinzugefügt.');
+    }
+
+    public function importLibraryImage(Request $request, SongVersion $songVersion): RedirectResponse
+    {
+        $this->authorizeEditableVersion($request, $songVersion);
+        $data = $request->validate(['resource_id' => ['required', 'integer']]);
+        $resource = ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->findOrFail($data['resource_id']);
+        abort_unless(Storage::disk('local')->exists($resource->storage_path), 404);
+        $extension = pathinfo($resource->original_name, PATHINFO_EXTENSION);
+        $path = 'songs/images/'.Str::uuid().($extension ? '.'.$extension : '');
+        Storage::disk('local')->copy($resource->storage_path, $path);
+        $songVersion->images()->create(['original_name' => $resource->original_name, 'storage_path' => $path, 'mime_type' => $resource->mime_type, 'size' => Storage::disk('local')->size($path)]);
+
+        return back()->with('success', 'Bild wurde aus der Bibliothek übernommen.');
+    }
+
+    public function destroyImage(Request $request, SongVersion $songVersion, SongImage $songImage): RedirectResponse
+    {
+        $this->authorizeEditableVersion($request, $songVersion);
+        abort_unless($songImage->song_version_id === $songVersion->id, 404);
+        Storage::disk('local')->delete($songImage->storage_path);
+        $songImage->delete();
+
+        return back()->with('success', 'Bild wurde gelöscht.');
     }
 
     public function generateSheet(Request $request, SongVersion $songVersion, SongbookPdfExporter $exporter): RedirectResponse

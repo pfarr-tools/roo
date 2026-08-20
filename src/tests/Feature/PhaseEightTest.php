@@ -6,6 +6,7 @@ use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Song;
 use App\Models\SongVersion;
+use App\Models\ResourceReference;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -111,4 +112,20 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=a5&through_date=2026-09-30");
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($book->fresh()->exports)->toHaveCount(1)->and($book->fresh()->checkpoints)->toHaveCount(1);
+});
+
+it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Bild Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Bildlied'])->versions()->create(['name' => 'Fassung']);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/dateien', ['resource' => UploadedFile::fake()->image('quelle.png')])->assertRedirect();
+    $resource = ResourceReference::firstOrFail();
+    $this->actingAs($user)->post("/lieder/fassungen/{$version->id}/bilder/bibliothek", ['resource_id' => $resource->id])->assertRedirect();
+    $image = $version->fresh()->images->firstOrFail();
+    expect($image->original_name)->toBe('quelle.png');
+
+    $this->actingAs($user)->delete("/lieder/fassungen/{$version->id}/bilder/{$image->id}")->assertRedirect();
+    expect($version->fresh()->images)->toBeEmpty();
 });
