@@ -10,13 +10,17 @@ const canvas = { width: 420, height: 595.28 }
 const form = useForm({ title: '', composer: '', author: '', copyright_notice: '', age_group: '', topics: '', notes: '', version_name: 'Standardfassung', lyrics: '', notation: '', chords: '', rights_status: 'unknown', rights_note: '', text_export_allowed: false, metadata_export_allowed: true, sheet: null })
 const editor = useForm({ song: {}, name: '', language: 'de', parts: [], layout_data: { images: [] } }), imageForm = useForm({ images: [] })
 const selectedImage = computed(() => editor.layout_data.images?.find(image => image.id === activeImageId.value) ?? null)
+const canvasImages = computed(() => (editor.layout_data.images ?? []).filter(image => editorVersion.value?.images?.some(item => item.id === image.id)))
 const filteredLibraryImages = computed(() => (props.libraryImages ?? []).filter(image => image.original_name.toLowerCase().includes(libraryQuery.value.toLowerCase())))
 const songCredits = computed(() => {
     const author = (editor.song.author ?? '').trim(), composer = (editor.song.composer ?? '').trim(), copyright = (editor.song.copyright_notice ?? '').trim()
     let credit = author && composer && author.toLowerCase() === composer.toLowerCase() ? `Text & Musik: ${author}` : [author && `Text: ${author}`, composer && `Musik: ${composer}`].filter(Boolean).join(' / ')
-    return copyright ? `${credit}${credit ? '. ' : ''}${copyright}` : credit
+    credit = copyright ? `${credit}${credit ? '. ' : ''}${copyright}` : credit
+    const images = (editor.layout_data.images ?? []).map(image => (image.credits ?? '').trim()).filter(Boolean)
+    return [credit, images.length ? `${images.length === 1 ? 'Bild:' : 'Bilder:'} ${images.join(' · ')}` : ''].filter(Boolean).join('\n')
 })
 const imageCredits = computed(() => (editor.layout_data.images ?? []).map(image => (image.credits ?? '').trim()).filter(Boolean))
+const previewCredits = computed(() => [songCredits.value, imageCredits.value.length ? `${imageCredits.value.length === 1 ? 'Bild:' : 'Bilder:'} ${imageCredits.value.join(' · ')}` : ''].filter(Boolean).join('\n'))
 const previewStyles = computed(() => ({ title: { fontFamily: props.songStyles?.title_font_family, fontSize: `${props.songStyles?.title_font_size ?? 24}px`, fontWeight: props.songStyles?.title_font_weight }, text: { fontFamily: props.songStyles?.text_font_family, fontSize: `${props.songStyles?.text_font_size ?? 14}px`, fontWeight: props.songStyles?.text_font_weight }, refrain: { fontFamily: props.songStyles?.refrain_font_family, fontSize: `${props.songStyles?.refrain_font_size ?? 14}px`, fontWeight: props.songStyles?.refrain_font_weight } }))
 function search() { router.get('/lieder', { q: query.value }, { preserveState: true, replace: true }) }
 function save() { form.post('/lieder', { forceFormData: true, onSuccess: () => { modal.value = false; form.reset() } }) }
@@ -41,7 +45,7 @@ function imageStyle(image) { return { left: 0, top: 0, width: `${image.width}px`
 function beginInteraction(type, event, image, corner = null) { event.preventDefault(); activeImageId.value = image.id; interaction.value = { type, corner, image, startX: event.clientX, startY: event.clientY, x: image.x, y: image.y, width: image.width, height: image.height, rotation: image.rotation }; window.addEventListener('pointermove', continueInteraction); window.addEventListener('pointerup', endInteraction, { once: true }) }
 function continueInteraction(event) { const state = interaction.value; if (!state) return; const dx = event.clientX - state.startX, dy = event.clientY - state.startY; if (state.type === 'move') { state.image.x = Math.max(0, Math.min(canvas.width - state.image.width, state.x + dx)); state.image.y = Math.max(0, Math.min(canvas.height - state.image.height, state.y + dy)); return } if (state.type === 'resize') { const west = state.corner.includes('w'), north = state.corner.includes('n'), width = Math.max(20, state.width + (west ? -dx : dx)), height = Math.max(20, state.height + (north ? -dy : dy)); state.image.width = width; state.image.height = height; state.image.x = Math.max(0, Math.min(canvas.width - width, west ? state.x + state.width - width : state.x)); state.image.y = Math.max(0, Math.min(canvas.height - height, north ? state.y + state.height - height : state.y)); return } const centerX = state.x + state.width / 2, centerY = state.y + state.height / 2; state.image.rotation = state.rotation + (Math.atan2(event.clientY - centerY - (state.startY - centerY), event.clientX - centerX - (state.startX - centerX)) * 180 / Math.PI) }
 function endInteraction() { interaction.value = null; window.removeEventListener('pointermove', continueInteraction) }
-function removeSelectedImage() { if (selectedImage.value) { editor.layout_data.images = editor.layout_data.images.filter(image => image.id !== selectedImage.value.id); activeImageId.value = null } }
+function removeSelectedImage() { if (selectedImage.value) { editor.layout_data = { ...editor.layout_data, images: editor.layout_data.images.filter(image => image.id !== selectedImage.value.id) }; activeImageId.value = null } }
 function handleImageKeydown(event) { if ((event.key === 'Delete' || event.key === 'Backspace') && selectedImage.value) { event.preventDefault(); removeSelectedImage() } }
 window.addEventListener('keydown', handleImageKeydown)
 async function removeSong(song) { if (await requestConfirmation({ message: `„${song.title}“ wirklich löschen?` })) router.delete(`/lieder/${song.id}`) }

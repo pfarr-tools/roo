@@ -128,8 +128,13 @@ body {
 .song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 1.25rem; }
 .song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
 .song-preview-credits, .song-preview-image-credits { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 8px; font-weight: 400; text-align: right; }
+.song-preview-credits { white-space: pre-line; }
 .song-preview-credits { position: absolute; right: .75rem; bottom: .75rem; max-width: 85%; }
-.song-preview-image-credits { position: absolute; right: .75rem; bottom: 2.2rem; max-width: 85%; }
+.song-preview-image-credits { display: none; }
+.list-group-item:has(> div > button[title="Lied löschen"]) { display: flex; align-items: center; flex-wrap: nowrap; gap: .5rem; }
+.list-group-item:has(> div > button[title="Lied löschen"]) > div { display: contents; }
+.list-group-item:has(> div > button[title="Lied löschen"]) > div > button[title="Lied löschen"] { order: 99; margin-left: auto !important; }
+.list-group-item:has(> div > button[title="Lied löschen"]) > div > span { min-width: 0; }
 .song-image-selection { position: absolute; z-index: 2; border: 1px solid transparent; cursor: move; }
 .song-image-selection.selected { border-color: var(--bs-primary); }
 .song-image-selection img { position: absolute; object-fit: contain; transform-origin: center; pointer-events: none; }

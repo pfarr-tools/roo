@@ -58,7 +58,6 @@ class SongbookPdfExporter
     {
         $parts = $version->parts->map(fn ($part) => '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($part->content).'</section>')->implode('');
         if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
-        $credits = $this->renderCredits($version);
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
             if (! $record || ! Storage::disk('local')->exists($record->storage_path)) return '';
@@ -70,11 +69,11 @@ class SongbookPdfExporter
             $credit = trim((string) ($image['credits'] ?? ''));
             return $record && $credit !== '' ? e($credit) : null;
         })->filter()->values();
-        $imageCreditBlock = $imageCredits->isNotEmpty() ? '<div class="image-credits"><strong>'.($imageCredits->count() === 1 ? 'Bild:' : 'Bilder:').'</strong> '.$imageCredits->implode(' · ').'</div>' : '';
-        return $this->htmlPage($directory, $version->song->title, '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits.$imageCreditBlock, $format, 'song-'.$number);
+        $credits = $this->renderCredits($version, $imageCredits->all());
+        return $this->htmlPage($directory, $version->song->title, '<div class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</div><h1>'.e($version->song->title).'</h1>'.$parts.$images.$credits, $format, 'song-'.$number);
     }
 
-    private function renderCredits(SongVersion $version): string
+    private function renderCredits(SongVersion $version, array $imageCredits = []): string
     {
         $author = trim((string) $version->song->author);
         $composer = trim((string) $version->song->composer);
@@ -83,13 +82,19 @@ class SongbookPdfExporter
             ? 'Text &amp; Musik: '.e($author)
             : collect([$author !== '' ? 'Text: '.e($author) : null, $composer !== '' ? 'Musik: '.e($composer) : null])->filter()->implode(' / ');
         if ($copyright !== '') $credit .= ($credit !== '' ? '. ' : '').e($copyright);
-        return $credit !== '' ? '<div class="song-credits">'.$credit.'</div>' : '';
+        $lines = array_filter([$credit, $imageCredits !== [] ? ($this->imageCreditLabel($imageCredits).' '.implode(' · ', $imageCredits)) : null]);
+        return $lines !== [] ? '<div class="song-credits">'.implode('<br>', $lines).'</div>' : '';
+    }
+
+    private function imageCreditLabel(array $credits): string
+    {
+        return count($credits) === 1 ? 'Bild:' : 'Bilder:';
     }
 
     private function htmlPage(string $directory, string $title, string $content, string $format, string $name): string
     {
         $size = $format === 'a5' ? '148mm 210mm' : '210mm 297mm';
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'px;font-weight:'.config('songs.text_font_weight', 'normal').';width:559.37px;height:793.7px;position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:420px;height:595.28px;padding:16px;overflow:hidden;transform:scale(1.332);transform-origin:top left}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'px;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:12px;bottom:12px;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right}.image-credits{position:absolute;right:12px;bottom:35px;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'px;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11px}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:'.config('songs.page_margin_top_mm', 17).'mm '.config('songs.page_margin_right_mm', 17).'mm '.config('songs.page_margin_bottom_mm', 17).'mm '.config('songs.page_margin_left_mm', 20).'mm}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'px;font-weight:'.config('songs.text_font_weight', 'normal').';width:420px;height:665px;position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:420px;height:595.28px;padding:16px;overflow:hidden}h1{font-family:"'.config('songs.title_font_family', 'Comic Neue').'";font-size:'.config('songs.title_font_size', 24).'px;font-weight:'.config('songs.title_font_weight', 'bold').';margin:0 0 2rem}.song-credits{position:absolute;right:12px;bottom:12px;font-family:"Atkinson Hyperlegible Next";font-size:8px;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'px;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.song-number{float:right;font-size:11px}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
         $pdfPath = $directory.'/'.$name.'.pdf';
