@@ -18,20 +18,23 @@ use Inertia\Response;
 
 class SongController extends Controller
 {
-    public function index(Request $request): Response
+    public function create(Request $request): Response
     {
-        $query = trim((string) $request->query('q', ''));
-        $sort = in_array($request->query('sort'), ['title', 'author'], true) ? $request->query('sort') : 'title';
-        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
-        $songs = Song::where(fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
-            ->with(['versions.song:id,organization_id,title,composer,author,copyright_notice,age_group,topics,notes', 'versions.sheet', 'versions.parts', 'versions.images'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))
-            ->orderBy($sort, $direction)->get();
+        return Inertia::render('Songs/Index', $this->editorProps($request));
+    }
 
-        $songs->each(fn (Song $song) => $song->setAttribute('can_delete', $song->organization_id === $request->user()->organization_id));
+    public function edit(Request $request, SongVersion $songVersion): Response
+    {
+        $this->authorizeEditableVersion($request, $songVersion);
+        $songVersion->load(['song:id,organization_id,title,composer,author,copyright_notice,age_group,topics,notes', 'sheet', 'parts', 'images']);
+        return Inertia::render('Songs/Index', $this->editorProps($request, $songVersion));
+    }
 
-        return Inertia::render('Songs/Index', [
-            'songs' => $songs,
-            'filters' => ['q' => $query, 'sort' => $sort, 'direction' => $direction],
+    private function editorProps(Request $request, ?SongVersion $songVersion = null): array
+    {
+        return [
+            'songVersion' => $songVersion,
+            'isCreating' => $songVersion === null,
             'libraryImages' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
             'flux' => ['enabled' => filled($request->user()->flux_api_key), 'userName' => $request->user()->name, 'models' => config('flux.models')],
             'songStyles' => collect(config('songs'))->only([
@@ -39,7 +42,7 @@ class SongController extends Controller
                 'text_font_family', 'text_font_size', 'text_font_weight',
                 'refrain_font_family', 'refrain_font_size', 'refrain_font_weight',
             ])->all(),
-        ]);
+        ];
     }
 
     public function store(Request $request): RedirectResponse
@@ -59,7 +62,7 @@ class SongController extends Controller
         $version = $song->versions()->create(collect($data)->only(['version_name', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed'])->merge(['name' => $data['version_name']])->all());
         if ($request->hasFile('sheet')) $this->storeSheet($version, $request->file('sheet'));
 
-        return back()->with('success', 'Lied wurde gespeichert.');
+        return to_route('songs.versions.edit', $version)->with('success', 'Lied wurde gespeichert.');
     }
 
     public function destroy(Request $request, Song $song): RedirectResponse

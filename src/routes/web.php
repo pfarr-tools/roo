@@ -42,7 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/bibliothek', ResourceLibraryController::class)->name('resources.library');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class);
-    Route::get('/lieder', [SongController::class, 'index'])->name('songs.index');
+    Route::get('/bibliothek/lied/neu', [SongController::class, 'create'])->name('songs.create');
+    Route::get('/bibliothek/lied/{songVersion}', [SongController::class, 'edit'])->name('songs.versions.edit');
     Route::post('/lieder', [SongController::class, 'store'])->name('songs.store');
     Route::delete('/lieder/{song}', [SongController::class, 'destroy'])->name('songs.destroy');
     Route::post('/lieder/fassungen/{songVersion}/liedblatt', [SongController::class, 'uploadSheet'])->name('songs.sheets.upload');

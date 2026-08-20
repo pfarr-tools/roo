@@ -50,6 +50,21 @@ it('zeigt Lieder mit Musikcredits in der Bibliothek', function () {
     expect($version->fresh()->song->title)->toBe('Unser Lied');
 });
 
+it('öffnet den Liededitor unter der Bibliotheksroute', function () {
+    $organization = Organization::create(['name' => 'Editor Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Editorlied'])
+        ->versions()->create(['name' => 'Standardfassung']);
+
+    $this->actingAs($user)->get('/bibliothek/lied/'.$version->id)
+        ->assertInertia(fn ($page) => $page->component('Songs/Index')
+            ->where('songVersion.id', $version->id)
+            ->where('isCreating', false));
+
+    $this->actingAs($user)->get('/bibliothek/lied/neu')
+        ->assertInertia(fn ($page) => $page->component('Songs/Index')->where('isCreating', true));
+});
+
 it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'Copyright Organisation']);
