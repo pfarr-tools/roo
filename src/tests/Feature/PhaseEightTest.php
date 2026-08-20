@@ -98,6 +98,21 @@ it('bearbeitet Liedmetadaten und löscht eigene Lieder, aber keine globalen Lied
     expect(Song::find($global->id))->not->toBeNull();
 });
 
+it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'PDF Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $version = Song::create(['organization_id' => $organization->id, 'title' => 'PDF Lied'])->versions()->create(['name' => 'Fassung']);
+    Storage::disk('local')->put('songs/generated/old.pdf', "%PDF-1.4\nstartxref\n%%EOF");
+    $version->update(['generated_sheet_path' => 'songs/generated/old.pdf']);
+
+    $response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt");
+
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    $generated = Storage::disk('local')->get($version->fresh()->generated_sheet_path);
+    expect($generated)->toStartWith('%PDF-')->toContain('%%EOF');
+});
+
 it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'Export Organisation']);

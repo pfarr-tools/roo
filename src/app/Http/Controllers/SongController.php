@@ -158,7 +158,7 @@ class SongController extends Controller
     {
         if (! Storage::disk('local')->exists($path) || Storage::disk('local')->size($path) < 100) return false;
         $contents = Storage::disk('local')->get($path);
-        return str_starts_with($contents, '%PDF-') && str_contains($contents, '%%EOF');
+        return str_starts_with($contents, '%PDF-') && preg_match('/startxref\s+\d+\s+%%EOF/s', $contents) === 1;
     }
 
     public function image(Request $request, SongVersion $songVersion, SongImage $songImage)
