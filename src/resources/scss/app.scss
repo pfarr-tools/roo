@@ -129,9 +129,9 @@ body {
 .song-hole-hint { position: absolute; left: 25.7px; width: 17px; height: 17px; border: 1px solid rgba(108, 117, 125, .35); border-radius: 50%; transform: translateY(-50%); }
 .song-hole-hint:first-child { top: 184.2px; }
 .song-hole-hint:last-child { top: 410.8px; }
-.song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 24px; }
-.song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 10.51px; font-weight: 400; white-space: pre-wrap; margin-bottom: 15px; }
-.song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 10.51px; font-weight: 400; }
+.song-preview-title { font-family: 'Comic Neue', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.song-preview-part { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 14px; font-weight: 400; white-space: pre-wrap; margin-bottom: 15px; }
+.song-preview-refrain { font-family: 'Comic Neue', sans-serif; font-size: 14px; font-weight: 400; }
 .song-preview-credits, .song-preview-image-credits { font-family: 'Atkinson Hyperlegible Next', sans-serif; font-size: 6px; font-weight: 400; text-align: right; }
 .song-preview-credits { white-space: pre-line; }
 .song-preview-credits { position: absolute; right: 48.24px; bottom: 48.24px; max-width: 66%; }

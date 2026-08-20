@@ -7,7 +7,6 @@ import { requestConfirmation } from '../../utils/confirmation'
 const props = defineProps({ songs: Array, filters: Object, songStyles: Object, libraryImages: Array })
 const query = ref(props.filters?.q ?? ''), modal = ref(false), editorTab = ref('metadata'), editorVersion = ref(null), generatedSheetUrl = ref(null), activeImageId = ref(null), draggedPartIndex = ref(null), interaction = ref(null), libraryModal = ref(false), libraryQuery = ref('')
 const canvas = { width: 420, height: 595.28 }
-const previewScale = canvas.width / (148 * 96 / 25.4)
 const form = useForm({ title: '', composer: '', author: '', copyright_notice: '', age_group: '', topics: '', notes: '', version_name: '', lyrics: '', notation: '', chords: '', text_export_allowed: false, metadata_export_allowed: true, sheet: null })
 const editor = useForm({ song: {}, name: '', language: 'de', parts: [], layout_data: { images: [] } }), imageForm = useForm({ images: [] })
 const selectedImage = computed(() => editor.layout_data.images?.find(image => image.id === activeImageId.value) ?? null)
@@ -22,7 +21,7 @@ const songCredits = computed(() => {
 })
 const imageCredits = computed(() => (editor.layout_data.images ?? []).map(image => (image.credits ?? '').trim()).filter(Boolean))
 const previewCredits = computed(() => [songCredits.value, imageCredits.value.length ? `${imageCredits.value.length === 1 ? 'Bild:' : 'Bilder:'} ${imageCredits.value.join(' · ')}` : ''].filter(Boolean).join('\n'))
-const previewStyles = computed(() => ({ title: { fontFamily: props.songStyles?.title_font_family, fontSize: `${(props.songStyles?.title_font_size ?? 24) * previewScale}px`, fontWeight: props.songStyles?.title_font_weight }, text: { fontFamily: props.songStyles?.text_font_family, fontSize: `${(props.songStyles?.text_font_size ?? 14) * previewScale}px`, fontWeight: props.songStyles?.text_font_weight }, refrain: { fontFamily: props.songStyles?.refrain_font_family, fontSize: `${(props.songStyles?.refrain_font_size ?? 14) * previewScale}px`, fontWeight: props.songStyles?.refrain_font_weight } }))
+const previewStyles = computed(() => ({ title: { fontFamily: props.songStyles?.title_font_family, fontSize: `${props.songStyles?.title_font_size ?? 24}px`, fontWeight: props.songStyles?.title_font_weight }, text: { fontFamily: props.songStyles?.text_font_family, fontSize: `${props.songStyles?.text_font_size ?? 14}px`, fontWeight: props.songStyles?.text_font_weight }, refrain: { fontFamily: props.songStyles?.refrain_font_family, fontSize: `${props.songStyles?.refrain_font_size ?? 14}px`, fontWeight: props.songStyles?.refrain_font_weight } }))
 function search() { router.get('/lieder', { q: query.value }, { preserveState: true, replace: true }) }
 function save() { form.post('/lieder', { forceFormData: true, onSuccess: () => { modal.value = false; form.reset() } }) }
 function generatedSheetUrlFor(version, format = 'a5', cacheKey = (format === 'a4' ? version.generated_sheet_a4_path ?? version.generated_sheet_a4_at : version.generated_sheet_path ?? version.generated_sheet_at) ?? Date.now()) { const path = format === 'a4' ? version.generated_sheet_a4_path : version.generated_sheet_path; return path ? `/lieder/fassungen/${version.id}/liedblatt/erzeugt${format === 'a4' ? '/a4' : ''}?v=${encodeURIComponent(cacheKey)}` : null }
