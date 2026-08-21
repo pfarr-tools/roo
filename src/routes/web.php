@@ -144,10 +144,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'index'])->name('assessments.index');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/neu', [AssessmentController::class, 'create'])->name('assessments.create');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/bearbeiten', [AssessmentController::class, 'edit'])->name('assessments.edit');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'store'])->name('assessments.store');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/aufgaben/{assessmentTask}/ergebnisse', [AssessmentController::class, 'updateResult'])->name('assessments.results.update');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.index');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/neu', [EvaluationController::class, 'createPeriod'])->name('evaluations.periods.create');
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/bearbeiten', [EvaluationController::class, 'edit'])->name('evaluations.edit');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'songbookTitlePage'])->name('teaching-groups.songbook.title-page');

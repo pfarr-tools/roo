@@ -1,0 +1,8 @@
+<script setup>
+import AppShell from '../../Components/Ui/AppShell.vue'
+import { useForm } from '@inertiajs/vue3'
+const props = defineProps({ group: Object, evaluation: Object })
+const form = useForm({ draft_text: props.evaluation.draft_text ?? '', teacher_note: props.evaluation.teacher_note ?? '', status: props.evaluation.status ?? 'draft' })
+function save() { form.put(`/unterrichtsgruppen/${props.group.id}/bewertungen/${props.evaluation.id}`) }
+</script>
+<template><AppShell><template #toolbar><a :href="`/unterrichtsgruppen/${group.id}/bewertungen`" class="btn btn-sm btn-light" title="Schließen" aria-label="Schließen"><i class="bi bi-x-lg" aria-hidden="true"></i></a></template><div class="container-full px-3 py-4"><h1 class="h2">Bewertung bearbeiten</h1><p class="text-muted">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }} · {{ evaluation.period.label }}</p><form class="card card-body" @submit.prevent="save"><label class="form-label" for="draft-text">Bewertungsentwurf</label><textarea id="draft-text" v-model="form.draft_text" class="form-control" rows="12"></textarea><label class="form-label mt-3" for="teacher-note">Interne Notiz</label><textarea id="teacher-note" v-model="form.teacher_note" class="form-control" rows="4"></textarea><div class="form-check mt-3"><input id="evaluation-confirmed" v-model="form.status" class="form-check-input" type="checkbox" true-value="confirmed" false-value="draft"><label class="form-check-label" for="evaluation-confirmed">Bewertung als bestätigt markieren</label></div><div class="text-end mt-4"><button class="btn btn-primary" type="submit" :disabled="form.processing">Speichern</button></div></form></div></AppShell></template>

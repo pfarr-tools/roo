@@ -382,6 +382,7 @@ export default {
     groupTimetable: 'Stundenplan',
     groupAssessments: 'Lernstandserhebungen',
     groupEvaluations: 'Bewertungen',
+    groupContents: 'Inhalte',
     studentsIntro: 'Alle Schüler:innen deiner Schulen alphabetisch verwalten.',
     exportStudents: 'CSV exportieren',
     exportStudentsTitle: 'Schüler:innen als CSV exportieren',
