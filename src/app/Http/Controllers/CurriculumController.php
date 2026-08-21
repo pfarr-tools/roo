@@ -199,15 +199,24 @@ class CurriculumController extends Controller
     {
         $this->ensureVisible($curriculum);
         abort_unless($topic->version->curriculum_id === $curriculum->id, 404);
+        abort_unless($topic->version->is_editable, 403);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'hours' => ['nullable', 'integer', 'min:0', 'max:999'],
             'notes' => ['nullable', 'string', 'max:10000'],
             'preparation_questions' => ['nullable', 'string', 'max:10000'],
+            'perspectives' => ['nullable', 'array'],
+            'perspectives.*' => ['nullable', 'string', 'max:10000'],
         ]);
         $data['preparation_questions'] = collect(preg_split('/\R/', $data['preparation_questions'] ?? ''))
             ->map(fn (string $question): string => trim($question))->filter()->values()->all();
-        $topic->update($data);
+        $allowedPerspectives = collect(['common', ...($curriculum->denominations ?? [])])->unique()->values();
+        $perspectives = collect($data['perspectives'] ?? [])->filter(fn ($text, $denomination): bool => $allowedPerspectives->contains($denomination));
+        $topic->update(collect($data)->except('perspectives')->all());
+        $topic->perspectives()->whereNotIn('denomination', $allowedPerspectives)->delete();
+        foreach ($perspectives as $denomination => $text) {
+            $topic->perspectives()->updateOrCreate(['denomination' => $denomination], ['text' => trim((string) $text)]);
+        }
 
         return back();
     }

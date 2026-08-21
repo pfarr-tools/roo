@@ -181,6 +181,8 @@ export default {
         common: 'Zentrale Inhalte',
     },
     perspectives: 'Perspektiven',
+    perspective: 'Perspektive',
+    centralPerspective: 'Zentrale Inhalte',
     educationPlanBindings: 'Zugeordnete Bildungspläne',
     denomination: 'Konfession',
     groupDenominationHint: 'Es gelten nur die konfessionsbezogenen Kompetenzen dieses Curriculums sowie gemeinsame Kompetenzen.',

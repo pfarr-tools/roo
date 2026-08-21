@@ -71,12 +71,13 @@ it('creates and edits an own curriculum without changing the source', function (
     $own = Curriculum::where('title', 'Mein Religionscurriculum')->firstOrFail();
     $topic = $own->versions()->firstOrFail()->topics()->firstOrFail();
     $this->put("/curricula/{$own->id}", ['title' => 'Mein bearbeitetes Curriculum', 'school_type' => 'GS', 'grades' => [1, 2]])->assertRedirect();
-    $this->put("/curricula/{$own->id}/themen/{$topic->id}", ['title' => 'Neue UE', 'hours' => 3, 'notes' => 'Eigene Notiz', 'preparation_questions' => "Frage eins\nFrage zwei"])->assertRedirect();
+    $this->put("/curricula/{$own->id}/themen/{$topic->id}", ['title' => 'Neue UE', 'hours' => 3, 'notes' => 'Eigene Notiz', 'preparation_questions' => "Frage eins\nFrage zwei", 'perspectives' => ['common' => 'Gemeinsame Perspektive', 'evangelical' => 'Evangelische Perspektive', 'catholic' => 'Katholische Perspektive']])->assertRedirect();
     $this->post("/curricula/{$own->id}/themen", ['title' => 'Zusätzliche eigene UE', 'year' => 2, 'hours' => 2])->assertRedirect();
 
     expect($own->fresh()->title)->toBe('Mein bearbeitetes Curriculum')
         ->and($topic->fresh()->title)->toBe('Neue UE')
         ->and($topic->fresh()->preparation_questions)->toBe(['Frage eins', 'Frage zwei'])
+        ->and($topic->fresh()->perspectives()->where('denomination', 'common')->value('text'))->toBe('Gemeinsame Perspektive')
         ->and($own->fresh()->topics()->where('title', 'Zusätzliche eigene UE')->value('year'))->toBe(2)
         ->and(Curriculum::where('external_identifier', 'GS_1-2_A')->first()->topics()->first()->title)->not->toBe('Neue UE');
 
