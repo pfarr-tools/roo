@@ -11,7 +11,6 @@ const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
 const competencyPickerOpen = ref(false)
-const competencyPickerApplying = ref(false)
 const form = useForm({
     title: '',
     duration: 1,
@@ -22,6 +21,7 @@ const form = useForm({
     notes: '',
 })
 const competencyForm = useForm({ competency_ids: [] })
+const selectedEducationPlanIds = ref([])
 const phaseDraft = ref([])
 const resourceLinksDraft = ref([])
 const materialItemsDraft = ref([])
@@ -42,6 +42,7 @@ function syncLesson(lesson) {
     })
     form.reset()
     competencyForm.competency_ids = lesson.competencies?.map(competency => competency.id) ?? []
+    selectedEducationPlanIds.value = lesson.competencies?.map(competency => competency.education_plan_competency_id).filter(Boolean) ?? []
     phaseDraft.value = (lesson.phases ?? []).map(phase => ({ ...phase }))
     resourceLinksDraft.value = [...(lesson.resource_links ?? props.resourceLinks ?? props.unit?.resource_links ?? [])].map(link => ({ ...link }))
     materialItemsDraft.value = [...(lesson.material_items ?? props.materialItems ?? [])].map(item => ({ ...item }))
@@ -58,7 +59,7 @@ const contentCompetencies = computed(() => unitCompetencies.value.filter(compete
 const competencyAreaGroups = competencies => { const groups = new Map(); for (const competency of competencies) { const key = competency.competency_area?.identifier || competency.education_plan_competency?.area?.external_identifier || 'other'; if (!groups.has(key)) groups.set(key, { key, area: competency.competency_area ?? (competency.education_plan_competency?.area ? { identifier: competency.education_plan_competency.area.external_identifier, title: competency.education_plan_competency.area.title } : null), competencies: [] }); groups.get(key).competencies.push(competency) } return [...groups.values()] }
 const processCompetencyGroups = computed(() => competencyAreaGroups(processCompetencies.value))
 const contentCompetencyGroups = computed(() => competencyAreaGroups(contentCompetencies.value))
-const lessonSelectedEducationPlanIds = computed(() => unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id)).map(competency => competency.curriculum_topic_competency_id || competency.education_plan_competency_id).filter(Boolean))
+const lessonSelectedEducationPlanIds = computed(() => selectedEducationPlanIds.value)
 const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {
     const represented = lesson.id === props.lesson?.id
         ? competencyForm.competency_ids.includes(competency.id)
@@ -74,34 +75,8 @@ const competencyCardStyle = competency => {
 
 function applyCompetencies(educationPlanCompetencyIds) {
     const selectedIds = [...new Set(educationPlanCompetencyIds)]
-    const selectedUnitCompetencyIds = []
-    const pending = []
-    selectedIds.forEach(educationPlanCompetencyId => {
-        const existing = unitCompetencies.value.find(competency => (competency.curriculum_topic_competency_id || competency.education_plan_competency_id) === educationPlanCompetencyId)
-        existing ? selectedUnitCompetencyIds.push(existing.id) : pending.push(educationPlanCompetencyId)
-    })
-    competencyPickerApplying.value = pending.length > 0
-    const addNext = index => {
-        if (index >= pending.length) {
-            competencyForm.competency_ids = selectedUnitCompetencyIds
-            competencyPickerApplying.value = false
-            return
-        }
-        const curriculumTopicCompetencyId = pending[index]
-        router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { curriculum_topic_competency_id: curriculumTopicCompetencyId }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: response => {
-                const updatedUnit = response.props.workspace?.units?.find(unit => unit.id === props.unit.id)
-                if (updatedUnit) unitCompetencies.value = [...(updatedUnit.competencies ?? [])]
-                const added = unitCompetencies.value.find(competency => competency.curriculum_topic_competency_id === curriculumTopicCompetencyId)
-                if (added) selectedUnitCompetencyIds.push(added.id)
-                addNext(index + 1)
-            },
-            onError: () => { competencyPickerApplying.value = false },
-        })
-    }
-    addNext(0)
+    selectedEducationPlanIds.value = selectedIds
+    competencyForm.competency_ids = unitCompetencies.value.filter(competency => selectedIds.includes(competency.education_plan_competency_id)).map(competency => competency.id)
 }
 
 function save() {
@@ -109,7 +84,7 @@ function save() {
         ...phase,
         social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
     }))
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, education_plan_competency_ids: selectedEducationPlanIds.value, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => emit('close'),
@@ -161,7 +136,7 @@ function updatePreparationStatus() {
                             </div>
                             <p v-else class="small text-muted">{{ de.noCompetencies }}</p>
                             <div class="position-relative mt-4">
-                                <button class="btn btn-outline-primary" type="button" :disabled="competencyPickerApplying" @click="competencyPickerOpen = true"><i class="bi bi-list-check me-1"></i>{{ de.addCompetency }}</button>
+                                <button class="btn btn-outline-primary" type="button" @click="competencyPickerOpen = true"><i class="bi bi-list-check me-1"></i>{{ de.addCompetency }}</button>
                             </div>
                         </div>
 
