@@ -8,6 +8,7 @@ const props = defineProps({
     selectedIds: { type: Array, default: () => [] },
     competencyText: { type: Function, required: true },
     lessons: { type: Array, default: () => [] },
+    coveredHours: { type: Object, default: () => ({}) },
     currentLessonId: { type: [String, Number], default: null },
 })
 const emit = defineEmits(['update:modelValue', 'apply'])
@@ -63,8 +64,11 @@ const competencyHours = competency => props.lessons.reduce((total, lesson) => {
     const represented = (lesson.competencies ?? []).some(item => [item.curriculum_topic_competency_id, item.education_plan_competency_id, item.curriculum_competency?.id, item.education_plan_competency?.id].filter(value => value !== null && value !== undefined).some(value => optionIds.has(String(value))))
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
+const coveredHoursFor = competency => Object.prototype.hasOwnProperty.call(props.coveredHours, String(competency.id))
+    ? Number(props.coveredHours[String(competency.id)] ?? 0)
+    : competencyHours(competency)
 const competencyCardStyle = competency => {
-    const hours = competencyHours(competency)
+    const hours = coveredHoursFor(competency)
     const intensity = Math.min(0.78, 0.18 + hours * 0.16)
     return { backgroundColor: hours ? `rgba(var(--bs-success-rgb), ${intensity})` : 'rgba(var(--bs-secondary-rgb), 0.04)' }
 }

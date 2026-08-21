@@ -66,6 +66,11 @@ class LessonWorkspaceController extends Controller
             $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
         });
         $groupLessons = $group->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies'])->get()->flatMap->lessons->values();
+        $groupCompetencyHours = $groupLessons->flatMap(fn ($groupLesson) => $groupLesson->competencies->map(fn ($competency) => ['id' => $competency->education_plan_competency_id, 'hours' => (float) $groupLesson->duration]))
+            ->filter(fn ($item) => $item['id'] !== null)
+            ->groupBy('id')
+            ->map(fn ($items) => $items->sum('hours'))
+            ->all();
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
         $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
             if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
@@ -110,6 +115,7 @@ class LessonWorkspaceController extends Controller
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'competencyOptions' => $competencyOptions,
             'groupLessons' => $groupLessons,
+            'groupCompetencyHours' => $groupCompetencyHours,
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
             'observationStudents' => $groupStudents,
             'observationTypes' => $observationTypes,
