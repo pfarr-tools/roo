@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateLessonExecutionRequest;
+use App\Models\AttendanceRecord;
+use App\Models\CompetenceEvidence;
 use App\Models\LessonTemplate;
-use App\Models\MaterialItem;
+use App\Models\Observation;
+use App\Models\ObservationType;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
-use App\Http\Requests\UpdateLessonExecutionRequest;
-use App\Models\ScheduledLesson;
-use App\Models\ObservationType;
-use App\Models\AttendanceRecord;
-use App\Models\Observation;
-use App\Models\CompetenceEvidence;
+use App\Models\SongVersion;
 use App\Services\CompetencyResolver;
-use App\Services\WscDocInspector;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
+use App\Services\WscDocInspector;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,6 +37,9 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.unit.materialItems',
             'scheduledLesson.lesson.resources',
             'scheduledLesson.lesson.materialItems',
+            'scheduledLesson.lesson.assessmentTasks.competency',
+            'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency',
+            'scheduledLesson.lesson.assessmentTasks.levels',
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
@@ -93,7 +96,8 @@ class LessonWorkspaceController extends Controller
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
             'materialItems' => $lesson->unit->materialItems->merge($lesson->materialItems)->unique('id')->values(),
-            'songs' => \App\Models\SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
+            'assessmentTasks' => $lesson->assessmentTasks,
+            'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
             'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
@@ -146,6 +150,7 @@ class LessonWorkspaceController extends Controller
                 }
             }
         });
+
         return back()->with('success', 'Beobachtungen wurden gespeichert.');
     }
 
@@ -166,10 +171,10 @@ class LessonWorkspaceController extends Controller
 
     private function filenamePart(string $value): string
     {
-        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), " .-");
+        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), ' .-');
     }
 
-    public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): \Illuminate\Http\RedirectResponse
+    public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): RedirectResponse
     {
         $group = $scheduleSlot->group;
         $this->authorize('update', $group);
@@ -194,6 +199,7 @@ class LessonWorkspaceController extends Controller
         abort_if($versions->isEmpty(), 422, 'Für diese Stunde sind keine neuen Lieder zugeordnet.');
 
         $path = $exporter->exportSongs($versions, $format, $book, $data['instrument'] ?? null);
+
         return Storage::disk('local')->download($path, 'Neue-Lieder-Stunde-'.$scheduleSlot->date->format('Y-m-d').'-'.$format.'.pdf');
     }
 }

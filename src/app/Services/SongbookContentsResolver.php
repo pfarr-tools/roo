@@ -36,7 +36,9 @@ class SongbookContentsResolver
 
         foreach ($assigned as $assignment) {
             $version = $assignment['version'];
-            if ($existingIds->has($version->id) || ! $this->inRange($assignment['date'], $throughDate, $afterDate)) continue;
+            if ($existingIds->has($version->id) || ! $this->inRange($assignment['date'], $throughDate, $afterDate)) {
+                continue;
+            }
 
             $entry = new GroupSongbookEntry([
                 'song_version_id' => $version->id,
@@ -68,25 +70,37 @@ class SongbookContentsResolver
     {
         $assigned = collect();
         foreach ($book->group?->teachingUnits ?? [] as $unit) {
-            foreach ($unit->songs as $version) $assigned->push(['version' => $version, 'date' => $version->pivot?->created_at ?? now()]);
+            foreach ($unit->songs as $version) {
+                $assigned->push(['version' => $version, 'date' => $version->pivot?->created_at ?? now()]);
+            }
             foreach ($unit->lessons as $lesson) {
                 $date = $lesson->scheduledLessons->sortBy(fn ($scheduled) => $scheduled->slot?->date)->first()?->slot?->date
                     ?? $lesson->songs->first()?->pivot?->created_at
                     ?? now();
-                foreach ($lesson->songs as $version) $assigned->push(['version' => $version, 'date' => $date]);
-                foreach ($lesson->phases as $phase) foreach ($phase->songs as $version) $assigned->push(['version' => $version, 'date' => $date]);
+                foreach ($lesson->songs as $version) {
+                    $assigned->push(['version' => $version, 'date' => $date]);
+                }
+                foreach ($lesson->phases as $phase) {
+                    foreach ($phase->songs as $version) {
+                        $assigned->push(['version' => $version, 'date' => $date]);
+                    }
+                }
             }
         }
 
         return $assigned->groupBy(fn (array $assignment) => $assignment['version']->id)->map(function (Collection $matches): array {
             $first = $matches->sortBy(fn (array $assignment) => Carbon::parse($assignment['date']))->first();
+
             return $first;
         })->values();
     }
 
     private function inRange(mixed $date, ?string $throughDate, ?string $afterDate): bool
     {
-        if ($throughDate !== null && Carbon::parse($date)->toDateString() > $throughDate) return false;
+        if ($throughDate !== null && Carbon::parse($date)->toDateString() > $throughDate) {
+            return false;
+        }
+
         return $afterDate === null || Carbon::parse($date)->gt(Carbon::parse($afterDate));
     }
 }

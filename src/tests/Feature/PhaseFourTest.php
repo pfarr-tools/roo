@@ -3,11 +3,11 @@
 use App\Models\Curriculum;
 use App\Models\Lesson;
 use App\Models\Organization;
+use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolPeriod;
 use App\Models\SchoolYear;
-use App\Models\ScheduleSlot;
-use App\Models\ScheduledLesson;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;

@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TeachingGroup;
-use App\Models\TeachingUnit;
+use App\Http\Requests\StorePhaseTemplateRequest;
 use App\Models\EducationPlan;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
 use App\Models\SocialForm;
-use App\Http\Requests\StorePhaseTemplateRequest;
+use App\Models\TeachingUnit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -119,7 +118,9 @@ class TeachingUnitController extends Controller
             }
             $materialItemIds[] = $material->id;
         }
-        if (array_key_exists('material_items', $data)) $teachingUnit->materialItems()->sync($materialItemIds);
+        if (array_key_exists('material_items', $data)) {
+            $teachingUnit->materialItems()->sync($materialItemIds);
+        }
 
         return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
     }

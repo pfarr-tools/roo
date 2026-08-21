@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SongbookExport extends Model
 {
     protected $table = 'group_songbook_exports';
+
     protected $casts = ['through_date' => 'date'];
-    public function songbook(): BelongsTo { return $this->belongsTo(GroupSongbook::class, 'group_songbook_id'); }
+
+    public function songbook(): BelongsTo
+    {
+        return $this->belongsTo(GroupSongbook::class, 'group_songbook_id');
+    }
 }

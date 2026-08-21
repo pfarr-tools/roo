@@ -51,6 +51,11 @@ class Lesson extends Model
         return $this->morphToMany(MaterialItem::class, 'material_itemable');
     }
 
+    public function assessmentTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(AssessmentTask::class, 'lesson_assessment_tasks')->withPivot('position')->withTimestamps();
+    }
+
     public function songs(): BelongsToMany
     {
         return $this->belongsToMany(SongVersion::class, 'lesson_songs')->withPivot('position')->withTimestamps();

@@ -14,6 +14,7 @@ class ScheduledLesson extends Model
     {
         return ['actual_on' => 'date'];
     }
+
     public const STATUS_ASSIGNED = 'assigned';
 
     public const STATUS_PLANNED = 'planned';

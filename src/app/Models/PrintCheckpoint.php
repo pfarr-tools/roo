@@ -10,5 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PrintCheckpoint extends Model
 {
     protected $casts = ['printed_at' => 'datetime'];
-    public function songbook(): BelongsTo { return $this->belongsTo(GroupSongbook::class, 'group_songbook_id'); }
+
+    public function songbook(): BelongsTo
+    {
+        return $this->belongsTo(GroupSongbook::class, 'group_songbook_id');
+    }
 }

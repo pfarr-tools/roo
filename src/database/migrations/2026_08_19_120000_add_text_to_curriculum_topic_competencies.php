@@ -8,11 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('curriculum_topic_competencies', function (Blueprint $table): void { $table->text('text')->nullable()->after('display'); });
+        Schema::table('curriculum_topic_competencies', function (Blueprint $table): void {
+            $table->text('text')->nullable()->after('display');
+        });
     }
 
     public function down(): void
     {
-        Schema::table('curriculum_topic_competencies', function (Blueprint $table): void { $table->dropColumn('text'); });
+        Schema::table('curriculum_topic_competencies', function (Blueprint $table): void {
+            $table->dropColumn('text');
+        });
     }
 };

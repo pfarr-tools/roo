@@ -505,9 +505,11 @@ Ein Emoticon ist ein konfigurierbarer Nachweis, keine automatische Note.
 
 ## Phase 10 – Lernstandserhebungen und Bewertung
 
-Fortschritt: `[~]` Lernstandserhebungen können gruppenbezogen mit Aufgaben,
-Kompetenzbezug, Punkten und G/M/E-Differenzierung angelegt werden; die
-Ergebniserfassung und transparenten Rundungsregeln folgen im nächsten Schnitt.
+Fortschritt: `[~]` Wiederverwendbare, kompetenzbezogene Prüfungsaufgaben sind
+als Bibliothekseinträge angelegt, können Unterrichtsstunden zugeordnet und in
+mehreren gruppenbezogenen Lernstandserhebungen zusammengestellt werden.
+G/M/E-Niveaus sind mehrfach pro Aufgabe möglich; Ergebniserfassung und
+transparente Rundungsregeln folgen im nächsten Schnitt.
 
 ### Ziel
 

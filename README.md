@@ -38,6 +38,7 @@ Architektur- und Arbeitsregeln finden sich in:
 - [Architektur](build/architecture.md)
 - [Domänenmodell](build/domain-model.md)
 - [Architekturentscheidungen](build/decisions/)
+- [Bibliothek: Eintragstypen und Zuordnungen](build/bibliothek.md)
 
 Für den produktiven Betrieb gibt es ein eigenes
 [Administrationshandbuch](docs/admin/README.md) mit Erstinstallation,

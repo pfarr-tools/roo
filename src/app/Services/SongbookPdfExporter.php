@@ -34,7 +34,9 @@ class SongbookPdfExporter
         $paths = [];
         foreach ($version->chordSets as $set) {
             $instrument = trim((string) $set->instrument);
-            if ($instrument === '') continue;
+            if ($instrument === '') {
+                continue;
+            }
             $pdf = $this->renderChordVersion($temporary, $version, $set, 'chords-'.$set->id);
             $this->writePdfMetadata($pdf, $version->song->title.' – '.$instrument, $author, $this->creditsText($version));
             $stored = 'songs/generated/'.Str::uuid().'.pdf';
@@ -42,6 +44,7 @@ class SongbookPdfExporter
             $paths[$instrument] = $stored;
         }
         File::deleteDirectory($temporary);
+
         return $paths;
     }
 
@@ -79,6 +82,7 @@ class SongbookPdfExporter
         $stored = 'songs/generated/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($stored, File::get($pdf));
         File::deleteDirectory($temporary);
+
         return $stored;
     }
 
@@ -95,9 +99,13 @@ class SongbookPdfExporter
             $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
                 ? $book->title_page_a4_path
                 : $book->title_page_path;
-            if ($format === 'chord-sheet') $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title', true);
-            elseif (str_ends_with(strtolower($titlePagePath), '.pdf')) $pages[] = Storage::disk('local')->path($titlePagePath);
-            else $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
+            if ($format === 'chord-sheet') {
+                $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title', true);
+            } elseif (str_ends_with(strtolower($titlePagePath), '.pdf')) {
+                $pages[] = Storage::disk('local')->path($titlePagePath);
+            } else {
+                $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
+            }
         }
         foreach ($entries as $entry) {
             $version = $entry->songVersion;
@@ -118,13 +126,18 @@ class SongbookPdfExporter
                 ? $this->overlaySongNumber($temporary, is_string($sourcePath) ? (str_starts_with($sourcePath, '/') ? $sourcePath : Storage::disk('local')->path($sourcePath)) : $sourcePath, $entry->song_number, $pageFormat, 'song-'.$entry->song_number, $imprint)
                 : $this->renderVersion($temporary, $entry->song_number, $version, $format === 'chord-sheet' ? 'a4-chord' : $format, $imprint);
         }
-        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $titlePageFormat, 'empty');
+        if ($pages === []) {
+            $pages[] = $this->htmlPage($temporary, 'Leeres Liederbuch', '<p>Dieses Liederbuch enthält noch keine Lieder.</p>', $titlePageFormat, 'empty');
+        }
         $output = $temporary.'/songbook.pdf';
         try {
             (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
         } catch (Throwable) {
-            if (count($pages) === 1) File::copy($pages[0], $output);
-            else $this->minimalPdf($output, 'Der Export benötigt pdfunite oder Chromium für die Zusammenstellung mehrerer Seiten.');
+            if (count($pages) === 1) {
+                File::copy($pages[0], $output);
+            } else {
+                $this->minimalPdf($output, 'Der Export benötigt pdfunite oder Chromium für die Zusammenstellung mehrerer Seiten.');
+            }
         }
         $stored = 'exports/songbooks/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($stored, File::get($output));
@@ -162,17 +175,23 @@ class SongbookPdfExporter
                 ? $this->overlaySongNumber($temporary, str_starts_with($sourcePath, '/') ? $sourcePath : Storage::disk('local')->path($sourcePath), $number, $format, 'song-'.$version->id, $imprint)
                 : $this->renderVersion($temporary, $number, $version, $format === 'chord-sheet' ? 'a4-chord' : $format, $imprint);
         })->all();
-        if ($pages === []) $pages[] = $this->htmlPage($temporary, 'Keine neuen Lieder', '<p>Für diese Stunde sind keine neuen Lieder zugeordnet.</p>', $format, 'empty');
+        if ($pages === []) {
+            $pages[] = $this->htmlPage($temporary, 'Keine neuen Lieder', '<p>Für diese Stunde sind keine neuen Lieder zugeordnet.</p>', $format, 'empty');
+        }
         $output = $temporary.'/songs.pdf';
         try {
             (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
         } catch (Throwable) {
-            if (count($pages) === 1) File::copy($pages[0], $output);
-            else $this->minimalPdf($output, 'Der Export benötigt pdfunite oder Chromium für die Zusammenstellung mehrerer Seiten.');
+            if (count($pages) === 1) {
+                File::copy($pages[0], $output);
+            } else {
+                $this->minimalPdf($output, 'Der Export benötigt pdfunite oder Chromium für die Zusammenstellung mehrerer Seiten.');
+            }
         }
         $stored = 'exports/songbooks/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($stored, File::get($output));
         File::deleteDirectory($temporary);
+
         return $stored;
     }
 
@@ -187,29 +206,39 @@ class SongbookPdfExporter
             }
             $prefix = $number === null ? '' : $number.'. ';
             $repeatSuffix = $part->is_repeated ? ' ('.($part->repeat_count ?? 2).'x)' : '';
+
             return '<section class="part '.($part->is_refrain ? 'refrain' : '').'">'.e($prefix.$part->content.$repeatSuffix).'</section>';
         })->implode('');
-        if ($parts === '') $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
+        if ($parts === '') {
+            $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
+        }
         $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
-            if (! $record || ! Storage::disk('local')->exists($record->storage_path)) return '';
+            if (! $record || ! Storage::disk('local')->exists($record->storage_path)) {
+                return '';
+            }
             $transform = 'rotate('.((float) ($image['rotation'] ?? 0)).'deg) scale('.(($image['flipX'] ?? false) ? -1 : 1).', '.(($image['flipY'] ?? false) ? -1 : 1).')';
             $x = ((float) ($image['x'] ?? 20)) * 148 / 420;
             $y = ((float) ($image['y'] ?? 20)) * 210 / 595.28;
             $width = ((float) ($image['width'] ?? 100)) * 148 / 420;
             $height = ((float) ($image['height'] ?? 100)) * 210 / 595.28;
+
             return '<img class="placed-image" src="'.e(Storage::disk('local')->path($record->storage_path)).'" style="left:'.$x.'mm;top:'.$y.'mm;width:'.$width.'mm;height:'.$height.'mm;transform:'.$transform.'">';
         })->implode('');
         $imageCredits = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): ?string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
             $credit = trim((string) ($image['credits'] ?? ''));
+
             return $record && $credit !== '' ? $credit : null;
         })->filter()->values();
         $credits = $this->renderCredits($version, $imageCredits->all());
         $heading = '<div class="song-heading"><h1>'.e($version->song->title).'</h1><span class="song-number"'.($number === 0 ? ' style="display:none"' : '').'>'.$number.'</span></div>';
         $page = $heading.$parts.$images.$credits;
-        if ($imprint !== null) $page .= '<div class="song-imprint">'.e($imprint).'</div>';
+        if ($imprint !== null) {
+            $page .= '<div class="song-imprint">'.e($imprint).'</div>';
+        }
         $content = $format === 'a4' ? '<div class="a4-copy a4-copy-left">'.$page.'</div><div class="a4-copy a4-copy-right">'.$page.'</div>' : $page;
+
         return $this->htmlPage($directory, $version->song->title, $content, $format, 'song-'.$number);
     }
 
@@ -219,6 +248,7 @@ class SongbookPdfExporter
         $heading = '<div class="song-heading"><h1>'.e($version->song->title).'</h1></div>';
         $credits = $this->renderCredits($version);
         $content = $heading.'<div class="chord-instrument">'.e((string) $set->instrument).($set->key_signature ? ' · '.e((string) $set->key_signature) : '').'</div>'.$parts.$credits;
+
         return $this->htmlPage($directory, $version->song->title.' – '.$set->instrument, $content, 'a4-chord', $name);
     }
 
@@ -244,8 +274,12 @@ class SongbookPdfExporter
             $pages[] = $this->htmlPage($directory, 'A4-Hochformat', $image, 'a4-image', $name.'-portrait-page-1');
         }
         $output = $directory.'/'.$name.'-portrait.pdf';
-        if (count($pages) === 1) File::copy($pages[0], $output);
-        else (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
+        if (count($pages) === 1) {
+            File::copy($pages[0], $output);
+        } else {
+            (new Process(array_merge(['pdfunite'], $pages, [$output])))->mustRun();
+        }
+
         return $output;
     }
 
@@ -253,6 +287,7 @@ class SongbookPdfExporter
     {
         $output = (new Process(['pdfinfo', $path]))->mustRun()->getOutput();
         preg_match('/^Page size:\s+([0-9.]+) x ([0-9.]+)/m', $output, $matches);
+
         return isset($matches[1], $matches[2]) && (float) $matches[1] > (float) $matches[2];
     }
 
@@ -270,10 +305,13 @@ class SongbookPdfExporter
                     $chord = $lineChords->get($offset);
                     $markup .= '<span class="chord-character">'.($chord ? '<span class="chord">'.e($chord->chord).'</span>' : '').($character === ' ' ? '&nbsp;' : e($character)).'</span>';
                 }
-                if ($line === '' && ($chord = $lineChords->get(0))) $markup .= '<span class="chord chord-empty">'.e($chord->chord).'</span>';
+                if ($line === '' && ($chord = $lineChords->get(0))) {
+                    $markup .= '<span class="chord chord-empty">'.e($chord->chord).'</span>';
+                }
                 $markup .= '</div>';
             }
         }
+
         return $markup.'</section>';
     }
 
@@ -309,6 +347,7 @@ class SongbookPdfExporter
 
         $output = $directory.'/'.$name.'-stamped.pdf';
         (new Process(array_merge(['pdfunite'], $stampedPages, [$output])))->mustRun();
+
         return $output;
     }
 
@@ -316,6 +355,7 @@ class SongbookPdfExporter
     {
         $result = (new Process(['pdfinfo', $path]))->mustRun()->getOutput();
         preg_match('/^Pages:\s+(\d+)$/m', $result, $matches);
+
         return max(1, (int) ($matches[1] ?? 1));
     }
 
@@ -350,12 +390,15 @@ class SongbookPdfExporter
         $htmlPath = $directory.'/'.$name.'-overlay.html';
         File::put($htmlPath, $html);
         (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-overlay-profile-'.$name, '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
-        if (! File::exists($pdfPath) || File::size($pdfPath) < 100) throw new \RuntimeException('Die PDF-Druckmarkierung konnte nicht erzeugt werden.');
+        if (! File::exists($pdfPath) || File::size($pdfPath) < 100) {
+            throw new \RuntimeException('Die PDF-Druckmarkierung konnte nicht erzeugt werden.');
+        }
     }
 
     private function renderCredits(SongVersion $version, array $imageCredits = []): string
     {
         $text = $this->creditsText($version, $imageCredits);
+
         return $text !== '' ? '<div class="song-credits">'.nl2br(e($text)).'</div>' : '';
     }
 
@@ -367,8 +410,11 @@ class SongbookPdfExporter
         $credit = $author !== '' && $composer !== '' && mb_strtolower($author) === mb_strtolower($composer)
             ? 'Text & Musik: '.$author
             : collect([$author !== '' ? 'Text: '.$author : null, $composer !== '' ? 'Musik: '.$composer : null])->filter()->implode(' / ');
-        if ($copyright !== '') $credit .= ($credit !== '' ? '. ' : '').$copyright;
+        if ($copyright !== '') {
+            $credit .= ($credit !== '' ? '. ' : '').$copyright;
+        }
         $lines = array_filter([$credit, $imageCredits !== [] ? ($this->imageCreditLabel($imageCredits).' '.implode(' · ', $imageCredits)) : null]);
+
         return implode("\n", $lines);
     }
 
@@ -384,13 +430,17 @@ class SongbookPdfExporter
         $objectNumber = ((int) (max($objects[1] ?? [0]))) + 1;
         $trailerPosition = strrpos($pdf, 'trailer');
         $startxrefPosition = strrpos($pdf, 'startxref');
-        if ($trailerPosition === false || $startxrefPosition === false) return;
+        if ($trailerPosition === false || $startxrefPosition === false) {
+            return;
+        }
         $trailer = substr($pdf, $trailerPosition, $startxrefPosition - $trailerPosition);
         preg_match('/\/Root\s+(\d+)\s+0\s+R/', $trailer, $root);
         preg_match('/startxref\s+(\d+)/', substr($pdf, $startxrefPosition), $previous);
-        if (! isset($root[1], $previous[1])) return;
+        if (! isset($root[1], $previous[1])) {
+            return;
+        }
 
-        $object = $objectNumber." 0 obj\n<< /Title ".$this->pdfMetadataString($title)." /Author ".$this->pdfMetadataString((string) $author)." /Subject ".$this->pdfMetadataString($subject)." /Creator ".$this->pdfMetadataString('Roo')." /Producer ".$this->pdfMetadataString('Roo')." >>\nendobj\n";
+        $object = $objectNumber." 0 obj\n<< /Title ".$this->pdfMetadataString($title).' /Author '.$this->pdfMetadataString((string) $author).' /Subject '.$this->pdfMetadataString($subject).' /Creator '.$this->pdfMetadataString('Roo').' /Producer '.$this->pdfMetadataString('Roo')." >>\nendobj\n";
         $objectOffset = strlen($pdf);
         $pdf .= $object;
         $xrefOffset = strlen($pdf);
@@ -401,6 +451,7 @@ class SongbookPdfExporter
     private function pdfMetadataString(string $value): string
     {
         $encoded = mb_convert_encoding($value, 'UTF-16BE', 'UTF-8');
+
         return '<'.strtoupper(bin2hex("\xFE\xFF".$encoded)).'>';
     }
 
@@ -427,10 +478,13 @@ class SongbookPdfExporter
         $pdfPath = $directory.'/'.$name.'.pdf';
         try {
             (new Process(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--user-data-dir='.$directory.'/chromium-profile', '--print-to-pdf='.$pdfPath, 'file://'.$htmlPath]))->mustRun();
-            if (! File::exists($pdfPath) || File::size($pdfPath) < 100 || substr((string) File::get($pdfPath), 0, 5) !== '%PDF-') throw new \RuntimeException('Chromium erzeugte keine gültige PDF-Datei.');
+            if (! File::exists($pdfPath) || File::size($pdfPath) < 100 || substr((string) File::get($pdfPath), 0, 5) !== '%PDF-') {
+                throw new \RuntimeException('Chromium erzeugte keine gültige PDF-Datei.');
+            }
         } catch (Throwable) {
             $this->minimalPdf($pdfPath, str_replace(['<br>', '<br/>', '<br />'], "\n", strip_tags($content)));
         }
+
         return $pdfPath;
     }
 
@@ -442,8 +496,10 @@ class SongbookPdfExporter
             ['Atkinson Hyperlegible Next', 400, 'AtkinsonHyperlegibleNext-Regular.otf', 'opentype'],
             ['Atkinson Hyperlegible Next', 700, 'AtkinsonHyperlegibleNext-Bold.otf', 'opentype'],
         ];
+
         return collect($fonts)->map(function (array $font): string {
             $path = resource_path('fonts/'.$font[2]);
+
             return is_file($path) ? '@font-face{font-family:"'.$font[0].'";font-style:normal;font-weight:'.$font[1].';src:url("data:font/'.$font[3].';base64,'.base64_encode((string) file_get_contents($path)).'") format("'.$font[3].'");}' : '';
         })->implode('');
     }
@@ -451,11 +507,13 @@ class SongbookPdfExporter
     private function minimalPdf(string $path, string $text): void
     {
         $lines = preg_split('/\R/', html_entity_decode($text)) ?: [];
-        $commands = "BT /F1 12 Tf 40 555 Td ";
+        $commands = 'BT /F1 12 Tf 40 555 Td ';
         foreach (array_slice($lines, 0, 38) as $index => $line) {
             $line = substr(preg_replace('/[^\\x20-\\x7E\\xC0-\\xFF]/', ' ', trim($line)) ?: '', 0, 92);
             $commands .= '('.str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $line).') Tj ';
-            if ($index < 37) $commands .= '0 -14 Td ';
+            if ($index < 37) {
+                $commands .= '0 -14 Td ';
+            }
         }
         $commands .= 'ET';
         $objects = [
@@ -463,14 +521,19 @@ class SongbookPdfExporter
             '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
             '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
             '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-            "<< /Length ".strlen($commands)." >>\nstream\n".$commands."\nendstream",
+            '<< /Length '.strlen($commands)." >>\nstream\n".$commands."\nendstream",
         ];
         $pdf = "%PDF-1.4\n";
         $offsets = [0];
-        foreach ($objects as $number => $object) { $offsets[] = strlen($pdf); $pdf .= ($number + 1)." 0 obj\n".$object."\nendobj\n"; }
+        foreach ($objects as $number => $object) {
+            $offsets[] = strlen($pdf);
+            $pdf .= ($number + 1)." 0 obj\n".$object."\nendobj\n";
+        }
         $xref = strlen($pdf);
         $pdf .= "xref\n0 ".(count($objects) + 1)."\n0000000000 65535 f \n";
-        foreach (array_slice($offsets, 1) as $offset) $pdf .= sprintf("%010d 00000 n \n", $offset);
+        foreach (array_slice($offsets, 1) as $offset) {
+            $pdf .= sprintf("%010d 00000 n \n", $offset);
+        }
         $pdf .= "trailer\n<< /Size ".(count($objects) + 1)." /Root 1 0 R >>\nstartxref\n".$xref."\n%%EOF";
         File::put($path, $pdf);
     }

@@ -8,13 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('resource_references', function (Blueprint $table): void { $table->text('copyrights')->nullable()->after('description'); });
-        Schema::table('song_images', function (Blueprint $table): void { $table->text('copyrights')->nullable()->after('original_name'); });
+        Schema::table('resource_references', function (Blueprint $table): void {
+            $table->text('copyrights')->nullable()->after('description');
+        });
+        Schema::table('song_images', function (Blueprint $table): void {
+            $table->text('copyrights')->nullable()->after('original_name');
+        });
     }
 
     public function down(): void
     {
-        Schema::table('song_images', function (Blueprint $table): void { $table->dropColumn('copyrights'); });
-        Schema::table('resource_references', function (Blueprint $table): void { $table->dropColumn('copyrights'); });
+        Schema::table('song_images', function (Blueprint $table): void {
+            $table->dropColumn('copyrights');
+        });
+        Schema::table('resource_references', function (Blueprint $table): void {
+            $table->dropColumn('copyrights');
+        });
     }
 };

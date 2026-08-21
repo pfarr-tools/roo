@@ -2,15 +2,15 @@
 
 use App\Models\AttendanceRecord;
 use App\Models\Observation;
+use App\Models\ObservationType;
 use App\Models\Organization;
-use App\Models\ScheduleSlot;
 use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\User;
-use App\Models\ObservationType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

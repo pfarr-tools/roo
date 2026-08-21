@@ -50,6 +50,7 @@ class FluxController extends Controller
     {
         $key = $request->user()?->flux_api_key;
         abort_unless(filled($key), 403, 'Kein FLUX API-Schlüssel hinterlegt.');
+
         return $key;
     }
 

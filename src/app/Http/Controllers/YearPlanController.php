@@ -4,40 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\InterruptPlannedUnitRequest;
 use App\Http\Requests\SplitPlannedUnitRequest;
+use App\Http\Requests\StoreLessonPhaseRequest;
 use App\Http\Requests\StorePlannedUnitRequest;
 use App\Http\Requests\UpdateLessonOccurrenceRequest;
-use App\Http\Requests\StoreLessonPhaseRequest;
 use App\Http\Requests\UpdateScheduledLessonStatusRequest;
+use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumTopicCompetency;
-use App\Models\CurriculumEducationPlanBinding;
 use App\Models\EducationPlanCompetency;
 use App\Models\GroupYearPlan;
 use App\Models\Lesson;
-use App\Models\LessonTemplate;
 use App\Models\LessonOccurrence;
 use App\Models\LessonPhase;
+use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
-use App\Models\PlannedUnit;
-use App\Models\ScheduledLesson;
 use App\Models\PhaseTemplate;
+use App\Models\PlannedUnit;
 use App\Models\ResourceLink;
 use App\Models\ResourceReference;
+use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
+use App\Models\SongVersion;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
-use App\Models\SongVersion;
 use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
 use App\Models\UserPreference;
-use App\Services\YearPlanningWorkspace;
 use App\Services\CompetencyResolver;
 use App\Services\TeachingGroupCompetencyOverview;
+use App\Services\YearPlanningWorkspace;
 use Carbon\CarbonPeriod;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -82,6 +82,7 @@ class YearPlanController extends Controller
                 $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
                 $competency->setAttribute('covered_hours', $coveredHoursByEducationId->get($competency->id, $coveredHoursByIdentifier->get($competency->external_identifier, 0)));
             });
+
         return response()->json([
             'competencies' => $competencies,
             'covered_hours' => $competencies->mapWithKeys(fn ($competency) => [$competency->id => $competency->covered_hours])->all(),
@@ -249,7 +250,9 @@ class YearPlanController extends Controller
             }
             $materialItemIds[] = $material->id;
         }
-        if (array_key_exists('material_items', $data)) $teachingUnit->materialItems()->sync($materialItemIds);
+        if (array_key_exists('material_items', $data)) {
+            $teachingUnit->materialItems()->sync($materialItemIds);
+        }
         if (array_key_exists('education_plan_competency_ids', $data)) {
             $educationIds = collect($data['education_plan_competency_ids'])->unique()->values();
             $validEducationIds = EducationPlanCompetency::whereIn('id', $educationIds)
@@ -464,10 +467,18 @@ class YearPlanController extends Controller
                     unset($attributes['social_form']);
                     $attributes['social_form_id'] = $socialFormName === '' ? null : SocialForm::firstOrCreate(['organization_id' => $lesson->unit->organization_id, 'name' => $socialFormName])->id;
                     $savedPhase = ! empty($phase['id']) ? tap($lesson->phases()->whereKey($phase['id'])->firstOrFail())->update($attributes) : $lesson->phases()->create($attributes);
-                    if ($savedPhase instanceof LessonPhase) $savedPhase->resources()->sync($validResourceIds);
-                    if ($savedPhase instanceof LessonPhase) $savedPhase->resourceLinks()->sync($validResourceLinkIds);
-                    if ($savedPhase instanceof LessonPhase) $savedPhase->materialItems()->sync($validMaterialItemIds);
-                    if ($savedPhase instanceof LessonPhase) $savedPhase->songs()->sync($validSongIds);
+                    if ($savedPhase instanceof LessonPhase) {
+                        $savedPhase->resources()->sync($validResourceIds);
+                    }
+                    if ($savedPhase instanceof LessonPhase) {
+                        $savedPhase->resourceLinks()->sync($validResourceLinkIds);
+                    }
+                    if ($savedPhase instanceof LessonPhase) {
+                        $savedPhase->materialItems()->sync($validMaterialItemIds);
+                    }
+                    if ($savedPhase instanceof LessonPhase) {
+                        $savedPhase->songs()->sync($validSongIds);
+                    }
                     if ($validSongIds !== []) {
                         $songbook = $teachingGroup->songbook()->firstOrCreate([]);
                         foreach ($validSongIds as $songId) {
@@ -475,7 +486,9 @@ class YearPlanController extends Controller
                         }
                     }
                 }
-                if ($phases->isNotEmpty()) $lesson->scheduledLessons()->where('status', ScheduledLesson::STATUS_ASSIGNED)->update(['status' => ScheduledLesson::STATUS_PLANNED]);
+                if ($phases->isNotEmpty()) {
+                    $lesson->scheduledLessons()->where('status', ScheduledLesson::STATUS_ASSIGNED)->update(['status' => ScheduledLesson::STATUS_PLANNED]);
+                }
             }
         });
         if (array_key_exists('competency_ids', $data) || array_key_exists('education_plan_competency_ids', $data)) {

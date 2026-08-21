@@ -11,6 +11,8 @@ const props = defineProps({
     coveredHours: { type: Object, default: () => ({}) },
     endpoint: { type: String, required: true },
     currentLessonId: { type: [String, Number], default: null },
+    excludeProcessCompetencies: { type: Boolean, default: false },
+    single: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'apply'])
 
@@ -25,10 +27,10 @@ let searchTimer
 
 watch(() => props.modelValue, async open => {
     if (!open) return
-    activeTab.value = 'process'
+    activeTab.value = props.excludeProcessCompetencies ? 'content' : 'process'
     search.value = ''
     debouncedSearch.value = ''
-    draftSelectedIds.value = new Set(props.selectedIds)
+    draftSelectedIds.value = new Set(props.selectedIds.map(id => String(id)))
     pickerCompetencies.value = [...props.competencies]
     pickerCoveredHours.value = { ...props.coveredHours }
     loading.value = true
@@ -72,7 +74,7 @@ const processGroups = computed(() => grouped(pickerCompetencies.value.filter(com
 const contentGroups = computed(() => grouped(pickerCompetencies.value.filter(competency => competencyKind(competency) !== 'process')))
 const activeGroups = computed(() => activeTab.value === 'process' ? processGroups.value : contentGroups.value)
 const selectedCompetencies = computed(() => pickerCompetencies.value
-    .filter(competency => draftSelectedIds.value.has(competency.id))
+    .filter(competency => draftSelectedIds.value.has(String(competency.id)))
     .sort((left, right) => String(left.external_identifier || left.number || left.id).localeCompare(String(right.external_identifier || right.number || right.id), 'de', { numeric: true })))
 
 const competencyHours = competency => props.lessons.reduce((total, lesson) => {
@@ -90,8 +92,12 @@ const competencyCardStyle = competency => {
 }
 
 function toggle(competency) {
+    if (props.single) {
+        draftSelectedIds.value = new Set(draftSelectedIds.value.has(String(competency.id)) ? [] : [String(competency.id)])
+        return
+    }
     const selected = new Set(draftSelectedIds.value)
-    selected.has(competency.id) ? selected.delete(competency.id) : selected.add(competency.id)
+    selected.has(String(competency.id)) ? selected.delete(String(competency.id)) : selected.add(String(competency.id))
     draftSelectedIds.value = selected
 }
 function close() { emit('update:modelValue', false) }
@@ -112,7 +118,7 @@ function apply() {
                     </div>
                     <input v-model="search" class="form-control mb-3" :placeholder="de.searchCompetencies" type="search">
                     <ul class="nav nav-tabs mb-3" role="tablist">
-                        <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'process' }" type="button" @click="activeTab = 'process'">{{ de.editProcessCompetencies }}</button></li>
+                        <li v-if="!excludeProcessCompetencies" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'process' }" type="button" @click="activeTab = 'process'">{{ de.editProcessCompetencies }}</button></li>
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'content' }" type="button" @click="activeTab = 'content'">{{ de.editContentCompetencies }}</button></li>
                     </ul>
                     <div class="competency-picker-list flex-grow-1 overflow-auto pe-2" style="min-height: 0">
@@ -120,7 +126,7 @@ function apply() {
                         <template v-for="group in activeGroups" :key="group.key">
                             <h3 v-if="group.area" class="col-12 h6 border-bottom pb-1 mt-3 mb-1">{{ group.area.identifier }} {{ group.area.title }}</h3>
                             <label v-for="competency in group.competencies" :key="competency.id" class="col-md-6 col-xl-4 form-check border rounded p-2 ps-5" :style="competencyCardStyle(competency)">
-                                <input class="form-check-input" type="checkbox" :checked="draftSelectedIds.has(competency.id)" @change="toggle(competency)">
+                                <input class="form-check-input" :type="single ? 'radio' : 'checkbox'" :name="single ? 'competency-picker-single' : undefined" :checked="draftSelectedIds.has(String(competency.id))" @change="toggle(competency)">
                                 <span class="form-check-label small">{{ competencyText(competency) }}</span>
                             </label>
                         </template>
@@ -136,7 +142,7 @@ function apply() {
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button class="btn btn-outline-secondary" type="button" @click="close">{{ de.cancel }}</button>
-                        <button class="btn btn-primary" type="button" @click="apply">{{ de.saveChanges }}</button>
+                        <button class="btn btn-primary" type="button" :disabled="single && !selectedCompetencies.length" @click="apply">{{ de.saveChanges }}</button>
                     </div>
                 </div>
             </div>

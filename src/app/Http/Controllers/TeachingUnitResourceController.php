@@ -126,6 +126,6 @@ class TeachingUnitResourceController extends Controller
 
     private function filenamePart(string $value): string
     {
-        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), " .-");
+        return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), ' .-');
     }
 }

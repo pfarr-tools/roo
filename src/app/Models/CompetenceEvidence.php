@@ -11,7 +11,18 @@ class CompetenceEvidence extends Model
 {
     protected $table = 'competence_evidences';
 
-    public function scheduledLesson(): BelongsTo { return $this->belongsTo(ScheduledLesson::class); }
-    public function student(): BelongsTo { return $this->belongsTo(Student::class); }
-    public function competency(): BelongsTo { return $this->belongsTo(TeachingUnitCompetency::class, 'teaching_unit_competency_id'); }
+    public function scheduledLesson(): BelongsTo
+    {
+        return $this->belongsTo(ScheduledLesson::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function competency(): BelongsTo
+    {
+        return $this->belongsTo(TeachingUnitCompetency::class, 'teaching_unit_competency_id');
+    }
 }

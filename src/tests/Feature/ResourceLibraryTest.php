@@ -1,14 +1,18 @@
 <?php
 
+use App\Models\AssessmentTask;
 use App\Models\MaterialItem;
 use App\Models\Organization;
 use App\Models\ResourceLink;
 use App\Models\ResourceReference;
+use App\Models\School;
+use App\Models\SchoolYear;
 use App\Models\Song;
+use App\Models\TeachingGroup;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -79,4 +83,24 @@ it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien',
     $resource = ResourceReference::firstOrFail();
     expect($resource->description)->toBe('Eine freundliche Strichzeichnung')
         ->and($resource->copyrights)->toBe('FLUX.2 [flex] / Black Forest Labs / Ada Beispiel');
+});
+
+it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie Stunden zu', function () {
+    $organization = Organization::create(['name' => 'Aufgaben Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Aufgabenschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'competency_id' => $competency->id, 'levels' => ['G', 'M'], 'max_points' => 8])->assertRedirect();
+
+    $task = AssessmentTask::firstOrFail();
+    expect($task->teaching_unit_competency_id)->toBe($competency->id)->and($task->levels()->pluck('level')->all())->toBe(['G', 'M']);
+    $this->actingAs($user)->get('/bibliothek?type=assessment-task')->assertInertia(fn ($page) => $page->where('items.0.description', 'Kann begründen · G, M'));
+
+    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
+    expect($lesson->fresh()->assessmentTasks)->toHaveCount(1);
 });

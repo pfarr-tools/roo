@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CurriculumTopicCompetency;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Resolves the canonical presentation of a competency relation.
@@ -102,7 +103,7 @@ class CompetencyResolver
     {
         $value = $model->getRelationValue($relation);
 
-        return $value instanceof \Illuminate\Support\Collection ? $value : collect();
+        return $value instanceof Collection ? $value : collect();
     }
 
     private function formatIdentifier(mixed $value): string

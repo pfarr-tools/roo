@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['organization_id', 'title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])]
 class Song extends Model
 {
-    public function organization(): BelongsTo { return $this->belongsTo(Organization::class); }
-    public function versions(): HasMany { return $this->hasMany(SongVersion::class); }
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function versions(): HasMany
+    {
+        return $this->hasMany(SongVersion::class);
+    }
 }

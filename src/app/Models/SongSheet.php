@@ -9,5 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['song_version_id', 'original_name', 'storage_path', 'mime_type', 'size'])]
 class SongSheet extends Model
 {
-    public function version(): BelongsTo { return $this->belongsTo(SongVersion::class, 'song_version_id'); }
+    public function version(): BelongsTo
+    {
+        return $this->belongsTo(SongVersion::class, 'song_version_id');
+    }
 }

@@ -5,10 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\MaterialItem;
-use App\Models\SongVersion;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['organization_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes'])]
 class TeachingUnit extends Model

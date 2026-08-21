@@ -10,6 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AttendanceRecord extends Model
 {
     public const STATUSES = ['present', 'absent', 'late'];
-    public function scheduledLesson(): BelongsTo { return $this->belongsTo(ScheduledLesson::class); }
-    public function student(): BelongsTo { return $this->belongsTo(Student::class); }
+
+    public function scheduledLesson(): BelongsTo
+    {
+        return $this->belongsTo(ScheduledLesson::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
 }

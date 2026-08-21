@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['education_plan_version_id', 'education_plan_stage_id', 'parent_id', 'kind', 'external_identifier', 'title', 'introduction', 'notes', 'source_raw', 'position'])]
 class EducationPlanCompetenceArea extends Model

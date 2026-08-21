@@ -59,6 +59,7 @@ class TeachingGroupCompetencyOverview
             ->with('area:id,kind,external_identifier,title')->get()
             ->flatMap(function ($competency) use ($competencyResolver): array {
                 $identifier = $competencyResolver->identifier($competency);
+
                 return [$identifier => $competency->area, $competency->external_identifier => $competency->area];
             });
         $missingCompetencies = EducationPlanCompetency::query()
@@ -87,15 +88,18 @@ class TeachingGroupCompetencyOverview
                     'covered_hours' => $coveredEducationHours->get($competency->id, 0),
                 ];
             })->values();
+
         return $competencies->concat($missingCompetencies)->map(function (array $competency) use ($educationPlanAreas): array {
             $area = $educationPlanAreas->get($competency['presentation']['identifier']);
             $competency['area'] = $area ? ['identifier' => $area->external_identifier, 'title' => $area->title, 'kind' => $area->kind] : null;
+
             return $competency;
         })->groupBy(fn (array $competency) => $competency['presentation']['identifier'] ?: $competency['id'])
             ->map(function ($items): array {
                 $competency = $items->first();
                 $competency['covered_hours'] = $items->sum('covered_hours');
                 $competency['missing_from_curriculum'] = $items->every(fn (array $item) => $item['missing_from_curriculum']);
+
                 return $competency;
             })->values();
     }

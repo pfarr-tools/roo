@@ -251,6 +251,7 @@ class SongController extends Controller
         $safeTitle = rtrim(trim($safeTitle), '. ');
 
         $suffix = $format === 'a5' ? ' A5' : ($format === 'chord-sheet' ? ' Akkordblatt'.($instrument ? ' '.$instrument : '') : '');
+
         return ($safeTitle !== '' ? $safeTitle : 'Lied').$suffix.'.pdf';
     }
 

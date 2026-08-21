@@ -12,23 +12,23 @@ use App\Http\Requests\UpdateTeachingGroupCurriculaRequest;
 use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
 use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
-use App\Models\CurriculumTopicCompetency;
 use App\Models\CurriculumEducationPlanBinding;
+use App\Models\CurriculumTopicCompetency;
 use App\Models\EducationPlanCompetency;
+use App\Models\PhaseTemplate;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\SongVersion;
 use App\Models\Student;
 use App\Models\TeachingGroup;
-use App\Models\PhaseTemplate;
-use App\Models\SongVersion;
-use App\Services\SongbookContentsResolver;
 use App\Services\CompetencyResolver;
+use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -87,6 +87,7 @@ class TeachingGroupController extends Controller
             ->with('area:id,kind,external_identifier,title')->get()
             ->flatMap(function ($competency) use ($competencyResolver): array {
                 $identifier = $competencyResolver->identifier($competency);
+
                 return [$identifier => $competency->area, $competency->external_identifier => $competency->area];
             });
         $missingCompetencies = EducationPlanCompetency::query()
@@ -102,15 +103,15 @@ class TeachingGroupController extends Controller
         $missingCompetencies = $missingCompetencies
             ->reject(fn ($competency) => $curriculumCompetencyIdentifiers->contains($competency->external_identifier))
             ->map(function ($competency) use ($competencyResolver, $coveredEducationHours): array {
-            $presentation = $competencyResolver->present($competency);
+                $presentation = $competencyResolver->present($competency);
 
-            return [
-                'id' => 'education-'.$competency->id, 'education_plan_competency_id' => $competency->id,
-                'topic_id' => null, 'topic_title' => null, 'grade' => null, 'kind' => $competency->area->kind,
-                'denomination' => null, 'presentation' => $presentation, 'missing_from_curriculum' => true,
-                'covered_hours' => $coveredEducationHours->get($competency->id, 0),
-            ];
-        })->values();
+                return [
+                    'id' => 'education-'.$competency->id, 'education_plan_competency_id' => $competency->id,
+                    'topic_id' => null, 'topic_title' => null, 'grade' => null, 'kind' => $competency->area->kind,
+                    'denomination' => null, 'presentation' => $presentation, 'missing_from_curriculum' => true,
+                    'covered_hours' => $coveredEducationHours->get($competency->id, 0),
+                ];
+            })->values();
         $competencies = $competencies->concat($missingCompetencies)->map(function (array $competency) use ($educationPlanAreas): array {
             $area = $competency['education_plan_competency_id']
                 ? $educationPlanAreas->get($competency['presentation']['identifier'])
@@ -150,16 +151,21 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function uploadSongbookTitlePage(Request $request, TeachingGroup $teachingGroup, SongbookPdfExporter $exporter): \Illuminate\Http\RedirectResponse
+    public function uploadSongbookTitlePage(Request $request, TeachingGroup $teachingGroup, SongbookPdfExporter $exporter): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['title_page' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200']]);
         $book = $teachingGroup->songbook()->firstOrCreate([]);
-        if ($book->title_page_path) Storage::disk('local')->delete($book->title_page_path);
-        if ($book->title_page_a4_path) Storage::disk('local')->delete($book->title_page_a4_path);
+        if ($book->title_page_path) {
+            Storage::disk('local')->delete($book->title_page_path);
+        }
+        if ($book->title_page_a4_path) {
+            Storage::disk('local')->delete($book->title_page_a4_path);
+        }
         $file = $data['title_page'];
         $titlePagePath = $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local');
         $book->update(['title_page_path' => $titlePagePath, 'title_page_a4_path' => $exporter->generateTitlePageA4($titlePagePath), 'title_page_original_name' => $file->getClientOriginalName(), 'title_page_mime_type' => $file->getMimeType(), 'title_page_size' => $file->getSize()]);
+
         return back()->with('success', 'Titelseite des Liederbuchs wurde gespeichert.');
     }
 
@@ -168,6 +174,7 @@ class TeachingGroupController extends Controller
         $this->authorize('view', $teachingGroup);
         $book = $teachingGroup->songbook;
         abort_unless($book?->title_page_path, 404);
+
         return response()->file(Storage::disk('local')->path($book->title_page_path), ['Content-Type' => $book->title_page_mime_type ?: 'application/octet-stream']);
     }
 

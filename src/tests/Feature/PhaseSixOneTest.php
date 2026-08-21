@@ -1,27 +1,27 @@
 <?php
 
 use App\Models\Curriculum;
+use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumTopicCompetency;
-use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
-use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanCompetenceVariant;
+use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
 use App\Models\Organization;
-use App\Models\ScheduledLesson;
 use App\Models\PhaseTemplate;
-use App\Models\ScheduleSlot;
 use App\Models\ResourceLink;
+use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolPeriod;
-use App\Models\SocialForm;
 use App\Models\SchoolYear;
+use App\Models\SocialForm;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
 use App\Models\TeachingUnitCompetency;
@@ -310,7 +310,7 @@ it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', func
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Reich Gottes', 'position' => 1, 'duration' => 1]);
     $archivePath = tempnam(sys_get_temp_dir(), 'wscdoc-');
-    $archive = new ZipArchive();
+    $archive = new ZipArchive;
     $archive->open($archivePath);
     $archive->addFromString('info.json', json_encode(['Statistics' => ['PageCount' => 3]]));
     $archive->addFromString('preview.jpg', 'preview');
@@ -454,7 +454,6 @@ it('entfernt Lesson- und UE-Belegungen ohne die eigene Planung zu löschen', fun
 
     expect(ScheduledLesson::count())->toBe(0)->and(TeachingUnit::find($unit->id))->not->toBeNull();
 });
-
 
 it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
     [$user, $group] = phaseSixOneGroup();

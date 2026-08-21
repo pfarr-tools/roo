@@ -10,6 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class GroupSongbookEntry extends Model
 {
     protected $casts = ['added_at' => 'datetime'];
-    public function songVersion(): BelongsTo { return $this->belongsTo(SongVersion::class); }
-    public function songbook(): BelongsTo { return $this->belongsTo(GroupSongbook::class, 'group_songbook_id'); }
+
+    public function songVersion(): BelongsTo
+    {
+        return $this->belongsTo(SongVersion::class);
+    }
+
+    public function songbook(): BelongsTo
+    {
+        return $this->belongsTo(GroupSongbook::class, 'group_songbook_id');
+    }
 }
