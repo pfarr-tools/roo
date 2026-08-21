@@ -84,6 +84,17 @@ it('creates and edits an own curriculum without changing the source', function (
     expect(Curriculum::where('title', 'Mein bearbeitetes Curriculum')->exists())->toBeFalse();
 });
 
+it('toggles editing for imported curricula outside production', function () {
+    $imported = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post("/curricula/{$imported['curriculum']->id}/bearbeitung")->assertRedirect();
+    expect($imported['version']->fresh()->is_editable)->toBeTrue();
+
+    $this->actingAs($user)->post("/curricula/{$imported['curriculum']->id}/bearbeitung")->assertRedirect();
+    expect($imported['version']->fresh()->is_editable)->toBeFalse();
+});
+
 it('assigns all copied units when the source covers exactly one grade', function () {
     $imported = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/SEK1_10_A.json'));
     $user = User::factory()->create();

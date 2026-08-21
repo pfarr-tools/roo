@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');
     Route::post('/curricula', [CurriculumController::class, 'store'])->name('curricula.store');
     Route::post('/curricula/{curriculum}/fassungen', [CurriculumController::class, 'storeVersion'])->name('curricula.versions.store');
+    Route::post('/curricula/{curriculum}/bearbeitung', [CurriculumController::class, 'toggleEditing'])->name('curricula.editing.toggle');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
     Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');

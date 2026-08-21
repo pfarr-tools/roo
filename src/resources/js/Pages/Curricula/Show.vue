@@ -6,7 +6,7 @@ import { router, useForm } from '@inertiajs/vue3'
 import { computed, reactive, ref } from 'vue'
 import { requestConfirmation } from '../../utils/confirmation'
 
-const props = defineProps({ curriculum: Object, version: Object, educationPlans: Array, schoolTypes: Array })
+const props = defineProps({ curriculum: Object, version: Object, educationPlans: Array, schoolTypes: Array, canToggleEditing: Boolean })
 const denominations = ['evangelical', 'catholic', 'old_catholic', 'syriac_orthodox']
 const years = computed(() => {
     const values = [...new Set((props.curriculum.grades ?? []).map(Number))].filter(year => year >= 1 && year <= 13).sort((a, b) => a - b)
@@ -42,6 +42,7 @@ function saveTopic(topic) { router.put(`/curricula/${props.curriculum.id}/themen
 function addTopic() { addForm.post(`/curricula/${props.curriculum.id}/themen`, { preserveScroll: true, onSuccess: () => { addForm.reset(); showAddForm.value = false } }) }
 async function deleteCurriculum() { if (await requestConfirmation({ message: de.deleteCurriculumConfirm })) router.delete(`/curricula/${props.curriculum.id}`) }
 async function createVersion() { if (await requestConfirmation({ message: `${de.newCurriculumVersion}?` })) router.post(`/curricula/${props.curriculum.id}/fassungen`) }
+async function toggleEditing() { if (await requestConfirmation({ message: props.version.is_editable ? de.disableEditingConfirm : de.enableEditingConfirm })) router.post(`/curricula/${props.curriculum.id}/bearbeitung`) }
 function addBinding() { curriculumForm.education_plan_bindings.push({ denomination: '', subject: '', plan_code: '' }) }
 function removeBinding(index) { curriculumForm.education_plan_bindings.splice(index, 1) }
 function openCompetencies(topic, kind) {
@@ -91,7 +92,7 @@ function saveCompetencies() { competencyForm.value.put(`/curricula/${props.curri
 
 <template>
     <AppShell>
-        <template #toolbar><a href="/curricula" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a></template>
+        <template #toolbar><button v-if="canToggleEditing" class="btn btn-sm btn-light me-2" type="button" :title="version.is_editable ? de.disableEditing : de.enableEditing" :aria-label="version.is_editable ? de.disableEditing : de.enableEditing" @click="toggleEditing"><i :class="version.is_editable ? 'bi bi-lock' : 'bi bi-pencil'" aria-hidden="true"></i><span class="visually-hidden">{{ version.is_editable ? de.disableEditing : de.enableEditing }}</span></button><a href="/curricula" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a></template>
         <div class="container-full px-3 py-4">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div><h1 class="h2 mb-0">{{ curriculum.title }}</h1></div><div class="d-flex flex-wrap justify-content-end align-items-start gap-2"><template v-if="version.is_editable"><button class="btn btn-sm btn-primary" type="button" @click="showCurriculumForm = true"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ de.editCurriculum }}</button><button class="btn btn-sm btn-outline-primary" type="button" @click="showAddForm = true"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ de.addUnit }}</button><button class="btn btn-sm btn-outline-secondary" type="button" @click="createVersion"><i class="bi bi-copy me-1" aria-hidden="true"></i>{{ de.newCurriculumVersion }}</button><button class="btn btn-sm btn-outline-danger" type="button" @click="deleteCurriculum"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ de.deleteCurriculum }}</button></template></div></div>
             <div class="row g-3 flex-nowrap overflow-auto pb-3 mt-1 roo-curriculum-board">

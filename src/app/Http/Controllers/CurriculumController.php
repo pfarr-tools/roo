@@ -117,7 +117,18 @@ class CurriculumController extends Controller
         $this->ensureVisible($curriculum);
         $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.perspectives', 'topics.competencies.educationPlanCompetency', 'topics.sourceVersion.curriculum'])->firstOrFail();
 
-        return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions(), 'schoolTypes' => $this->schoolTypeOptions()]);
+        return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions(), 'schoolTypes' => $this->schoolTypeOptions(), 'canToggleEditing' => app()->environment() !== 'production' && $curriculum->external_identifier !== null]);
+    }
+
+    public function toggleEditing(Curriculum $curriculum): RedirectResponse
+    {
+        $this->ensureVisible($curriculum);
+        abort_unless(app()->environment() !== 'production' && $curriculum->external_identifier !== null, 403);
+
+        $version = $curriculum->versions()->latest('id')->firstOrFail();
+        $version->update(['is_editable' => ! $version->is_editable]);
+
+        return back()->with('success', $version->is_editable ? 'Bearbeiten des importierten Curriculums wurde aktiviert.' : 'Bearbeiten des importierten Curriculums wurde deaktiviert.');
     }
 
     public function storeTopic(Request $request, Curriculum $curriculum): RedirectResponse
@@ -177,6 +188,7 @@ class CurriculumController extends Controller
     public function destroy(Curriculum $curriculum): RedirectResponse
     {
         $this->ensureVisible($curriculum);
+        abort_unless($curriculum->external_identifier === null, 403);
         abort_unless($curriculum->versions()->where('is_editable', true)->exists(), 403);
         $curriculum->delete();
 
