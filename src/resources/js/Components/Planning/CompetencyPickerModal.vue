@@ -31,7 +31,7 @@ watch(search, value => {
     searchTimer = setTimeout(() => { debouncedSearch.value = value.trim().toLowerCase() }, 250)
 })
 
-const competencyKind = competency => competency.competency_presentation?.kind || competency.area?.kind || competency.competency_area?.kind || competency.competency_kind || 'content'
+const competencyKind = competency => competency.competency_kind || competency.competency_presentation?.kind || competency.area?.kind || competency.competency_area?.kind || 'content'
 const areaFor = competency => competency.competency_area || (competency.area ? { identifier: competency.area.external_identifier, title: competency.area.title } : null)
 const matchesSearch = competency => !debouncedSearch.value || props.competencyText(competency).toLowerCase().includes(debouncedSearch.value)
 const grouped = competencies => {
