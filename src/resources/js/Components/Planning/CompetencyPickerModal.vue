@@ -54,9 +54,13 @@ const grouped = competencies => {
 const processGroups = computed(() => grouped(props.competencies.filter(competency => competencyKind(competency) === 'process')))
 const contentGroups = computed(() => grouped(props.competencies.filter(competency => competencyKind(competency) !== 'process')))
 const activeGroups = computed(() => activeTab.value === 'process' ? processGroups.value : contentGroups.value)
+const selectedCompetencies = computed(() => props.competencies
+    .filter(competency => draftSelectedIds.value.has(competency.id))
+    .sort((left, right) => String(left.external_identifier || left.number || left.id).localeCompare(String(right.external_identifier || right.number || right.id), 'de', { numeric: true })))
 
 const competencyHours = competency => props.lessons.reduce((total, lesson) => {
-    const represented = (lesson.competencies ?? []).some(item => item.curriculum_topic_competency_id === competency.id || item.education_plan_competency_id === competency.id)
+    const optionIds = new Set([competency.id, competency.education_plan_competency_id].filter(value => value !== null && value !== undefined).map(String))
+    const represented = (lesson.competencies ?? []).some(item => [item.curriculum_topic_competency_id, item.education_plan_competency_id, item.curriculum_competency?.id, item.education_plan_competency?.id].filter(value => value !== null && value !== undefined).some(value => optionIds.has(String(value))))
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
 const competencyCardStyle = competency => {
@@ -79,7 +83,7 @@ function apply() {
 
 <template>
     <div v-if="modelValue" class="roo-modal-backdrop" role="presentation" @click.self="close">
-        <section class="roo-modal roo-modal-wide" role="dialog" aria-modal="true" :aria-label="de.addCompetency" style="height: 80vh; max-height: 80vh">
+        <section class="roo-modal roo-modal-wide" role="dialog" aria-modal="true" :aria-label="de.addCompetency" style="width: 80vw; max-width: 80vw; height: 80vh; max-height: 80vh">
             <div class="card border-0 h-100">
                 <div class="card-body d-flex flex-column" style="min-height: 0">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -92,14 +96,22 @@ function apply() {
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'content' }" type="button" @click="activeTab = 'content'">{{ de.editContentCompetencies }}</button></li>
                     </ul>
                     <div class="competency-picker-list flex-grow-1 overflow-auto pe-2" style="min-height: 0">
+                        <div class="row g-2">
                         <template v-for="group in activeGroups" :key="group.key">
-                            <h3 v-if="group.area" class="h6 border-bottom pb-1 mt-3 mb-2">{{ group.area.identifier }} {{ group.area.title }}</h3>
-                            <label v-for="competency in group.competencies" :key="competency.id" class="form-check border rounded p-2 ps-5 mb-2" :style="competencyCardStyle(competency)">
+                            <h3 v-if="group.area" class="col-12 h6 border-bottom pb-1 mt-3 mb-1">{{ group.area.identifier }} {{ group.area.title }}</h3>
+                            <label v-for="competency in group.competencies" :key="competency.id" class="col-md-6 col-xl-4 form-check border rounded p-2 ps-5" :style="competencyCardStyle(competency)">
                                 <input class="form-check-input" type="checkbox" :checked="draftSelectedIds.has(competency.id)" @change="toggle(competency)">
                                 <span class="form-check-label small">{{ competencyText(competency) }}</span>
                             </label>
                         </template>
+                        </div>
                         <p v-if="!activeGroups.length" class="small text-muted">{{ de.noCompetencyOptions }}</p>
+                    </div>
+                    <div v-if="selectedCompetencies.length" class="border-top pt-2 mt-2">
+                        <span v-for="competency in selectedCompetencies" :key="`selected-${competency.id}`" class="badge text-bg-primary me-1 mb-1">
+                            {{ competency.external_identifier || competency.number || competency.id }}
+                            <button class="btn-close btn-close-white ms-1 align-middle" type="button" :aria-label="de.removeCompetency" @click="toggle(competency)"></button>
+                        </span>
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button class="btn btn-outline-secondary" type="button" @click="close">{{ de.cancel }}</button>
