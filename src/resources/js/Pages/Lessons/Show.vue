@@ -3,6 +3,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import AttachmentList from '../../Components/Ui/AttachmentList.vue'
 import LessonEditorModal from '../../Components/Planning/LessonEditorModal.vue'
 import LessonPhasesTab from '../../Components/Planning/LessonPhasesTab.vue'
+import LessonAssessmentTab from '../../Components/Planning/LessonAssessmentTab.vue'
 import Tab from '../../Components/Ui/Tabs/Tab.vue'
 import TabHeader from '../../Components/Ui/Tabs/TabHeader.vue'
 import TabHeaders from '../../Components/Ui/Tabs/TabHeaders.vue'
@@ -12,8 +13,9 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { requestConfirmation } from '../../utils/confirmation'
 import { router, useForm } from '@inertiajs/vue3'
 
-const props = defineProps({ slot: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) }, observationStudents: { type: Array, default: () => [] }, observationTypes: { type: Array, default: () => [] }, attendanceRecords: { type: Array, default: () => [] }, observations: { type: Array, default: () => [] }, competenceEvidences: { type: Array, default: () => [] } })
-const activeTab = ref('planning')
+const props = defineProps({ slot: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, educationPlans: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) }, observationStudents: { type: Array, default: () => [] }, observationTypes: { type: Array, default: () => [] }, attendanceRecords: { type: Array, default: () => [] }, observations: { type: Array, default: () => [] }, competenceEvidences: { type: Array, default: () => [] } })
+const requestedTab = new URLSearchParams(window.location.search).get('tab')
+const activeTab = ref(['planning', 'execution', 'observation', 'assessment'].includes(requestedTab) ? requestedTab : 'planning')
 const editorOpen = ref(false)
 const phaseDraft = ref((props.lesson.phases ?? []).map(phase => ({ ...phase })))
 const resourceLinks = ref((props.resourceLinks ?? []).map(link => ({ ...link })))
@@ -149,6 +151,7 @@ async function printLessonSongs() {
                 <TabHeader id="planning" :title="de.lessonPlanning" :active-tab="activeTab" icon="clipboard-check" @select="activeTab = $event" />
                 <TabHeader id="execution" :title="de.lessonExecution" :active-tab="activeTab" icon="play-circle" @select="activeTab = $event" />
                 <TabHeader id="observation" :title="de.lessonObservation" :active-tab="activeTab" icon="person-lines-fill" @select="activeTab = $event" />
+                <TabHeader id="assessment" :title="de.lessonAssessment" :active-tab="activeTab" icon="clipboard-data" @select="activeTab = $event" />
             </TabHeaders>
             <Tabs :active-tab="activeTab">
             <Tab id="planning" :active-tab="activeTab">
@@ -168,6 +171,9 @@ async function printLessonSongs() {
             <Tab id="observation" :active-tab="activeTab">
                 <div class="d-flex justify-content-between align-items-center mb-3"><div><h2 id="observation-heading" class="h4 mb-1">{{ de.lessonObservation }}</h2><p class="text-muted mb-0">Schnelle Nachweise für diese Stunde</p></div><button class="btn btn-primary" type="button" :disabled="observationForm.processing" @click="saveObservations"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Beobachtungen speichern</button></div>
                 <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0 observation-table"><thead><tr><th scope="col">Schüler:in</th><th scope="col">Anwesenheit</th><th v-for="type in observationTypes" :key="type.id" scope="col" class="text-center" :title="type.label">{{ type.symbol || type.label }}</th><th scope="col">Notiz</th></tr></thead><tbody><tr v-for="student in observationStudents" :key="student.id"><th scope="row"><span>{{ student.last_name }}, {{ student.first_name }}</span><small v-if="student.class_name" class="d-block text-muted">{{ student.class_name }}</small></th><td><select v-model="observationRow(student).attendance" class="form-select form-select-sm"><option value="present">anwesend</option><option value="late">verspätet</option><option value="absent">abwesend</option></select></td><td v-for="type in observationTypes" :key="type.id" class="text-center"><button type="button" class="btn btn-sm" :class="observationRow(student).observation_type_ids.includes(type.id) ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="observationRow(student).observation_type_ids.includes(type.id)" :title="type.label" @click="toggleObservation(student, type.id)">{{ type.symbol || '✓' }}</button></td><td><input v-model="observationRow(student).note" class="form-control form-control-sm" maxlength="2000"></td></tr><tr v-if="!observationStudents.length"><td colspan="99" class="text-muted">Für diese Gruppe sind keine Schüler:innen erfasst.</td></tr></tbody></table></div></div>
+            </Tab>
+            <Tab id="assessment" :active-tab="activeTab">
+                <LessonAssessmentTab :schedule-slot-id="slot.id" :group-id="group.id" :lesson-id="lesson.id" :competencies="targetCompetencies.content" :assessment-tasks="assessmentTasks" :education-plans="educationPlans" @refresh="refreshResources" />
             </Tab>
             </Tabs>
         </div>

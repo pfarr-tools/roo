@@ -120,6 +120,7 @@ function size(bytes) {
 }
 function openAdd(kind) {
     newMenuOpen.value = false;
+    if (kind === "assessment-task") return window.location.assign("/bibliothek/pruefungsaufgaben/neu");
     if (kind === "song") return window.location.assign("/bibliothek/lied/neu");
     modal.value = kind;
 }
@@ -155,6 +156,7 @@ function chordSongUrl(item, instrument) {
     return `/lieder/fassungen/${item.id}/liedblatt/erzeugt/akkord/${encodeURIComponent(instrument)}`;
 }
 function openEdit(item) {
+    if (item.kind === "assessment-task") return window.location.assign(`/bibliothek/pruefungsaufgaben/${item.id}/bearbeiten`);
     editing.value = item;
     competencyPickerOpen.value = false;
     selectedTaskCompetencyText.value = item.competency ?? "";
@@ -612,7 +614,7 @@ function previewable(item) {
             </div>
         </div>
         <div
-            v-if="modal"
+            v-if="modal && modal !== 'assessment-task'"
             class="roo-modal-backdrop"
             role="presentation"
             @click.self="modal = null"

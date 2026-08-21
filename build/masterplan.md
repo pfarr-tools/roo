@@ -511,6 +511,11 @@ mehreren gruppenbezogenen Lernstandserhebungen zusammengestellt werden.
 G/M/E-Niveaus sind mehrfach pro Aufgabe möglich; Ergebniserfassung und
 transparente Rundungsregeln folgen im nächsten Schnitt.
 
+Die Unterrichtsstundenansicht enthält einen eigenen Tab für inhaltsbezogene
+Kompetenzen. Aufgaben können dort neu angelegt, aus der Bibliothek (gefiltert
+auf Prüfungsaufgaben) zugeordnet, bearbeitet und aus der Stunde entfernt
+werden.
+
 ### Ziel
 
 Kompetenzorientierte Lernstandserhebungen erstellen und Ergebnisse bewerten.

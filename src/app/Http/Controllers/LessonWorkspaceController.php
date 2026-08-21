@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateLessonExecutionRequest;
 use App\Models\AttendanceRecord;
+use App\Models\AssessmentTask;
 use App\Models\CompetenceEvidence;
+use App\Models\EducationPlan;
+use App\Models\EducationPlanCompetency;
 use App\Models\LessonTemplate;
 use App\Models\Observation;
 use App\Models\ObservationType;
@@ -26,6 +29,112 @@ use Inertia\Response;
 
 class LessonWorkspaceController extends Controller
 {
+    public function createAssessmentTask(Request $request, ScheduleSlot $scheduleSlot): Response
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        abort_unless($scheduleSlot->scheduledLesson?->lesson, 404);
+
+        return $this->assessmentTaskForm($request, $scheduleSlot, null);
+    }
+
+    public function editAssessmentTask(Request $request, ScheduleSlot $scheduleSlot, AssessmentTask $assessmentTask): Response
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        $lesson = $scheduleSlot->scheduledLesson?->lesson;
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+
+        $assessmentTask->load(['educationPlanCompetency.variants', 'levels']);
+        $assessmentTask->setAttribute('has_differentiation', $assessmentTask->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
+
+        return $this->assessmentTaskForm($request, $scheduleSlot, $assessmentTask);
+    }
+
+    private function assessmentTaskForm(Request $request, ScheduleSlot $scheduleSlot, ?AssessmentTask $task): Response
+    {
+        return Inertia::render('AssessmentTask/Edit', [
+            'scheduleSlotId' => $scheduleSlot->id,
+            'backUrl' => route('lessons.show', $scheduleSlot).'?tab=assessment',
+            'submitUrl' => $task
+                ? route('lessons.assessment-tasks.update', [$scheduleSlot, $task])
+                : route('lessons.assessment-tasks.store', $scheduleSlot),
+            'method' => $task ? 'put' : 'post',
+            'task' => $task,
+            'competencyId' => $request->integer('teaching_unit_competency_id') ?: null,
+            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title']),
+        ]);
+    }
+
+    public function storeAssessmentTask(Request $request, ScheduleSlot $scheduleSlot): RedirectResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        $lesson = $scheduleSlot->scheduledLesson?->lesson;
+        abort_unless($lesson, 404);
+        $data = $request->validate([
+            'teaching_unit_competency_id' => ['nullable', 'integer'],
+            'education_plan_id' => ['nullable', 'integer'],
+            'education_plan_competency_id' => ['nullable', 'integer'],
+            'title' => ['required', 'string', 'max:255'],
+            'solution' => ['nullable', 'string'],
+            'max_points' => ['nullable', 'integer', 'min:1'],
+            'levels' => ['sometimes', 'array'],
+            'levels.*' => ['in:G,M,E'],
+        ]);
+        $attributes = [
+            'organization_id' => $group->organization_id,
+            'title' => $data['title'],
+            'solution' => $data['solution'] ?? null,
+            'max_points' => $data['max_points'] ?? null,
+            'level' => collect($data['levels'] ?? [])->first(),
+        ];
+        if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
+            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
+            $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
+        } else {
+            abort_unless($lesson->competencies()->whereKey($data['teaching_unit_competency_id'])->exists(), 422, 'Die Kompetenz gehört nicht zu dieser Stunde.');
+            $attributes['teaching_unit_competency_id'] = $data['teaching_unit_competency_id'];
+        }
+        $task = AssessmentTask::create($attributes);
+        $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
+        $lesson->assessmentTasks()->syncWithoutDetaching([$task->id]);
+
+        return back()->with('success', 'Prüfungsaufgabe wurde angelegt und der Stunde zugeordnet.');
+    }
+
+    public function updateAssessmentTask(Request $request, ScheduleSlot $scheduleSlot, AssessmentTask $assessmentTask): RedirectResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        $lesson = $scheduleSlot->scheduledLesson?->lesson;
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $attributes = ['title' => $data['title'], 'solution' => $data['solution'] ?? null, 'max_points' => $data['max_points'] ?? null, 'level' => collect($data['levels'] ?? [])->first()];
+        if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
+            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
+            $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id'], 'teaching_unit_competency_id' => null];
+        }
+        $assessmentTask->update($attributes);
+        $assessmentTask->levels()->delete();
+        $assessmentTask->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
+
+        return back()->with('success', 'Prüfungsaufgabe wurde gespeichert.');
+    }
+
+    public function removeAssessmentTask(Request $request, ScheduleSlot $scheduleSlot, AssessmentTask $assessmentTask): RedirectResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('update', $group);
+        $lesson = $scheduleSlot->scheduledLesson?->lesson;
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+        $lesson->assessmentTasks()->detach($assessmentTask->id);
+
+        return back()->with('success', 'Prüfungsaufgabe wurde aus der Stunde entfernt.');
+    }
+
     public function show(Request $request, ScheduleSlot $scheduleSlot, CompetencyResolver $competencyResolver, WscDocInspector $inspector): Response
     {
         $group = $scheduleSlot->group;
@@ -38,7 +147,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.resources',
             'scheduledLesson.lesson.materialItems',
             'scheduledLesson.lesson.assessmentTasks.competency',
-            'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency',
+            'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency.variants.level',
             'scheduledLesson.lesson.assessmentTasks.levels',
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
@@ -83,7 +192,10 @@ class LessonWorkspaceController extends Controller
             }
         }
         $targetCompetencies = $lesson->competencies
-            ->map(fn ($competency) => $competencyResolver->present($competency))
+            ->map(fn ($competency) => $competencyResolver->present($competency) + [
+                'education_plan_competency_id' => $competency->education_plan_competency_id,
+                'source_identifier' => $competency->curriculumCompetency?->external_identifier ?: $competency->educationPlanCompetency?->external_identifier,
+            ])
             ->groupBy('kind')
             ->map(fn ($competencies) => $competencies->values())
             ->all();
@@ -96,7 +208,11 @@ class LessonWorkspaceController extends Controller
             'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
             'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
             'materialItems' => $lesson->unit->materialItems->merge($lesson->materialItems)->unique('id')->values(),
-            'assessmentTasks' => $lesson->assessmentTasks,
+            'assessmentTasks' => $lesson->assessmentTasks->each(function ($task): void {
+                $task->setAttribute('competency_identifier', $task->educationPlanCompetency?->external_identifier);
+                $task->setAttribute('has_differentiation', $task->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
+            }),
+            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title']),
             'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
             'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);

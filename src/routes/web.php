@@ -40,10 +40,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/flux/poll', [FluxController::class, 'poll'])->name('flux.poll');
     Route::get('/unterricht/{scheduleSlot}', [LessonWorkspaceController::class, 'show'])->name('lessons.show');
     Route::get('/unterricht/{scheduleSlot}/lieder/export', [LessonWorkspaceController::class, 'exportSongs'])->name('lessons.songs.export');
+    Route::get('/unterricht/{scheduleSlot}/pruefungsaufgaben/neu', [LessonWorkspaceController::class, 'createAssessmentTask'])->name('lessons.assessment-tasks.create');
+    Route::get('/unterricht/{scheduleSlot}/pruefungsaufgaben/{assessmentTask}/bearbeiten', [LessonWorkspaceController::class, 'editAssessmentTask'])->name('lessons.assessment-tasks.edit');
+    Route::post('/unterricht/{scheduleSlot}/pruefungsaufgaben', [LessonWorkspaceController::class, 'storeAssessmentTask'])->name('lessons.assessment-tasks.store');
+    Route::put('/unterricht/{scheduleSlot}/pruefungsaufgaben/{assessmentTask}', [LessonWorkspaceController::class, 'updateAssessmentTask'])->name('lessons.assessment-tasks.update');
+    Route::delete('/unterricht/{scheduleSlot}/pruefungsaufgaben/{assessmentTask}', [LessonWorkspaceController::class, 'removeAssessmentTask'])->name('lessons.assessment-tasks.destroy');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::put('/unterricht/{scheduleSlot}/beobachtungen', [LessonWorkspaceController::class, 'updateObservations'])->name('lessons.observations.update');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/bibliothek', ResourceLibraryController::class)->name('resources.library');
+    Route::get('/bibliothek/pruefungsaufgaben/neu', [ResourceLibraryController::class, 'createAssessmentTask'])->name('resources.library.assessment-tasks.create');
+    Route::get('/bibliothek/pruefungsaufgaben/{assessmentTask}/bearbeiten', [ResourceLibraryController::class, 'editAssessmentTask'])->name('resources.library.assessment-tasks.edit');
     Route::get('/ressourcen/bibliothek', ResourceLibraryController::class);
     Route::get('/bibliothek/lied/neu', [SongController::class, 'create'])->name('songs.create');
     Route::get('/bibliothek/lied/{songVersion}', [SongController::class, 'edit'])->name('songs.versions.edit');

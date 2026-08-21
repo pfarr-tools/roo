@@ -99,6 +99,10 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
 
     $task = AssessmentTask::firstOrFail();
     expect($task->teaching_unit_competency_id)->toBe($competency->id)->and($task->levels()->pluck('level')->all())->toBe(['G', 'M']);
+    $this->actingAs($user)->get('/bibliothek/pruefungsaufgaben/neu')
+        ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('method', 'post'));
+    $this->actingAs($user)->get("/bibliothek/pruefungsaufgaben/{$task->id}/bearbeiten")
+        ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('task.title', 'Begründe deine Antwort'));
     $this->actingAs($user)->get('/bibliothek?type=assessment-task')->assertInertia(fn ($page) => $page->where('items.0.description', 'Kann begründen · G, M'));
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();

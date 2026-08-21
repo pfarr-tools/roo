@@ -25,6 +25,36 @@ use Inertia\Inertia;
 
 class ResourceLibraryController extends Controller
 {
+    public function createAssessmentTask(Request $request)
+    {
+        return Inertia::render('AssessmentTask/Edit', [
+            'backUrl' => route('resources.library'),
+            'submitUrl' => route('resources.library.assessment-tasks.store'),
+            'method' => 'post',
+            'libraryMode' => true,
+            'competencyField' => 'competency_id',
+            'competencies' => $this->competencies($request->user()->organization_id),
+            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
+        ]);
+    }
+
+    public function editAssessmentTask(Request $request, int $assessmentTask)
+    {
+        $task = $this->item($request, 'assessment-task', $assessmentTask);
+        $task->load(['educationPlanCompetency.variants', 'levels']);
+
+        return Inertia::render('AssessmentTask/Edit', [
+            'backUrl' => route('resources.library'),
+            'submitUrl' => route('resources.library.update', ['assessment-task', $task->id]),
+            'method' => 'put',
+            'libraryMode' => true,
+            'competencyField' => 'competency_id',
+            'task' => $task,
+            'competencies' => $this->competencies($request->user()->organization_id),
+            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
+        ]);
+    }
+
     public function associationStatus(Request $request, TeachingGroup $teachingGroup, string $kind, int $resource): JsonResponse
     {
         $this->authorize('update', $teachingGroup);
@@ -251,9 +281,17 @@ class ResourceLibraryController extends Controller
 
     public function storeAssessmentTask(Request $request): RedirectResponse
     {
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['required', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
-        $competency = TeachingUnitCompetency::whereKey($data['competency_id'])->whereHas('unit', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->firstOrFail();
-        $task = AssessmentTask::create(['organization_id' => $request->user()->organization_id, 'teaching_unit_competency_id' => $competency->id, 'title' => $data['title'], 'solution' => $data['solution'] ?? null, 'max_points' => $data['max_points'] ?? null, 'level' => collect($data['levels'] ?? [])->first()]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'solution' => $data['solution'] ?? null, 'max_points' => $data['max_points'] ?? null, 'level' => collect($data['levels'] ?? [])->first()];
+        if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
+            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
+            $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
+        } else {
+            $competency = TeachingUnitCompetency::whereKey($data['competency_id'])->whereHas('unit', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->firstOrFail();
+            $attributes['teaching_unit_competency_id'] = $competency->id;
+        }
+        $task = AssessmentTask::create($attributes);
         $task->levels()->delete();
         $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
 
