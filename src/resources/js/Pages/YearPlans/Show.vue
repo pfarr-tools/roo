@@ -5,7 +5,7 @@ import LessonEditorModal from '../../Components/Planning/LessonEditorModal.vue'
 import de from '../../i18n/de'
 import { formatCompetencyIdentifier } from '../../utils/competencies'
 import { router, useForm, usePage } from '@inertiajs/vue3'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ group: Object, workspace: Object, groupOptions: Array, availableUnits: Array, competencyOptions: Array, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, phaseTemplates: Array, socialForms: Array, holidayPeriods: Array, canUndoReflow: Boolean, curriculumColumnOpen: Boolean })
@@ -38,10 +38,6 @@ function addToast(type, message) {
     window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 4500)
 }
 
-watch(() => [page.props.flash?.success, page.props.flash?.warning], ([success, warning]) => {
-    addToast('success', success)
-    addToast('warning', warning)
-}, { immediate: true })
 const dragOverSlot = ref(null)
 const dropPreviewSlots = ref([])
 const dropInsertSlots = ref([])

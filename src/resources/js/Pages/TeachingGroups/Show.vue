@@ -95,7 +95,6 @@ async function remove(student) { if (await requestConfirmation({ message: `${stu
         <template #toolbar><a href="/unterrichtsgruppen" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-primary" type="button" @click="save">{{ de.saveChanges }}</button></template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ group.name }}</h1>
-            <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <TabHeaders :aria-label="`${group.name} Bereiche`">
                 <TabHeader id="general" :title="de.groupGeneral" :active-tab="activeTab" icon="gear" @select="activeTab = $event" />
                 <TabHeader id="timetable" :title="de.groupTimetable" :active-tab="activeTab" icon="calendar-week" @select="activeTab = $event" />

@@ -40,6 +40,11 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
   Umschalten nicht zerstört, damit ungespeicherte Formulareingaben erhalten
   bleiben. Auf kleinen Bildschirmen dürfen Tab-Kopfzeilen horizontal
   scrollen.
+- Alle serverseitigen Flash-Nachrichten werden global als Toasts angezeigt,
+  nicht als Meldungsblöcke im Seiteninhalt. Toasts müssen Erfolg, Warnungen und
+  Fehler unterscheiden, zugänglich angekündigt werden und automatisch
+  verschwinden; seitenbezogene Sondermeldungen dürfen ergänzend eigene Toasts
+  verwenden.
 
 ---
 

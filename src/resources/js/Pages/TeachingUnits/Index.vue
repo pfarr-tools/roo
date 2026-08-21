@@ -43,7 +43,6 @@ async function removeTemplate(template) { if (await requestConfirmation({ messag
                 <div class="col-sm-8 col-lg-5"><label class="visually-hidden" for="teaching-unit-search">{{ de.searchUnits }}</label><input id="teaching-unit-search" v-model="search" class="form-control" type="search" :placeholder="de.searchUnits"></div>
                 <div class="col-auto"><button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ de.filter }}</button></div>
             </form>
-            <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!units.length" class="alert alert-info">{{ de.noTeachingUnits }}</div>
             <div v-for="unit in units" :key="unit.id" class="card mb-2 planning-card">
                 <div class="card-body d-flex justify-content-between gap-3">

@@ -19,7 +19,6 @@ function create() { form.grade_levels = form.grade_levels.map(value => value.tri
         <template #toolbar><button class="btn btn-sm btn-primary" type="button" @click="open = true"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ de.addTeachingGroup }}</button></template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ de.teachingGroups }}</h1>
-            <div v-if="$page.props.flash?.success" class="alert alert-success">{{ $page.props.flash.success }}</div>
             <div v-if="!groups.length" class="alert alert-info">{{ de.noTeachingGroups }}</div>
             <div v-for="group in groups" :key="group.id" class="card mb-3"><div class="card-body d-flex justify-content-between align-items-center gap-3"><div><h2 class="h5 mb-1"><a :href="`/unterrichtsgruppen/${group.id}`" class="text-decoration-none">{{ group.name }}</a></h2><div class="text-muted">{{ group.school.name }} · {{ group.school_year.name }} · {{ group.grade_levels.map(level => level.grade_level).join(', ') }}</div></div><span class="badge text-bg-light">{{ group.students_count }} {{ de.members.toLowerCase() }}</span></div></div>
         </div>

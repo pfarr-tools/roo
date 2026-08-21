@@ -297,6 +297,11 @@ body {
 .planning-toast-success { background: var(--bs-success); }
 .planning-toast-warning { background: var(--bs-warning); color: var(--bs-dark); }
 .planning-toast-error { background: var(--bs-danger); }
+.roo-toast-container { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1200; display: flex; width: min(26rem, calc(100vw - 2.5rem)); flex-direction: column; gap: .6rem; pointer-events: none; }
+.roo-toast { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: .8rem 1rem; border-radius: var(--bs-border-radius); box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .18); color: #fff; pointer-events: auto; animation: planning-toast-in .2s ease-out; }
+.roo-toast-success { background: var(--bs-success); }
+.roo-toast-warning { background: var(--bs-warning); color: var(--bs-dark); }
+.roo-toast-error { background: var(--bs-danger); }
 .nested-modal { z-index: 1060; }
 .planning-phases-scroll { max-height: calc(100vh - var(--roo-topbar-height) - 13rem); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 @keyframes planning-toast-in { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: translateY(0); } }

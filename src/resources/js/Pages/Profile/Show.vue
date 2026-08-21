@@ -15,7 +15,6 @@ const form = useForm({ name: props.user.name, email: props.user.email, openai_ap
     <AppShell>
         <div class="container-fluid px-3 py-4">
             <h1 class="h2 mb-4">{{ de.profile }}</h1>
-            <div v-if="$page.props.flash?.success" class="alert alert-success" role="status">{{ $page.props.flash.success }}</div>
             <form class="row g-4" @submit.prevent="form.put('/profil')">
                 <section class="col-12 col-xl-7" aria-labelledby="profile-data-heading">
                     <div class="card border-0 shadow-sm">

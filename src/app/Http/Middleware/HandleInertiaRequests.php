@@ -16,6 +16,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'warning' => fn () => $request->session()->get('warning'),
+                'error' => fn () => $request->session()->get('error'),
                 'planning_overflow' => fn () => $request->session()->get('planning_overflow'),
             ],
         ];
