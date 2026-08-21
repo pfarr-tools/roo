@@ -58,12 +58,19 @@ class TeachingGroupController extends Controller
             ->groupBy('curriculum_id');
         $coveredEducationHours = $plannedCompetencies->filter(fn ($items, $id) => $id === '' || $id === null)->flatten(1)->groupBy('education_id')->map(fn ($items) => $items->sum('hours'));
         $coveredHours = $plannedCompetencies->reject(fn ($items, $id) => $id === '' || $id === null)->map(fn ($items) => $items->sum('hours'));
-        $competencies = $planCompetencies->map(fn ($competency) => [
-            'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
-            'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
-            'presentation' => $competencyResolver->present($competency),
-            'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
-        ])->values();
+        $competencies = $planCompetencies->map(function ($competency) use ($competencyResolver, $coveredHours, $coveredEducationHours): array {
+            $presentation = $competencyResolver->present($competency);
+            $text = $presentation['text'] ?: $competency->educationPlanCompetency?->text ?: $competency->text ?: $competency->raw_text;
+            $presentation['text'] = $text;
+            $presentation['label'] = $presentation['identifier'] && $text ? $presentation['identifier'].' – '.$text : ($text ?: $presentation['identifier']);
+
+            return [
+                'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
+                'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
+                'presentation' => $presentation,
+                'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
+            ];
+        })->values();
         $songbookVersions = $teachingGroup->songbook
             ? $contentsResolver->resolve($teachingGroup->songbook)
                 ->map(fn ($entry) => $entry->songVersion)
