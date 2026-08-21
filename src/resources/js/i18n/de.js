@@ -181,6 +181,8 @@ export default {
     },
     educationPlanBindings: 'Zugeordnete Bildungspläne',
     denomination: 'Konfession',
+    groupDenominationHint: 'Es gelten nur die konfessionsbezogenen Kompetenzen dieses Curriculums sowie gemeinsame Kompetenzen.',
+    allDenominations: 'Alle verfügbaren Konfessionen',
     competency: 'Kompetenz',
     competencyNumber: 'Kompetenznummer',
     competencySearch: 'Kompetenznummer oder Text suchen',

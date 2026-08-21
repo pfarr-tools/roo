@@ -70,11 +70,15 @@ class YearPlanController extends Controller
         $curriculumColumnPreference = $request->user()->preferences()->where('key', 'year-plan.'.$teachingGroup->id.'.curriculum-column')->first()?->value ?? [];
 
         $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description', 'songs.song:id,title', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind', 'competencies.curriculumCompetency:id,external_identifier,display,text,raw_text,competency_kind', 'lessons.template:id,title', 'lessons.resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'lessons.resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.materialItems:id,name,description', 'lessons.songs.song:id,title', 'lessons.songbooks', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.phases.songs.song:id,title', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
-        $workspaceUnits->each(fn ($unit) => $unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))));
-        $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
+        $workspaceUnits->each(function ($unit) use ($teachingGroup, $competencyResolver): void {
+            $unit->setRelation('competencies', $unit->competencies->filter(fn ($competency) => ! $competency->curriculumCompetency || ! $teachingGroup->denomination || blank($competency->curriculumCompetency->denomination) || $competency->curriculumCompetency->denomination === $teachingGroup->denomination)->values());
+            $unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        });
+        $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
         $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-            ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies:id,education_plan_competency_id,competency_kind,display,text,raw_text'])
+            ->whereHas('curriculumCompetencies', fn ($query) => $query->forGroup($teachingGroup))
+            ->with(['area:id,kind', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies' => fn ($query) => $query->forGroup($teachingGroup)->select('id', 'education_plan_competency_id', 'competency_kind', 'display', 'text', 'raw_text')])
             ->orderBy('external_identifier')
             ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
             ->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
@@ -135,7 +139,7 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         $curriculumIds = $teachingGroup->curricula()->pluck('curricula.id');
         abort_unless(CurriculumTopic::whereKey($topic->id)->whereHas('version', fn ($query) => $query->whereIn('curriculum_id', $curriculumIds))->exists(), 422, 'Das Curriculumthema gehört nicht zu dieser Unterrichtsgruppe.');
-        $unit = $workspace->importCurriculumUnit($teachingGroup, $topic->load('competencies'));
+        $unit = $workspace->importCurriculumUnit($teachingGroup, $topic->load(['competencies' => fn ($query) => $query->forGroup($teachingGroup)]));
         $plan = $this->planFor($teachingGroup);
         $this->revise($plan, $request->user()->id, 'teaching_unit_imported', 'Curriculum-UE „'.$unit->title.'“ als eigene UE übernommen.');
 
@@ -150,7 +154,7 @@ class YearPlanController extends Controller
         $topics = CurriculumTopic::query()
             ->whereHas('version', fn ($query) => $query->whereIn('curriculum_id', $curriculumIds))
             ->when($gradeLevels->isNotEmpty(), fn ($query) => $query->whereIn('year', $gradeLevels))
-            ->with('competencies')
+            ->with(['competencies' => fn ($query) => $query->forGroup($teachingGroup)])
             ->get();
         $existingTopicIds = $teachingGroup->teachingUnits()->whereNotNull('source_curriculum_topic_id')->pluck('source_curriculum_topic_id');
         $imported = 0;

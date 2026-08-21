@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'notes'])]
+#[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes'])]
 class TeachingGroup extends Model
 {
     public function school(): BelongsTo

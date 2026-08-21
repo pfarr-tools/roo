@@ -12,6 +12,7 @@ use App\Http\Requests\UpdateTeachingGroupCurriculaRequest;
 use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
 use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
+use App\Models\CurriculumTopicCompetency;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
@@ -44,8 +45,22 @@ class TeachingGroupController extends Controller
     public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
         $organizationId = auth()->user()->organization_id;
+        $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
+        $planCompetencies = CurriculumTopicCompetency::query()
+            ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
+            ->whereHas('topic', fn ($query) => $query->whereIn('year', $gradeLevels))
+            ->forGroup($teachingGroup)->with('topic:id,title,year')->orderBy('competency_kind')->orderBy('position')->get();
+        $coveredHours = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'competencies:id,teaching_unit_id,curriculum_topic_competency_id'])->get()
+            ->flatMap(fn ($unit) => $unit->competencies->mapWithKeys(fn ($competency) => [$competency->curriculum_topic_competency_id => $unit->lessons->sum('duration')]))
+            ->groupBy(fn ($hours, $id) => $id)->map(fn ($hours) => $hours->sum());
+        $competencies = $planCompetencies->map(fn ($competency) => [
+            'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
+            'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
+            'identifier' => $competency->external_identifier, 'display' => $competency->display, 'text' => $competency->text ?? $competency->raw_text,
+            'covered_hours' => $coveredHours->get($competency->id, 0),
+        ])->values();
         $songbookVersions = $teachingGroup->songbook
             ? $contentsResolver->resolve($teachingGroup->songbook)
                 ->map(fn ($entry) => $entry->songVersion)
@@ -64,6 +79,8 @@ class TeachingGroupController extends Controller
             'songVersions' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with('song:id,title')->orderBy('name')->get(),
             'assessments' => $teachingGroup->assessments->sortByDesc('assessed_on')->values(),
             'reportPeriods' => $teachingGroup->reportPeriods->sortByDesc('ends_on')->values(),
+            'competencies' => $competencies,
+            'denominationOptions' => $teachingGroup->curricula->flatMap(fn ($curriculum) => $curriculum->denominations ?? [])->filter()->unique()->values(),
         ]);
     }
 
@@ -152,7 +169,7 @@ class TeachingGroupController extends Controller
         abort_unless($data['school_id'] === $teachingGroup->school_id && $data['school_year_id'] === $teachingGroup->school_year_id, 422);
         $nameChanged = $teachingGroup->name !== $data['name'];
         DB::transaction(function () use ($data, $teachingGroup): void {
-            $teachingGroup->update(collect($data)->only(['name', 'aktenzeichen', 'notes'])->all());
+            $teachingGroup->update(collect($data)->only(['name', 'aktenzeichen', 'denomination', 'notes'])->all());
             $teachingGroup->gradeLevels()->delete();
             $teachingGroup->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
             if (array_key_exists('periods', $data)) {

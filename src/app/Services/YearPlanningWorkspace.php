@@ -606,7 +606,7 @@ class YearPlanningWorkspace
         $lessonCompetencies = $units->flatMap(fn ($unit) => $unit->lessons->flatMap->competencies);
         $plannedEducation = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
         $lessonEducation = $lessonCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
-        $curriculumCompetencies = $group->curricula()->with('versions.topics.competencies')->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->competencies;
+        $curriculumCompetencies = $group->curricula()->with(['versions.topics.competencies' => fn ($query) => $query->forGroup($group)])->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->competencies;
         $curriculumIds = $curriculumCompetencies->pluck('id')->unique();
         $coveredEducationIds = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique();
         $coveredCurriculumIds = $curriculumCompetencies->filter(fn ($competency) => $coveredEducationIds->contains($competency->education_plan_competency_id) || $unitCompetencies->pluck('curriculum_topic_competency_id')->contains($competency->id))->pluck('id')->unique();
