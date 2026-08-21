@@ -63,20 +63,26 @@ class YearPlanController extends Controller
     public function competencyPicker(Request $request, TeachingGroup $teachingGroup, CompetencyResolver $competencyResolver, TeachingGroupCompetencyOverview $overview): JsonResponse
     {
         $this->authorize('view', $teachingGroup);
-        $competencies = $overview->forGroup($teachingGroup, $competencyResolver);
-        $educationIdsByIdentifier = EducationPlanCompetency::query()
+        $groupCompetencies = $overview->forGroup($teachingGroup, $competencyResolver);
+        $coveredHoursByEducationId = $groupCompetencies->filter(fn (array $competency) => filled($competency['education_plan_competency_id']))
+            ->mapWithKeys(fn (array $competency) => [$competency['education_plan_competency_id'] => $competency['covered_hours']]);
+        $coveredHoursByIdentifier = $groupCompetencies->filter(fn (array $competency) => filled($competency['external_identifier']))
+            ->mapWithKeys(fn (array $competency) => [$competency['external_identifier'] => $competency['covered_hours']]);
+        $competencies = EducationPlanCompetency::query()
             ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-            ->pluck('id', 'external_identifier');
-        $pickerCompetencies = $competencies->map(function (array $competency) use ($educationIdsByIdentifier): array {
-            $pickerId = $competency['education_plan_competency_id'] ?? $educationIdsByIdentifier->get($competency['external_identifier']) ?? $competency['external_identifier'];
-            $competency['id'] = $pickerId;
-            $competency['competency_presentation'] = $competency['presentation'];
-            $competency['competency_area'] = $competency['area'];
-            return $competency;
-        })->values();
+            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
+            ->orderBy('external_identifier')
+            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
+            ->unique('external_identifier')
+            ->values()
+            ->each(function ($competency) use ($competencyResolver, $coveredHoursByEducationId, $coveredHoursByIdentifier): void {
+                $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
+                $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
+                $competency->setAttribute('covered_hours', $coveredHoursByEducationId->get($competency->id, $coveredHoursByIdentifier->get($competency->external_identifier, 0)));
+            });
         return response()->json([
-            'competencies' => $pickerCompetencies,
-            'covered_hours' => $pickerCompetencies->mapWithKeys(fn (array $competency) => [$competency['id'] => $competency['covered_hours']])->all(),
+            'competencies' => $competencies,
+            'covered_hours' => $competencies->mapWithKeys(fn ($competency) => [$competency->id => $competency->covered_hours])->all(),
         ]);
     }
 
