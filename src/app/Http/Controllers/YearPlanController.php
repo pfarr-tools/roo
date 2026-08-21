@@ -473,6 +473,10 @@ class YearPlanController extends Controller
             $validIds = $lesson->unit->competencies()->whereIn('id', $selectedIds)->pluck('id');
             abort_unless($validIds->count() === $selectedIds->count(), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
             $lesson->competencies()->sync($validIds);
+            $lesson->unit->competencies()
+                ->where('is_secondary', true)
+                ->whereDoesntHave('lessons')
+                ->delete();
         }
 
         return back()->with('success', 'Stunde wurde gespeichert.');

@@ -23,6 +23,7 @@ use App\Models\SocialForm;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
+use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
 use App\Models\User;
 use App\Services\YearPlanningWorkspace;
@@ -234,6 +235,28 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
             ->where('targetCompetencies.content.0.label', '3.2.3 (4) – die Sprache der biblischen Bildworte wahrnehmen und deuten')
             ->where('unit.competencies.0.competency_presentation.kind', 'process')
             ->where('unit.competencies.0.competency_presentation.text', 'Wahrnehmen und beschreiben'));
+});
+
+it('entfernt abgewählte sekundäre Kompetenzen vollständig aus der Stunde', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
+    $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Eine Kompetenz', 'position' => 1, 'is_active' => true]);
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Kompetenzstunde', 'position' => 1, 'duration' => 1]);
+    $unitCompetency = $unit->competencies()->create(['education_plan_competency_id' => $educationCompetency->id, 'is_secondary' => true]);
+    $lesson->competencies()->attach($unitCompetency->id);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
+        'title' => $lesson->title,
+        'duration' => 1,
+        'competency_ids' => [],
+        'education_plan_competency_ids' => [],
+    ])->assertRedirect();
+
+    expect($lesson->fresh()->competencies)->toBeEmpty()
+        ->and(TeachingUnitCompetency::find($unitCompetency->id))->toBeNull();
 });
 
 it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', function () {
