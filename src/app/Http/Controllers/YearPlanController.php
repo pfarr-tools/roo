@@ -87,7 +87,7 @@ class YearPlanController extends Controller
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
         $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-            ->whereHas('curriculumCompetencies', fn ($query) => $query->forGroup($teachingGroup))
+            ->where(fn ($query) => $query->whereDoesntHave('curriculumCompetencies')->orWhereHas('curriculumCompetencies', fn ($curriculumCompetencies) => $curriculumCompetencies->forGroup($teachingGroup)))
             ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies' => fn ($query) => $query->forGroup($teachingGroup)->select('id', 'education_plan_competency_id', 'competency_kind', 'display', 'text', 'raw_text')])
             ->orderBy('external_identifier')
             ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])

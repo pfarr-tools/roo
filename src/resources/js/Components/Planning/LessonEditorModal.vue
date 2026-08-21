@@ -1,6 +1,7 @@
 <script setup>
 import de from '../../i18n/de'
 import AttachmentList from '../Ui/AttachmentList.vue'
+import CompetencyPickerModal from './CompetencyPickerModal.vue'
 import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
@@ -9,8 +10,8 @@ const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Numb
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
-const competencySearch = ref('')
-const competencySearchOpen = ref(false)
+const competencyPickerOpen = ref(false)
+const competencyPickerApplying = ref(false)
 const form = useForm({
     title: '',
     duration: 1,
@@ -51,19 +52,13 @@ function syncLesson(lesson) {
 watch(() => props.lesson, syncLesson, { immediate: true })
 watch(() => props.unit, unit => { unitCompetencies.value = [...(unit?.competencies ?? [])] })
 
-const availableCompetencies = computed(() => {
-    const selected = new Set(unitCompetencies.value.map(competency => competency.education_plan_competency_id).filter(Boolean))
-    const query = competencySearch.value.trim().toLowerCase()
-    return (props.competencyOptions ?? []).filter(option => !selected.has(option.id) && (!query || props.competencyText(option).toLowerCase().includes(query))).slice(0, 50)
-})
-
 const competencyKind = competency => competency.competency_presentation?.kind || competency.education_plan_competency?.area?.kind || competency.curriculum_competency?.competency_kind || 'content'
 const processCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) === 'process'))
 const contentCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) !== 'process'))
 const competencyAreaGroups = competencies => { const groups = new Map(); for (const competency of competencies) { const key = competency.competency_area?.identifier || competency.education_plan_competency?.area?.external_identifier || 'other'; if (!groups.has(key)) groups.set(key, { key, area: competency.competency_area ?? (competency.education_plan_competency?.area ? { identifier: competency.education_plan_competency.area.external_identifier, title: competency.education_plan_competency.area.title } : null), competencies: [] }); groups.get(key).competencies.push(competency) } return [...groups.values()] }
 const processCompetencyGroups = computed(() => competencyAreaGroups(processCompetencies.value))
 const contentCompetencyGroups = computed(() => competencyAreaGroups(contentCompetencies.value))
-const availableCompetencyGroups = computed(() => competencyAreaGroups(availableCompetencies.value))
+const lessonSelectedEducationPlanIds = computed(() => unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id)).map(competency => competency.education_plan_competency_id).filter(Boolean))
 const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {
     const represented = lesson.id === props.lesson?.id
         ? competencyForm.competency_ids.includes(competency.id)
@@ -77,21 +72,36 @@ const competencyCardStyle = competency => {
     return { backgroundColor: hours ? `rgba(var(--bs-success-rgb), ${intensity})` : 'rgba(var(--bs-secondary-rgb), 0.04)' }
 }
 
-function addCompetency(option) {
-    router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { education_plan_competency_id: option.id }, {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: response => {
-            const updatedUnit = response.props.workspace?.units?.find(unit => unit.id === props.unit.id)
-            if (updatedUnit) {
-                unitCompetencies.value = [...(updatedUnit.competencies ?? [])]
-                const added = unitCompetencies.value.find(competency => competency.education_plan_competency_id === option.id)
-                if (added && !competencyForm.competency_ids.includes(added.id)) competencyForm.competency_ids.push(added.id)
-            }
-            competencySearch.value = ''
-            competencySearchOpen.value = false
-        },
+function applyCompetencies(educationPlanCompetencyIds) {
+    const selectedIds = [...new Set(educationPlanCompetencyIds)]
+    const selectedUnitCompetencyIds = []
+    const pending = []
+    selectedIds.forEach(educationPlanCompetencyId => {
+        const existing = unitCompetencies.value.find(competency => competency.education_plan_competency_id === educationPlanCompetencyId)
+        existing ? selectedUnitCompetencyIds.push(existing.id) : pending.push(educationPlanCompetencyId)
     })
+    competencyPickerApplying.value = pending.length > 0
+    const addNext = index => {
+        if (index >= pending.length) {
+            competencyForm.competency_ids = selectedUnitCompetencyIds
+            competencyPickerApplying.value = false
+            return
+        }
+        const educationPlanCompetencyId = pending[index]
+        router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { education_plan_competency_id: educationPlanCompetencyId }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: response => {
+                const updatedUnit = response.props.workspace?.units?.find(unit => unit.id === props.unit.id)
+                if (updatedUnit) unitCompetencies.value = [...(updatedUnit.competencies ?? [])]
+                const added = unitCompetencies.value.find(competency => competency.education_plan_competency_id === educationPlanCompetencyId)
+                if (added) selectedUnitCompetencyIds.push(added.id)
+                addNext(index + 1)
+            },
+            onError: () => { competencyPickerApplying.value = false },
+        })
+    }
+    addNext(0)
 }
 
 function save() {
@@ -151,12 +161,7 @@ function updatePreparationStatus() {
                             </div>
                             <p v-else class="small text-muted">{{ de.noCompetencies }}</p>
                             <div class="position-relative mt-4">
-                                <label class="form-label">{{ de.addCompetency }}</label>
-                                <input v-model="competencySearch" class="form-control" :placeholder="de.searchCompetencies" @focus="competencySearchOpen = true">
-                                <div v-if="competencySearchOpen" class="list-group position-absolute w-100 shadow-sm z-3">
-                                    <template v-for="group in availableCompetencyGroups" :key="group.key"><div v-if="group.area" class="list-group-item small fw-semibold text-muted">{{ group.area.identifier }} {{ group.area.title }}</div><button v-for="option in group.competencies" :key="option.id" class="list-group-item list-group-item-action text-start small" type="button" @click="addCompetency(option)">{{ competencyText(option) }}</button></template>
-                                    <div v-if="!availableCompetencies.length" class="list-group-item small text-muted">{{ de.noCompetencyOptions }}</div>
-                                </div>
+                                <button class="btn btn-outline-primary" type="button" :disabled="competencyPickerApplying" @click="competencyPickerOpen = true"><i class="bi bi-list-check me-1"></i>{{ de.addCompetency }}</button>
                             </div>
                         </div>
 
@@ -173,4 +178,5 @@ function updatePreparationStatus() {
         </section>
 
     </div>
+    <CompetencyPickerModal v-model="competencyPickerOpen" :competencies="competencyOptions" :selected-ids="lessonSelectedEducationPlanIds" :competency-text="competencyText" :lessons="unit?.lessons ?? []" :current-lesson-id="lesson?.id" @apply="applyCompetencies" />
 </template>
