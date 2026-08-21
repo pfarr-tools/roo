@@ -72,7 +72,16 @@ class YearPlanController extends Controller
                 $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
                 $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
             });
-        $groupCompetencyHours = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies'])->get()->flatMap->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['id' => $competency->education_plan_competency_id, 'hours' => (float) $lesson->duration]))
+        $educationIdsByIdentifier = $competencies->filter(fn ($competency) => filled($competency->external_identifier))
+            ->mapWithKeys(fn ($competency) => [$competency->external_identifier => $competency->id]);
+        $groupCompetencyHours = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies.educationPlanCompetency:id', 'lessons.competencies.curriculumCompetency:id,education_plan_competency_id,external_identifier'])->get()->flatMap->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(function ($competency) use ($educationIdsByIdentifier): array {
+            $curriculum = $competency->curriculumCompetency;
+            $id = $competency->education_plan_competency_id
+                ?? $curriculum?->education_plan_competency_id
+                ?? $educationIdsByIdentifier->get($curriculum?->external_identifier);
+
+            return ['id' => $id, 'hours' => (float) $lesson->duration];
+        }))
             ->filter(fn ($item) => $item['id'] !== null)
             ->groupBy('id')
             ->map(fn ($items) => $items->sum('hours'))

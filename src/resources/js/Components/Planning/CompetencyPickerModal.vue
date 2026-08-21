@@ -37,11 +37,11 @@ watch(() => props.modelValue, async open => {
         if (!response.ok) throw new Error('Kompetenzen konnten nicht geladen werden.')
         const data = await response.json()
         pickerCompetencies.value = data.competencies ?? []
-        pickerCoveredHours.value = data.covered_hours ?? {}
+        pickerCoveredHours.value = Object.fromEntries(Object.entries(data.covered_hours ?? {}).map(([id, hours]) => [String(id), Number(hours ?? 0)]))
     } finally {
         loading.value = false
     }
-})
+}, { immediate: true })
 
 watch(search, value => {
     clearTimeout(searchTimer)
