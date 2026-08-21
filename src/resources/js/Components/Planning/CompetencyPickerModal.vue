@@ -31,7 +31,10 @@ watch(search, value => {
     searchTimer = setTimeout(() => { debouncedSearch.value = value.trim().toLowerCase() }, 250)
 })
 
-const competencyKind = competency => competency.competency_kind || competency.competency_presentation?.kind || competency.area?.kind || competency.competency_area?.kind || 'content'
+const competencyKind = competency => {
+    const kind = competency.competency_kind || competency.area?.kind || competency.competency_area?.kind || competency.competency_presentation?.kind || 'content'
+    return String(kind).includes('process') ? 'process' : 'content'
+}
 const areaFor = competency => competency.competency_area || competency.area || competency.education_plan_competency?.area || null
 const matchesSearch = competency => !debouncedSearch.value || props.competencyText(competency).toLowerCase().includes(debouncedSearch.value)
 const grouped = competencies => {
@@ -55,7 +58,7 @@ const activeGroups = computed(() => activeTab.value === 'process' ? processGroup
 const competencyHours = competency => props.lessons.reduce((total, lesson) => {
     const represented = lesson.id === props.currentLessonId
         ? draftSelectedIds.value.has(competency.id)
-        : (lesson.competencies ?? []).some(item => item.curriculum_topic_competency_id === competency.id || item.education_plan_competency_id === competency.education_plan_competency_id)
+        : (lesson.competencies ?? []).some(item => item.curriculum_topic_competency_id === competency.id || item.education_plan_competency_id === competency.id)
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
 const competencyCardStyle = competency => {

@@ -6,7 +6,7 @@ import LessonPhasesTab from './LessonPhasesTab.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
-const props = defineProps({ lesson: Object, unit: Object, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, scheduledLesson: { type: Object, default: null }, executionUrl: { type: String, default: '' }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
+const props = defineProps({ lesson: Object, unit: Object, groupLessons: { type: Array, default: () => [] }, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, scheduledLesson: { type: Object, default: null }, executionUrl: { type: String, default: '' }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
 const emit = defineEmits(['close'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
@@ -178,5 +178,5 @@ function updatePreparationStatus() {
         </section>
 
     </div>
-    <CompetencyPickerModal v-model="competencyPickerOpen" :competencies="competencyOptions" :selected-ids="lessonSelectedEducationPlanIds" :competency-text="competencyText" :lessons="unit?.lessons ?? []" :current-lesson-id="lesson?.id" @apply="applyCompetencies" />
+    <CompetencyPickerModal v-model="competencyPickerOpen" :competencies="competencyOptions" :selected-ids="lessonSelectedEducationPlanIds" :competency-text="competencyText" :lessons="groupLessons.length ? groupLessons : (unit?.lessons ?? [])" :current-lesson-id="lesson?.id" @apply="applyCompetencies" />
 </template>
