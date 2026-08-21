@@ -9,6 +9,7 @@ const props = defineProps({
     assessment: { type: Object, default: null },
     slot: { type: Object, default: null },
     assessmentTasks: { type: Array, default: () => [] },
+    assessmentCompetencies: { type: Array, default: () => [] },
     returnTab: { type: String, default: "assessments" },
     returnTo: { type: String, default: "group" },
 });
@@ -108,18 +109,29 @@ const activeTasks = computed(() =>
 );
 const taskGroups = computed(() => {
     const groups = new Map();
+    props.assessmentCompetencies.forEach((competency) => {
+        if (!competency.title?.trim()) return;
+        groups.set(competency.key, {
+            key: competency.key,
+            title: competency.title || de.noCompetency,
+            tasks: [],
+        });
+    });
     taskList.value.forEach((task) => {
+        if (!task.competency?.trim()) return;
         const key = task.competency_key ?? task.competency_id ?? task.education_plan_competency_id ?? (task.competency ? `text-${task.competency}` : "none");
+        if (key === "none") return;
         if (!groups.has(key))
             groups.set(key, {
                 key,
-                title: task.competency || de.noCompetency,
+                title: task.competency,
                 tasks: [],
             });
         groups.get(key).tasks.push(task);
     });
     return [...groups.values()].map((group) => ({
         ...group,
+        hasWarning: group.tasks.length === 0,
         tasks: group.tasks.sort(
             (left, right) =>
                 (left.date || "9999-12-31").localeCompare(
@@ -258,9 +270,12 @@ syncTasks();
                     <p class="small text-muted">
                         {{ de.assessmentTasksWindowHint }}
                     </p>
-                    <div v-if="taskList.length" class="list-group">
+                    <div v-if="taskGroups.length" class="list-group">
                         <template v-for="group in taskGroups" :key="group.key">
                             <h3 class="h6 mt-3 mb-0 px-3 py-2 bg-light">{{ group.title }}</h3>
+                            <p v-if="group.hasWarning" class="alert alert-warning rounded-0 mb-0 py-2 px-3 small">
+                                {{ de.assessmentCompetencyWithoutTask }}
+                            </p>
                             <div class="table-responsive">
                                 <table class="table table-sm mb-0 align-middle assessment-task-table">
                                     <colgroup>
@@ -270,12 +285,12 @@ syncTasks();
                                         <col v-if="isDifferentiated" class="assessment-task-level-column">
                                         <col class="assessment-task-actions-column">
                                     </colgroup>
-                                    <thead>
+                                    <thead v-if="isDifferentiated">
                                         <tr>
-                                            <th>{{ de.assessmentTasks }}</th>
-                                            <th v-if="isDifferentiated" class="text-center">G</th>
-                                            <th v-if="isDifferentiated" class="text-center">M</th>
-                                            <th v-if="isDifferentiated" class="text-center">E</th>
+                                            <th></th>
+                                            <th class="text-center">G</th>
+                                            <th class="text-center">M</th>
+                                            <th class="text-center">E</th>
                                             <th></th>
                                         </tr>
                                     </thead>

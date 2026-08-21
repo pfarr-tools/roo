@@ -77,8 +77,68 @@ class AssessmentController extends Controller
         $slot = $assessment?->scheduleSlots()->where('status', 'lse')->orderBy('date')->orderBy('period_number')->first();
         $assessmentDate = ($slot?->date ?? $assessment?->assessed_on)?->toImmutable();
         $assessmentTasks = $this->assessmentTasksForWindow($teachingGroup, $assessmentDate, $assessment);
+        $assessmentCompetencies = $this->assessmentCompetenciesForWindow($teachingGroup, $assessmentDate);
 
-        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'assessmentCompetencies' => $assessmentCompetencies, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+    }
+
+    private function assessmentCompetenciesForWindow(TeachingGroup $teachingGroup, ?CarbonInterface $assessmentDate): array
+    {
+        if (! $assessmentDate) {
+            return [];
+        }
+
+        $assessmentDate = $assessmentDate->toImmutable();
+        $previousLseDate = $teachingGroup->scheduleSlots()
+            ->where('status', 'lse')
+            ->whereDate('date', '<', $assessmentDate->toDateString())
+            ->orderByDesc('date')
+            ->value('date');
+        $fromDate = $previousLseDate
+            ? CarbonImmutable::parse($previousLseDate)->addDay()
+            : $teachingGroup->schoolYear->starts_on->toImmutable();
+
+        $slotFilter = fn ($query) => $query
+            ->where('teaching_group_id', $teachingGroup->id)
+            ->whereDate('date', '>=', $fromDate->toDateString())
+            ->whereDate('date', '<=', $assessmentDate->toDateString());
+
+        return $teachingGroup->teachingUnits()
+            ->with(['lessons' => fn ($query) => $query
+                ->whereHas('scheduledLessons.slot', $slotFilter)
+                ->with(['competencies.educationPlanCompetency.area', 'competencies.educationPlanCompetency.variants', 'competencies.curriculumCompetency.educationPlanCompetency.area', 'competencies.curriculumCompetency.educationPlanCompetency.variants'])])
+            ->get()
+            ->flatMap->lessons
+            ->flatMap->competencies
+            ->filter(fn ($competency) => $competency->educationPlanCompetency?->area?->kind === 'content'
+                || $competency->curriculumCompetency?->competency_kind === 'content')
+            ->map(function ($competency): array {
+                $educationPlanCompetency = $competency->educationPlanCompetency
+                    ?? $competency->curriculumCompetency?->educationPlanCompetency;
+
+                return [
+                    'key' => $educationPlanCompetency
+                        ? 'education-plan-'.$educationPlanCompetency->id
+                        : 'teaching-unit-'.$competency->id,
+                    'title' => $this->competencyText($educationPlanCompetency, $competency),
+                ];
+            })
+            ->unique('key')
+            ->sortBy('title', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+    }
+
+    private function competencyText($educationPlanCompetency, $teachingUnitCompetency): ?string
+    {
+        if ($educationPlanCompetency) {
+            return collect([
+                $educationPlanCompetency->external_identifier ?: $educationPlanCompetency->number,
+                $educationPlanCompetency->text ?: $educationPlanCompetency->variants?->pluck('text')->filter()->implode(' / '),
+            ])->filter()->implode(' – ');
+        }
+
+        return $teachingUnitCompetency->local_wording;
     }
 
     private function assessmentTasksForWindow(TeachingGroup $teachingGroup, ?CarbonInterface $assessmentDate, ?Assessment $assessment): array
@@ -109,7 +169,7 @@ class AssessmentController extends Controller
                 ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
                 ->whereHas('scheduledLessons.slot', $slotFilter))
             ->with([
-                'levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency', 'educationPlanCompetency.area',
+                'levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency.variants', 'educationPlanCompetency.area', 'educationPlanCompetency.variants',
                 'lessons' => fn ($query) => $query
                     ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
                     ->with(['scheduledLessons' => fn ($scheduledQuery) => $scheduledQuery->whereHas('slot', $slotFilter)->with('slot:id,date')]),
@@ -121,7 +181,7 @@ class AssessmentController extends Controller
         $windowTaskIds = $tasks->pluck('id')->all();
 
         if ($assessment) {
-            $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency', 'educationPlanCompetency.area'])->get())->unique('id')->sortBy('title')->values();
+            $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency.variants', 'educationPlanCompetency.area', 'educationPlanCompetency.variants'])->get())->unique('id')->sortBy('title')->values();
         }
 
         return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $windowTaskIds): array {
@@ -142,9 +202,7 @@ class AssessmentController extends Controller
                     : ($task->teaching_unit_competency_id
                         ? 'teaching-unit-'.$task->teaching_unit_competency_id
                         : 'text-'.md5((string) $task->competency?->local_wording)),
-                'competency' => $educationPlanCompetency
-                    ? collect([$educationPlanCompetency->external_identifier ?: $educationPlanCompetency->number, $educationPlanCompetency->text ?: $educationPlanCompetency->variants?->pluck('text')->filter()->implode(' / ')])->filter()->implode(' – ')
-                    : $task->competency?->local_wording,
+                'competency' => $this->competencyText($educationPlanCompetency, $task->competency),
                 'edit_url' => route('resources.library.assessment-tasks.edit', $task->id),
                 'checked' => in_array($task->id, $selectedTaskIds, true),
                 'source' => in_array($task->id, $windowTaskIds, true) ? 'hours' : 'manual',
