@@ -32,6 +32,23 @@ case "$COMMAND" in
   artisan)
     exec docker compose exec -e XDG_CONFIG_HOME=/tmp/config app php artisan "$@"
     ;;
+  data)
+    DATA_COMMAND="${1:-help}"
+    shift || true
+    case "$DATA_COMMAND" in
+      push|pull)
+        exec "$ROOT/scripts/data-sync.sh" "$DATA_COMMAND" "$@"
+        ;;
+      help)
+        exec "$ROOT/scripts/data-sync.sh" help
+        ;;
+      *)
+        echo "Unbekannter Datenbefehl: $DATA_COMMAND" >&2
+        echo "Verwendung: ./roo data push <ssh-path> oder ./roo data pull <ssh-path>" >&2
+        exit 2
+        ;;
+    esac
+    ;;
   composer)
     exec docker compose exec app composer "$@"
     ;;
@@ -127,6 +144,8 @@ Verwendung:
   ./roo logs [dienst]
   ./roo shell
   ./roo artisan <befehl>
+  ./roo data push <ssh-path> [--source-down]
+  ./roo data pull <ssh-path> [--source-down]
   ./roo composer <befehl>
   ./roo npm <befehl>
   ./roo pint
