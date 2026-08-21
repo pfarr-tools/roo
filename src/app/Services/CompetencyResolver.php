@@ -47,7 +47,11 @@ class CompetencyResolver
         $curriculumText = $this->clean($curriculum?->text, $identifier)
             ?: $this->clean($curriculum?->raw_text, $identifier)
             ?: $this->displayText($curriculum?->display, $identifier);
-        $variants = collect($this->relatedMany($competency, 'variants'))
+        $variants = collect($this->relatedMany($competency, 'variants'));
+        if ($variants->isEmpty()) {
+            $variants = collect($this->relatedMany($plan, 'variants'));
+        }
+        $variants = $variants
             ->pluck('text')
             ->filter()
             ->implode(' / ');

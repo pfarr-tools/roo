@@ -48,11 +48,15 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.phases.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.phases.songs.parts',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
+            'scheduledLesson.lesson.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.competencies.curriculumCompetency',
+            'scheduledLesson.lesson.competencies.curriculumCompetency.educationPlanCompetency.area',
+            'scheduledLesson.lesson.competencies.curriculumCompetency.educationPlanCompetency.variants',
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        $lesson->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
         $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
             if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
                 $resource->page_count = $inspector->pageCount(Storage::disk('local')->path($resource->storage_path));

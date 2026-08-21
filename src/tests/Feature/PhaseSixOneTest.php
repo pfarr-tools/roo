@@ -7,6 +7,7 @@ use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanVersion;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
@@ -214,7 +215,8 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Wahrnehmen', 'position' => 1]);
     $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.1', 'text' => '2.1.1 Wahrnehmen und beschreiben', 'position' => 1, 'is_active' => true]);
     $contentArea = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => '3.2.3', 'title' => 'Biblische Bildworte', 'position' => 2]);
-    $contentCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.2.3.4', 'text' => '(4) die Sprache der biblischen Bildworte wahrnehmen und deuten', 'position' => 1, 'is_active' => true]);
+    $contentCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.2.3.4', 'text' => null, 'position' => 1, 'is_active' => true]);
+    EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $contentCompetency->id, 'text' => 'die Sprache der biblischen Bildworte wahrnehmen und deuten', 'position' => 1]);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
     $link = $unit->competencies()->create(['education_plan_competency_id' => $educationCompetency->id]);
     $contentLink = $unit->competencies()->create(['education_plan_competency_id' => $contentCompetency->id]);
