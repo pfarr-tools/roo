@@ -69,6 +69,7 @@ class TeachingGroupController extends Controller
             return [
                 'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
                 'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
+                'education_plan_competency_id' => $competency->education_plan_competency_id,
                 'presentation' => $presentation, 'missing_from_curriculum' => false,
                 'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
             ];
@@ -81,6 +82,13 @@ class TeachingGroupController extends Controller
             ->forGroup($teachingGroup)->pluck('external_identifier')->filter()->unique();
         $curriculumVersionIds = $teachingGroup->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id');
         $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $curriculumVersionIds)->whereNotNull('education_plan_id')->pluck('education_plan_id')->unique();
+        $educationPlanAreas = EducationPlanCompetency::query()
+            ->whereHas('area.version', fn ($query) => $query->whereIn('education_plan_id', $educationPlanIds))
+            ->with('area:id,kind,external_identifier,title')->get()
+            ->flatMap(function ($competency) use ($competencyResolver): array {
+                $identifier = $competencyResolver->identifier($competency);
+                return [$identifier => $competency->area, $competency->external_identifier => $competency->area];
+            });
         $missingCompetencies = EducationPlanCompetency::query()
             ->whereHas('area', function ($query) use ($educationPlanIds, $gradeLevels): void {
                 $query->whereHas('version', fn ($version) => $version->whereIn('education_plan_id', $educationPlanIds))
@@ -103,7 +111,15 @@ class TeachingGroupController extends Controller
                 'covered_hours' => $coveredEducationHours->get($competency->id, 0),
             ];
         })->values();
-        $competencies = $competencies->concat($missingCompetencies)->values();
+        $competencies = $competencies->concat($missingCompetencies)->map(function (array $competency) use ($educationPlanAreas): array {
+            $area = $competency['education_plan_competency_id']
+                ? $educationPlanAreas->get($competency['presentation']['identifier'])
+                : null;
+            $area ??= $educationPlanAreas->get($competency['presentation']['identifier']);
+            $competency['area'] = $area ? ['identifier' => $area->external_identifier, 'title' => $area->title] : null;
+
+            return $competency;
+        })->values();
         $songbookVersions = $teachingGroup->songbook
             ? $contentsResolver->resolve($teachingGroup->songbook)
                 ->map(fn ($entry) => $entry->songVersion)
