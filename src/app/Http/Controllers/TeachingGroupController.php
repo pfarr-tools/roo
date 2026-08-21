@@ -20,6 +20,7 @@ use App\Models\TeachingGroup;
 use App\Models\PhaseTemplate;
 use App\Models\SongVersion;
 use App\Services\SongbookContentsResolver;
+use App\Services\CompetencyResolver;
 use App\Services\SongbookPdfExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +43,7 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver): Response
+    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver): Response
     {
         $this->authorize('view', $teachingGroup);
         $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
@@ -51,15 +52,17 @@ class TeachingGroupController extends Controller
         $planCompetencies = CurriculumTopicCompetency::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
             ->whereHas('topic', fn ($query) => $query->whereIn('year', $gradeLevels))
-            ->forGroup($teachingGroup)->with('topic:id,title,year')->orderBy('competency_kind')->orderBy('position')->get();
-        $coveredHours = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'competencies:id,teaching_unit_id,curriculum_topic_competency_id'])->get()
-            ->flatMap(fn ($unit) => $unit->competencies->mapWithKeys(fn ($competency) => [$competency->curriculum_topic_competency_id => $unit->lessons->sum('duration')]))
-            ->groupBy(fn ($hours, $id) => $id)->map(fn ($hours) => $hours->sum());
+            ->forGroup($teachingGroup)->with(['topic:id,title,year', 'educationPlanCompetency.area:id,kind'])->orderBy('competency_kind')->orderBy('position')->get();
+        $plannedCompetencies = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'competencies:id,teaching_unit_id,curriculum_topic_competency_id,education_plan_competency_id'])->get()
+            ->flatMap(fn ($unit) => $unit->competencies->map(fn ($competency) => ['curriculum_id' => $competency->curriculum_topic_competency_id, 'education_id' => $competency->education_plan_competency_id, 'hours' => $unit->lessons->sum('duration')]))
+            ->groupBy('curriculum_id');
+        $coveredEducationHours = $plannedCompetencies->filter(fn ($items, $id) => $id === '' || $id === null)->flatten(1)->groupBy('education_id')->map(fn ($items) => $items->sum('hours'));
+        $coveredHours = $plannedCompetencies->reject(fn ($items, $id) => $id === '' || $id === null)->map(fn ($items) => $items->sum('hours'));
         $competencies = $planCompetencies->map(fn ($competency) => [
             'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
             'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
-            'identifier' => $competency->external_identifier, 'display' => $competency->display, 'text' => $competency->text ?? $competency->raw_text,
-            'covered_hours' => $coveredHours->get($competency->id, 0),
+            'presentation' => $competencyResolver->present($competency),
+            'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
         ])->values();
         $songbookVersions = $teachingGroup->songbook
             ? $contentsResolver->resolve($teachingGroup->songbook)

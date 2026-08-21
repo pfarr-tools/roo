@@ -27,7 +27,7 @@ const weekdays = de.weekdays.map((label, index) => ({ label, value: index + 1 })
 const availableDenominations = ['evangelical', 'catholic', 'old_catholic', 'syriac_orthodox']
 const denominationLabel = value => de.denominationLabels[value] ?? value
 const competenciesByKind = computed(() => ({ process: props.competencies.filter(item => item.kind === 'process'), content: props.competencies.filter(item => item.kind !== 'process') }))
-const competencyText = competency => [competency.identifier, competency.display || competency.text].filter(Boolean).join(' – ')
+const competencyText = competency => competency.presentation?.label || de.noCompetencyText
 const competencyCardStyle = competency => ({ backgroundColor: competency.covered_hours ? `rgba(var(--bs-success-rgb), ${Math.min(0.78, 0.18 + competency.covered_hours * 0.16)})` : 'rgba(var(--bs-secondary-rgb), 0.04)' })
 
 function save() {
