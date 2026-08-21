@@ -6,14 +6,18 @@ use App\Models\Assessment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
+use App\Services\CompetencyResolver;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AssessmentController extends Controller
 {
+    public function __construct(private readonly CompetencyResolver $competencyResolver) {}
+
     public function create(TeachingGroup $teachingGroup)
     {
         $this->authorize('update', $teachingGroup);
@@ -120,7 +124,7 @@ class AssessmentController extends Controller
                     'key' => $educationPlanCompetency
                         ? 'education-plan-'.$educationPlanCompetency->id
                         : 'teaching-unit-'.$competency->id,
-                    'title' => $this->competencyText($educationPlanCompetency, $competency),
+                    'title' => $this->resolvedCompetencyText($educationPlanCompetency ?? $competency),
                 ];
             })
             ->unique('key')
@@ -129,16 +133,13 @@ class AssessmentController extends Controller
             ->all();
     }
 
-    private function competencyText($educationPlanCompetency, $teachingUnitCompetency): ?string
+    private function resolvedCompetencyText(?Model $competency): ?string
     {
-        if ($educationPlanCompetency) {
-            return collect([
-                $educationPlanCompetency->external_identifier ?: $educationPlanCompetency->number,
-                $educationPlanCompetency->text ?: $educationPlanCompetency->variants?->pluck('text')->filter()->implode(' / '),
-            ])->filter()->implode(' – ');
+        if (! $competency || ! $this->competencyResolver->textOnly($competency)) {
+            return null;
         }
 
-        return $teachingUnitCompetency->local_wording;
+        return $this->competencyResolver->duKannst($competency);
     }
 
     private function assessmentTasksForWindow(TeachingGroup $teachingGroup, ?CarbonInterface $assessmentDate, ?Assessment $assessment): array
@@ -202,7 +203,7 @@ class AssessmentController extends Controller
                     : ($task->teaching_unit_competency_id
                         ? 'teaching-unit-'.$task->teaching_unit_competency_id
                         : 'text-'.md5((string) $task->competency?->local_wording)),
-                'competency' => $this->competencyText($educationPlanCompetency, $task->competency),
+                'competency' => $this->resolvedCompetencyText($educationPlanCompetency ?? $task->competency),
                 'edit_url' => route('resources.library.assessment-tasks.edit', $task->id),
                 'checked' => in_array($task->id, $selectedTaskIds, true),
                 'source' => in_array($task->id, $windowTaskIds, true) ? 'hours' : 'manual',

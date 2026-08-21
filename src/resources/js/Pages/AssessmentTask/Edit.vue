@@ -5,7 +5,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import CompetencyPickerModal from '../../Components/Planning/CompetencyPickerModal.vue'
 import de from '../../i18n/de'
 import { requestConfirmation } from '../../utils/confirmation'
-import { formatCompetencyIdentifier } from '../../utils/competencies'
+import { competencyNumber, competencyNumberAndText, competencyText } from '../../utils/competencies'
 
 const props = defineProps({
     backUrl: { type: String, required: true }, submitUrl: { type: String, required: true }, method: { type: String, default: 'post' },
@@ -104,20 +104,13 @@ function totalPoints() { return form.expectations.reduce((total, expectation) =>
 function expectationCount() { return form.expectations.filter(expectation => String(expectation.text || '').trim() !== '').length }
 function setSelectedCompetency(competency) {
     const presentation = competency.competency_presentation || {}
-    selectedCompetencyNumber.value = formatCompetencyIdentifier(presentation.identifier || competency.external_identifier || competency.number || '')
-    selectedCompetencyWording.value = presentation.text || competency.text || competency.local_wording || (competency.variants || []).map(variant => variant.text).filter(Boolean).join(' / ') || ''
-    selectedCompetencyText.value = competencyText(competency)
+    selectedCompetencyNumber.value = competencyNumber(competency)
+    selectedCompetencyWording.value = competencyText(competency)
+    selectedCompetencyText.value = competencyNumberAndText(competency)
 }
 function competencyIsDifferentiated(competency) { return competency?.has_differentiation || (competency?.variants || []).some(variant => variant.education_plan_level_id) }
 const competenceSummary = computed(() => `Du kannst ${selectedCompetencyWording.value || '…'}${selectedCompetencyNumber.value ? ` (${selectedCompetencyNumber.value})` : ''} [${totalPoints()} VP]`)
 function removeAt(collection, index) { if (collection.length > 1) collection.splice(index, 1) }
-function competencyText(competency) {
-    const presentation = competency.competency_presentation || {}
-    const number = presentation.identifier || competency.external_identifier || competency.number
-    const variants = (competency.variants || []).map(variant => variant.text).filter(Boolean).join(' / ')
-    const text = presentation.text || competency.text || competency.display || competency.local_wording || variants
-    return text ? [number, text].filter(Boolean).join(' – ') : (presentation.label || ('Kompetenz ' + competency.id))
-}
 function pickerEndpoint() { return form.education_plan_id ? '/ressourcen/bibliothek/bildungsplaene/' + form.education_plan_id + '/kompetenzen' : '/ressourcen/bibliothek/bildungsplaene/0/kompetenzen' }
 function applyCompetency(ids, selected = []) { form.education_plan_competency_id = ids[0] ?? ''; if (selected[0]) setSelectedCompetency(selected[0]); else { selectedCompetencyText.value = ''; selectedCompetencyNumber.value = ''; selectedCompetencyWording.value = '' }; selectedCompetencyDifferentiated.value = selected[0]?.has_differentiation ?? false }
 function choosePlan() { form.education_plan_competency_id = ''; selectedCompetencyText.value = ''; selectedCompetencyNumber.value = ''; selectedCompetencyWording.value = ''; selectedCompetencyDifferentiated.value = false }

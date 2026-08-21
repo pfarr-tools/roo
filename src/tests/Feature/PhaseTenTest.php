@@ -88,6 +88,6 @@ it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/bearbeiten")
         ->assertInertia(fn ($page) => $page
             ->has('assessmentCompetencies', 2)
-            ->where('assessmentCompetencies.0.title', '3.1.1 – Ohne Aufgabe')
-            ->where('assessmentCompetencies.1.title', '3.1.2 – Mit Aufgabe'));
+            ->where('assessmentCompetencies.0.title', 'Du kannst Mit Aufgabe (3.1.2)')
+            ->where('assessmentCompetencies.1.title', 'Du kannst Ohne Aufgabe (3.1.1)'));
 });

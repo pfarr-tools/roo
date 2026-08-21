@@ -30,6 +30,38 @@ class CompetencyResolver
         ];
     }
 
+    public function number(Model $competency): string
+    {
+        return $this->identifier($competency);
+    }
+
+    public function numberAndText(Model $competency): string
+    {
+        return collect([$this->number($competency), $this->text($competency)])
+            ->filter()
+            ->implode(' – ');
+    }
+
+    public function textOnly(Model $competency): string
+    {
+        return $this->text($competency);
+    }
+
+    public function duKannst(Model $competency, bool $numberInParentheses = true, bool $removeParentheses = true): string
+    {
+        $text = $this->text($competency);
+        if ($removeParentheses) {
+            do {
+                $withoutParentheses = preg_replace('/\s*\([^()]*\)/u', '', $text, -1, $count);
+                $text = trim((string) $withoutParentheses);
+            } while ($count > 0);
+        }
+        $text = trim((string) preg_replace('/\s+/u', ' ', $text));
+        $number = $this->number($competency);
+
+        return trim('Du kannst '.$text.($numberInParentheses && $number ? ' ('.$number.')' : ''));
+    }
+
     public function kind(Model $competency): string
     {
         $plan = $this->related($competency, 'educationPlanCompetency');
@@ -110,7 +142,7 @@ class CompetencyResolver
     {
         $identifier = trim((string) ($value ?? ''));
 
-        return preg_replace('/^(\d+\.\d+\.\d+)\.(\d+)$/', '$1 ($2)', $identifier) ?: $identifier;
+        return preg_replace('/^(\d+(?:\.\d+){2})\.(\d+)$/', '$1 ($2)', $identifier) ?: $identifier;
     }
 
     private function clean(mixed $value, string $identifier = ''): string
