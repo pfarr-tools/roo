@@ -74,7 +74,7 @@ const unitPickerSelectedIds = computed(() => (editorUnit.value?.competencies ?? 
 const filteredCompetencyOptions = computed(() => unitCompetencyOptions.value.filter(option => !selectedCompetencyIds.value.has(option.id) && competencyText(option).toLowerCase().includes(competencySearch.value.toLowerCase())).slice(0, 100))
 const processCompetencyOptions = computed(() => filteredCompetencyOptions.value.filter(option => option.area?.kind === 'process'))
 const contentCompetencyOptions = computed(() => filteredCompetencyOptions.value.filter(option => option.area?.kind !== 'process'))
-const coveragePercent = computed(() => { const total = Number(props.workspace.coverage?.curriculum_total ?? 0); return total ? Math.round((Number(props.workspace.coverage?.curriculum_covered ?? 0) / total) * 100) : 0 })
+const coveragePercent = computed(() => { const total = Number(props.workspace.coverage?.required_total ?? 0); return total ? Math.round((Number(props.workspace.coverage?.required_covered ?? 0) / total) * 100) : 0 })
 const holidays = computed(() => (props.holidayPeriods ?? []).map(holiday => ({ ...holiday, starts_on: String(holiday.starts_on).slice(0, 10), ends_on: String(holiday.ends_on).slice(0, 10) })))
 const planningEntries = computed(() => [...Object.entries(slotsByDate.value).map(([date, slots]) => ({ type: 'day', date, slots })), ...holidays.value.map(holiday => ({ type: 'holiday', date: holiday.starts_on, holiday }))].sort((left, right) => left.date.localeCompare(right.date) || (left.type === 'holiday' ? -1 : 1)))
 const autoPlanSlots = computed(() => props.workspace.slots.filter(slot => slot.status === 'free' && !slot.scheduled_lesson && !slot.is_pinned))
@@ -226,7 +226,7 @@ function dropTopic(event) { endCurriculumDrag(); const value = JSON.parse(event.
         <div class="container-fluid px-3 py-4 year-planning-page">
             <h1 class="h2">{{ de.yearPlans }}</h1>
             <div class="planning-toast-container" aria-live="polite" aria-atomic="true"><div v-for="toast in toastMessages" :key="toast.id" class="planning-toast" :class="`planning-toast-${toast.type}`" role="status"><span>{{ toast.message }}</span><button class="btn-close btn-close-white ms-3" type="button" :aria-label="de.close" @click="toastMessages = toastMessages.filter(item => item.id !== toast.id)"></button></div></div>
-            <div class="small text-muted mb-3">{{ group.school.name }} · {{ group.school_year.name }} · {{ de.coverage }}: {{ coveragePercent }} % · {{ workspace.coverage.education_plan_lesson }} {{ de.competenciesInLessons }}</div>
+            <div class="small text-muted mb-3">{{ group.school.name }} · {{ group.school_year.name }} · {{ de.coverage }}: {{ coveragePercent }} % · {{ workspace.coverage.required_covered }} / {{ workspace.coverage.required_total }} {{ de.competenciesInLessons }}</div>
             <div class="year-planning-grid" :class="{ 'curriculum-collapsed': !curriculumOpen }">
                 <section class="planning-column planning-year" aria-labelledby="year-plan-heading">
                     <div class="d-flex justify-content-between align-items-center mb-2"><h2 id="year-plan-heading" class="h5 mb-0">{{ de.yearPlanColumn }}</h2><span class="badge text-bg-light">{{ workspace.slots.length }}</span></div><p class="small text-muted">{{ de.yearPlanQuestion }}</p>

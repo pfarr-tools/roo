@@ -88,7 +88,7 @@ class YearPlanController extends Controller
         ]);
     }
 
-    public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace, CompetencyResolver $competencyResolver): Response
+    public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace, CompetencyResolver $competencyResolver, TeachingGroupCompetencyOverview $competencyOverview): Response
     {
         $this->authorize('view', $teachingGroup);
         if ($request->user()->last_year_plan_teaching_group_id !== $teachingGroup->id) {
@@ -117,6 +117,11 @@ class YearPlanController extends Controller
         });
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'versions.topics.competencies.educationPlanCompetency.area:id,kind,external_identifier,title', 'versions.topics.competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
+        $coverage = $workspace->coverage($teachingGroup);
+        $requiredCompetencies = $competencyOverview->forGroup($teachingGroup, $competencyResolver);
+        $coverage['required_covered'] = $requiredCompetencies->where('covered_hours', '>', 0)->count();
+        $coverage['required_total'] = $requiredCompetencies->count();
+
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
@@ -129,7 +134,7 @@ class YearPlanController extends Controller
                 'units' => $workspaceUnits,
                 'curricula' => $curricula,
                 'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
-                'coverage' => $workspace->coverage($teachingGroup),
+                'coverage' => $coverage,
             ],
             'groupOptions' => TeachingGroup::where('organization_id', auth()->user()->organization_id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
             'availableUnits' => TeachingUnit::where('organization_id', auth()->user()->organization_id)
