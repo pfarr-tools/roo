@@ -85,7 +85,7 @@ function addToast(type, message) { const id = ++toastId; toastMessages.value.pus
 function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
 async function deleteResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
 const statusLabel = status => ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed }[status] ?? status)
-const phaseMinutes = phase => Number(phase.duration_minutes || 0)
+const phaseMinutes = phase => Number(phase?.duration_minutes || 0)
 const plannedMinutes = () => (props.lesson.phases ?? []).reduce((sum, phase) => sum + phaseMinutes(phase), 0) || Number(props.lesson.duration || 1) * 45
 const lessonStart = () => { const date = String(props.slot.date).slice(0, 10); const time = String(props.slot.starts_at || '08:00').slice(0, 5); return new Date(`${date}T${time}:00`) }
 const elapsedSeconds = () => Math.floor((now.value.getTime() - lessonStart().getTime()) / 1000)
