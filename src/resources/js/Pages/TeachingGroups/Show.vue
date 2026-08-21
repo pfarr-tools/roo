@@ -26,7 +26,9 @@ const curriculumForm = useForm({ curriculum_assignments: (props.group.curricula 
 const weekdays = de.weekdays.map((label, index) => ({ label, value: index + 1 }))
 const availableDenominations = ['evangelical', 'catholic', 'old_catholic', 'syriac_orthodox']
 const denominationLabel = value => de.denominationLabels[value] ?? value
-const competenciesByKind = computed(() => ({ process: props.competencies.filter(item => item.kind === 'process'), content: props.competencies.filter(item => item.kind !== 'process') }))
+const competencyNumber = competency => String(competency.presentation?.identifier ?? '').match(/\d+/g)?.map(Number) ?? []
+const compareCompetencies = (left, right) => { const leftNumber = competencyNumber(left); const rightNumber = competencyNumber(right); for (let index = 0; index < Math.max(leftNumber.length, rightNumber.length); index++) { const difference = (leftNumber[index] ?? -1) - (rightNumber[index] ?? -1); if (difference) return difference } return Number(left.missing_from_curriculum) - Number(right.missing_from_curriculum) }
+const competenciesByKind = computed(() => ({ process: props.competencies.filter(item => item.kind === 'process').sort(compareCompetencies), content: props.competencies.filter(item => item.kind !== 'process').sort(compareCompetencies) }))
 const competencyText = competency => competency.presentation?.label || [competency.presentation?.identifier, competency.presentation?.text].filter(Boolean).join(' – ') || de.noCompetencyText
 const competencyCardStyle = competency => ({ backgroundColor: competency.covered_hours ? `rgba(var(--bs-success-rgb), ${Math.min(0.78, 0.18 + competency.covered_hours * 0.16)})` : 'rgba(var(--bs-secondary-rgb), 0.04)' })
 
