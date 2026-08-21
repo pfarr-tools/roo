@@ -118,7 +118,13 @@ function applyUnitCompetencies(educationPlanCompetencyIds, selectedCompetencies 
     unitEditor.education_plan_competency_ids = selectedIds
 }
 function addUnitCompetency(competency) { router.post(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/kompetenzen`, { education_plan_competency_id: competency.id }, { preserveState: true, preserveScroll: true, onSuccess: response => { competencySearch.value = ''; openCompetencySearch.value = false; refreshEditorUnit(response) } }) }
-async function removeUnitCompetency(competency) { if (!await requestConfirmation({ message: de.removeCompetencyConfirm })) return; const linkId = competency.id; router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/kompetenzen/${linkId}`, { preserveState: true, preserveScroll: true, onSuccess: refreshEditorUnit }) }
+async function removeUnitCompetency(competency) {
+    if (!await requestConfirmation({ message: de.removeCompetencyConfirm })) return
+    const remaining = (editorUnit.value?.competencies ?? []).filter(item => item.id !== competency.id)
+    editorUnit.value = { ...editorUnit.value, competencies: remaining }
+    unitEditor.competency_ids = remaining.map(item => item.id)
+    unitEditor.education_plan_competency_ids = remaining.map(item => item.education_plan_competency_id || item.education_plan_competency?.id).filter(Boolean)
+}
 function uploadUnitResource() { resourceForm.post(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge`, { forceFormData: true, preserveState: true, preserveScroll: true, onSuccess: response => { refreshEditorUnit(response); resourceForm.reset() } }) }
 function updateResourceDescription(resource, description) { useForm({ description }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge/${resource.id}`, { preserveState: true, preserveScroll: true, onSuccess: refreshEditorUnit }) }
 async function deleteUnitResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${editorUnit.value.id}/anhaenge/${resource.id}`, { preserveState: true, preserveScroll: true, onSuccess: refreshEditorUnit }) }

@@ -3,6 +3,7 @@
 use App\Models\Curriculum;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumTopicCompetency;
+use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
@@ -86,6 +87,35 @@ it('erzeugt Slots ohne schulfreie Tage und plant eine mehrstündige Lesson', fun
     $slot = ScheduleSlot::orderBy('date')->firstOrFail();
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/einplanen", ['schedule_slot_id' => $slot->id])->assertRedirect();
     expect(ScheduledLesson::where('lesson_id', $lesson->id)->count())->toBe(2);
+});
+
+it('speichert Kompetenzen aus dem Picker einer UE und kann sie wieder entfernen', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Picker-Curriculum']);
+    $group->curricula()->attach($curriculum->id, ['role' => 'primary']);
+    $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'external_identifier' => 'v1', 'is_editable' => false, 'is_complete' => true]);
+    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
+    CurriculumEducationPlanBinding::create(['curriculum_version_id' => $version->id, 'education_plan_id' => $plan->id]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Wahrnehmen', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.1', 'text' => 'Wahrnehmen und beschreiben', 'position' => 1, 'is_active' => true]);
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Picker UE', 'position' => 1]);
+
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}/kompetenzen/picker")
+        ->assertJsonPath('competencies.0.competency_presentation.kind', 'process');
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", [
+        'title' => $unit->title,
+        'competency_ids' => [],
+        'education_plan_competency_ids' => [$competency->id],
+    ])->assertRedirect();
+    expect($unit->fresh()->competencies->pluck('education_plan_competency_id')->all())->toBe([$competency->id]);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", [
+        'title' => $unit->title,
+        'competency_ids' => [],
+        'education_plan_competency_ids' => [],
+    ])->assertRedirect();
+    expect($unit->fresh()->competencies)->toBeEmpty();
 });
 
 it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot', function () {

@@ -76,7 +76,9 @@ class YearPlanController extends Controller
             ->unique('external_identifier')
             ->values()
             ->each(function ($competency) use ($competencyResolver, $coveredHoursByEducationId, $coveredHoursByIdentifier): void {
-                $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
+                $presentation = $competencyResolver->present($competency);
+                $presentation['kind'] = $competency->area?->kind ?? $presentation['kind'];
+                $competency->setAttribute('competency_presentation', $presentation);
                 $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
                 $competency->setAttribute('covered_hours', $coveredHoursByEducationId->get($competency->id, $coveredHoursByIdentifier->get($competency->external_identifier, 0)));
             });
