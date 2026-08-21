@@ -56,9 +56,7 @@ const contentGroups = computed(() => grouped(props.competencies.filter(competenc
 const activeGroups = computed(() => activeTab.value === 'process' ? processGroups.value : contentGroups.value)
 
 const competencyHours = competency => props.lessons.reduce((total, lesson) => {
-    const represented = lesson.id === props.currentLessonId
-        ? draftSelectedIds.value.has(competency.id)
-        : (lesson.competencies ?? []).some(item => item.curriculum_topic_competency_id === competency.id || item.education_plan_competency_id === competency.id)
+    const represented = (lesson.competencies ?? []).some(item => item.curriculum_topic_competency_id === competency.id || item.education_plan_competency_id === competency.id)
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
 const competencyCardStyle = competency => {
@@ -81,19 +79,19 @@ function apply() {
 
 <template>
     <div v-if="modelValue" class="roo-modal-backdrop" role="presentation" @click.self="close">
-        <section class="roo-modal roo-modal-wide" role="dialog" aria-modal="true" :aria-label="de.addCompetency">
-            <div class="card border-0">
-                <div class="card-body">
+        <section class="roo-modal roo-modal-wide" role="dialog" aria-modal="true" :aria-label="de.addCompetency" style="height: 80vh; max-height: 80vh">
+            <div class="card border-0 h-100">
+                <div class="card-body d-flex flex-column" style="min-height: 0">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h5 mb-0">{{ de.addCompetency }}</h2>
                         <button class="btn-close" type="button" :aria-label="de.close" @click="close"></button>
                     </div>
+                    <input v-model="search" class="form-control mb-3" :placeholder="de.searchCompetencies" type="search">
                     <ul class="nav nav-tabs mb-3" role="tablist">
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'process' }" type="button" @click="activeTab = 'process'">{{ de.editProcessCompetencies }}</button></li>
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'content' }" type="button" @click="activeTab = 'content'">{{ de.editContentCompetencies }}</button></li>
                     </ul>
-                    <input v-model="search" class="form-control mb-3" :placeholder="de.searchCompetencies" type="search">
-                    <div class="competency-picker-list">
+                    <div class="competency-picker-list flex-grow-1 overflow-auto pe-2" style="min-height: 0">
                         <template v-for="group in activeGroups" :key="group.key">
                             <h3 v-if="group.area" class="h6 border-bottom pb-1 mt-3 mb-2">{{ group.area.identifier }} {{ group.area.title }}</h3>
                             <label v-for="competency in group.competencies" :key="competency.id" class="form-check border rounded p-2 ps-5 mb-2" :style="competencyCardStyle(competency)">
