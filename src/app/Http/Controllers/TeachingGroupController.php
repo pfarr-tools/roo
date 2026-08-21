@@ -13,6 +13,8 @@ use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
 use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
 use App\Models\CurriculumTopicCompetency;
+use App\Models\CurriculumEducationPlanBinding;
+use App\Models\EducationPlanCompetency;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
@@ -67,10 +69,36 @@ class TeachingGroupController extends Controller
             return [
                 'id' => $competency->id, 'topic_id' => $competency->topic->id, 'topic_title' => $competency->topic->title,
                 'grade' => $competency->topic->year, 'kind' => $competency->competency_kind, 'denomination' => $competency->denomination,
-                'presentation' => $presentation,
+                'presentation' => $presentation, 'missing_from_curriculum' => false,
                 'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
             ];
         })->values();
+        $curriculumEducationIds = CurriculumTopicCompetency::query()
+            ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
+            ->forGroup($teachingGroup)->pluck('education_plan_competency_id')->filter()->unique();
+        $curriculumVersionIds = $teachingGroup->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id');
+        $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $curriculumVersionIds)->whereNotNull('education_plan_id')->pluck('education_plan_id')->unique();
+        $missingCompetencies = EducationPlanCompetency::query()
+            ->whereHas('area', function ($query) use ($educationPlanIds, $gradeLevels): void {
+                $query->whereHas('version', fn ($version) => $version->whereIn('education_plan_id', $educationPlanIds))
+                    ->where(function ($stage) use ($gradeLevels): void {
+                        $stage->whereNull('education_plan_stage_id')->orWhereHas('stage.gradeLevels', fn ($grades) => $grades->whereIn('numeric_value', $gradeLevels));
+                    });
+            })
+            ->whereNotIn('id', $curriculumEducationIds)
+            ->with(['area:id,education_plan_stage_id,kind', 'variants:id,education_plan_competency_id,text,position'])
+            ->orderBy('external_identifier')->get();
+        $missingCompetencies = $missingCompetencies->map(function ($competency) use ($competencyResolver, $coveredEducationHours): array {
+            $presentation = $competencyResolver->present($competency);
+
+            return [
+                'id' => 'education-'.$competency->id, 'education_plan_competency_id' => $competency->id,
+                'topic_id' => null, 'topic_title' => null, 'grade' => null, 'kind' => $competency->area->kind,
+                'denomination' => null, 'presentation' => $presentation, 'missing_from_curriculum' => true,
+                'covered_hours' => $coveredEducationHours->get($competency->id, 0),
+            ];
+        })->values();
+        $competencies = $competencies->concat($missingCompetencies)->values();
         $songbookVersions = $teachingGroup->songbook
             ? $contentsResolver->resolve($teachingGroup->songbook)
                 ->map(fn ($entry) => $entry->songVersion)
