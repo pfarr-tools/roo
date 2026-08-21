@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AssessmentTaskType;
 use App\Models\AssessmentTask;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetency;
@@ -21,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ResourceLibraryController extends Controller
@@ -41,7 +43,7 @@ class ResourceLibraryController extends Controller
     public function editAssessmentTask(Request $request, int $assessmentTask)
     {
         $task = $this->item($request, 'assessment-task', $assessmentTask);
-        $task->load(['educationPlanCompetency.variants', 'levels']);
+        $task->load(['educationPlanCompetency.variants', 'levels', 'expectations']);
 
         return Inertia::render('AssessmentTask/Edit', [
             'backUrl' => route('resources.library'),
@@ -281,8 +283,10 @@ class ResourceLibraryController extends Controller
 
     public function storeAssessmentTask(Request $request): RedirectResponse
     {
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
-        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'solution' => $data['solution'] ?? null, 'max_points' => $data['max_points'] ?? null, 'level' => collect($data['levels'] ?? [])->first()];
+        $expectations = $this->validatedExpectations($request);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['nullable', 'array'], 'content.images.*.url' => ['required_with:content.images', 'url', 'max:2000'], 'content.images.*.label' => ['nullable', 'string', 'max:255'], 'content.images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
+        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
@@ -292,6 +296,7 @@ class ResourceLibraryController extends Controller
             $attributes['teaching_unit_competency_id'] = $competency->id;
         }
         $task = AssessmentTask::create($attributes);
+        $task->expectations()->createMany($expectations);
         $task->levels()->delete();
         $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
 
@@ -323,17 +328,22 @@ class ResourceLibraryController extends Controller
     public function updateItem(Request $request, string $kind, int $resource): RedirectResponse
     {
         $item = $this->item($request, $kind, $resource);
+        $expectations = $kind === 'assessment-task' ? $this->validatedExpectations($request) : [];
         $rules = match ($kind) {
             'file' => ['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']],
             'resource' => ['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']],
             'material' => ['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']],
-            'assessment-task' => ['title' => ['required', 'string', 'max:255'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']],
+            'assessment-task' => ['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['nullable', 'array'], 'content.images.*.url' => ['required_with:content.images', 'url', 'max:2000'], 'content.images.*.label' => ['nullable', 'string', 'max:255'], 'content.images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']],
         };
         $validated = $request->validate($rules);
+        if ($kind === 'assessment-task') $validated['content'] = ($validated['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
         if ($kind === 'assessment-task') {
             abort_unless(EducationPlan::whereKey($validated['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($validated['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $validated['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
             $item->update($validated + ['teaching_unit_competency_id' => null]);
+            $item->expectations()->delete();
+            $item->expectations()->createMany($expectations);
+            $item->update(['max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null]);
         } else {
             $item->update($validated);
         }
@@ -345,6 +355,16 @@ class ResourceLibraryController extends Controller
         }
 
         return back()->with('success', 'Bibliothekseintrag wurde gespeichert.');
+    }
+
+    private function validatedExpectations(Request $request): array
+    {
+        return $request->validate([
+            'expectations' => ['nullable', 'array'],
+            'expectations.*.text' => ['required_with:expectations', 'string', 'max:5000'],
+            'expectations.*.points' => ['required_with:expectations', 'integer', 'min:1', 'max:10000'],
+            'expectations.*.repetitions' => ['required_with:expectations', 'integer', 'min:1', 'max:10000'],
+        ])['expectations'] ?? [];
     }
 
     public function uploadMaterialImage(Request $request, int $resource): RedirectResponse

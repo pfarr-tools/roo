@@ -9,9 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 
-#[Fillable(['organization_id', 'education_plan_id', 'education_plan_competency_id', 'teaching_unit_competency_id', 'title', 'solution', 'max_points', 'level', 'position'])]
+#[Fillable(['organization_id', 'education_plan_id', 'education_plan_competency_id', 'teaching_unit_competency_id', 'title', 'task_type', 'content', 'solution', 'max_points', 'level', 'position'])]
 class AssessmentTask extends Model
 {
+    protected function casts(): array
+    {
+        return ['content' => 'array'];
+    }
+
     protected static function booted(): void
     {
         static::saving(function (self $task): void {
@@ -55,6 +60,11 @@ class AssessmentTask extends Model
     public function levels(): HasMany
     {
         return $this->hasMany(AssessmentTaskLevel::class);
+    }
+
+    public function expectations(): HasMany
+    {
+        return $this->hasMany(AssessmentTaskExpectation::class)->orderBy('position');
     }
 
     public function lessons(): BelongsToMany

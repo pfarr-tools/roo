@@ -95,10 +95,17 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
 
-    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'competency_id' => $competency->id, 'levels' => ['G', 'M'], 'max_points' => 8])->assertRedirect();
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
     $task = AssessmentTask::firstOrFail();
-    expect($task->teaching_unit_competency_id)->toBe($competency->id)->and($task->levels()->pluck('level')->all())->toBe(['G', 'M']);
+    expect($task->teaching_unit_competency_id)->toBe($competency->id)
+        ->and($task->task_type)->toBe('free_text')
+        ->and($task->content['lines'])->toBe(5)
+        ->and($task->content['lineated'])->toBeTrue()
+        ->and($task->max_points)->toBe(3)
+        ->and($task->expectations)->toHaveCount(1)
+        ->and($task->expectations->first()->repetitions)->toBe(3)
+        ->and($task->levels()->pluck('level')->all())->toBe(['G', 'M']);
     $this->actingAs($user)->get('/bibliothek/pruefungsaufgaben/neu')
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('method', 'post'));
     $this->actingAs($user)->get("/bibliothek/pruefungsaufgaben/{$task->id}/bearbeiten")
