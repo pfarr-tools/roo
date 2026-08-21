@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum GS 3/4 A",
@@ -34,20 +34,19 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GS_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GS_RRK"
+      "plan_code": null
     }
   ],
   "units": [
     {
       "id": "ue-01",
       "number": 1,
-      "year": 3,
       "title": "Miteinander auf dem Weg",
       "hours": 6,
       "preparation_questions": [
@@ -313,12 +312,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impuls für verantwortungsvolles Handeln entwickeln 211.2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild)2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch christlichen Überlieferung in Beziehung setzen2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Glaube und verantwortungsvolles Handeln gehören zusammen",
+        "catholic": "Impulse für ein gelingendes Miteinander aus der Bibel gewinnen",
+        "common": "Orientierung aus Jesu Handeln gewinnen"
+      }
     },
     {
       "id": "ue-02",
       "number": 2,
-      "year": 3,
       "title": "Unsichtbar und doch da? – Gott geht mit seinem Volk",
       "hours": 12,
       "preparation_questions": [
@@ -585,12 +588,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen auseinandersetzen.2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren.2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen211. 2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Von Gottes hilfreicher Gegenwart hören",
+        "catholic": "Sich über Bilder und biblische Erzählungen Gott annähern",
+        "common": "Gott begleitet sein Volk"
+      }
     },
     {
       "id": "ue-03",
       "number": 3,
-      "year": 3,
       "title": "Ein Jahr – so viele Feste!",
       "hours": 8,
       "preparation_questions": [
@@ -825,12 +832,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren 2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.5.2 religiöse Ausdrucksformen reflektiert gestalten2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Den Zusammenhang zwischen Jesu Leben und den Festen des Kirchenjahres aufzeigen",
+        "catholic": "Religiöse Ausdrucksformen von Advent und Weihnachten kennenlernen und gestalten",
+        "common": "Menschwerdung Gottes in Festen feiern"
+      }
     },
     {
       "id": "ue-04",
       "number": 4,
-      "year": 3,
       "title": "Leben in einer vielfältigen Welt",
       "hours": 8,
       "preparation_questions": [
@@ -1108,12 +1119,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen.2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessioneller und interreligiöser Begegnungen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten4 wiedergeben und sich diese erschließen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.2 religiöse Ausdrucksformen reflektiert gestalten2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Reden und Handeln Jesu als Maßstab für gelingendes Zusammenleben entdecken",
+        "catholic": "Jesu Aufforderung zur Nächstenliebe als besondere Herausforderung reflektieren",
+        "common": "Die Vielfalt als Gabe Gottes entdecken"
+      }
     },
     {
       "id": "ue-05",
       "number": 5,
-      "year": 3,
       "title": "Wie kann ich Gott ansprechen?",
       "hours": 6,
       "preparation_questions": [
@@ -1337,12 +1352,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlieferung auseinandersetzen2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.1 eigene Gedanken, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.2 sich in Gedanken, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Jesu unmittelbares Verhältnis zu seinem himmlischen Vater kennen lernen",
+        "catholic": "Die Gottesbeziehung Jesu kennen lernen",
+        "common": "Gott als gütigen Vater erkennen"
+      }
     },
     {
       "id": "ue-06",
       "number": 6,
-      "year": 3,
       "title": "Freude an der Schöpfung",
       "hours": 10,
       "preparation_questions": [
@@ -1674,12 +1693,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten.2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Beziehung setzen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Dankbar und verantwortlich mit der Schöpfung umgehen",
+        "catholic": "Möglichkeiten eigenen Engagements zur Bewahrung der Schöpfung, für Gerechtigkeit und Frieden erarbeiten",
+        "common": "Die Erde –Geschenk und Aufgabe für uns"
+      }
     },
     {
       "id": "ue-07",
       "number": 7,
-      "year": 3,
       "title": "Bewegt und begeistert – Himmelfahrt und Pfingsten",
       "hours": 5,
       "preparation_questions": [
@@ -1890,12 +1913,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.3 über menschliche Grundfragen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Das Wirken des Geistes Christi begründet die Kirche",
+        "catholic": "Der Geist als bleibende Gabe an die Kirche",
+        "common": "Kirche: Gemeinschaft der an Christus Glaubenden"
+      }
     },
     {
       "id": "ue-08",
       "number": 8,
-      "year": 4,
       "title": "Gottes Reich ist wie...",
       "hours": 10,
       "preparation_questions": [
@@ -2152,12 +2179,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wirklichkeit verweisen, erkennen und deuten2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gottes Reich als Zentrum der Botschaft Jesu",
+        "catholic": "Jesu Botschaft vom Reich Gottes als Hoffnungsperspektive für heute kennen lernen",
+        "common": "Die Botschaft Jesu vom Reich Gottes"
+      }
     },
     {
       "id": "ue-09",
       "number": 9,
-      "year": 4,
       "title": "Martin Luther entdeckt den gnädigen Gott",
       "hours": 6,
       "preparation_questions": [
@@ -2396,12 +2427,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten2.3.2 aus menschlichen Erfahrungen wie Freundschaft, Enttäuschung, Streit oder der Erfahrung mit Trauer und Tod unterschiedliche Antwort- und Handlungsmöglichkeiten finden, diese miteinander vergleichen und auf Basis der biblisch-christlichen Überlieferung reflektieren 211.2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Den gnädigen Gott kennen lernen",
+        "catholic": "Biblische Bilder von Gott als Ausdruck von Erfahrungen mit Gott verstehen",
+        "common": "Der Glaube verändert Menschen"
+      }
     },
     {
       "id": "ue-10",
       "number": 10,
-      "year": 4,
       "title": "Die Bibel erzählt von Gott und den Menschen",
       "hours": 6,
       "preparation_questions": [
@@ -2579,12 +2614,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen2.1.2 eigene Fragen stellen, in der Lerngruppe nach Antworten suchen und sich dabei mit biblisch-christlichen Deutungen auseinandersetzen2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe 211.2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Biblische Erzählungen kennen",
+        "catholic": "Biblische Erzählungen kennen",
+        "common": "Biblische Erzählungen kennen"
+      }
     },
     {
       "id": "ue-11",
       "number": 11,
-      "year": 4,
       "title": "Eine gute Gemeinschaft",
       "hours": 8,
       "preparation_questions": [
@@ -2877,12 +2916,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wirklichkeit verweisen, erkennen und deuten2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die Kirche ist eine Gemeinschaft, die auf Jesus vertraut",
+        "catholic": "Sakramente als Zeichen der Zuwendung Gottes und ihre Bedeutung für die Glaubensgemeinschaft",
+        "common": "Gemeinsamkeiten und Unterschiede der Konfessionen"
+      }
     },
     {
       "id": "ue-12",
       "number": 12,
-      "year": 4,
       "title": "Fragen nach Gott und dem Leben stellen",
       "hours": 6,
       "preparation_questions": [
@@ -3104,12 +3147,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlieferung auseinandersetzen 211.2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmöglichkeiten prüfen2.3.4 im Kontext des eigenen Lebensumfeldes zu religiösen und ethischen Fragen einen Standpunkt einnehmen und argumentativ vertreten2.5.3 über menschliche Grundfragen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gott kann man alles fragen",
+        "catholic": "Über die großen Fragen des Lebens nachdenken",
+        "common": "Über das Leben und seinen Sinn nachdenken"
+      }
     },
     {
       "id": "ue-13",
       "number": 13,
-      "year": 4,
       "title": "Jesus leidet und wird auferweckt",
       "hours": 6,
       "preparation_questions": [
@@ -3326,12 +3373,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.2.1 Sprach- und Ausdrucksformen wie Metaphern, Symbole oder Bilder, die auf eine andere Dimension von Wirklichkeit verweisen, erkennen und deuten2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren2.3.2 aus menschlichen Erfahrungen wie Freundschaft, Enttäuschung, Streit oder der Erfahrung mit Trauer und Tod unterschiedliche Antwort- und Handlungsmöglichkeiten finden, diese miteinander vergleichen und auf der Basis der biblisch-christlichen Überlieferung reflektieren2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmöglichkeiten prüfen2.3.4 im Kontext des eigenen Lebensumfeldes zu religiösen und ethischen Fragen einen Standpunkt einnehmen und argumentativ vertreten.."
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Jesus Leiden, Sterben und Auferweckung als Anfang des Glaubens",
+        "catholic": "Auferweckung Jesu als Grund christlicher Hoffnung über den Tod hinaus",
+        "common": "Tod und Auferweckung Jesu als Grund für Hoffnung und Glaube"
+      }
     },
     {
       "id": "ue-14",
       "number": 14,
-      "year": 4,
       "title": "Wie in anderen Religionen an Gott geglaubt wird",
       "hours": 6,
       "preparation_questions": [
@@ -3661,12 +3712,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten2.3.3 einen eigenen Standpunkt zu religiösen und ethischen Problem- und Fragestellungen einnehmen und diesen begründen2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessioneller und interreligiöser Begegnungen2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.3.3 sich mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen2.3.4 im Kontext des eigenen Lebensumfeldes zu religiösen und ethischen Fragen einen Standpunkt einnehmen und argumentativ vertreten2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Menschen anderen Glaubens begegnen",
+        "catholic": "Ein respektvolles Miteinander in der Schule gestalten",
+        "common": "Judentum, Christentum und Islam – Vergleich und Begegnung"
+      }
     },
     {
       "id": "ue-15",
       "number": 15,
-      "year": 4,
       "title": "Projekt - Wir feiern miteinander",
       "hours": 4,
       "preparation_questions": [
@@ -3876,7 +3931,12 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Schülerinnen und Schüler können2.3.1 aus menschlichen Erfahrungen wie Liebe, Geborgenheit, Hoffnung, Vertrauen, Freude, Leid, Trauer, Scheitern, Ungerechtigkeit oder Schuld religiöse und ethische Fragen entwickeln2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Einen Gottesdienst (eine Andacht) mitgestalten",
+        "catholic": "Einen Gottesdienst gestalten",
+        "common": "Gemeinsam Gottesdienst feiern"
+      }
     }
   ]
 }

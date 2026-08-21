@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum Sek.I 7/8/9 A",
@@ -35,13 +35,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_SEK1_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_SEK1_RRK"
+      "plan_code": null
     }
   ],
   "units": [
@@ -273,7 +273,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben2.3.4 Grundzüge theologischer Argumentationen miteinander vergleichen2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die Würde und Unverfügbarkeit des Menschen in vielfältigen Beziehungen reflektieren",
+        "catholic": "Angenommensein durch Gott eröffnet einen freien und kritischen Umgang mit angebotenen Identitäten",
+        "common": "Angenommen durch Gott"
+      }
     },
     {
       "id": "ue-02",
@@ -530,7 +535,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.5.4 typische Sprachformen der Bibel und des christlichen Glaubens transformieren2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren2.1.5 die Rezeption religiöser Motive in Medien erkennen2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen2.2.1 Grundformen religiöser Sprache erschließen2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entdecken und darstellen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die biblischen Erzählungen über Jesus machen die befreiende Botschaft der Liebe Gottes und der Hoffnung offenbar.",
+        "catholic": "Der Christusglaube als Grund und Ausdruck der Hoffnung",
+        "common": "Das Wirken Jesu als Grund christlicher Hoffnung"
+      }
     },
     {
       "id": "ue-03",
@@ -844,7 +854,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen2.3.4 Grundzüge theologischer Argumentationen miteinander vergleichen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Der Glaube an Gott motiviert zu verantwortungsvollem Handeln. Das Gewissen fungiert dabei als innerer, von Gott gelenkter Kompass.",
+        "catholic": "Das umkämpfte und von Gott getröstete Gewissen.",
+        "common": "Gewissensverantwortung vor Gott"
+      }
     },
     {
       "id": "ue-04",
@@ -1138,7 +1153,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Vorstellungen von Gott sind von menschlichen Erfahrungen geprägt. Jesus bringt im Bild von liebenden Vater die Gottesvorstellungen auf den Punkt, die zum Dreifachgebot der Liebe auffordern.",
+        "catholic": "Gott wird in seinem Wort erfahr- und erkennbar",
+        "common": "Von Gott in Bildern sprechen"
+      }
     },
     {
       "id": "ue-05",
@@ -1402,7 +1422,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.5.4 über Fragen nach Sinn und Transzendenz angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Mitarbeiten am Reich Gottes",
+        "catholic": "Die Welt verändernde und gestaltende Kraft biblischer Hoffnung",
+        "common": "Der Glaube an Gott motiviert zur Gestaltung der Welt"
+      }
     },
     {
       "id": "ue-06",
@@ -1621,7 +1646,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen2.5.3 angemessenes Verhalten in religiös bedeutsamen Situationen reflektieren2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Menschen versuchen, grundlegende biblische Aussagen in der Nachfolge Jesu in ihrem jeweiligen zeitlichen Kontext konkret zu leben.",
+        "catholic": "Sich am Leben und Wirken Jesu ausrichten",
+        "common": "Was es heißt, Jesus zu folgen"
+      }
     },
     {
       "id": "ue-07",
@@ -1985,7 +2015,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen2.4.1 sich auf die Perspektive eines anderen einlassen und sie in Bezug zum eigenen Standpunkt setzen. 2.4.4 Kriterien für einen konstruktiven interreligiösen Diskurs benennen2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern2.4.5 Gemeinsamkeiten und Unterschiede von religiösen und weltanschaulichen Überzeugungen benennen und im Dialog argumentativ verwenden2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gemeinsamkeiten und Unterschiede in den Gottesvorstellungen herausarbeiten, die eine Grundlage für ein Gespräch darstellen können.",
+        "catholic": "Die Vielfalt des Gottesglaubens darstellen",
+        "common": "Gelebte Religion verstehen"
+      }
     },
     {
       "id": "ue-08",
@@ -2340,7 +2375,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben.2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen.2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren.2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren.2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten2.5.1 religiöse Rituale und Symbole in einer Weise transformieren, die ihren Überzeugungen entspricht2.5.2 typische Sprachformen der Bibel transformieren2.5.3 Aspekten des christlichen Glaubens kreativ Ausdruck verleihen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Als Christ Verantwortung in Kirche und Gesellschaft übernehmen",
+        "catholic": "Kirche wird durch Gottes Wort begründet",
+        "common": "Wesen und Wirken der Kirche verstehen"
+      }
     },
     {
       "id": "ue-09",
@@ -2618,7 +2658,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.3.3 ambivalente Aspekte der Religion und ihrer Praxis erläutern.2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen.2.3.4 Grundzüge theologischer Argumentationen miteinander vergleichen.2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren. 2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entdecken und darstellen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.2 Gemeinsamkeiten von Konfessionen, Religionen und Weltanschauungen sowie deren Unterschiede aus der Perspektive des katholischen Glaubens analysieren2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die Kirche orientiert sich am Anspruch Jesu und ist immer reformbedürftig.",
+        "catholic": "Brennpunkte der Kirchengeschichte als Auftrag sich am Anfang auszurichten",
+        "common": "Kirchengeschichtliche Entwicklungen aufzeigen"
+      }
     },
     {
       "id": "ue-10",
@@ -2927,7 +2972,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.5 die Rezeption religiöser Motive in Medien erkennen. 2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen.2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten.2.3.4 Grundzüge theologischer Argumentationen miteinander vergleichen.2.5.4 typische Sprachformen der Bibel und des christlichen Glaubens transformieren.2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entdecken und darstellen2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Tod und Auferstehung Jesu als Befreiung und Grund menschlicher Hoffnung.",
+        "catholic": "Sterben und Auferstehung Jesu als Zentrum christlichen Glaubens",
+        "common": "Der gestorbene und auferstandene Christus als Mitte des Glaubens"
+      }
     },
     {
       "id": "ue-11",
@@ -3236,7 +3286,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen. 2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen.2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren.2.3.4 Grundzüge theologischer Argumentationen miteinander vergleichen.2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten.2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.3.6 Modelle ethischer Urteilsbildung beispielhaft anwenden2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Würde und Unverfügbarkeit menschlichen Lebens angesichts des Todes",
+        "catholic": "Umgang mit Tod und Trauer im christlichen Glauben verstehen",
+        "common": "Bewältigung von Sterben und Tod"
+      }
     },
     {
       "id": "ue-13",
@@ -3529,7 +3584,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren.2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen.2.3.3 ambivalente Aspekte der Religion und ihrer Praxis erläutern.2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und ihn argumentativ vertreten.2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden2.3.4 Zweifel und Kritik an Religion prüfen2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten2.3.7 Herausforderungen sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Der Pervertierung von Religion entgegenwirken",
+        "catholic": "Die ambivalenten Möglichkeiten von Religion verstehen",
+        "common": "Religion soll dem Frieden dienen"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum Sek.I 10 A",
@@ -33,13 +33,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_SEK1_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_SEK1_RRK"
+      "plan_code": null
     }
   ],
   "units": [
@@ -231,7 +231,12 @@
         [
           "Prozessbezogene Kompetenzen aus beiden Fachplänen: 2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "",
+        "catholic": "Die Reich-Gottes-Botschaft Jesu und seine ethischen Forderungen in der Bergpredigt zielen als Zuspruch und Anspruch auf ein verantwortliches Handeln in Gesellschaft und Welt.",
+        "common": "Die Bergpredigt als Grundsatzerklärung der Ethik Jesu: Aufbau, Gliederung, Parallelen im LukasevangeliumUnterschiedliche Auslegungstraditionen der Bergpredigt (wörtliches/bildhaftes/exklusives Verständnis der Bergpredigt) Zentrale Texte aus der Bergpredigt in Auswahl: Seligpreisungen, Antithesen; Sorget nicht; Vaterunser; Goldene Regel; Haus auf Sand."
+      }
     },
     {
       "id": "ue-02",
@@ -472,7 +477,12 @@
         [
           "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "",
+        "catholic": "Deutungen von Jesus Christus in (Jugend-)Kultur und Gesellschaft im Horizont von Bibel und Tradition.",
+        "common": "Jesus in Werbung, Musik, FilmBekenntnisse zu Jesus Christus heute: Poetry slam; Promis (Sportler und Sportlerinnen). Wie ist Werbung mit Jesus Christus zu verstehen?Die „christologischen Hoheitstitel“ (Christus: Apg 2,33-36.- Herr: Phil 2,6-10; Röm 10,9. - Gottes Sohn: Mk 14,39; Joh 1,1-18.)"
+      }
     },
     {
       "id": "ue-03",
@@ -605,7 +615,12 @@
         [
           "PbK aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.5.1 sich mit Ausdrucksformen des christlichen Glaubens auseinandersetzen und ihren Gebrauch reflektieren.2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichen gesellschaftlichen Handlungsfeldern wie Kultur, Wissenschaft, Politik und Wirtschaft erkennen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "",
+        "catholic": "Die Kirchen haben angesichts des Unrechts der Shoah versagt, es gab aber auch Christinnen und Christen, die sich zum Widerstand herausfordern ließen.",
+        "common": "Vom Landesherrlichen Kirchenregiment zur Kirche im Dritten ReichChristsein im Nationalsozialismus – Christsein gegen den Nationalsozialismus?Christsein im Widerstand gegen den totalitären StaatChristenverfolgung: aktueller denn je"
+      }
     },
     {
       "id": "ue-04",
@@ -783,7 +798,12 @@
         [
           "Prozessbezogene Kompetenzen aus beiden Bildungsplänen: 2.4.3 sich aus der Perspektive des christlichen Glaubens mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen.2.3.4 Zweifel und Kritik an Religion erörtern2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "",
+        "catholic": "Die Schülerinnen und Schüler setzen sich angesichts der Vielzahl religiöser und areligiöser Orientierungsangebote mit reflektiertem christlichem Gottesglauben und seiner Bedeutung für das eigene Leben auseinander.",
+        "common": ""
+      }
     },
     {
       "id": "ue-05",
@@ -911,7 +931,12 @@
         [
           "PbK aus beiden Bildungsplänen: 2.2.2 religiöse Motive und Elemente in medialen Ausdrucksformen deuten2.3.6 Modelle ethischer Urteilsbildung bewerten und diese beispielhaft anwenden2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen begründet vertreten2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "",
+        "catholic": "Im Kontext partnerschaftlicher Beziehungen setzen sich die Schülerinnen und Schüler am Beispiel des Schwangerschaftsabbruchs mit einer individualethischen Konfliktsituation und der Vorstellung von dem Gewissen als letzter Entscheidungsinstanz auseinander.",
+        "common": "„Familie haben alle“ (Wolfgang Huber): Formen des Zusammenlebens heuteZusammenhang von Liebe – Sexualität – Freiheit – VerantwortungKirchliche Eheschließung und Zivilehe: „Muss“ man heiraten?Mediale Darstellung von Liebe – Partnerschaft – Sexualität am Beispiel der Werbung"
+      }
     }
   ]
 }

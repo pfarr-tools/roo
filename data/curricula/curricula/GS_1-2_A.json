@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum GS 1/2 A",
@@ -34,20 +34,19 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GS_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GS_RRK"
+      "plan_code": null
     }
   ],
   "units": [
     {
       "id": "ue-01",
       "number": 1,
-      "year": 1,
       "title": "Ich bin ich und du bist du – wir gehören zusammen",
       "hours": 6,
       "preparation_questions": [
@@ -359,12 +358,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Die Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen.2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen.2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten.2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten.2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen (zum Beispiel Metapher, Symbol, Wundererzählung, Gleichnis, Legende, Gebet, Stille, Ritual, Musik, Bild)2.4.1 eigene Gedanken, Gefühle, Sicht- und Verhaltensweisen beschreiben und erläutern2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Jeden Menschen als Gottes geliebte Geschöpfe betrachten",
+        "catholic": "Auf Gottes Liebe antworten in spirituellen Elementen",
+        "common": "Die Religionsgruppe als Gemeinschaft mit Ritualen"
+      }
     },
     {
       "id": "ue-02",
       "number": 2,
-      "year": 1,
       "title": "Wie ist Gott?",
       "hours": 6,
       "preparation_questions": [
@@ -633,12 +636,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Die Schülerinnen und Schüler können2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren.2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen.2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlieferung auseinandersetzen.2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.5.3 über menschliche Grundfragen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gott als guten Hirten des eigenen Lebens kennenlernen",
+        "catholic": "Erfahrungen von Menschen mit Gott zum Ausdruck bringen",
+        "common": "Bildern von Gott in biblischen Texten begegnen"
+      }
     },
     {
       "id": "ue-03",
       "number": 3,
-      "year": 1,
       "title": "Handeln wie Martin von Tours",
       "hours": 2,
       "preparation_questions": [
@@ -840,12 +847,16 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Die Schülerinnen und Schüler können2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen.2.5.3 aus dem Nachdenken über biblische Texte und Personen aus Vergangenheit und Gegenwart Impulse für verantwortungsvolles Handeln entwickeln.2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Kirchenjahr als Erinnerung an Gottes Handeln",
+        "catholic": "An Vorbildern des Glaubens Orientierung für das eigene Leben finden",
+        "common": "Orientierung an Jesus Christus"
+      }
     },
     {
       "id": "ue-04",
       "number": 4,
-      "year": 1,
       "title": "Advent und Weihnachten",
       "hours": 6,
       "preparation_questions": [
@@ -1042,12 +1053,16 @@
         [
           "2.1.1 Spuren des Christentums in der persönlichen Lebenswelt entdecken2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Advents- und Weihnachtszeit biblisch begründen",
+        "catholic": "Den Glauben an die Menschwerdung Gottes ausdrücken",
+        "common": "Ausdrucksformen und biblische Begründungen der Advents- und Weihnachtszeit"
+      }
     },
     {
       "id": "ue-05",
       "number": 5,
-      "year": 1,
       "title": "Menschen begegnen Jesus",
       "hours": 6,
       "preparation_questions": [
@@ -1287,12 +1302,16 @@
         [
           "Prozessbezogene Kompetenzen Die Schülerinnen und Schüler können2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren.2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe.2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.1 eigene Gedanken, Sicht- und Verhaltensweisen beschreiben und erläutern 2.4.2 sich in Gedanken, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Jesus ermutigt zum Leben",
+        "catholic": "Zuversicht für das Leben gewinnen",
+        "common": "Jesus Christus ruft Menschen in die Nachfolge"
+      }
     },
     {
       "id": "ue-06",
       "number": 6,
-      "year": 1,
       "title": "Josef – Gott geht mit",
       "hours": 10,
       "preparation_questions": [
@@ -1570,12 +1589,16 @@
         [
           "2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Beziehung setzen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.3 über menschliche Grundfragen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Erfahrungen von der verborgenen Begleitung Gottes im Leben",
+        "catholic": "Gott begleitet uns in den Höhen und Tiefen des Lebens",
+        "common": "Vertrauen auf Gott"
+      }
     },
     {
       "id": "ue-07",
       "number": 7,
-      "year": 1,
       "title": "Freut euch, Jesus lebt!",
       "hours": 5,
       "preparation_questions": [
@@ -1809,12 +1832,16 @@
         [
           "2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Biblische Grundlagen des Osterfestes kennenlernen",
+        "catholic": "Biblische Grundlagen der Karwoche und des Osterfestes und das damit verbundene Brauchtum entdecken",
+        "common": "Das Osterfest und sein Brauchtum"
+      }
     },
     {
       "id": "ue-08",
       "number": 8,
-      "year": 1,
       "title": "Wohnt Gott in der Kirche?",
       "hours": 8,
       "preparation_questions": [
@@ -2044,12 +2071,16 @@
         [
           "2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Kirche als Ort der Nähe Gottes und der feiernden Gemeinde kennenlernen",
+        "catholic": "Das Verständnis von Kirche als Sakralraum und Glaubensgemeinschaft kennenlernen",
+        "common": "Kirchenräume mit kirchenraum-pädagogischen Elementen erkunden"
+      }
     },
     {
       "id": "ue-09",
       "number": 9,
-      "year": 1,
       "title": "Leben in Gottes Welt – Staunen, danken, Verantwortung übernehmen",
       "hours": 8,
       "preparation_questions": [
@@ -2328,12 +2359,16 @@
         [
           "2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschießen2.4.4 im Kontext des eigenen Lebensumfeldes zu religiösen und ethischen Fragen einen Standpunkt einnehmen und argumentativ vertreten 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Den Menschen als geliebtes und verantwortliches Geschöpf erkennen",
+        "catholic": "Die Welt verstehen als eine gute Schöpfung Gottes und sich für die Bewahrung der Schöpfung einsetzen",
+        "common": "Über die Schöpfung staunen, für sie danken und Verantwortung übernehmen"
+      }
     },
     {
       "id": "ue-10",
       "number": 10,
-      "year": 2,
       "title": "Wer bist du, Gott?",
       "hours": 6,
       "preparation_questions": [
@@ -2557,12 +2592,16 @@
         [
           "2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen 2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.5.3 über menschliche Grunderfahrungen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gott als liebenden Gott erkennen",
+        "catholic": "Antworten auf die Gottesfrage suchen",
+        "common": "Vorstellungen von Gott"
+      }
     },
     {
       "id": "ue-11",
       "number": 11,
-      "year": 2,
       "title": "Mit Gott kann ich reden",
       "hours": 4,
       "preparation_questions": [
@@ -2806,12 +2845,16 @@
         [
           "prozessbezogene Kompetenzen evangelischDie Schülerinnen und Schüler können2.2.2 erlebte Symbole und Symbolhandlungen sowie liturgische Formen deuten2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe2.5.2 an religiösen und liturgischen Ausdrucksformen reflektiert teilnehmen oder diese mitgestalten2.2.1 Grundformen religiöser Sprache ganzheitlich erschließen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken2.5.3 über menschliche Grunderfahrungen angemessen sprechen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Beten als Ausdruck der Gottesbeziehung erfahren",
+        "catholic": "Den Glauben an Gott zum Ausdruck bringen",
+        "common": "Mit Gott kann man immer sprechen"
+      }
     },
     {
       "id": "ue-12",
       "number": 12,
-      "year": 2,
       "title": "Wir treffen Bischof Nikolaus",
       "hours": 2,
       "preparation_questions": [
@@ -3012,12 +3055,16 @@
         [
           "prozessbezogene KompetenzenDie Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessioneller und interreligiöser Begegnungen.2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Menschen als Vorbilder im Glauben und im Leben erfahren",
+        "catholic": "An Vorbildern des Glaubens Orientierung finden",
+        "common": "Nikolaus kennenlernen"
+      }
     },
     {
       "id": "ue-13",
       "number": 13,
-      "year": 2,
       "title": "Gott kommt zu den Menschen",
       "hours": 5,
       "preparation_questions": [
@@ -3244,12 +3291,16 @@
         [
           "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen.2.2.3 Texte religiöser Überlieferung inhaltlich wiedergeben und Deutungen formulieren.2.5.1 sich gestaltend-kreativ mit eigenen Erfahrungen, menschlichen Grunderfahrungen und der biblisch-christlichen Überlieferung auseinandersetzen.2.1.1 Spuren des Christentums und anderer Religionen in der persönlichen Lebenswelt entdecken2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen verstehen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gott wird Mensch für uns",
+        "catholic": "Die Menschwerdung Gottes feiern",
+        "common": "Gott wird Mensch"
+      }
     },
     {
       "id": "ue-14",
       "number": 14,
-      "year": 2,
       "title": "Unterwegs mit Jesus",
       "hours": 12,
       "preparation_questions": [
@@ -3499,12 +3550,16 @@
         [
           "2.2.3 zentrale Zeugnisse der biblisch–christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen 2.4.2 sich in Gedanken, Gefühle, Sicht– und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern 2.5.3 über menschliche Grundfragen angemessen sprechen 2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Jesu wendet sich Menschen zu",
+        "catholic": "In biblischen Geschichten Jesus begegnen",
+        "common": "Leben und Wirken Jesu anhand von Kinderbibeln zeigen"
+      }
     },
     {
       "id": "ue-15",
       "number": 15,
-      "year": 2,
       "title": "Wie Abraham auf Gott vertrauen",
       "hours": 8,
       "preparation_questions": [
@@ -3792,12 +3847,16 @@
         [
           "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können2.1.3 erkennen und beschreiben, dass Menschen religiöse und andere Fragen stellen und wie sie diese deuten.2.2.4 Erfahrungen von Menschen mit Gott in Beziehung setzen zu eigenen Erfahrungen.2.4.2 sich in Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen anderer Menschen (Mitmenschen, biblische Figuren, Vorbilder) hineinversetzen.2.1.3 eigene Fragen stellen und in der Lerngruppe nach Antworten suchen2.2.3 zentrale Zeugnisse der biblisch-christlichen Überlieferung in eigenen Worten wiedergeben und sich diese erschließen2.4.2 sich in Gedanken, Gefühle, Sicht- und Verhaltensweisen anderer hineinversetzen und dadurch die eigene Perspektive erweitern2.5.1 Erkenntnisse aus Gelerntem kreativ ausdrücken"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Biblische Texte als Ausdruck der Erfahrung mit Gott entdecken",
+        "catholic": "Abraham als Urvater für das Verständnis von Glauben als Vertrauen",
+        "common": "Entdecken, wie Abraham und Sara im Vertrauen auf Gott ihren Weg gehen"
+      }
     },
     {
       "id": "ue-16",
       "number": 16,
-      "year": 2,
       "title": "Was mich bewegt",
       "hours": 6,
       "preparation_questions": [
@@ -4035,12 +4094,16 @@
         [
           "2.3.1 in Situationen aus ihrem Lebensumfeld, die religiös oder ethisch herausfordern, Antworten und Handlungsmöglichkeiten prüfen 2.3.2 unterschiedliche Antworten und Handlungsmöglichkeiten mit der biblisch-christlichen Überlieferung in Beziehung setzen 2.4.1 eigene Gedanken, Sicht- und Verhaltensweisen beschreiben und erläutern 2.5.4 Impulse für verantwortungsvolles Handeln entwickeln"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Erfahrungen mit Gott zur Sprache bringen",
+        "catholic": "Gottes bedingungslose Liebe als Grundlage für Selbst- und Nächstenliebe kennenlernen",
+        "common": "Die von Gott jedem Menschen zugesprochene Würde bedenken"
+      }
     },
     {
       "id": "ue-17",
       "number": 17,
-      "year": 2,
       "title": "Glaube hat viele Gesichter – was glaubst du?",
       "hours": 8,
       "preparation_questions": [],
@@ -4366,7 +4429,12 @@
         [
           "prozessbezogene Kompetenzen Die Schülerinnen und Schüler können2.1.1 wahrnehmen und beschreiben, wo sie religiösen Spuren, Ausdrucksformen gelebten Glaubens und religiösen Fragestellungen in ihrem Leben begegnen.2.4.1 eigene Gedanken, Gefühle und Sicht- beziehungsweise Verhaltensweisen ausdrücken und in Beziehung setzen zu denen anderer Kinder in der Lerngruppe.2.4.3 anderen Menschen in deren Vielfalt tolerant, achtsam und wertschätzend begegnen, auch im Kontext interkonfessioneller und interreligiöser Begegnungen.2.5.4 ein achtsames Miteinander im Schulalltag mitgestalten.2.1.2 grundlegende Ausdrucksformen religiösen Glaubens beschreiben2.3.3 sich mit anderen religiösen und nichtreligiösen Überzeugungen auseinandersetzen2.4.3 erworbene Kenntnisse zu religiösen und ethischen Fragen verständlich erklären und im Dialog argumentativ verwenden2.4.4 anderen im interkonfessionellen und interreligiösen Kontext respektvoll begegnen2.5.2 religiöse Ausdrucksformen reflektiert gestalten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Von anderen Formen des Glaubens hören und miteinander leben lernen",
+        "catholic": "Durch das Kennenlernen anderer Religionen zu einem respektvollen Umgang anleiten",
+        "common": "Nichtchristlichen Religionen respektvoll begegnen"
+      }
     }
   ]
 }

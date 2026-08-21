@@ -21,6 +21,15 @@ it('imports every curriculum from the provided package', function () {
     expect(Curriculum::count())->toBe(16);
 });
 
+it('imports unit perspectives by denomination including common content', function () {
+    $result = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_3-4_B.json'));
+    $topic = $result['version']->topics()->where('external_identifier', 'ue-01')->firstOrFail();
+
+    expect($topic->perspectives()->pluck('text', 'denomination')->all())
+        ->toHaveKeys(['evangelical', 'catholic', 'common'])
+        ->and($topic->perspectives()->where('denomination', 'common')->value('text'))->not->toBe('');
+});
+
 it('compares two visible curricula', function () {
     $first = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'))['curriculum'];
     $second = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_3-4_A.json'))['curriculum'];
@@ -90,12 +99,11 @@ it('assigns all copied units when the source covers exactly one grade', function
         ->and($own->topics()->where('year', 10)->count())->toBe(5);
 });
 
-it('imports source year metadata for multi-grade curricula', function () {
+it('imports all units when the source omits optional year metadata', function () {
     $result = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
 
-    expect($result['version']->topics()->where('external_identifier', 'ue-01')->value('year'))->toBe(1)
-        ->and($result['version']->topics()->where('external_identifier', 'ue-02')->value('year'))->toBe(1)
-        ->and($result['version']->topics()->where('external_identifier', 'ue-17')->value('year'))->toBe(2);
+    expect($result['version']->topics()->count())->toBe(17)
+        ->and($result['version']->topics()->whereNull('year')->count())->toBe(17);
 });
 
 it('derives the visible grade metadata from selected sources when none is entered', function () {

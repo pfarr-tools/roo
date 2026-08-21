@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum GYM 5/6 A",
@@ -34,13 +34,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GYM_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GYM_RRK"
+      "plan_code": null
     }
   ],
   "units": [
@@ -378,7 +378,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk) Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben.2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren 2.2.4 den Geltungsanspruch biblischer [...] Texte erläutern 2.4.1 sich auf die Perspektive eines anderen einlassen und sie in Bezug zum eigenen Standpunkt setzen2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Menschsein zwischen Individualität und Sozialität",
+        "catholic": "Menschliches Zusammenleben an biblischen Weisungen ausrichten",
+        "common": "Menschliches Zusammenleben und biblische Überlieferung"
+      }
     },
     {
       "id": "ue-02",
@@ -616,7 +621,12 @@
         [
           "Prozessbezogene Kompetenzen (pbK)Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben 2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.2.1 Grundformen religiöser Sprache erschließen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gott begleitet Menschen auf ihrem Weg",
+        "catholic": "Menschliche Grunderfahrungen im eigenen Leben und in der Bibel entdecken",
+        "common": "Erfahrungen mit biblischen Erfahrungen machen"
+      }
     },
     {
       "id": "ue-03",
@@ -913,7 +923,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen 2.5.4 Formen religiöser Praxis Ausdruck verleihen2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.2.1 Grundformen religiöser Sprache erschließen2.2.4 biblische […] Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die Vielfalt der Ausdrucksformen des Glaubens an Gott",
+        "catholic": "Biblische Sprache als sprachliche Gestalt der Gottesbeziehung entdecken",
+        "common": "Von und mit Gott sprechen"
+      }
     },
     {
       "id": "ue-04",
@@ -1193,7 +1208,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.4 in ethischen Herausforderungen mögliche religiös bedeutsame Entscheidungssituationen identifizieren 2.2.4 den Geltungsanspruch biblischer Texte erläutern2.4.2 Gemeinsamkeiten und Unterschiede religiöser und nichtreligiöser Überzeugungen benennen2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.2.1 Grundformen religiöser Sprache erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Verantwortlicher und dankbarer Umgang mit Gottes Schöpfung",
+        "catholic": "Biblischer Schöpfungsglaube im Gespräch mit naturwissenschaftlichen Erklärungen der Weltentstehung",
+        "common": "Glaube an Gott, den Schöpfer"
+      }
     },
     {
       "id": "ue-05",
@@ -1460,7 +1480,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk) Die Schülerinnen und Schüler können2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern2.2.1 Grundformen religiöser Sprache erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entdecken und fachsprachlich korrekt darstellen2.2.4 biblische […] Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die Bibel verstehen lernen",
+        "catholic": "Die Bibel als Buch entdecken",
+        "common": "Entstehung und Aufbau der Bibel"
+      }
     },
     {
       "id": "ue-06",
@@ -1773,7 +1798,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk) Die Schülerinnen und Schüler können2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen2.4.1 sich auf die Perspektive eines anderen einlassen und sie in Bezug zum eigenen Standpunkt setzen2.4.4 Kriterien für einen konstruktiven interreligiösen Diskurs benennenDie Schülerinnen und Schüler können2.2.1 Grundformen religiöser Sprache erschließen2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten2.3.6 Modelle ethischer Urteilsbildung kritisch beurteilen und beispielhaft anwenden2.3.9 Ansätze und Formen theologischer Argumentation vergleichen und bewerten"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Ausdrucksformen katholischen Glaubens entdecken",
+        "catholic": "Merkmale der Konfessionen entfalten",
+        "common": "Gemeinsamkeiten und Besonderheiten"
+      }
     },
     {
       "id": "ue-07",
@@ -2098,7 +2128,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk) Die Schülerinnen und Schüler können2.1.2 religiös bedeutsame Phänomene und Fragestellungen in ihrem Lebensumfeld wahrnehmen und sie beschreiben2.1.3 grundlegende religiöse Ausdrucksformen (Symbole, Riten, Mythen, Räume, Zeiten) wahrnehmen, sie in verschiedenen Kontexten erkennen, wiedergeben und sie einordnen2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen 2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen im Diskurs begründet vertreten2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Religiöse Vielfalt wahrnehmen und vergleichen",
+        "catholic": "Religiöse Ausdruckformen in anderen Religionen präzise wahrnehmen",
+        "common": "Christentum, Judentum und Islam"
+      }
     },
     {
       "id": "ue-08",
@@ -2459,7 +2494,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler könnenDie Schülerinnen und Schüler können2.2.1 religiöse Ausdrucksformen analysieren und sie als Ausdruck existenzieller Erfahrungen verstehen2.2.3 Texte, insbesondere biblische, sachgemäß und methodisch reflektiert auslegen2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern 2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren2.2.5 religiöse Ausdrucksformen analysieren und als Ausdruck existenzieller Erfahrungen deuten2.2.6 Glaubensaussagen in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen und ihre Bedeutung aufweisen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Ausrichtung des eigenen Verhaltens am Handeln Jesu",
+        "catholic": "Das Leben Jesu und seine Bedeutung für den Glauben aufzeigen",
+        "common": "Jesus in der Bibel und im Glauben der Kirche"
+      }
     }
   ]
 }

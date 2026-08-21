@@ -31,5 +31,10 @@
         "catholic": 10
       }
     }
-  ]
+  ],
+  "perspectives": {
+    "all_units_have_object": true,
+    "all_objects_have_required_keys": true,
+    "all_values_are_strings": true
+  }
 }

@@ -8,6 +8,7 @@ use App\Models\CurriculumImportRun;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumTopicCompetency;
 use App\Models\CurriculumTopicProfile;
+use App\Models\CurriculumTopicPerspective;
 use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetency;
@@ -87,6 +88,13 @@ class ImportCurriculum
                         'hours' => $unit['hours'] ?? null, 'preparation_questions' => $unit['preparation_questions'] ?? [],
                         'shared_plan' => $unit['shared_plan'] ?? [], 'raw_rows' => $unit['raw_rows'] ?? [],
                     ]);
+                    foreach ($unit['perspectives'] ?? [] as $denomination => $text) {
+                        CurriculumTopicPerspective::create([
+                            'curriculum_topic_id' => $topic->id,
+                            'denomination' => $denomination,
+                            'text' => $text,
+                        ]);
+                    }
                     $competencyPosition = 0;
                     foreach ($unit['process_competencies'] ?? [] as $competency) {
                         $this->createCompetency($topic, $competency['denomination'] ?? null, 'process', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
@@ -132,6 +140,14 @@ class ImportCurriculum
         }
 
         foreach ($payload['units'] as $unit) {
+            foreach ($unit['perspectives'] ?? [] as $denomination => $text) {
+                if (! is_string($denomination) || trim($denomination) === '' || ! is_string($text)) {
+                    throw new \InvalidArgumentException('Perspektiven müssen nach Konfession verschlüsselt und als Text angegeben werden.');
+                }
+                if ($denomination !== 'common' && ! in_array($denomination, $payload['metadata']['denominations'] ?? [], true)) {
+                    throw new \InvalidArgumentException('Eine Perspektive verweist auf eine unbekannte Konfession.');
+                }
+            }
             foreach ($unit['process_competencies'] ?? [] as $competency) {
                 if (! is_string($competency['denomination'] ?? null) || trim($competency['denomination']) === '') {
                     throw new \InvalidArgumentException('Jede Prozesskompetenz muss eine Konfession enthalten.');

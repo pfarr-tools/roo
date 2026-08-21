@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Roo Confessional Cooperative Curriculum 1.1",
+  "title": "Roo Confessional Cooperative Curriculum 1.2",
   "type": "object",
   "required": [
     "schema_version",
@@ -37,7 +37,8 @@
           "shared_plan",
           "denominational_profiles",
           "process_competencies",
-          "raw_rows"
+          "raw_rows",
+          "perspectives"
         ],
         "properties": {
           "id": {
@@ -156,6 +157,26 @@
                 "type": "string"
               }
             }
+          },
+          "perspectives": {
+            "type": "object",
+            "required": [
+              "evangelical",
+              "catholic",
+              "common"
+            ],
+            "properties": {
+              "evangelical": {
+                "type": "string"
+              },
+              "catholic": {
+                "type": "string"
+              },
+              "common": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": true

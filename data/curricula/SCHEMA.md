@@ -1,6 +1,6 @@
 # Roo-Schema: konfessionell-kooperative Curricula
 
-## Version 1.1
+## Version 1.2
 
 Das Schema bleibt kompatibel mit dem zuvor verwendeten Root-Typ
 `confessional_cooperative_curriculum`, präzisiert aber die Kompetenzabbildung.
@@ -20,6 +20,33 @@ konfessionellen Bildungsplänen und verbindet sie in Unterrichtseinheiten.
 
 Konfessionen sind nicht als feste Enum im Schema definiert. Die hier vorliegenden
 Dateien verwenden `evangelical` und `catholic`.
+
+
+## `perspectives`
+
+Jede Unterrichtseinheit enthält zusätzlich genau dieses Objekt:
+
+```json
+"perspectives": {
+  "evangelical": "...",
+  "catholic": "...",
+  "common": "..."
+}
+```
+
+Die drei Werte entsprechen unmittelbar den Feldern der Quellcurricula:
+
+- `evangelical` = **Evangelischer Blickwinkel**
+- `catholic` = **Katholischer Blickwinkel**
+- `common` = **Zentrale Inhalte** bzw. bei den abweichend aufgebauten Sek-I-10-Vorlagen der gemeinsame mittlere Unterrichts-/Umsetzungsinhalt
+
+Alle drei Schlüssel sind immer vorhanden und enthalten Strings. Wenn die Quelle
+einen konfessionellen Blickwinkel in einer UE nicht ausfüllt, wird `""` verwendet.
+
+Die bereits vorhandenen Felder `shared_plan` und
+`denominational_profiles.*.perspective` bleiben aus Gründen der
+Rückwärtskompatibilität unverändert. Für die drei hier beschriebenen
+Quellfelder ist `perspectives` die kanonische, sauber zuordenbare Darstellung.
 
 ## `units[]`
 

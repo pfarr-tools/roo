@@ -1,0 +1,66 @@
+{
+  "documents": 16,
+  "units": 160,
+  "units_with_perspectives_object": 160,
+  "evangelical_nonempty": 155,
+  "catholic_nonempty": 155,
+  "common_nonempty": 159,
+  "all_three_nonempty": 150,
+  "empty_fields": [
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-01",
+      "field": "evangelical"
+    },
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-02",
+      "field": "evangelical"
+    },
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-03",
+      "field": "evangelical"
+    },
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-04",
+      "field": "evangelical"
+    },
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-04",
+      "field": "common"
+    },
+    {
+      "curriculum": "SEK1_10_A",
+      "unit": "ue-05",
+      "field": "evangelical"
+    },
+    {
+      "curriculum": "SEK1_10_B",
+      "unit": "ue-01",
+      "field": "catholic"
+    },
+    {
+      "curriculum": "SEK1_10_B",
+      "unit": "ue-02",
+      "field": "catholic"
+    },
+    {
+      "curriculum": "SEK1_10_B",
+      "unit": "ue-03",
+      "field": "catholic"
+    },
+    {
+      "curriculum": "SEK1_10_B",
+      "unit": "ue-04",
+      "field": "catholic"
+    },
+    {
+      "curriculum": "SEK1_10_B",
+      "unit": "ue-05",
+      "field": "catholic"
+    }
+  ]
+}

@@ -49,7 +49,7 @@ class CurriculumController extends Controller
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'school_type' => ['nullable', 'string', 'max:50'], 'grades' => ['nullable', 'array'], 'grades.*' => ['integer', 'min:1', 'max:13'], 'denominations' => ['nullable', 'array'], 'denominations.*' => ['string', 'max:50'], 'source_version_ids' => ['nullable', 'array'], 'source_version_ids.*' => ['integer', 'exists:curriculum_versions,id']]);
         $curriculum = DB::transaction(function () use ($data): Curriculum {
             $sourceVersionIds = array_values($data['source_version_ids'] ?? []);
-            $sourceVersions = CurriculumVersion::with(['curriculum', 'bindings', 'topics.competencies', 'topics.profiles'])->whereIn('id', $sourceVersionIds)->where('is_editable', false)->whereHas('curriculum', fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get();
+            $sourceVersions = CurriculumVersion::with(['curriculum', 'bindings', 'topics.competencies', 'topics.profiles', 'topics.perspectives'])->whereIn('id', $sourceVersionIds)->where('is_editable', false)->whereHas('curriculum', fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get();
             abort_if($sourceVersions->count() !== count(array_unique($sourceVersionIds)), 422, 'Mindestens eine Vorlage ist nicht verfügbar.');
             $grades = array_values($data['grades'] ?? []);
             if ($grades === []) {
@@ -73,6 +73,9 @@ class CurriculumController extends Controller
                     foreach ($topic->profiles as $profile) {
                         $copy->profiles()->create($profile->only(['denomination', 'perspective']));
                     }
+                    foreach ($topic->perspectives as $perspective) {
+                        $copy->perspectives()->create($perspective->only(['denomination', 'text']));
+                    }
                 }
             }
 
@@ -85,7 +88,7 @@ class CurriculumController extends Controller
     public function storeVersion(Curriculum $curriculum): RedirectResponse
     {
         $this->ensureVisible($curriculum);
-        $source = $curriculum->versions()->with(['bindings', 'topics.competencies', 'topics.profiles'])->latest('id')->firstOrFail();
+        $source = $curriculum->versions()->with(['bindings', 'topics.competencies', 'topics.profiles', 'topics.perspectives'])->latest('id')->firstOrFail();
         abort_unless($source->is_editable, 403);
 
         $number = ((int) $curriculum->versions()->where('external_identifier', 'like', 'custom-%')->pluck('external_identifier')->map(fn (string $id): int => (int) str_replace('custom-', '', $id))->max()) + 1;
@@ -101,6 +104,9 @@ class CurriculumController extends Controller
             foreach ($topic->profiles as $profile) {
                 $copy->profiles()->create($profile->only(['denomination', 'perspective']));
             }
+            foreach ($topic->perspectives as $perspective) {
+                $copy->perspectives()->create($perspective->only(['denomination', 'text']));
+            }
         }
 
         return redirect()->route('curricula.show', $curriculum)->with('success', 'Neue Curriculumfassung wurde angelegt.');
@@ -109,7 +115,7 @@ class CurriculumController extends Controller
     public function show(Curriculum $curriculum): Response
     {
         $this->ensureVisible($curriculum);
-        $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.competencies.educationPlanCompetency', 'topics.sourceVersion.curriculum'])->firstOrFail();
+        $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.perspectives', 'topics.competencies.educationPlanCompetency', 'topics.sourceVersion.curriculum'])->firstOrFail();
 
         return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions(), 'schoolTypes' => $this->schoolTypeOptions()]);
     }

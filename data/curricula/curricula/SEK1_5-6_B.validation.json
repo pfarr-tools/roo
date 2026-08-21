@@ -6,5 +6,10 @@
   "output_process_competency_occurrences": 98,
   "process_competencies_without_denomination": [],
   "number_spacing_issues": [],
-  "process_denomination_inferred_by_exact_text_match": []
+  "process_denomination_inferred_by_exact_text_match": [],
+  "perspectives": {
+    "all_units_have_object": true,
+    "all_objects_have_required_keys": true,
+    "all_values_are_strings": true
+  }
 }

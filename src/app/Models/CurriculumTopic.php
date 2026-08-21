@@ -34,4 +34,9 @@ class CurriculumTopic extends Model
     {
         return $this->hasMany(CurriculumTopicProfile::class);
     }
+
+    public function perspectives(): HasMany
+    {
+        return $this->hasMany(CurriculumTopicPerspective::class);
+    }
 }

@@ -24,3 +24,18 @@ Besondere Qualitätsregeln dieses Imports:
    Vollständigkeitsprüfung.
 
 Siehe `SCHEMA.md` für das Datenmodell.
+
+## Perspectives-Ergänzung (Schema 1.2)
+
+Jede UE enthält nun zusätzlich:
+
+```json
+"perspectives": {
+  "evangelical": "...",
+  "catholic": "...",
+  "common": "..."
+}
+```
+
+Das restliche Datenmodell wurde nicht verändert. Siehe `SCHEMA.md` und
+`QA_PERSPECTIVES.json`.

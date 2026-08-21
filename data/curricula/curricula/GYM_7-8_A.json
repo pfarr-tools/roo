@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "type": "confessional_cooperative_curriculum",
   "metadata": {
     "title": "KoKo Beispielcurriculum GYM 7/8 A",
@@ -34,13 +34,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GYM_REV"
+      "plan_code": null
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": "BP2016BW_ALLG_GYM_RRK"
+      "plan_code": null
     }
   ],
   "units": [
@@ -386,7 +386,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben, zum Leben historischer Personen und zur gesellschaftlichen Wirklichkeit setzen2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.2.1 Grundformen religiöser Sprache erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.2.3 in Lebenszeugnissen und ästhetischen Ausdrucksformen Antwortversuche auf menschliche Grundfragen entdecken und (…) darstellen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Gottes Geist führt Menschen auf den Weg in die Freiheit und wirkt in der Kirche",
+        "catholic": "Das reformatorische Freiheitsverständnis gründet im Glauben an den gnädigen Gott",
+        "common": "Reformen in der Kircheim Geist der Freiheit"
+      }
     },
     {
       "id": "ue-02",
@@ -743,7 +748,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.1 Situationen erfassen, in denen letzte Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben, zum Leben historischer Personen und zur gesellschaftlichen Wirklichkeit setzen 2.5.2 religiös bedeutsame Inhalte und Standpunkte medial und adressatenbezogen präsentieren2.1.1 die existenzielle Dimension von Situationen und Erfahrungen beschreiben2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens fürdas Leben des Einzelnen und für die Gesellschaft prüfen2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Menschsein im Spannungsfeld von Freiheit und Verantwortung",
+        "catholic": "Evangelischer Glaube gründet in der befreienden Erfahrung der Liebe Gottes",
+        "common": "Glaube als von Gott geschenkte Identität"
+      }
     },
     {
       "id": "ue-03",
@@ -1216,7 +1226,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu (…) ethischen Fragen einnehmen und ihn argumentativ vertreten 2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.4 ethische Herausforderungen in der individuellen Lebensgeschichte sowie in unterschiedlichengesellschaftlichen Handlungsfeldern (…) erkennen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.7 Herausforderungen (…) sittlichen Handelns wahrnehmen, im Kontext ihrer eigenen Biografie reflektieren und in Beziehung zu kirchlichem Glauben und Leben setzen2.4.2 eigene Vorstellungen zu religiösen und ethischen Fragen (…) begründet vertreten2.4.4 die Perspektive eines anderen einnehmen und dadurch die eigene Perspektive erweitern"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Die biblische Botschaft inspiriert zu solidarischem und gerechtem Handeln",
+        "catholic": "Christliches Handeln wird biblisch begründet und verantwortet",
+        "common": "Handeln in Freiheit, Verantwortung und Gerechtigkeit"
+      }
     },
     {
       "id": "ue-04",
@@ -1799,7 +1814,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.3 grundlegende religiöse Ausdrucksformen wahrnehmen, sie in verschiedenen Kontexten wiedererkennen und sie einordnen 2.2.4 den Geltungsanspruch biblischer und theologischer Texte erläutern und sie in Beziehung zum eigenen Leben und zur gesellschaftlichen Wirklichkeit setzen 2.3.5 im Zusammenhang einer pluralen Gesellschaft einen eigenen Standpunkt zu religiösen Fragen einnehmen und ihn argumentativ vertreten2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.1.5 aus ausgewählten Quellen, Texten, Medien Informationen erheben, die eine Deutung religiöser Sachverhalte ermöglichen2.2.1 Grundformen religiöser Sprache erschließen2.2.2 ausgewählte Fachbegriffe und Glaubensaussagen sowie fachspezifische Methoden verstehen2.2.4 biblische, lehramtliche, theologische und andere Zeugnisse christlichen Glaubens methodisch angemessen erschließen2.3.2 Gemeinsamkeiten von Konfessionen, Religionen und Weltanschauungen sowie deren Unterschiede aus der Perspektive des katholischen Glaubens analysieren2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen2.4.3 erworbenes Wissen zu religiösen und ethischen Fragen verständlich erklären2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen2.5.1 religiöse Rituale und Symbole in einer Weise transformieren, die ihren Überzeugungen entspricht"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Das christliche Gottesbild wird im Alten Testament und vor allem im Denken und Handeln Jesu greifbar. Ein wichtiger Markstein des Begreifens des Jesus-Geschehens ist das Pfingstereignis, in dem zugleich der universale („ökumenische“) Anspruch des jesuanischen Handelns ersichtlich wird.",
+        "catholic": "Die Merkmale evangelischen Glaubens Vertrauens auf Gott, Gründung auf die biblischen Überlieferungen, die zentrale Bedeutung Jesu Christi und die Hoffnung auf Gottes Gnade.",
+        "common": "Gottesbilder, die grundlegend sind für das Christentum"
+      }
     },
     {
       "id": "ue-05",
@@ -2229,7 +2249,12 @@
         [
           "Prozessbezogene Kompetenzen (pbk)Die Schülerinnen und Schüler können2.1.3 grundlegende religiöse Ausdrucksformen wahrnehmen und sie in verschiedenen Kontexten wiedererkennen und sie einordnen 2.4.2 Gemeinsamkeiten und Unterschiede religiöser Überzeugungen benennen und sie im Hinblick auf mögliche Dialogpartner kommunizieren2.1.2 Situationen erfassen, in denen Fragen nach Grund, Sinn, Ziel und Verantwortung des Lebens aufbrechen2.1.3 religiöse Spuren in ihrer Lebenswelt sowie grundlegende Ausdrucksformen religiösen Glaubens beschreiben und sie in verschiedenen Kontexten wiedererkennen2.3.1 die Relevanz von Glaubenszeugnissen und Grundaussagen des christlichen Glaubens für das Leben des Einzelnen und für die Gesellschaft prüfen2.3.3 lebensfördernde und lebensfeindliche Formen von Religion unterscheiden2.3.4 Zweifel und Kritik an Religion prüfen2.3.5 im Kontext der Pluralität einen eigenen Standpunkt zu religiösen und ethischen Fragen einnehmen und argumentativ vertreten2.4.1 Kriterien für einen konstruktiven Dialog entwickeln und in dialogischen Situationen berücksichtigen2.4.5 Gemeinsamkeiten und Unterschiede von religiösen und weltanschaulichen Überzeugungen benennen und im Dialog argumentativ verwenden2.4.6 sich aus der Perspektive des katholischen Glaubens mit anderen religiösen und weltanschaulichen Überzeugungen im Dialog argumentativ auseinandersetzen"
         ]
-      ]
+      ],
+      "perspectives": {
+        "evangelical": "Den Glauben an den einen persönlichen Gott wird im Vergleich zu den anderen Weltreligionen ins Gespräch bringen.",
+        "catholic": "Kriterien für das Gespräch zwischen den Religionen benennen",
+        "common": "Gespräch zwischen den Religionen"
+      }
     }
   ]
 }
