@@ -96,7 +96,7 @@ function toggle(competency) {
 }
 function close() { emit('update:modelValue', false) }
 function apply() {
-    emit('apply', [...draftSelectedIds.value])
+    emit('apply', [...draftSelectedIds.value], selectedCompetencies.value)
     emit('update:modelValue', false)
 }
 </script>

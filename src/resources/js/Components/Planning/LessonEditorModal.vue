@@ -73,10 +73,25 @@ const competencyCardStyle = competency => {
     return { backgroundColor: hours ? `rgba(var(--bs-success-rgb), ${intensity})` : 'rgba(var(--bs-secondary-rgb), 0.04)' }
 }
 
-function applyCompetencies(educationPlanCompetencyIds) {
+function applyCompetencies(educationPlanCompetencyIds, selectedCompetencies = []) {
     const selectedIds = [...new Set(educationPlanCompetencyIds)]
     selectedEducationPlanIds.value = selectedIds
-    competencyForm.competency_ids = unitCompetencies.value.filter(competency => selectedIds.includes(competency.education_plan_competency_id)).map(competency => competency.id)
+    const existing = unitCompetencies.value.filter(competency => !competency.pending && selectedIds.includes(competency.education_plan_competency_id))
+    const pending = selectedCompetencies
+        .filter(competency => !existing.some(item => item.education_plan_competency_id === competency.id))
+        .map(competency => ({ ...competency, id: `pending-${competency.id}`, education_plan_competency_id: competency.id, pending: true }))
+    unitCompetencies.value = [...unitCompetencies.value.filter(competency => !competency.pending), ...pending]
+    competencyForm.competency_ids = [...existing.map(competency => competency.id), ...pending.map(competency => competency.id)]
+}
+
+function removeUnitCompetency(competency) {
+    if (competency.pending) {
+        competencyForm.competency_ids = competencyForm.competency_ids.filter(id => id !== competency.id)
+        selectedEducationPlanIds.value = selectedEducationPlanIds.value.filter(id => id !== competency.education_plan_competency_id)
+        unitCompetencies.value = unitCompetencies.value.filter(item => item.id !== competency.id)
+        return
+    }
+    router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/kompetenzen/${competency.id}`, { preserveState: true, preserveScroll: true })
 }
 
 function save() {
@@ -84,7 +99,7 @@ function save() {
         ...phase,
         social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
     }))
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids, education_plan_competency_ids: selectedEducationPlanIds.value, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids.filter(id => typeof id === 'number' || /^\d+$/.test(String(id))), education_plan_competency_ids: selectedEducationPlanIds.value, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => emit('close'),
