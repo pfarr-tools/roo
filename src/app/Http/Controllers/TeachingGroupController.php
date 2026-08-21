@@ -76,6 +76,9 @@ class TeachingGroupController extends Controller
         $curriculumEducationIds = CurriculumTopicCompetency::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
             ->forGroup($teachingGroup)->pluck('education_plan_competency_id')->filter()->unique();
+        $curriculumCompetencyIdentifiers = CurriculumTopicCompetency::query()
+            ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
+            ->forGroup($teachingGroup)->pluck('external_identifier')->filter()->unique();
         $curriculumVersionIds = $teachingGroup->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id');
         $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $curriculumVersionIds)->whereNotNull('education_plan_id')->pluck('education_plan_id')->unique();
         $missingCompetencies = EducationPlanCompetency::query()
@@ -88,7 +91,9 @@ class TeachingGroupController extends Controller
             ->whereNotIn('id', $curriculumEducationIds)
             ->with(['area:id,education_plan_stage_id,kind', 'variants:id,education_plan_competency_id,text,position'])
             ->orderBy('external_identifier')->get();
-        $missingCompetencies = $missingCompetencies->map(function ($competency) use ($competencyResolver, $coveredEducationHours): array {
+        $missingCompetencies = $missingCompetencies
+            ->reject(fn ($competency) => $curriculumCompetencyIdentifiers->contains($competency->external_identifier))
+            ->map(function ($competency) use ($competencyResolver, $coveredEducationHours): array {
             $presentation = $competencyResolver->present($competency);
 
             return [
