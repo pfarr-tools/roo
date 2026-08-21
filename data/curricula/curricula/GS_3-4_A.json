@@ -47,6 +47,7 @@
     {
       "id": "ue-01",
       "number": 1,
+      "year": 3,
       "title": "Miteinander auf dem Weg",
       "hours": 6,
       "preparation_questions": [
@@ -322,6 +323,7 @@
     {
       "id": "ue-02",
       "number": 2,
+      "year": 3,
       "title": "Unsichtbar und doch da? – Gott geht mit seinem Volk",
       "hours": 12,
       "preparation_questions": [
@@ -598,6 +600,7 @@
     {
       "id": "ue-03",
       "number": 3,
+      "year": 3,
       "title": "Ein Jahr – so viele Feste!",
       "hours": 8,
       "preparation_questions": [
@@ -842,6 +845,7 @@
     {
       "id": "ue-04",
       "number": 4,
+      "year": 3,
       "title": "Leben in einer vielfältigen Welt",
       "hours": 8,
       "preparation_questions": [
@@ -1129,6 +1133,7 @@
     {
       "id": "ue-05",
       "number": 5,
+      "year": 3,
       "title": "Wie kann ich Gott ansprechen?",
       "hours": 6,
       "preparation_questions": [
@@ -1362,6 +1367,7 @@
     {
       "id": "ue-06",
       "number": 6,
+      "year": 3,
       "title": "Freude an der Schöpfung",
       "hours": 10,
       "preparation_questions": [
@@ -1703,6 +1709,7 @@
     {
       "id": "ue-07",
       "number": 7,
+      "year": 3,
       "title": "Bewegt und begeistert – Himmelfahrt und Pfingsten",
       "hours": 5,
       "preparation_questions": [
@@ -1923,6 +1930,7 @@
     {
       "id": "ue-08",
       "number": 8,
+      "year": 4,
       "title": "Gottes Reich ist wie...",
       "hours": 10,
       "preparation_questions": [
@@ -2189,6 +2197,7 @@
     {
       "id": "ue-09",
       "number": 9,
+      "year": 4,
       "title": "Martin Luther entdeckt den gnädigen Gott",
       "hours": 6,
       "preparation_questions": [
@@ -2437,6 +2446,7 @@
     {
       "id": "ue-10",
       "number": 10,
+      "year": 4,
       "title": "Die Bibel erzählt von Gott und den Menschen",
       "hours": 6,
       "preparation_questions": [
@@ -2624,6 +2634,7 @@
     {
       "id": "ue-11",
       "number": 11,
+      "year": 4,
       "title": "Eine gute Gemeinschaft",
       "hours": 8,
       "preparation_questions": [
@@ -2926,6 +2937,7 @@
     {
       "id": "ue-12",
       "number": 12,
+      "year": 4,
       "title": "Fragen nach Gott und dem Leben stellen",
       "hours": 6,
       "preparation_questions": [
@@ -3157,6 +3169,7 @@
     {
       "id": "ue-13",
       "number": 13,
+      "year": 4,
       "title": "Jesus leidet und wird auferweckt",
       "hours": 6,
       "preparation_questions": [
@@ -3383,6 +3396,7 @@
     {
       "id": "ue-14",
       "number": 14,
+      "year": 4,
       "title": "Wie in anderen Religionen an Gott geglaubt wird",
       "hours": 6,
       "preparation_questions": [
@@ -3722,6 +3736,7 @@
     {
       "id": "ue-15",
       "number": 15,
+      "year": 4,
       "title": "Projekt - Wir feiern miteinander",
       "hours": 4,
       "preparation_questions": [

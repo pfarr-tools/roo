@@ -47,6 +47,7 @@
     {
       "id": "ue-01",
       "number": 1,
+      "year": 1,
       "title": "Ich bin ich und du bist du – wir gehören zusammen",
       "hours": 6,
       "preparation_questions": [
@@ -368,6 +369,7 @@
     {
       "id": "ue-02",
       "number": 2,
+      "year": 1,
       "title": "Wie ist Gott?",
       "hours": 6,
       "preparation_questions": [
@@ -646,6 +648,7 @@
     {
       "id": "ue-03",
       "number": 3,
+      "year": 1,
       "title": "Handeln wie Martin von Tours",
       "hours": 2,
       "preparation_questions": [
@@ -857,6 +860,7 @@
     {
       "id": "ue-04",
       "number": 4,
+      "year": 1,
       "title": "Advent und Weihnachten",
       "hours": 6,
       "preparation_questions": [
@@ -1063,6 +1067,7 @@
     {
       "id": "ue-05",
       "number": 5,
+      "year": 1,
       "title": "Menschen begegnen Jesus",
       "hours": 6,
       "preparation_questions": [
@@ -1312,6 +1317,7 @@
     {
       "id": "ue-06",
       "number": 6,
+      "year": 1,
       "title": "Josef – Gott geht mit",
       "hours": 10,
       "preparation_questions": [
@@ -1599,6 +1605,7 @@
     {
       "id": "ue-07",
       "number": 7,
+      "year": 1,
       "title": "Freut euch, Jesus lebt!",
       "hours": 5,
       "preparation_questions": [
@@ -1842,6 +1849,7 @@
     {
       "id": "ue-08",
       "number": 8,
+      "year": 1,
       "title": "Wohnt Gott in der Kirche?",
       "hours": 8,
       "preparation_questions": [
@@ -2081,6 +2089,7 @@
     {
       "id": "ue-09",
       "number": 9,
+      "year": 1,
       "title": "Leben in Gottes Welt – Staunen, danken, Verantwortung übernehmen",
       "hours": 8,
       "preparation_questions": [
@@ -2369,6 +2378,7 @@
     {
       "id": "ue-10",
       "number": 10,
+      "year": 2,
       "title": "Wer bist du, Gott?",
       "hours": 6,
       "preparation_questions": [
@@ -2602,6 +2612,7 @@
     {
       "id": "ue-11",
       "number": 11,
+      "year": 2,
       "title": "Mit Gott kann ich reden",
       "hours": 4,
       "preparation_questions": [
@@ -2855,6 +2866,7 @@
     {
       "id": "ue-12",
       "number": 12,
+      "year": 2,
       "title": "Wir treffen Bischof Nikolaus",
       "hours": 2,
       "preparation_questions": [
@@ -3065,6 +3077,7 @@
     {
       "id": "ue-13",
       "number": 13,
+      "year": 2,
       "title": "Gott kommt zu den Menschen",
       "hours": 5,
       "preparation_questions": [
@@ -3301,6 +3314,7 @@
     {
       "id": "ue-14",
       "number": 14,
+      "year": 2,
       "title": "Unterwegs mit Jesus",
       "hours": 12,
       "preparation_questions": [
@@ -3560,6 +3574,7 @@
     {
       "id": "ue-15",
       "number": 15,
+      "year": 2,
       "title": "Wie Abraham auf Gott vertrauen",
       "hours": 8,
       "preparation_questions": [
@@ -3857,6 +3872,7 @@
     {
       "id": "ue-16",
       "number": 16,
+      "year": 2,
       "title": "Was mich bewegt",
       "hours": 6,
       "preparation_questions": [
@@ -4104,6 +4120,7 @@
     {
       "id": "ue-17",
       "number": 17,
+      "year": 2,
       "title": "Glaube hat viele Gesichter – was glaubst du?",
       "hours": 8,
       "preparation_questions": [],
