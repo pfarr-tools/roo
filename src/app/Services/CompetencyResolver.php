@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CurriculumTopicCompetency;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -58,8 +59,13 @@ class CompetencyResolver
                 ->first();
         }
 
+        $ownCurriculumText = $competency instanceof CurriculumTopicCompetency
+            ? ($this->clean($competency->text, $identifier) ?: $this->clean($competency->raw_text, $identifier) ?: $this->displayText($competency->display, $identifier))
+            : '';
+
         return (string) ($this->clean($competency->local_wording, $identifier)
             ?: $curriculumText
+            ?: $ownCurriculumText
             ?: $this->clean($plan?->text, $identifier)
             ?: $variants
             ?: $this->clean($competency->text, $identifier)

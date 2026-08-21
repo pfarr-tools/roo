@@ -58,7 +58,7 @@ const contentCompetencies = computed(() => unitCompetencies.value.filter(compete
 const competencyAreaGroups = competencies => { const groups = new Map(); for (const competency of competencies) { const key = competency.competency_area?.identifier || competency.education_plan_competency?.area?.external_identifier || 'other'; if (!groups.has(key)) groups.set(key, { key, area: competency.competency_area ?? (competency.education_plan_competency?.area ? { identifier: competency.education_plan_competency.area.external_identifier, title: competency.education_plan_competency.area.title } : null), competencies: [] }); groups.get(key).competencies.push(competency) } return [...groups.values()] }
 const processCompetencyGroups = computed(() => competencyAreaGroups(processCompetencies.value))
 const contentCompetencyGroups = computed(() => competencyAreaGroups(contentCompetencies.value))
-const lessonSelectedEducationPlanIds = computed(() => unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id)).map(competency => competency.education_plan_competency_id).filter(Boolean))
+const lessonSelectedEducationPlanIds = computed(() => unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id)).map(competency => competency.curriculum_topic_competency_id || competency.education_plan_competency_id).filter(Boolean))
 const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {
     const represented = lesson.id === props.lesson?.id
         ? competencyForm.competency_ids.includes(competency.id)
@@ -77,7 +77,7 @@ function applyCompetencies(educationPlanCompetencyIds) {
     const selectedUnitCompetencyIds = []
     const pending = []
     selectedIds.forEach(educationPlanCompetencyId => {
-        const existing = unitCompetencies.value.find(competency => competency.education_plan_competency_id === educationPlanCompetencyId)
+        const existing = unitCompetencies.value.find(competency => (competency.curriculum_topic_competency_id || competency.education_plan_competency_id) === educationPlanCompetencyId)
         existing ? selectedUnitCompetencyIds.push(existing.id) : pending.push(educationPlanCompetencyId)
     })
     competencyPickerApplying.value = pending.length > 0
@@ -87,14 +87,14 @@ function applyCompetencies(educationPlanCompetencyIds) {
             competencyPickerApplying.value = false
             return
         }
-        const educationPlanCompetencyId = pending[index]
-        router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { education_plan_competency_id: educationPlanCompetencyId }, {
+        const curriculumTopicCompetencyId = pending[index]
+        router.post(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}/kompetenzen`, { curriculum_topic_competency_id: curriculumTopicCompetencyId }, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: response => {
                 const updatedUnit = response.props.workspace?.units?.find(unit => unit.id === props.unit.id)
                 if (updatedUnit) unitCompetencies.value = [...(updatedUnit.competencies ?? [])]
-                const added = unitCompetencies.value.find(competency => competency.education_plan_competency_id === educationPlanCompetencyId)
+                const added = unitCompetencies.value.find(competency => competency.curriculum_topic_competency_id === curriculumTopicCompetencyId)
                 if (added) selectedUnitCompetencyIds.push(added.id)
                 addNext(index + 1)
             },

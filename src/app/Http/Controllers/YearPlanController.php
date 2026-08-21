@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateLessonOccurrenceRequest;
 use App\Http\Requests\StoreLessonPhaseRequest;
 use App\Http\Requests\UpdateScheduledLessonStatusRequest;
 use App\Models\CurriculumTopic;
+use App\Models\CurriculumTopicCompetency;
 use App\Models\CurriculumEducationPlanBinding;
 use App\Models\EducationPlanCompetency;
 use App\Models\GroupYearPlan;
@@ -84,16 +85,11 @@ class YearPlanController extends Controller
                 $competency->setAttribute('competency_area', $area ? ['identifier' => $area->external_identifier, 'title' => $area->title] : null);
             });
         });
-        $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,text'])->get();
+        $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'versions.topics.competencies.educationPlanCompetency.area:id,kind,external_identifier,title', 'versions.topics.competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
-        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-            ->where(fn ($query) => $query->whereDoesntHave('curriculumCompetencies')->orWhereHas('curriculumCompetencies', fn ($curriculumCompetencies) => $curriculumCompetencies->forGroup($teachingGroup)))
-            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position', 'curriculumCompetencies' => fn ($query) => $query->forGroup($teachingGroup)->select('id', 'education_plan_competency_id', 'competency_kind', 'display', 'text', 'raw_text')])
-            ->orderBy('external_identifier')
-            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
-            ->each(function ($competency) use ($competencyResolver): void {
+        $competencyOptions = $curricula->flatMap(fn ($curriculum) => $curriculum->versions)->flatMap(fn ($version) => $version->topics)->flatMap(fn ($topic) => $topic->competencies)->unique('id')->sortBy('external_identifier')->values()->each(function ($competency) use ($competencyResolver): void {
                 $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-                $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title]);
+                $competency->setAttribute('competency_area', ['identifier' => $competency->educationPlanCompetency?->area?->external_identifier, 'title' => $competency->educationPlanCompetency?->area?->title]);
             });
 
         return Inertia::render('YearPlans/Show', [
@@ -275,11 +271,26 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['education_plan_competency_id' => ['required', 'integer']]);
-        $competency = EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
+        $data = $request->validate(['education_plan_competency_id' => ['nullable', 'integer', 'required_without:curriculum_topic_competency_id'], 'curriculum_topic_competency_id' => ['nullable', 'integer', 'required_without:education_plan_competency_id']]);
+        $curriculumCompetency = isset($data['curriculum_topic_competency_id'])
+            ? CurriculumTopicCompetency::whereKey($data['curriculum_topic_competency_id'])
+                ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula()->pluck('curricula.id')))
+                ->forGroup($teachingGroup)
+                ->firstOrFail()
+            : null;
+        $competency = $curriculumCompetency?->educationPlanCompetency ?? EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
             ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
             ->firstOrFail();
-        $unitCompetency = $lesson->unit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id], ['is_secondary' => true]);
+        $unitCompetency = $lesson->unit->competencies()
+            ->where(fn ($query) => $query->where('curriculum_topic_competency_id', $curriculumCompetency?->id)->orWhere('education_plan_competency_id', $competency->id))
+            ->first();
+        if (! $unitCompetency) {
+            $unitCompetency = $lesson->unit->competencies()->create([
+                'curriculum_topic_competency_id' => $curriculumCompetency?->id,
+                'education_plan_competency_id' => $competency->id,
+                'is_secondary' => true,
+            ]);
+        }
         $lesson->competencies()->syncWithoutDetaching([$unitCompetency->id]);
 
         return back()->with('success', 'Kompetenz wurde als sekundäre UE-Kompetenz hinzugefügt.');
