@@ -12,6 +12,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+it('legt eine Lernstandserhebung zunächst ohne Aufgaben an', function () {
+    $organization = Organization::create(['name' => 'Aufgabenlose Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Aufgabenlose Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE ohne Aufgaben'])->assertRedirect();
+
+    expect(Assessment::first()->tasks)->toBeEmpty();
+});
+
 it('legt eine Lernstandserhebung mit differenzierten Aufgaben an', function () {
     $organization = Organization::create(['name' => 'Bewertungsorganisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);

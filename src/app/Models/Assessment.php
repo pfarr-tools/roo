@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['organization_id', 'teaching_group_id', 'report_period_id', 'title', 'assessed_on', 'status', 'notes'])]
 class Assessment extends Model
@@ -18,6 +19,11 @@ class Assessment extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(TeachingGroup::class, 'teaching_group_id');
+    }
+
+    public function scheduleSlots(): HasMany
+    {
+        return $this->hasMany(ScheduleSlot::class);
     }
 
     public function reportPeriod(): BelongsTo

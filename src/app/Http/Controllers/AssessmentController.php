@@ -33,7 +33,9 @@ class AssessmentController extends Controller
         $data = $this->validatedAssessment($request);
         DB::transaction(function () use ($data, $teachingGroup): void {
             $assessment = $teachingGroup->assessments()->create(['organization_id' => $teachingGroup->organization_id, 'report_period_id' => $data['report_period_id'] ?? null, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
-            $this->syncTasks($assessment, $teachingGroup, $data['tasks']);
+            if (array_key_exists('tasks', $data)) {
+                $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
+            }
         });
 
         return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde angelegt.');
@@ -46,8 +48,10 @@ class AssessmentController extends Controller
         $data = $this->validatedAssessment($request);
         DB::transaction(function () use ($data, $assessment, $teachingGroup): void {
             $assessment->update(collect($data)->only(['report_period_id', 'title', 'assessed_on', 'notes'])->all());
-            $assessment->tasks()->sync([]);
-            $this->syncTasks($assessment, $teachingGroup, $data['tasks']);
+            if (array_key_exists('tasks', $data)) {
+                $assessment->tasks()->sync([]);
+                $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
+            }
         });
 
         return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde gespeichert.');
@@ -66,22 +70,12 @@ class AssessmentController extends Controller
 
     private function formProps(TeachingGroup $teachingGroup, ?Assessment $assessment = null): array
     {
-        return ['group' => $teachingGroup, 'assessment' => $assessment, 'reportPeriods' => $teachingGroup->reportPeriods()->orderBy('starts_on')->get(), 'competencies' => $this->competencies($teachingGroup), 'assessmentTasks' => $this->assessmentTasks($teachingGroup), 'differentiated' => $this->isDifferentiated($teachingGroup)];
-    }
-
-    private function competencies(TeachingGroup $teachingGroup)
-    {
-        return $teachingGroup->teachingUnits()->with('competencies')->get()->flatMap->competencies->values();
-    }
-
-    private function assessmentTasks(TeachingGroup $teachingGroup)
-    {
-        return AssessmentTask::where('organization_id', $teachingGroup->organization_id)->with(['competency', 'levels'])->orderBy('title')->get();
+        return ['group' => $teachingGroup, 'assessment' => $assessment];
     }
 
     private function validatedAssessment(Request $request): array
     {
-        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'notes' => ['nullable', 'string'], 'tasks' => ['required', 'array', 'min:1'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E']]);
+        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E']]);
     }
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void

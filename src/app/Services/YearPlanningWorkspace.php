@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class YearPlanningWorkspace
 {
-    public const BLOCKED_STATUSES = ['absent', 'cancelled', 'blocked'];
+    public const BLOCKED_STATUSES = ['absent', 'cancelled', 'blocked', 'lse'];
 
     public function syncSlots(TeachingGroup $group): Collection
     {

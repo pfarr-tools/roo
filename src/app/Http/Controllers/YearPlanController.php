@@ -12,6 +12,7 @@ use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumTopic;
 use App\Models\CurriculumTopicCompetency;
 use App\Models\EducationPlanCompetency;
+use App\Models\Assessment;
 use App\Models\GroupYearPlan;
 use App\Models\Lesson;
 use App\Models\LessonOccurrence;
@@ -124,7 +125,7 @@ class YearPlanController extends Controller
         $coverage['required_total'] = $requiredCompetencies->count();
 
         return Inertia::render('YearPlans/Show', [
-            'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
+            'group' => $teachingGroup->load(['school:id,name,slug', 'schoolYear:id,name,slug,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
             'canUndoReflow' => $plan->revisions->contains(fn ($revision) => $revision->action === 'slot_reflow' && ! empty($revision->payload)),
             'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
@@ -134,7 +135,7 @@ class YearPlanController extends Controller
             'workspace' => [
                 'units' => $workspaceUnits,
                 'curricula' => $curricula,
-                'slots' => $teachingGroup->scheduleSlots()->with('scheduledLesson.lesson.unit')->orderBy('date')->orderBy('period_number')->get(),
+                'slots' => $teachingGroup->scheduleSlots()->with(['scheduledLesson.lesson.unit', 'assessment:id,title,assessed_on'])->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $coverage,
             ],
             'groupOptions' => TeachingGroup::where('organization_id', auth()->user()->organization_id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
@@ -792,23 +793,67 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($slot->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'is_pinned' => ['sometimes', 'boolean'], 'reflow_mode' => ['sometimes', 'in:move,remove']]);
+        $data = $request->validate(['status' => ['required', 'in:free,buffer,absent,cancelled,blocked,lse'], 'label' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'is_pinned' => ['sometimes', 'boolean'], 'reflow_mode' => ['sometimes', 'in:move,remove'], 'assessment_action' => ['sometimes', 'in:delete,move'], 'assessment_target_slot_id' => ['sometimes', 'integer']]);
         abort_unless(! ($data['is_pinned'] ?? false) || $slot->scheduledLesson()->exists(), 422, 'Nur belegte Stunden können fixiert werden.');
         $wasAvailable = in_array($slot->status, ['free', 'buffer'], true);
         $previousStatus = $slot->status;
         $willBeAvailable = in_array($data['status'], ['free', 'buffer'], true);
         $isPinned = (bool) ($data['is_pinned'] ?? $slot->is_pinned);
+        $assessmentAction = $data['assessment_action'] ?? null;
+        $assessmentTarget = null;
+        $hasOtherLseOnDay = ScheduleSlot::where('teaching_group_id', $teachingGroup->id)->whereDate('date', $slot->date)->where('status', 'lse')->whereKeyNot($slot->id)->exists();
+        if ($previousStatus === 'lse' && $data['status'] !== 'lse' && ! $hasOtherLseOnDay) {
+            abort_unless(in_array($assessmentAction, ['delete', 'move'], true), 422, 'Für diese LSE muss vor dem Freigeben eine Aktion gewählt werden.');
+            if ($assessmentAction === 'move') {
+                $assessmentTarget = ScheduleSlot::where('teaching_group_id', $teachingGroup->id)->with('scheduledLesson')->findOrFail($data['assessment_target_slot_id'] ?? 0);
+                abort_unless($assessmentTarget->id !== $slot->id && in_array($assessmentTarget->status, ['free', 'buffer'], true) && ! $assessmentTarget->scheduledLesson, 422, 'Der Zielslot ist nicht verfügbar.');
+            }
+        }
         if ($wasAvailable !== $willBeAvailable) {
             $assignments = $teachingGroup->teachingUnits()->with('lessons.scheduledLessons')->get()->flatMap->lessons->flatMap->scheduledLessons->map(fn ($assignment) => $assignment->only(['schedule_slot_id', 'lesson_id']))->all();
             $result = app(YearPlanningWorkspace::class)->blockAndReflow($teachingGroup, $slot, $data['status'], $data['reflow_mode'] ?? 'move');
             $slot->update(['label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null, 'is_pinned' => $isPinned]);
+            $this->syncSlotAssessment($slot, $previousStatus, $data['status'], $assessmentAction, $assessmentTarget, $hasOtherLseOnDay);
             $this->revise($this->planFor($teachingGroup), auth()->id(), 'slot_reflow', 'Terminstatus geändert und Jahresplan neu angeordnet.', ['assignments' => $assignments, 'blocked_slot_id' => $slot->id, 'previous_status' => $previousStatus]);
 
             return back()->with($result['overflow'] ? 'warning' : 'success', $result['overflow'] ? $result['overflow'].' Schulstunde(n) passen nicht mehr in verfügbare Termine.' : 'Terminstatus gespeichert und Jahresplan neu angeordnet.');
         }
         $slot->update(['status' => $data['status'], 'label' => $data['label'] ?? null, 'notes' => $data['notes'] ?? null, 'is_pinned' => $isPinned]);
+        $this->syncSlotAssessment($slot, $previousStatus, $data['status'], $assessmentAction, $assessmentTarget, $hasOtherLseOnDay);
 
         return back()->with('success', 'Terminstatus wurde gespeichert.');
+    }
+
+    private function syncSlotAssessment(ScheduleSlot $slot, string $previousStatus, string $status, ?string $assessmentAction, ?ScheduleSlot $assessmentTarget, bool $hasOtherLseOnDay): void
+    {
+        if ($status === 'lse' && $previousStatus !== 'lse') {
+            $assessment = Assessment::where('teaching_group_id', $slot->teaching_group_id)
+                ->whereDate('assessed_on', $slot->date)
+                ->whereHas('scheduleSlots', fn ($query) => $query->where('status', 'lse'))
+                ->first() ?? Assessment::create(['organization_id' => $slot->group->organization_id, 'teaching_group_id' => $slot->teaching_group_id, 'title' => 'Lernstandserhebung', 'assessed_on' => $slot->date, 'status' => 'draft']);
+            $slot->update(['assessment_id' => $assessment->id]);
+
+            return;
+        }
+        if ($previousStatus !== 'lse' || $status === 'lse') {
+            return;
+        }
+        $assessment = $slot->assessment;
+        $slot->update(['assessment_id' => null]);
+        if ($hasOtherLseOnDay) {
+            return;
+        }
+        if (! $assessment) {
+            return;
+        }
+        if ($assessmentAction === 'delete') {
+            $assessment->delete();
+
+            return;
+        }
+        abort_unless($assessmentTarget, 422, 'Für das Verschieben der LSE muss ein Zielslot gewählt werden.');
+        $assessmentTarget->update(['status' => 'lse', 'assessment_id' => $assessment->id]);
+        $assessment->update(['assessed_on' => $assessmentTarget->date]);
     }
 
     public function storeUnit(StorePlannedUnitRequest $request, TeachingGroup $teachingGroup): RedirectResponse

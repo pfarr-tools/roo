@@ -10,6 +10,7 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
+use App\Models\Assessment;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
@@ -168,6 +169,37 @@ it('ordnet den Jahresplan beim Sperren und Freigeben eines Slots neu', function 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$slots[0]->id}", ['status' => 'free'])->assertRedirect();
     expect(ScheduledLesson::where('schedule_slot_id', $slots[0]->id)->value('lesson_id'))->toBe($firstLesson->id)
         ->and(ScheduledLesson::where('schedule_slot_id', $slots[1]->id)->value('lesson_id'))->toBe($secondLesson->id);
+});
+
+it('erstellt eine LSE beim Sperren und verschiebt oder löscht sie beim Freigeben', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $this->actingAs($user)->get("/jahresplanung/{$group->id}");
+    $slots = ScheduleSlot::orderBy('date')->get();
+    $firstSlot = $slots[0];
+    $secondSlot = $slots[1];
+    $sameDaySlot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => $firstSlot->date, 'period_number' => 2, 'starts_at' => '08:45', 'ends_at' => '09:30', 'status' => 'free']);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$firstSlot->id}", ['status' => 'lse'])->assertRedirect();
+    $assessment = Assessment::firstOrFail();
+    expect($firstSlot->fresh()->status)->toBe('lse')
+        ->and($firstSlot->fresh()->assessment_id)->toBe($assessment->id)
+        ->and($assessment->tasks)->toBeEmpty();
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$sameDaySlot->id}", ['status' => 'lse'])->assertRedirect();
+    expect(Assessment::count())->toBe(1)
+        ->and($sameDaySlot->fresh()->assessment_id)->toBe($assessment->id);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$firstSlot->id}", ['status' => 'free'])->assertRedirect();
+    expect(Assessment::count())->toBe(1)
+        ->and($sameDaySlot->fresh()->status)->toBe('lse');
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$sameDaySlot->id}", ['status' => 'free', 'assessment_action' => 'move', 'assessment_target_slot_id' => $secondSlot->id])->assertRedirect();
+    expect($sameDaySlot->fresh()->status)->toBe('free')
+        ->and($secondSlot->fresh()->status)->toBe('lse')
+        ->and($secondSlot->fresh()->assessment_id)->toBe($assessment->id);
+
+    $this->actingAs($user)->put("/jahresplanung/{$group->id}/slots/{$secondSlot->id}", ['status' => 'free', 'assessment_action' => 'delete'])->assertRedirect();
+    expect(Assessment::count())->toBe(0)->and($secondSlot->fresh()->status)->toBe('free');
 });
 
 it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {

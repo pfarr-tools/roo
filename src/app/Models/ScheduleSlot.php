@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['teaching_group_id', 'date', 'period_number', 'starts_at', 'ends_at', 'status', 'is_pinned', 'label', 'notes'])]
+#[Fillable(['teaching_group_id', 'assessment_id', 'date', 'period_number', 'starts_at', 'ends_at', 'status', 'is_pinned', 'label', 'notes'])]
 class ScheduleSlot extends Model
 {
     protected function casts(): array
@@ -23,5 +23,10 @@ class ScheduleSlot extends Model
     public function scheduledLesson(): HasOne
     {
         return $this->hasOne(ScheduledLesson::class);
+    }
+
+    public function assessment(): BelongsTo
+    {
+        return $this->belongsTo(Assessment::class);
     }
 }
