@@ -6,6 +6,8 @@ use App\Models\Assessment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -73,8 +75,82 @@ class AssessmentController extends Controller
     private function formProps(TeachingGroup $teachingGroup, ?Assessment $assessment = null, string $returnTab = 'assessments', string $returnTo = 'group'): array
     {
         $slot = $assessment?->scheduleSlots()->where('status', 'lse')->orderBy('date')->orderBy('period_number')->first();
+        $assessmentDate = ($slot?->date ?? $assessment?->assessed_on)?->toImmutable();
+        $assessmentTasks = $this->assessmentTasksForWindow($teachingGroup, $assessmentDate, $assessment);
 
-        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+    }
+
+    private function assessmentTasksForWindow(TeachingGroup $teachingGroup, ?CarbonInterface $assessmentDate, ?Assessment $assessment): array
+    {
+        if (! $assessmentDate) {
+            return [];
+        }
+
+        $assessmentDate = $assessmentDate->toImmutable();
+
+        $previousLseDate = $teachingGroup->scheduleSlots()
+            ->where('status', 'lse')
+            ->whereDate('date', '<', $assessmentDate->toDateString())
+            ->orderByDesc('date')
+            ->value('date');
+        $fromDate = $previousLseDate
+            ? CarbonImmutable::parse($previousLseDate)->addDay()
+            : $teachingGroup->schoolYear->starts_on->toImmutable();
+
+        $slotFilter = fn ($query) => $query
+            ->where('teaching_group_id', $teachingGroup->id)
+            ->whereDate('date', '>=', $fromDate->toDateString())
+            ->whereDate('date', '<=', $assessmentDate->toDateString());
+
+        $tasks = AssessmentTask::query()
+            ->where('organization_id', $teachingGroup->organization_id)
+            ->whereHas('lessons', fn ($query) => $query
+                ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
+                ->whereHas('scheduledLessons.slot', $slotFilter))
+            ->with([
+                'levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency', 'educationPlanCompetency.area',
+                'lessons' => fn ($query) => $query
+                    ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
+                    ->with(['scheduledLessons' => fn ($scheduledQuery) => $scheduledQuery->whereHas('slot', $slotFilter)->with('slot:id,date')]),
+            ])
+            ->orderBy('title')
+            ->get();
+
+        $selectedTaskIds = $assessment?->tasks()->pluck('assessment_tasks.id')->all() ?? [];
+        $windowTaskIds = $tasks->pluck('id')->all();
+
+        if ($assessment) {
+            $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency', 'educationPlanCompetency.area'])->get())->unique('id')->sortBy('title')->values();
+        }
+
+        return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $windowTaskIds): array {
+            $educationPlanCompetency = $task->educationPlanCompetency ?? $task->competency?->educationPlanCompetency;
+            $competencyId = $task->teaching_unit_competency_id ?? $educationPlanCompetency?->id;
+
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'max_points' => $task->expectations->isNotEmpty()
+                    ? $task->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1))
+                    : $task->max_points,
+                'levels' => $task->levels->pluck('level')->values()->all() ?: collect([$task->level])->filter()->values()->all(),
+                'competency_id' => $competencyId,
+                'education_plan_competency_id' => $educationPlanCompetency?->id,
+                'competency_key' => $educationPlanCompetency
+                    ? 'education-plan-'.$educationPlanCompetency->id
+                    : ($task->teaching_unit_competency_id
+                        ? 'teaching-unit-'.$task->teaching_unit_competency_id
+                        : 'text-'.md5((string) $task->competency?->local_wording)),
+                'competency' => $educationPlanCompetency
+                    ? collect([$educationPlanCompetency->external_identifier ?: $educationPlanCompetency->number, $educationPlanCompetency->text ?: $educationPlanCompetency->variants?->pluck('text')->filter()->implode(' / ')])->filter()->implode(' – ')
+                    : $task->competency?->local_wording,
+                'edit_url' => route('resources.library.assessment-tasks.edit', $task->id),
+                'checked' => in_array($task->id, $selectedTaskIds, true),
+                'source' => in_array($task->id, $windowTaskIds, true) ? 'hours' : 'manual',
+                'date' => $task->lessons->flatMap->scheduledLessons->map(fn ($scheduledLesson) => $scheduledLesson->slot?->date?->toDateString())->filter()->sort()->first(),
+            ];
+        })->all();
     }
 
     private function redirectAfterSave(TeachingGroup $teachingGroup, array $data)
@@ -96,13 +172,14 @@ class AssessmentController extends Controller
         $competencyIds = $teachingGroup->teachingUnits()->with('competencies:id,teaching_unit_id')->get()->flatMap->competencies->pluck('id');
         $attach = [];
         foreach ($tasks as $position => $task) {
-            $levels = collect($task['levels'] ?? ($task['level'] ? [$task['level']] : []))->unique()->values();
+            $levels = collect($task['levels'] ?? (($task['level'] ?? null) ? [$task['level']] : []))->unique()->values();
             if ($this->isDifferentiated($teachingGroup)) {
                 abort_unless($levels->isNotEmpty(), 422, 'Für differenzierte Gruppen muss mindestens ein G/M/E-Niveau gewählt werden.');
             }
             if (! empty($task['task_id'])) {
                 $model = AssessmentTask::where('organization_id', $teachingGroup->organization_id)->whereKey($task['task_id'])->firstOrFail();
-                abort_unless($competencyIds->contains($model->teaching_unit_competency_id), 422);
+                $assignedToGroup = $model->lessons()->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->exists();
+                abort_unless($competencyIds->contains($model->teaching_unit_competency_id) || $assignedToGroup, 422);
                 if ($levels->isNotEmpty()) {
                     $model->levels()->delete();
                     $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());

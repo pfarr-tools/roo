@@ -10,7 +10,7 @@ import { formatCompetencyIdentifier } from '../../utils/competencies'
 const props = defineProps({
     backUrl: { type: String, required: true }, submitUrl: { type: String, required: true }, method: { type: String, default: 'post' },
     competencyId: { type: [String, Number], default: '' }, educationPlans: { type: Array, default: () => [] }, task: { type: Object, default: null },
-    libraryMode: { type: Boolean, default: false }, competencies: { type: Array, default: () => [] }, competencyField: { type: String, default: 'teaching_unit_competency_id' }, assignedCompetency: { type: Object, default: null },
+    libraryMode: { type: Boolean, default: false },
 })
 
 const taskTypes = Object.entries(de.assessmentTaskTypeLabels).filter(([value]) => value !== 'multiple_choice').map(([value, label]) => ({ value, label }))
@@ -24,20 +24,19 @@ const automaticExpectationCount = ref(0)
 const automaticExpectationsEnabled = ref(true)
 const emptyExpectation = () => ({ text: '', points: 1, repetitions: 1 })
 const emptyContent = () => ({ prompt: '', lines: 5, lineated: false, reading_text: '', options: [{ text: '', correct: false }], columns: [''], rows: [{ label: '', answer: '' }], images: [{ url: '', label: '', answer: '' }], questions: [{ label: '', lines: 3 }], words: '', automatic_expectations: true })
-const form = useForm({ title: '', task_type: 'free_text', content: emptyContent(), expectations: [emptyExpectation()], solution: '', competency_id: '', education_plan_id: '', education_plan_competency_id: '', levels: [] })
+const form = useForm({ title: '', task_type: 'free_text', content: emptyContent(), expectations: [emptyExpectation()], solution: '', education_plan_id: '', education_plan_competency_id: '', levels: [] })
 
 function resetForm() {
     const content = { ...emptyContent(), ...(props.task?.content ?? {}) }
-    form.defaults({ title: props.task?.title ?? '', task_type: props.task?.task_type ?? 'free_text', content, expectations: props.task?.expectations?.length ? props.task.expectations.map(expectation => ({ text: expectation.text ?? '', points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })) : [emptyExpectation()], solution: props.task?.solution ?? '', competency_id: props.task?.teaching_unit_competency_id ?? props.competencyId ?? '', education_plan_id: props.task?.education_plan_id ?? '', education_plan_competency_id: props.task?.education_plan_competency_id ?? '', levels: props.task?.levels?.map(level => level.level ?? level) ?? [] })
+    form.defaults({ title: props.task?.title ?? '', task_type: props.task?.task_type ?? 'free_text', content, expectations: props.task?.expectations?.length ? props.task.expectations.map(expectation => ({ text: expectation.text ?? '', points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })) : [emptyExpectation()], solution: props.task?.solution ?? '', education_plan_id: props.task?.education_plan_id ?? '', education_plan_competency_id: props.task?.education_plan_competency_id ?? '', levels: props.task?.levels?.map(level => level.level ?? level) ?? [] })
     form.reset()
     if (props.task?.education_plan_competency) setSelectedCompetency(props.task.education_plan_competency)
-    else if (props.assignedCompetency) setSelectedCompetency(props.assignedCompetency.education_plan_competency || props.assignedCompetency)
     else {
         selectedCompetencyNumber.value = ''
         selectedCompetencyWording.value = props.task?.competency ?? ''
         selectedCompetencyText.value = props.task?.competency ?? ''
     }
-    selectedCompetencyDifferentiated.value = props.task?.has_differentiation ?? false
+    selectedCompetencyDifferentiated.value = props.task?.has_differentiation || competencyIsDifferentiated(props.task?.education_plan_competency) || competencyIsDifferentiated(props.task?.competency?.education_plan_competency) || false
     automaticExpectationsEnabled.value = form.content.automatic_expectations !== false
     automaticExpectationCount.value = form.task_type === 'checkbox' && automaticExpectationsEnabled.value ? Math.min(form.expectations.length, form.content.options.length) : 0
     syncCheckboxExpectations()
@@ -109,6 +108,7 @@ function setSelectedCompetency(competency) {
     selectedCompetencyWording.value = presentation.text || competency.text || competency.local_wording || (competency.variants || []).map(variant => variant.text).filter(Boolean).join(' / ') || ''
     selectedCompetencyText.value = competencyText(competency)
 }
+function competencyIsDifferentiated(competency) { return competency?.has_differentiation || (competency?.variants || []).some(variant => variant.education_plan_level_id) }
 const competenceSummary = computed(() => `Du kannst ${selectedCompetencyWording.value || '…'}${selectedCompetencyNumber.value ? ` (${selectedCompetencyNumber.value})` : ''} [${totalPoints()} VP]`)
 function removeAt(collection, index) { if (collection.length > 1) collection.splice(index, 1) }
 function competencyText(competency) {
@@ -140,8 +140,7 @@ function save() {
     }
     payload.content = content
     payload.expectations = payload.expectations.filter(expectation => String(expectation.text || '').trim() !== '')
-    payload[props.competencyField] = payload.competency_id
-    if (props.competencyField !== 'competency_id') delete payload.competency_id
+    delete payload.competency_id
     form.transform(() => payload)[props.method](props.submitUrl, { onSuccess: () => router.visit(props.backUrl) })
 }
 </script>
@@ -172,9 +171,8 @@ function save() {
                 </section>
                 <section v-show="editorTab === 'details'" class="card card-body" role="tabpanel">
                     <label class="form-label" for="assessment-task-title">{{ de.assessmentTaskTitle }}</label><input id="assessment-task-title" v-model="form.title" class="form-control" required>
-                    <template v-if="!libraryMode || task || form.education_plan_id"><label class="form-label mt-3" for="assessment-task-plan">{{ de.educationPlan }}</label><select id="assessment-task-plan" v-model="form.education_plan_id" class="form-select" required @change="choosePlan"><option value="">{{ de.choose }}</option><option v-for="plan in educationPlans" :key="plan.id" :value="plan.id">{{ plan.title }}</option></select><label class="form-label mt-3">{{ de.competency }}</label><div class="row g-2 align-items-center"><div class="col-11"><div class="form-control-plaintext py-2">{{ selectedCompetencyText || de.choose }}</div></div><div class="col-1"><button class="btn btn-outline-primary w-100" type="button" :disabled="!form.education_plan_id" @click="competencyPickerOpen = true">{{ de.assessmentTaskSelectCompetency }}</button></div></div></template>
-                    <template v-else><label class="form-label mt-3" for="assessment-task-library-competency">{{ de.competencies }}</label><select id="assessment-task-library-competency" v-model="form.competency_id" class="form-select" required><option value="">{{ de.choose }}</option><option v-for="competency in competencies" :key="competency.id" :value="competency.id">{{ competency.label }}{{ competency.unit ? ` · ${competency.unit}` : '' }}</option></select></template>
-                    <template v-if="selectedCompetencyDifferentiated"><label class="form-label mt-3">{{ de.assessmentLevels }}</label><div class="d-flex gap-3"><label v-for="level in ['G', 'M', 'E']" :key="level" class="form-check"><input v-model="form.levels" class="form-check-input" type="checkbox" :value="level"><span class="form-check-label">{{ level }}</span></label></div></template>
+                    <label class="form-label mt-3" for="assessment-task-plan">{{ de.educationPlan }}</label><select id="assessment-task-plan" v-model="form.education_plan_id" class="form-select" required @change="choosePlan"><option value="">{{ de.choose }}</option><option v-for="plan in educationPlans" :key="plan.id" :value="plan.id">{{ plan.title }}</option></select><label class="form-label mt-3">{{ de.competency }}</label><div class="row g-2 align-items-center"><div class="col-11"><div class="form-control-plaintext py-2">{{ selectedCompetencyText || de.choose }}</div></div><div class="col-1"><button class="btn btn-outline-primary w-100" type="button" :disabled="!form.education_plan_id" @click="competencyPickerOpen = true">{{ de.assessmentTaskSelectCompetency }}</button></div></div>
+                    <template v-if="selectedCompetencyDifferentiated || form.education_plan_competency_id"><label class="form-label mt-3">{{ de.assessmentLevels }}</label><div class="d-flex gap-3"><label v-for="level in ['G', 'M', 'E']" :key="level" class="form-check"><input v-model="form.levels" class="form-check-input" type="checkbox" :value="level"><span class="form-check-label">{{ level }}</span></label></div></template>
                 </section>
                 <section v-show="editorTab === 'expectations'" class="card card-body" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 mb-1">{{ de.assessmentTaskExpectations }}</h2><p class="text-muted mb-0">{{ totalPoints() }} {{ de.assessmentTaskPoints }}</p></div><button type="button" class="btn btn-sm btn-outline-primary" @click="addExpectation"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ de.assessmentTaskAddExpectation }}</button></div>

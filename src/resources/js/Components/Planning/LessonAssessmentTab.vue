@@ -13,14 +13,13 @@ const props = defineProps({
 })
 const emit = defineEmits(['refresh'])
 const modal = ref(null)
-const form = ref({ teaching_unit_competency_id: null })
 const librarySearch = ref('')
 const libraryItems = ref([])
 const libraryLoading = ref(false)
 
 const competencyText = competency => competency.label || competency.text || ('Kompetenz ' + competency.id)
-const tasksFor = competency => props.assessmentTasks.filter(task => String(task.teaching_unit_competency_id ?? task.competency_id) === String(competency.id) || (competency.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.education_plan_competency_id)) || (competency.source_identifier && String(task.competency_identifier) === String(competency.source_identifier)))
-function newUrl(competency) { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/neu?teaching_unit_competency_id=' + encodeURIComponent(competency.id) }
+const tasksFor = competency => props.assessmentTasks.filter(task => competency.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.education_plan_competency_id))
+function newUrl() { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/neu' }
 function editUrl(task) { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/' + task.id + '/bearbeiten' }
 async function remove(task) {
     if (!await requestConfirmation({ message: de.removeAssessmentTaskConfirm })) return
@@ -34,7 +33,7 @@ async function searchLibrary() {
     } finally { libraryLoading.value = false }
 }
 function close() { modal.value = null }
-function openLibrary(competency) { form.value.teaching_unit_competency_id = competency.id; librarySearch.value = ''; modal.value = 'library'; searchLibrary() }
+function openLibrary() { librarySearch.value = ''; modal.value = 'library'; searchLibrary() }
 function assign(task) {
     router.post('/jahresplanung/' + props.groupId + '/ressourcen/assessment-task/' + task.id + '/zuordnen', { target_type: 'lesson', target_id: props.lessonId }, { preserveScroll: true, onSuccess: page => { close(); emit('refresh', page) } })
 }

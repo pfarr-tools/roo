@@ -34,8 +34,6 @@ class ResourceLibraryController extends Controller
             'submitUrl' => route('resources.library.assessment-tasks.store'),
             'method' => 'post',
             'libraryMode' => true,
-            'competencyField' => 'competency_id',
-            'competencies' => $this->competencies($request->user()->organization_id),
             'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
         ]);
     }
@@ -43,16 +41,23 @@ class ResourceLibraryController extends Controller
     public function editAssessmentTask(Request $request, int $assessmentTask)
     {
         $task = $this->item($request, 'assessment-task', $assessmentTask);
-        $task->load(['educationPlanCompetency.variants', 'levels', 'expectations']);
+        $task->load(['educationPlanCompetency.variants', 'competency.educationPlanCompetency.variants', 'competency.educationPlanCompetency.area.version', 'levels', 'expectations']);
+        if (! $task->education_plan_competency_id && $task->competency?->education_plan_competency_id) {
+            $task->setAttribute('education_plan_competency_id', $task->competency->education_plan_competency_id);
+            $task->setAttribute('education_plan_id', $task->competency->educationPlanCompetency?->area?->version?->education_plan_id);
+            $task->setRelation('educationPlanCompetency', $task->competency->educationPlanCompetency);
+        }
+        $task->setAttribute('has_differentiation', $task->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
+
+        $returnTo = (string) $request->query('return_to', '');
+        $backUrl = str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//') ? $returnTo : route('resources.library');
 
         return Inertia::render('AssessmentTask/Edit', [
-            'backUrl' => route('resources.library'),
+            'backUrl' => $backUrl,
             'submitUrl' => route('resources.library.update', ['assessment-task', $task->id]),
             'method' => 'put',
             'libraryMode' => true,
-            'competencyField' => 'competency_id',
             'task' => $task,
-            'competencies' => $this->competencies($request->user()->organization_id),
             'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
         ]);
     }
