@@ -16,7 +16,7 @@ class AssessmentController extends Controller
     {
         $this->authorize('update', $teachingGroup);
 
-        return Inertia::render('Assessments/Form', $this->formProps($teachingGroup));
+        return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, null, request('return_tab', 'assessments'), request('return_to', 'group')));
     }
 
     public function edit(TeachingGroup $teachingGroup, Assessment $assessment)
@@ -24,7 +24,9 @@ class AssessmentController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
 
-        return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, $assessment->load('tasks.levels', 'tasks.competency')));
+        $assessment->load('tasks.levels', 'tasks.competency');
+
+        return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, $assessment, request('return_tab', 'assessments'), request('return_to', 'group')));
     }
 
     public function store(Request $request, TeachingGroup $teachingGroup)
@@ -38,7 +40,7 @@ class AssessmentController extends Controller
             }
         });
 
-        return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde angelegt.');
+        return $this->redirectAfterSave($teachingGroup, $data)->with('success', 'Lernstandserhebung wurde angelegt.');
     }
 
     public function update(Request $request, TeachingGroup $teachingGroup, Assessment $assessment)
@@ -54,7 +56,7 @@ class AssessmentController extends Controller
             }
         });
 
-        return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde gespeichert.');
+        return $this->redirectAfterSave($teachingGroup, $data)->with('success', 'Lernstandserhebung wurde gespeichert.');
     }
 
     public function updateResult(Request $request, TeachingGroup $teachingGroup, AssessmentTask $assessmentTask)
@@ -68,14 +70,25 @@ class AssessmentController extends Controller
         return back()->with('success', 'Ergebnis wurde gespeichert.');
     }
 
-    private function formProps(TeachingGroup $teachingGroup, ?Assessment $assessment = null): array
+    private function formProps(TeachingGroup $teachingGroup, ?Assessment $assessment = null, string $returnTab = 'assessments', string $returnTo = 'group'): array
     {
-        return ['group' => $teachingGroup, 'assessment' => $assessment];
+        $slot = $assessment?->scheduleSlots()->where('status', 'lse')->orderBy('date')->orderBy('period_number')->first();
+
+        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+    }
+
+    private function redirectAfterSave(TeachingGroup $teachingGroup, array $data)
+    {
+        if (($data['return_to'] ?? 'group') === 'year-plan') {
+            return redirect()->route('year-plans.show', $teachingGroup);
+        }
+
+        return redirect()->route('teaching-groups.show', ['teachingGroup' => $teachingGroup, 'tab' => $data['return_tab'] ?? 'assessments']);
     }
 
     private function validatedAssessment(Request $request): array
     {
-        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E']]);
+        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'return_tab' => ['nullable', 'in:assessments'], 'return_to' => ['nullable', 'in:group,year-plan'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E']]);
     }
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void

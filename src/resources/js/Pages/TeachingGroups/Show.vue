@@ -11,7 +11,8 @@ import TabHeaders from '../../Components/Ui/Tabs/TabHeaders.vue'
 import Tabs from '../../Components/Ui/Tabs/Tabs.vue'
 
 const props = defineProps({ group: Object, students: Array, curricula: Array, schoolPeriods: Array, ritualPhaseTemplates: Array, competencies: { type: Array, default: () => [] }, denominationOptions: { type: Array, default: () => [] }, songVersions: { type: Array, default: () => [] }, songbookVersions: { type: Array, default: () => [] }, assessments: { type: Array, default: () => [] }, reportPeriods: { type: Array, default: () => [] } })
-const activeTab = ref('general')
+const requestedTab = new URLSearchParams(window.location.search).get('tab')
+const activeTab = ref(['general', 'timetable', 'students', 'contents', 'competencies', 'assessments', 'evaluations'].includes(requestedTab) ? requestedTab : 'general')
 const selectedStudent = ref(null)
 const showStudentModal = ref(false)
 const showImportModal = ref(false)
@@ -43,6 +44,10 @@ const competenciesByKind = computed(() => {
 })
 const competencyText = competency => competency.presentation?.label || [competency.presentation?.identifier, competency.presentation?.text].filter(Boolean).join(' – ') || de.noCompetencyText
 const competencyCardStyle = competency => ({ backgroundColor: competency.covered_hours ? `rgba(var(--bs-success-rgb), ${Math.min(0.78, 0.18 + competency.covered_hours * 0.16)})` : 'rgba(var(--bs-secondary-rgb), 0.04)' })
+function formatDate(value) {
+    const parts = String(value ?? '').slice(0, 10).split('-')
+    return parts.length === 3 && parts.every(Boolean) ? `${parts[2]}.${parts[1]}.${parts[0]}` : value
+}
 
 function save() {
     editForm.grade_levels = String(editForm.grade_levels).split(',').map(value => value.trim()).filter(Boolean)
@@ -136,7 +141,7 @@ async function remove(student) { if (await requestConfirmation({ message: `${stu
                 <GroupSongbookPanel :group="group" :song-versions="songVersions" :songbook-versions="songbookVersions" />
             </Tab>
             <Tab id="assessments" :active-tab="activeTab">
-                <div class="card card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4">{{ de.groupAssessments }}</h2><p class="text-muted mb-0">Lernstandserhebungen und Aufgaben dieser Gruppe.</p></div><a class="btn btn-primary" :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/neu`"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Neue Lernstandserhebung</a></div><div v-if="!assessments.length" class="text-muted">Noch keine Lernstandserhebung angelegt.</div><div v-for="assessment in assessments" :key="assessment.id" class="border-top py-3 d-flex justify-content-between align-items-start"><div><strong>{{ assessment.title }}</strong><span v-if="assessment.assessed_on" class="text-muted ms-2">{{ assessment.assessed_on }}</span><span class="d-block small text-muted">{{ assessment.tasks.length }} Aufgaben</span></div><a class="btn btn-sm btn-outline-primary" :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/bearbeiten`">Bearbeiten</a></div></div>
+                <div class="card card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4">{{ de.groupAssessments }}</h2><p class="text-muted mb-0">Lernstandserhebungen und Aufgaben dieser Gruppe.</p></div></div><div v-if="!assessments.length" class="text-muted">Noch keine Lernstandserhebung angelegt.</div><div v-for="assessment in assessments" :key="assessment.id" class="border-top py-3 d-flex justify-content-between align-items-start"><div><strong>{{ assessment.title }}</strong><span v-if="assessment.assessed_on" class="text-muted ms-2">{{ formatDate(assessment.assessed_on) }}</span><span class="d-block small text-muted">{{ assessment.tasks.length }} Aufgaben</span></div><a class="btn btn-sm btn-outline-primary" :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/bearbeiten?return_tab=assessments`">Bearbeiten</a></div></div>
             </Tab>
             <Tab id="evaluations" :active-tab="activeTab">
                 <div class="card card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4">{{ de.groupEvaluations }}</h2><p class="text-muted mb-0">Bewertungszeiträume und bearbeitbare Entwürfe.</p></div><a class="btn btn-primary" :href="`/unterrichtsgruppen/${group.id}/bewertungen/neu`"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Bewertungszeitraum anlegen</a></div><div v-if="!reportPeriods.length" class="text-muted">Noch kein Bewertungszeitraum angelegt.</div><div v-for="period in reportPeriods" :key="period.id" class="border-top py-3"><strong>{{ period.label }}</strong><div v-if="!period.evaluations?.length" class="small text-muted mt-1">Keine Schüler:innen in diesem Zeitraum.</div><div v-for="evaluation in period.evaluations" :key="evaluation.id" class="d-flex justify-content-between align-items-start mt-2"><div><span>{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }}</span><span class="badge ms-2" :class="evaluation.status === 'confirmed' ? 'text-bg-success' : 'text-bg-light'">{{ evaluation.status === 'confirmed' ? 'bestätigt' : 'Entwurf' }}</span><p class="mb-0 mt-1 small text-muted text-pre-wrap">{{ evaluation.draft_text || 'Noch kein Bewertungsentwurf.' }}</p></div><a class="btn btn-sm btn-outline-primary" :href="`/unterrichtsgruppen/${group.id}/bewertungen/${evaluation.id}/bearbeiten`">Bearbeiten</a></div></div></div>

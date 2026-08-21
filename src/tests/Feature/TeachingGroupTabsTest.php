@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Organization;
+use App\Models\Assessment;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +26,19 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/neu")
         ->assertInertia(fn ($page) => $page->component('Assessments/Form'));
+
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Schöpfung', 'assessed_on' => '2026-11-12']);
+    ScheduleSlot::create(['teaching_group_id' => $group->id, 'assessment_id' => $assessment->id, 'date' => '2026-11-12', 'period_number' => 2, 'starts_at' => '09:00', 'ends_at' => '09:45', 'status' => 'lse']);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/bearbeiten?return_tab=assessments")
+        ->assertInertia(fn ($page) => $page->component('Assessments/Form')->where('slot.date', '2026-11-12')->where('returnTab', 'assessments'));
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/bearbeiten?return_to=year-plan")
+        ->assertInertia(fn ($page) => $page->component('Assessments/Form')->where('returnTo', 'year-plan'));
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung', 'return_to' => 'year-plan'])
+        ->assertRedirect("/jahresplanung/{$group->id}");
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung aktualisiert', 'return_tab' => 'assessments'])
+        ->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=assessments");
+
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/neu")
         ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm'));
 });
