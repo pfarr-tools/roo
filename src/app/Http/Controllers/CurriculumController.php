@@ -165,10 +165,6 @@ class CurriculumController extends Controller
             'education_plan_bindings.*.denomination' => ['required', 'string', 'max:50'],
             'education_plan_bindings.*.subject' => ['nullable', 'string', 'max:255'],
             'education_plan_bindings.*.plan_code' => ['nullable', 'string', 'max:255', 'exists:education_plans,external_identifier'],
-            'topics' => ['nullable', 'array'],
-            'topics.*.id' => ['required', 'integer'],
-            'topics.*.perspectives' => ['nullable', 'array'],
-            'topics.*.perspectives.*' => ['nullable', 'string', 'max:10000'],
         ]);
         if (! $isEditable && ($data['title'] !== $curriculum->title || ($data['school_type'] ?? null) !== $curriculum->school_type || ($data['grades'] ?? []) !== ($curriculum->grades ?? []) || ($data['denominations'] ?? []) !== ($curriculum->denominations ?? []))) {
             abort(403);
@@ -183,18 +179,6 @@ class CurriculumController extends Controller
                     $version->bindings()->create(collect($binding)->only(['education_plan_id', 'plan_code', 'denomination', 'subject'])->all() + ['role' => 'denominational_basis']);
                 }
                 $this->resolveTopicCompetencies($version);
-            }
-            foreach ($data['topics'] ?? [] as $topicData) {
-                $topic = $version->topics()->find($topicData['id']);
-                if (! $topic) {
-                    continue;
-                }
-                $allowedPerspectives = collect(['common', ...($curriculum->denominations ?? [])])->unique()->values();
-                $perspectives = collect($topicData['perspectives'] ?? [])->filter(fn ($text, $denomination): bool => $allowedPerspectives->contains($denomination));
-                $topic->perspectives()->whereNotIn('denomination', $allowedPerspectives)->delete();
-                foreach ($perspectives as $denomination => $text) {
-                    $topic->perspectives()->updateOrCreate(['denomination' => $denomination], ['text' => trim((string) $text)]);
-                }
             }
         });
 

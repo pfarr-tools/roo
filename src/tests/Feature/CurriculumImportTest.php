@@ -70,8 +70,7 @@ it('creates and edits an own curriculum without changing the source', function (
 
     $own = Curriculum::where('title', 'Mein Religionscurriculum')->firstOrFail();
     $topic = $own->versions()->firstOrFail()->topics()->firstOrFail();
-    $this->put("/curricula/{$own->id}", ['title' => 'Mein bearbeitetes Curriculum', 'school_type' => 'GS', 'grades' => [1, 2], 'topics' => [['id' => $topic->id, 'perspectives' => ['common' => 'Perspektive aus dem Curriculumdialog']]]])->assertRedirect();
-    expect($topic->fresh()->perspectives()->where('denomination', 'common')->value('text'))->toBe('Perspektive aus dem Curriculumdialog');
+    $this->put("/curricula/{$own->id}", ['title' => 'Mein bearbeitetes Curriculum', 'school_type' => 'GS', 'grades' => [1, 2]])->assertRedirect();
     $this->put("/curricula/{$own->id}/themen/{$topic->id}", ['title' => 'Neue UE', 'hours' => 3, 'notes' => 'Eigene Notiz', 'preparation_questions' => "Frage eins\nFrage zwei", 'perspectives' => ['common' => 'Gemeinsame Perspektive', 'evangelical' => 'Evangelische Perspektive', 'catholic' => 'Katholische Perspektive']])->assertRedirect();
     $this->post("/curricula/{$own->id}/themen", ['title' => 'Zusätzliche eigene UE', 'year' => 2, 'hours' => 2])->assertRedirect();
 
