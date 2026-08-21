@@ -262,9 +262,7 @@ class YearPlanController extends Controller
             $removedCompetencies = $teachingUnit->competencies()->when($validIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $validIds))->get();
             foreach ($removedCompetencies as $competency) {
                 $competency->lessons()->detach();
-            }
-            if ($validIds->isEmpty()) {
-                $teachingUnit->competencies()->delete();
+                $competency->delete();
             }
         }
 
