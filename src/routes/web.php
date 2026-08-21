@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
     Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');
     Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
+    Route::get('/jahresplanung/{teachingGroup}/kompetenzen/picker', [YearPlanController::class, 'competencyPicker'])->name('year-plans.competencies.picker');
     Route::put('/jahresplanung/{teachingGroup}/präferenzen/curriculum-spalte', [YearPlanController::class, 'updateCurriculumColumnPreference'])->name('year-plans.preferences.curriculum-column');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten', [YearPlanController::class, 'storeTeachingUnit'])->name('year-plans.teaching-units.store');
     Route::post('/jahresplanung/{teachingGroup}/curriculum-themen/alle-uebernehmen', [YearPlanController::class, 'takeAllCurriculumUnits'])->name('year-plans.curriculum-topics.take-all');

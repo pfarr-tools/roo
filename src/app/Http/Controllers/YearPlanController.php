@@ -36,6 +36,7 @@ use App\Services\CompetencyResolver;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,6 +57,28 @@ class YearPlanController extends Controller
         return Inertia::render('YearPlans/Index', [
             'groups' => $groups,
         ]);
+    }
+
+    public function competencyPicker(Request $request, TeachingGroup $teachingGroup, CompetencyResolver $competencyResolver): JsonResponse
+    {
+        $this->authorize('view', $teachingGroup);
+        $competencies = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
+            ->orderBy('external_identifier')
+            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
+            ->unique('external_identifier')
+            ->values()
+            ->each(function ($competency) use ($competencyResolver): void {
+                $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
+                $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
+            });
+        $groupCompetencyHours = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies'])->get()->flatMap->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['id' => $competency->education_plan_competency_id, 'hours' => (float) $lesson->duration]))
+            ->filter(fn ($item) => $item['id'] !== null)
+            ->groupBy('id')
+            ->map(fn ($items) => $items->sum('hours'))
+            ->all();
+
+        return response()->json(['competencies' => $competencies, 'covered_hours' => $groupCompetencyHours]);
     }
 
     public function show(Request $request, TeachingGroup $teachingGroup, YearPlanningWorkspace $workspace, CompetencyResolver $competencyResolver): Response
@@ -85,24 +108,8 @@ class YearPlanController extends Controller
                 $competency->setAttribute('competency_area', $area ? ['identifier' => $area->external_identifier, 'title' => $area->title] : null);
             });
         });
-        $groupCompetencyHours = $workspaceUnits->flatMap(fn ($unit) => $unit->lessons)->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['id' => $competency->education_plan_competency_id, 'hours' => (float) $lesson->duration]))
-            ->filter(fn ($item) => $item['id'] !== null)
-            ->groupBy('id')
-            ->map(fn ($items) => $items->sum('hours'))
-            ->all();
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'versions.topics.competencies.educationPlanCompetency.area:id,kind,external_identifier,title', 'versions.topics.competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
-        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
-            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
-            ->orderBy('external_identifier')
-            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
-            ->unique('external_identifier')
-            ->values()
-            ->each(function ($competency) use ($competencyResolver): void {
-                $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-                $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
-            });
-
         return Inertia::render('YearPlans/Show', [
             'group' => $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
@@ -123,8 +130,6 @@ class YearPlanController extends Controller
                 ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name'])
                 ->orderBy('title')->get(['id', 'teaching_group_id', 'education_plan_id', 'title', 'notes']),
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
-            'competencyOptions' => $competencyOptions,
-            'groupCompetencyHours' => $groupCompetencyHours,
             'materialItems' => MaterialItem::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name', 'material_number', 'storage_location', 'description']),
             'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->with('song:id,title')->orderBy('name')->get(),
             'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),

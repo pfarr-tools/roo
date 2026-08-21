@@ -9,6 +9,7 @@ const props = defineProps({
     competencyText: { type: Function, required: true },
     lessons: { type: Array, default: () => [] },
     coveredHours: { type: Object, default: () => ({}) },
+    endpoint: { type: String, required: true },
     currentLessonId: { type: [String, Number], default: null },
 })
 const emit = defineEmits(['update:modelValue', 'apply'])
@@ -17,14 +18,29 @@ const activeTab = ref('process')
 const search = ref('')
 const debouncedSearch = ref('')
 const draftSelectedIds = ref(new Set())
+const pickerCompetencies = ref([])
+const pickerCoveredHours = ref({})
+const loading = ref(false)
 let searchTimer
 
-watch(() => props.modelValue, open => {
+watch(() => props.modelValue, async open => {
     if (!open) return
     activeTab.value = 'process'
     search.value = ''
     debouncedSearch.value = ''
     draftSelectedIds.value = new Set(props.selectedIds)
+    pickerCompetencies.value = [...props.competencies]
+    pickerCoveredHours.value = { ...props.coveredHours }
+    loading.value = true
+    try {
+        const response = await fetch(props.endpoint, { headers: { Accept: 'application/json' } })
+        if (!response.ok) throw new Error('Kompetenzen konnten nicht geladen werden.')
+        const data = await response.json()
+        pickerCompetencies.value = data.competencies ?? []
+        pickerCoveredHours.value = data.covered_hours ?? {}
+    } finally {
+        loading.value = false
+    }
 })
 
 watch(search, value => {
@@ -52,10 +68,10 @@ const grouped = competencies => {
     })
     return [...groups.values()]
 }
-const processGroups = computed(() => grouped(props.competencies.filter(competency => competencyKind(competency) === 'process')))
-const contentGroups = computed(() => grouped(props.competencies.filter(competency => competencyKind(competency) !== 'process')))
+const processGroups = computed(() => grouped(pickerCompetencies.value.filter(competency => competencyKind(competency) === 'process')))
+const contentGroups = computed(() => grouped(pickerCompetencies.value.filter(competency => competencyKind(competency) !== 'process')))
 const activeGroups = computed(() => activeTab.value === 'process' ? processGroups.value : contentGroups.value)
-const selectedCompetencies = computed(() => props.competencies
+const selectedCompetencies = computed(() => pickerCompetencies.value
     .filter(competency => draftSelectedIds.value.has(competency.id))
     .sort((left, right) => String(left.external_identifier || left.number || left.id).localeCompare(String(right.external_identifier || right.number || right.id), 'de', { numeric: true })))
 
@@ -64,8 +80,8 @@ const competencyHours = competency => props.lessons.reduce((total, lesson) => {
     const represented = (lesson.competencies ?? []).some(item => [item.curriculum_topic_competency_id, item.education_plan_competency_id, item.curriculum_competency?.id, item.education_plan_competency?.id].filter(value => value !== null && value !== undefined).some(value => optionIds.has(String(value))))
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
-const coveredHoursFor = competency => Object.prototype.hasOwnProperty.call(props.coveredHours, String(competency.id))
-    ? Number(props.coveredHours[String(competency.id)] ?? 0)
+const coveredHoursFor = competency => Object.prototype.hasOwnProperty.call(pickerCoveredHours.value, String(competency.id))
+    ? Number(pickerCoveredHours.value[String(competency.id)] ?? 0)
     : competencyHours(competency)
 const competencyCardStyle = competency => {
     const hours = coveredHoursFor(competency)
@@ -109,7 +125,8 @@ function apply() {
                             </label>
                         </template>
                         </div>
-                        <p v-if="!activeGroups.length" class="small text-muted">{{ de.noCompetencyOptions }}</p>
+                        <p v-if="loading" class="small text-muted">Kompetenzen werden geladen …</p>
+                        <p v-else-if="!activeGroups.length" class="small text-muted">{{ de.noCompetencyOptions }}</p>
                     </div>
                     <div v-if="selectedCompetencies.length" class="border-top pt-2 mt-2">
                         <span v-for="competency in selectedCompetencies" :key="`selected-${competency.id}`" class="badge text-bg-primary me-1 mb-1">

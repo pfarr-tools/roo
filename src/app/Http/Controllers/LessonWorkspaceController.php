@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\LessonTemplate;
-use App\Models\EducationPlanCompetency;
-use App\Models\CurriculumEducationPlanBinding;
 use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
@@ -54,23 +52,6 @@ class LessonWorkspaceController extends Controller
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
-        $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $group->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id'))->whereNotNull('education_plan_id')->pluck('education_plan_id')->merge($group->teachingUnits()->whereNotNull('education_plan_id')->pluck('education_plan_id'))->unique()->values();
-        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $educationPlanIds)))
-            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
-            ->orderBy('external_identifier')
-            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
-            ->unique('external_identifier')
-            ->values()
-            ->each(function ($competency) use ($competencyResolver): void {
-            $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-            $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
-        });
-        $groupLessons = $group->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies'])->get()->flatMap->lessons->values();
-        $groupCompetencyHours = $groupLessons->flatMap(fn ($groupLesson) => $groupLesson->competencies->map(fn ($competency) => ['id' => $competency->education_plan_competency_id, 'hours' => (float) $groupLesson->duration]))
-            ->filter(fn ($item) => $item['id'] !== null)
-            ->groupBy('id')
-            ->map(fn ($items) => $items->sum('hours'))
-            ->all();
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
         $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
             if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
@@ -113,9 +94,6 @@ class LessonWorkspaceController extends Controller
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
-            'competencyOptions' => $competencyOptions,
-            'groupLessons' => $groupLessons,
-            'groupCompetencyHours' => $groupCompetencyHours,
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
             'observationStudents' => $groupStudents,
             'observationTypes' => $observationTypes,

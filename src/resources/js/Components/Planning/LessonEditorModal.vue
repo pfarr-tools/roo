@@ -178,5 +178,5 @@ function updatePreparationStatus() {
         </section>
 
     </div>
-    <CompetencyPickerModal v-model="competencyPickerOpen" :competencies="competencyOptions" :selected-ids="lessonSelectedEducationPlanIds" :competency-text="competencyText" :lessons="groupLessons.length ? groupLessons : (unit?.lessons ?? [])" :covered-hours="coveredHours" :current-lesson-id="lesson?.id" @apply="applyCompetencies" />
+    <CompetencyPickerModal v-model="competencyPickerOpen" :competencies="competencyOptions" :selected-ids="lessonSelectedEducationPlanIds" :competency-text="competencyText" :lessons="groupLessons.length ? groupLessons : (unit?.lessons ?? [])" :covered-hours="coveredHours" :endpoint="`/jahresplanung/${groupId}/kompetenzen/picker`" :current-lesson-id="lesson?.id" @apply="applyCompetencies" />
 </template>
