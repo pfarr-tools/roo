@@ -7,7 +7,7 @@ import { router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps({ lesson: Object, unit: Object, groupLessons: { type: Array, default: () => [] }, coveredHours: { type: Object, default: () => ({}) }, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, scheduledLesson: { type: Object, default: null }, executionUrl: { type: String, default: '' }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'saved'])
 const activeTab = ref('metadata')
 const unitCompetencies = ref([])
 const competencyPickerOpen = ref(false)
@@ -53,7 +53,16 @@ function syncLesson(lesson) {
 watch(() => props.lesson, syncLesson, { immediate: true })
 watch(() => props.unit, unit => { unitCompetencies.value = [...(unit?.competencies ?? [])] })
 
-const competencyKind = competency => competency.competency_presentation?.kind || competency.education_plan_competency?.area?.kind || competency.curriculum_competency?.competency_kind || 'content'
+const competencyKind = competency => {
+    const kind = competency.competency_presentation?.kind
+        || competency.competency_kind
+        || competency.competency_area?.kind
+        || competency.area?.kind
+        || competency.education_plan_competency?.area?.kind
+        || competency.curriculum_competency?.competency_kind
+        || 'content'
+    return String(kind).toLowerCase().includes('process') ? 'process' : 'content'
+}
 const processCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) === 'process'))
 const contentCompetencies = computed(() => unitCompetencies.value.filter(competency => competencyKind(competency) !== 'process'))
 const competencyAreaGroups = competencies => { const groups = new Map(); for (const competency of competencies) { const key = competency.competency_area?.identifier || competency.education_plan_competency?.area?.external_identifier || 'other'; if (!groups.has(key)) groups.set(key, { key, area: competency.competency_area ?? (competency.education_plan_competency?.area ? { identifier: competency.education_plan_competency.area.external_identifier, title: competency.education_plan_competency.area.title } : null), competencies: [] }); groups.get(key).competencies.push(competency) } return [...groups.values()] }
@@ -102,7 +111,15 @@ function save() {
     form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids.filter(id => typeof id === 'number' || /^\d+$/.test(String(id))), education_plan_competency_ids: selectedEducationPlanIds.value, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => emit('close'),
+        onSuccess: page => {
+            const localCompetencies = unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id))
+            emit('saved', {
+                lesson: page?.props?.lesson ?? null,
+                workspace: page?.props?.workspace ?? null,
+                competencies: localCompetencies,
+            })
+            emit('close')
+        },
     })
 }
 function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
