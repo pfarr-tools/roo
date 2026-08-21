@@ -219,7 +219,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.local_key' => ['nullable', 'string'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'education_plan_competency_ids' => ['sometimes', 'array'], 'education_plan_competency_ids.*' => ['integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.local_key' => ['nullable', 'string'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000']]);
         $data['material_items'] = $request->validate(['material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.local_key' => ['nullable', 'string'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.material_number' => ['nullable', 'string', 'max:255'], 'material_items.*.storage_location' => ['nullable', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string']])['material_items'] ?? [];
         $data['deleted_resource_link_ids'] = $request->validate(['deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer']])['deleted_resource_link_ids'] ?? [];
         $data['deleted_material_item_ids'] = $request->validate(['deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']])['deleted_material_item_ids'] ?? [];
@@ -243,6 +243,17 @@ class YearPlanController extends Controller
             $materialItemIds[] = $material->id;
         }
         if (array_key_exists('material_items', $data)) $teachingUnit->materialItems()->sync($materialItemIds);
+        if (array_key_exists('education_plan_competency_ids', $data)) {
+            $educationIds = collect($data['education_plan_competency_ids'])->unique()->values();
+            $validEducationIds = EducationPlanCompetency::whereIn('id', $educationIds)
+                ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+                ->pluck('id');
+            abort_unless($validEducationIds->count() === $educationIds->count(), 422, 'Eine Kompetenz gehört nicht zum Bildungsplan dieser Unterrichtsgruppe.');
+            foreach ($validEducationIds as $educationId) {
+                $data['competency_ids'][] = $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $educationId], ['is_secondary' => false])->id;
+            }
+            $data['competency_ids'] = collect($data['competency_ids'])->unique()->values()->all();
+        }
         if (array_key_exists('competency_ids', $data)) {
             $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'])->pluck('id');
             abort_unless($validIds->count() === count($data['competency_ids']), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');

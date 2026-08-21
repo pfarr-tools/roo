@@ -46,6 +46,18 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
   verschwinden; seitenbezogene Sondermeldungen dürfen ergänzend eigene Toasts
   verwenden.
 
+### Fachliche Definition: erforderliche Kompetenzen
+
+Die „erforderlichen Kompetenzen“ einer Unterrichtsgruppe sind die Kompetenzen,
+die sich aus dem Bildungsplan und dem der Gruppe zugeordneten Curriculum für
+ihre Jahrgangsstufe ergeben. Dazu gehören auch Kompetenzen ohne
+Curriculum-Zuordnung, wenn der Bildungsplan sie für diese Jahrgangsstufe
+fordert. Bei Bildungsplänen, die mehrere Jahrgänge gemeinsam beschreiben,
+verteilt das Curriculum die Anforderungen auf die einzelnen Jahrgänge. Der
+Kompetenzpicker darf jahrgangsübergreifend alle Kompetenzen des Bildungsplans
+anbieten; die farbliche Abdeckung bezieht sich jedoch nur auf die
+erforderlichen Kompetenzen der aktuellen Gruppe.
+
 ---
 
 ## Phase 0 – Technische Basis
