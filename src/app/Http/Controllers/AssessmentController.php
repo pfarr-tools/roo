@@ -12,17 +12,6 @@ use Inertia\Inertia;
 
 class AssessmentController extends Controller
 {
-    public function index(TeachingGroup $teachingGroup)
-    {
-        $this->authorize('view', $teachingGroup);
-        return Inertia::render('Assessments/Index', [
-            'group' => $teachingGroup,
-            'assessments' => $teachingGroup->assessments()->with('tasks.competency')->latest('assessed_on')->latest()->get(),
-            'students' => $teachingGroup->students()->orderBy('last_name')->orderBy('first_name')->get(['students.id', 'first_name', 'last_name']),
-            'competencies' => $teachingGroup->teachingUnits()->with('competencies')->get()->flatMap->competencies->values(),
-        ]);
-    }
-
     public function create(TeachingGroup $teachingGroup)
     {
         $this->authorize('update', $teachingGroup);
@@ -46,7 +35,7 @@ class AssessmentController extends Controller
             $assessment = $teachingGroup->assessments()->create(['organization_id' => $teachingGroup->organization_id, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
             foreach ($data['tasks'] as $position => $task) $assessment->tasks()->create(['teaching_unit_competency_id' => $task['competency_id'] ?? null, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $task['level'] ?? null, 'position' => $position + 1]);
         });
-        return to_route('assessments.index', $teachingGroup)->with('success', 'Lernstandserhebung wurde angelegt.');
+        return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde angelegt.');
     }
 
     public function update(Request $request, TeachingGroup $teachingGroup, Assessment $assessment)
@@ -65,7 +54,7 @@ class AssessmentController extends Controller
             }
             $assessment->tasks()->whereNotIn('id', $kept)->whereDoesntHave('results')->delete();
         });
-        return to_route('assessments.index', $teachingGroup)->with('success', 'Lernstandserhebung wurde gespeichert.');
+        return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Lernstandserhebung wurde gespeichert.');
     }
 
     private function competencies(TeachingGroup $teachingGroup)

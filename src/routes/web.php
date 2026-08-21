@@ -143,7 +143,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/schuelerinnen', fn () => to_route('students.index'))->name('students.index.legacy');
     Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}', [TeachingGroupController::class, 'show'])->name('teaching-groups.show');
-    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'index'])->name('assessments.index');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/neu', [AssessmentController::class, 'create'])->name('assessments.create');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/bearbeiten', [AssessmentController::class, 'edit'])->name('assessments.edit');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'store'])->name('assessments.store');
