@@ -25,6 +25,8 @@ Meilenstein soll einen real benutzbaren Arbeitsablauf ermöglichen.
 - Rücksprungaktionen in der Topbar verwenden für das Schließen bzw. Zurückgehen
   ein helles Bootstrap-Icon-Button-Muster (`btn btn-sm btn-light`) mit
   `bi-x-lg`, deutschem `title` und `aria-label`.
+- Der Schließen- bzw. Zurück-Button steht in der Topbar immer als erstes
+  interaktives Element vor allen weiteren Seitenaktionen.
 - Karten in Planungs- und Zuordnungsansichten, insbesondere Curriculum-
   Drag-and-drop-Spalten und Unterrichtseinheiten, erhalten eine dezente
   Hintergrundfläche und ausreichenden Kontrast zum Seitenhintergrund.
