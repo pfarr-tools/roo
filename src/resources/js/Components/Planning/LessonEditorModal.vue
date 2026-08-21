@@ -46,12 +46,18 @@ function syncLesson(lesson) {
     phaseDraft.value = (lesson.phases ?? []).map(phase => ({ ...phase }))
     resourceLinksDraft.value = [...(lesson.resource_links ?? props.resourceLinks ?? props.unit?.resource_links ?? [])].map(link => ({ ...link }))
     materialItemsDraft.value = [...(lesson.material_items ?? props.materialItems ?? [])].map(item => ({ ...item }))
-    unitCompetencies.value = [...(props.unit?.competencies ?? [])]
+    const unitOptions = [...(props.unit?.competencies ?? [])]
+    const lessonOptions = (lesson.competencies ?? []).filter(lessonCompetency => !unitOptions.some(unitCompetency => unitCompetency.id === lessonCompetency.id))
+    unitCompetencies.value = [...unitOptions, ...lessonOptions]
     preparationStatus.value = props.scheduledLesson?.status ?? ''
 }
 
 watch(() => props.lesson, syncLesson, { immediate: true })
-watch(() => props.unit, unit => { unitCompetencies.value = [...(unit?.competencies ?? [])] })
+watch(() => props.unit, unit => {
+    const unitOptions = [...(unit?.competencies ?? [])]
+    const lessonOptions = (props.lesson?.competencies ?? []).filter(lessonCompetency => !unitOptions.some(unitCompetency => unitCompetency.id === lessonCompetency.id))
+    unitCompetencies.value = [...unitOptions, ...lessonOptions]
+})
 
 const competencyKind = competency => {
     const kind = competency.competency_presentation?.kind
@@ -69,6 +75,7 @@ const competencyAreaGroups = competencies => { const groups = new Map(); for (co
 const processCompetencyGroups = computed(() => competencyAreaGroups(processCompetencies.value))
 const contentCompetencyGroups = computed(() => competencyAreaGroups(contentCompetencies.value))
 const lessonSelectedEducationPlanIds = computed(() => selectedEducationPlanIds.value)
+const educationPlanIdFor = competency => competency.education_plan_competency_id || competency.education_plan_competency?.id || null
 const competencyHours = competency => (props.unit?.lessons ?? []).reduce((total, lesson) => {
     const represented = lesson.id === props.lesson?.id
         ? competencyForm.competency_ids.includes(competency.id)
@@ -85,9 +92,9 @@ const competencyCardStyle = competency => {
 function applyCompetencies(educationPlanCompetencyIds, selectedCompetencies = []) {
     const selectedIds = [...new Set(educationPlanCompetencyIds)]
     selectedEducationPlanIds.value = selectedIds
-    const existing = unitCompetencies.value.filter(competency => !competency.pending && selectedIds.includes(competency.education_plan_competency_id))
+    const existing = unitCompetencies.value.filter(competency => !competency.pending && selectedIds.includes(educationPlanIdFor(competency)))
     const pending = selectedCompetencies
-        .filter(competency => !existing.some(item => item.education_plan_competency_id === competency.id))
+        .filter(competency => !existing.some(item => educationPlanIdFor(item) === competency.id))
         .map(competency => ({ ...competency, id: `pending-${competency.id}`, education_plan_competency_id: competency.id, pending: true }))
     unitCompetencies.value = [...unitCompetencies.value.filter(competency => !competency.pending), ...pending]
     competencyForm.competency_ids = [...existing.map(competency => competency.id), ...pending.map(competency => competency.id)]
@@ -96,7 +103,7 @@ function applyCompetencies(educationPlanCompetencyIds, selectedCompetencies = []
 function removeUnitCompetency(competency) {
     if (competency.pending) {
         competencyForm.competency_ids = competencyForm.competency_ids.filter(id => id !== competency.id)
-        selectedEducationPlanIds.value = selectedEducationPlanIds.value.filter(id => id !== competency.education_plan_competency_id)
+        selectedEducationPlanIds.value = selectedEducationPlanIds.value.filter(id => id !== educationPlanIdFor(competency))
         unitCompetencies.value = unitCompetencies.value.filter(item => item.id !== competency.id)
         return
     }
@@ -108,11 +115,13 @@ function save() {
         ...phase,
         social_form: typeof phase.social_form === 'object' ? phase.social_form?.name ?? '' : (phase.social_form ?? phase.socialForm?.name ?? ''),
     }))
-    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids.filter(id => typeof id === 'number' || /^\d+$/.test(String(id))), education_plan_competency_ids: selectedEducationPlanIds.value, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
+    const selectedCompetencies = unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id))
+    const selectedEducationPlanIdsForSave = selectedCompetencies.map(educationPlanIdFor).filter(Boolean)
+    form.transform(data => ({ ...data, competency_ids: competencyForm.competency_ids.filter(id => typeof id === 'number' || /^\d+$/.test(String(id))), education_plan_competency_ids: selectedEducationPlanIdsForSave, phases, resource_links: resourceLinksDraft.value, material_items: materialItemsDraft.value, deleted_resource_link_ids: deletedResourceLinkIds.value, deleted_material_item_ids: deletedMaterialItemIds.value })).put(`/jahresplanung/${props.groupId}/lessons/${props.lesson.id}`, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: page => {
-            const localCompetencies = unitCompetencies.value.filter(competency => competencyForm.competency_ids.includes(competency.id))
+            const localCompetencies = selectedCompetencies
             emit('saved', {
                 lesson: page?.props?.lesson ?? null,
                 workspace: page?.props?.workspace ?? null,
