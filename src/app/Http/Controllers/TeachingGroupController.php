@@ -110,7 +110,14 @@ class TeachingGroupController extends Controller
                 'denomination' => null, 'presentation' => $presentation, 'missing_from_curriculum' => true,
                 'covered_hours' => $coveredEducationHours->get($competency->id, 0),
             ];
-        })->values();
+        })->groupBy(fn (array $competency) => $competency['presentation']['identifier'] ?: $competency['id'])
+            ->map(function ($items): array {
+                $competency = $items->first();
+                $competency['covered_hours'] = $items->sum('covered_hours');
+                $competency['missing_from_curriculum'] = $items->every(fn (array $item) => $item['missing_from_curriculum']);
+
+                return $competency;
+            })->values();
         $competencies = $competencies->concat($missingCompetencies)->map(function (array $competency) use ($educationPlanAreas): array {
             $area = $competency['education_plan_competency_id']
                 ? $educationPlanAreas->get($competency['presentation']['identifier'])
