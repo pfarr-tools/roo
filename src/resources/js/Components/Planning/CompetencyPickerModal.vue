@@ -32,11 +32,15 @@ watch(search, value => {
 })
 
 const competencyKind = competency => competency.competency_kind || competency.competency_presentation?.kind || competency.area?.kind || competency.competency_area?.kind || 'content'
-const areaFor = competency => competency.competency_area || (competency.area ? { identifier: competency.area.external_identifier, title: competency.area.title } : null)
+const areaFor = competency => competency.competency_area || competency.area || competency.education_plan_competency?.area || null
 const matchesSearch = competency => !debouncedSearch.value || props.competencyText(competency).toLowerCase().includes(debouncedSearch.value)
 const grouped = competencies => {
     const groups = new Map()
+    const seen = new Set()
     competencies.filter(matchesSearch).forEach(competency => {
+        const competencyKey = competency.external_identifier || competency.number || competency.id
+        if (seen.has(competencyKey)) return
+        seen.add(competencyKey)
         const area = areaFor(competency)
         const key = area?.identifier || 'other'
         if (!groups.has(key)) groups.set(key, { key, area, competencies: [] })

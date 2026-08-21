@@ -87,9 +87,15 @@ class YearPlanController extends Controller
         });
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($teachingGroup), 'versions.topics.competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'versions.topics.competencies.educationPlanCompetency.area:id,kind,external_identifier,title', 'versions.topics.competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
-        $competencyOptions = $curricula->flatMap(fn ($curriculum) => $curriculum->versions)->flatMap(fn ($version) => $version->topics)->flatMap(fn ($topic) => $topic->competencies)->unique('id')->sortBy('external_identifier')->values()->each(function ($competency) use ($competencyResolver): void {
+        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
+            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
+            ->orderBy('external_identifier')
+            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
+            ->unique('external_identifier')
+            ->values()
+            ->each(function ($competency) use ($competencyResolver): void {
                 $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-                $competency->setAttribute('competency_area', ['identifier' => $competency->educationPlanCompetency?->area?->external_identifier, 'title' => $competency->educationPlanCompetency?->area?->title]);
+                $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
             });
 
         return Inertia::render('YearPlans/Show', [

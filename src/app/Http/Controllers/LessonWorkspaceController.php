@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\LessonTemplate;
+use App\Models\EducationPlanCompetency;
+use App\Models\CurriculumEducationPlanBinding;
 use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
@@ -52,11 +54,16 @@ class LessonWorkspaceController extends Controller
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
-        $gradeLevels = $group->gradeLevels()->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter()->values();
-        $curricula = $group->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.competencies' => fn ($query) => $query->forGroup($group), 'versions.topics.competencies.educationPlanCompetency.area'])->get();
-        $competencyOptions = $curricula->flatMap(fn ($curriculum) => $curriculum->versions)->flatMap(fn ($version) => $version->topics)->flatMap(fn ($topic) => $topic->competencies)->unique('id')->values()->each(function ($competency) use ($competencyResolver): void {
+        $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $group->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id'))->whereNotNull('education_plan_id')->pluck('education_plan_id')->merge($group->teachingUnits()->whereNotNull('education_plan_id')->pluck('education_plan_id'))->unique()->values();
+        $competencyOptions = EducationPlanCompetency::whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $educationPlanIds)))
+            ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,text,position'])
+            ->orderBy('external_identifier')
+            ->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
+            ->unique('external_identifier')
+            ->values()
+            ->each(function ($competency) use ($competencyResolver): void {
             $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-            $competency->setAttribute('competency_area', ['identifier' => $competency->educationPlanCompetency?->area?->external_identifier, 'title' => $competency->educationPlanCompetency?->area?->title]);
+            $competency->setAttribute('competency_area', ['identifier' => $competency->area?->external_identifier, 'title' => $competency->area?->title, 'kind' => $competency->area?->kind]);
         });
         $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
         $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
