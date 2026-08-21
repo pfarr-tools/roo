@@ -12,6 +12,13 @@ Der Name **Roo** leitet sich von **RU** – der gängigen Abkürzung für
 Religionsunterricht – ab. Das Känguru im Logo steht sinngemäß für Roo und
 begleitet die Anwendung als freundliches Markenzeichen.
 
+Roo unterstützt Religionsunterricht, der **differenziert** und
+**kompetenzorientiert** geplant wird und **konfessionell-kooperativ** angelegt
+sein kann. Die Orientierung am jeweils geltenden Bildungsplan ist ein
+zentraler Bestandteil der Anwendung. Dazu lassen sich Curricula verwenden,
+anpassen und auf die konkrete Schule beziehungsweise Unterrichtsgruppe
+zuschneiden.
+
 ## Ziel
 
 Roo soll die tägliche Arbeit rund um den Religionsunterricht an einem Ort
