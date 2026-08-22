@@ -151,7 +151,7 @@ class AssessmentController extends Controller
         abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
         $data = $request->validate([
             'scan' => ['required', 'array'],
-            'scan.booklets' => ['required', 'array'],
+            'scan.booklets' => ['present', 'array'],
             'scan.warnings' => ['present', 'array'],
             'fragment_ids' => ['present', 'array'],
         ]);

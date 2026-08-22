@@ -87,3 +87,23 @@ it('hands a completed browser session to the assessment result page', function (
         ->assertOk()
         ->assertHeader('Content-Type', 'image/png');
 });
+
+it('accepts a completed browser session without detected booklets', function () {
+    Storage::fake('temporary');
+    $fixture = browserScanResultFixture();
+
+    $session = $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session")
+        ->assertCreated()
+        ->json('session_id');
+
+    $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/complete", [
+            'scan' => [
+                'booklets' => [],
+                'warnings' => ['Es wurden keine Booklets erkannt.'],
+            ],
+            'fragment_ids' => [],
+        ])
+        ->assertOk();
+});
