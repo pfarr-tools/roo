@@ -5,7 +5,7 @@ const pageOrigin = globalThis.location?.origin
 const workerOrigin = pageOrigin ? new URL(pdfWorkerUrl, globalThis.location.href).origin : pageOrigin
 const useWorker = !pageOrigin || workerOrigin === pageOrigin
 
-if (useWorker) pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 export async function openPdf(file) {
     return pdfjsLib.getDocument({ data: await file.arrayBuffer(), disableWorker: !useWorker }).promise
