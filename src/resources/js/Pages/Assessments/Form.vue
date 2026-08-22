@@ -136,11 +136,13 @@ async function submitScan() {
         pdf: scanForm.pdf,
         sessionUrl,
         fragmentUrl: (sessionId) => `${sessionUrl}/${sessionId}/fragments`,
+        completeUrl: (sessionId) => `${sessionUrl}/${sessionId}/complete`,
         onProgress: (progress) => { scanProgress.value = progress },
         onFragmentError: (_fragment, error) => { scanError.value = error.message },
     })
     try {
         scanResult.value = await scanClient.value.start()
+        if (scanResult.value.redirect_url) window.location.assign(scanResult.value.redirect_url)
     } catch (error) {
         scanError.value = error.message
     } finally {

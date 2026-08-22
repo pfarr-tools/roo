@@ -47,13 +47,35 @@ final class AssessmentScanSessionStore
         ];
         $this->filesystem()->put($this->manifestPath($sessionId), json_encode($manifest, JSON_THROW_ON_ERROR));
 
-        return compact('fragmentId', 'checksum') + ['fragment_id' => $fragmentId];
+        return ['fragment_id' => $fragmentId, 'checksum' => $checksum];
     }
 
     public function delete(string $sessionId): void
     {
         $this->filesystem()->deleteDirectory("assessment-scans/{$sessionId}");
         $this->filesystem()->delete($this->manifestPath($sessionId));
+    }
+
+    public function complete(string $sessionId, array $scan, array $fragmentIds): void
+    {
+        $manifest = $this->manifest($sessionId);
+        abort_unless($manifest !== null, 404);
+        $manifest['scan'] = $scan;
+        $manifest['fragment_ids'] = $fragmentIds;
+        $manifest['status'] = 'completed';
+        $this->filesystem()->put($this->manifestPath($sessionId), json_encode($manifest, JSON_THROW_ON_ERROR));
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function fragments(string $sessionId): array
+    {
+        return $this->manifest($sessionId)['fragments'] ?? [];
+    }
+
+    /** @return array<string,mixed>|null */
+    public function fragment(string $sessionId, string $fragmentId): ?array
+    {
+        return collect($this->fragments($sessionId))->firstWhere('fragment_id', $fragmentId);
     }
 
     /** @return array<string,mixed>|null */

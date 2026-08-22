@@ -41,7 +41,7 @@ function pageFragments(markers, page, canvas) {
     return fragments
 }
 
-export function createScanClient({ pdf, sessionUrl, fragmentUrl, onProgress = () => {}, onFragmentError = () => {} }) {
+export function createScanClient({ pdf, sessionUrl, fragmentUrl, completeUrl, onProgress = () => {}, onFragmentError = () => {} }) {
     let sessionId = null
     let worker = null
     let cancelled = false
@@ -100,6 +100,7 @@ export function createScanClient({ pdf, sessionUrl, fragmentUrl, onProgress = ()
             const result = await resultPromise
             allMarkers.push(...result.markers)
             report({ detectedMarkers: allMarkers.length })
+            const booklet = Math.max(1, allMarkers.filter((marker) => marker.kind === 'PAGE').length)
 
             for (const fragment of pageFragments(result.markers, page, rendered.canvas)) {
                 const crop = globalThis.document.createElement('canvas')
@@ -110,7 +111,7 @@ export function createScanClient({ pdf, sessionUrl, fragmentUrl, onProgress = ()
                     id: `${page}-${fragment.start.task_id}-${pending.length}`,
                     blob: await blobFromCanvas(crop),
                     page,
-                    booklet: 1,
+                    booklet,
                     taskId: fragment.start.task_id,
                     start: fragment.start,
                     end: fragment.end,
@@ -130,8 +131,17 @@ export function createScanClient({ pdf, sessionUrl, fragmentUrl, onProgress = ()
         }
 
         worker.terminate()
-        report({ phase: 'complete', status: 'completed', detectedBooklets: groupRooMarkers(allMarkers).booklets.length })
-        return { ...groupRooMarkers(allMarkers), fragments: pending }
+        const scan = groupRooMarkers(allMarkers)
+        report({ phase: 'complete', status: 'completed', detectedBooklets: scan.booklets.length })
+        const completed = await jsonRequest(completeUrl(sessionId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                scan,
+                fragment_ids: pending.filter((item) => item.status === 'uploaded').map((item) => item.fragment_id),
+            }),
+        })
+        return { ...scan, fragments: pending, ...completed }
     }
 
     async function cancel() {

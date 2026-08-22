@@ -160,6 +160,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswerten', [AssessmentController::class, 'assess'])->name('assessments.assess');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session', [AssessmentController::class, 'createScanSession'])->name('assessments.scan-sessions.store');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/fragments', [AssessmentController::class, 'storeScanFragment'])->name('assessments.scan-sessions.fragments.store');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/complete', [AssessmentController::class, 'completeScanSession'])->name('assessments.scan-sessions.complete');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/ergebnis', [AssessmentController::class, 'scanSessionResult'])->name('assessments.scan-sessions.result');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/fragments/{fragment}', [AssessmentController::class, 'showScanFragment'])->name('assessments.scan-sessions.fragments.show');
     Route::delete('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}', [AssessmentController::class, 'deleteScanSession'])->name('assessments.scan-sessions.destroy');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen', [AssessmentController::class, 'store'])->name('assessments.store');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');

@@ -19,6 +19,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -140,6 +141,64 @@ class AssessmentController extends Controller
         $sessions->delete($session);
 
         return response()->noContent();
+    }
+
+    public function completeScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
+        $data = $request->validate([
+            'scan' => ['required', 'array'],
+            'scan.booklets' => ['required', 'array'],
+            'scan.warnings' => ['present', 'array'],
+            'fragment_ids' => ['present', 'array'],
+        ]);
+        $sessions->complete($session, $data['scan'], $data['fragment_ids']);
+
+        return response()->json([
+            'redirect_url' => route('assessments.scan-sessions.result', [$teachingGroup, $assessment, $session]),
+        ]);
+    }
+
+    public function scanSessionResult(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey() && ($manifest['status'] ?? null) === 'completed', 404);
+
+        $fragments = collect($sessions->fragments($session))->map(fn (array $fragment): array => [
+            'fragment_id' => $fragment['fragment_id'],
+            'booklet' => $fragment['metadata']['booklet'],
+            'task_id' => $fragment['metadata']['task_id'],
+            'page' => $fragment['metadata']['page'],
+            'url' => route('assessments.scan-sessions.fragments.show', [$teachingGroup, $assessment, $session, $fragment['fragment_id']]),
+        ])->values()->all();
+
+        return Inertia::render('Assessment/Assess', [
+            'group' => $teachingGroup,
+            'assessment' => $assessment,
+            'scan' => $manifest['scan'],
+            'fragment_ids' => $manifest['fragment_ids'],
+            'fragments' => $fragments,
+        ]);
+    }
+
+    public function showScanFragment(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, string $fragment, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
+        $stored = $sessions->fragment($session, $fragment);
+        abort_unless($stored !== null && Storage::disk('temporary')->exists($stored['path']), 404);
+
+        return response()->file(Storage::disk('temporary')->path($stored['path']), [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     public function store(Request $request, TeachingGroup $teachingGroup)

@@ -378,6 +378,7 @@ export default {
     assessmentScanMarkers: 'Marker',
     assessmentScanUploadedFragments: 'Fragmente hochgeladen',
     assessmentScanCompleted: 'Browseranalyse abgeschlossen. Die erkannten Fragmente sind temporär gespeichert.',
+    assessmentScanFragments: 'Übermittelte Antwortfragmente',
     assessmentTasksWindowHint: 'Aufgaben aus den verplanten Stunden seit der letzten Lernstandserhebung.',
     assessmentCompetencyWithoutTask: 'Für diese Kompetenz ist noch keine Prüfungsaufgabe zugeordnet.',
     noAssessmentTasksInWindow: 'Im relevanten Zeitraum sind noch keine Prüfungsaufgaben Stunden zugeordnet.',

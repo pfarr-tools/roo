@@ -1,11 +1,24 @@
 <script setup>
+import { computed } from 'vue'
 import AppShell from '../../Components/Ui/AppShell.vue'
 import de from '../../i18n/de'
 
-defineProps({
+const props = defineProps({
     group: { type: Object, required: true },
     assessment: { type: Object, required: true },
     scan: { type: Object, required: true },
+    fragments: { type: Array, default: () => [] },
+})
+
+const fragmentGroups = computed(() => {
+    const groups = new Map()
+
+    for (const fragment of props.fragments) {
+        if (!groups.has(fragment.booklet)) groups.set(fragment.booklet, [])
+        groups.get(fragment.booklet).push(fragment)
+    }
+
+    return [...groups.entries()].map(([booklet, fragments]) => ({ booklet, fragments }))
 })
 </script>
 
@@ -66,6 +79,24 @@ defineProps({
                 </div>
             </section>
             <p v-if="!scan.booklets?.length" class="text-muted">{{ de.assessmentScanNoBooklets }}</p>
+
+            <section v-if="fragments.length" class="mt-5">
+                <h2 class="h4 mb-3">{{ de.assessmentScanFragments }}</h2>
+                <div v-for="group in fragmentGroups" :key="group.booklet" class="mb-4">
+                    <h3 class="h5 mb-3">{{ de.assessmentScanBooklet }} {{ group.booklet }}</h3>
+                    <div class="row g-3">
+                        <div v-for="fragment in group.fragments" :key="fragment.fragment_id" class="col-md-6 col-xl-4">
+                            <article class="card h-100">
+                                <img :src="fragment.url" class="card-img-top assessment-scan-fragment" :alt="`${de.assessmentScanBooklet} ${fragment.booklet}, ${de.assessmentScanTask} ${fragment.task_id}`">
+                                <div class="card-body py-2">
+                                    <strong>{{ de.assessmentScanTask }} {{ fragment.task_id }}</strong>
+                                    <div class="small text-muted">{{ de.assessmentScanPage }} {{ fragment.page }}</div>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </AppShell>
 </template>
