@@ -3,6 +3,7 @@ import AppShell from "../../Components/Ui/AppShell.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 import de from "../../i18n/de";
+import { createScanClient } from "../../Features/AssessmentScan/scanClient";
 
 const props = defineProps({
     group: Object,
@@ -100,22 +101,51 @@ function editTaskUrl(task) {
 const assessmentDate = computed(() => props.slot?.date || props.assessment?.assessed_on)
 const scanOpen = ref(false)
 const scanForm = useForm({ pdf: null })
+const browserScanning = ref(false)
+const scanProgress = ref(null)
+const scanResult = ref(null)
+const scanError = ref(null)
+const scanClient = ref(null)
+const isScanProcessing = computed(() => scanForm.processing || browserScanning.value)
 function openScan() {
     scanForm.reset()
     scanForm.clearErrors()
+    scanProgress.value = null
+    scanResult.value = null
+    scanError.value = null
     scanOpen.value = true
 }
 function selectScanFile(event) {
     scanForm.pdf = event.target.files?.[0] ?? null
 }
 function closeScan() {
-    if (!scanForm.processing) scanOpen.value = false
+    if (!isScanProcessing.value) scanOpen.value = false
 }
-function submitScan() {
+function submitServerScan() {
     scanForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswerten`, {
         forceFormData: true,
         onSuccess: () => { scanOpen.value = false },
     })
+}
+async function submitScan() {
+    if (!scanForm.pdf) return
+    browserScanning.value = true
+    scanError.value = null
+    const sessionUrl = `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/session`
+    scanClient.value = createScanClient({
+        pdf: scanForm.pdf,
+        sessionUrl,
+        fragmentUrl: (sessionId) => `${sessionUrl}/${sessionId}/fragments`,
+        onProgress: (progress) => { scanProgress.value = progress },
+        onFragmentError: (_fragment, error) => { scanError.value = error.message },
+    })
+    try {
+        scanResult.value = await scanClient.value.start()
+    } catch (error) {
+        scanError.value = error.message
+    } finally {
+        browserScanning.value = false
+    }
 }
 function save() {
     const url = props.assessment
@@ -241,7 +271,7 @@ syncTasks();
                 v-if="assessment"
                 class="btn btn-sm btn-outline-primary ms-2"
                 type="button"
-                :disabled="scanForm.processing"
+                :disabled="isScanProcessing"
                 @click="openScan"
             ><span
                 v-if="scanForm.processing"
@@ -249,7 +279,7 @@ syncTasks();
                 role="status"
                 aria-hidden="true"
             ></span
-            >{{ scanForm.processing ? de.assessmentScanProcessing : de.assessmentScanTitle }}</button></template
+            >{{ isScanProcessing ? de.assessmentScanProcessing : de.assessmentScanTitle }}</button></template
         >
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">
@@ -448,10 +478,10 @@ syncTasks();
                 <form class="card-body" @submit.prevent="submitScan">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h6 mb-0">{{ de.assessmentScanTitle }}</h2>
-                        <button class="btn-close" type="button" :aria-label="de.close" :disabled="scanForm.processing" @click="closeScan"></button>
+                        <button class="btn-close" type="button" :aria-label="de.close" :disabled="isScanProcessing" @click="closeScan"></button>
                     </div>
                     <p class="small text-muted" :class="{ 'mb-2': scanForm.processing }">{{ de.assessmentScanUploadHint }}</p>
-                    <div v-if="scanForm.processing" class="alert alert-info d-flex align-items-start gap-2" role="status" aria-live="polite">
+                    <div v-if="isScanProcessing" class="alert alert-info d-flex align-items-start gap-2" role="status" aria-live="polite">
                         <span class="spinner-border spinner-border-sm mt-1 flex-shrink-0" aria-hidden="true"></span>
                         <span>{{ de.assessmentScanProcessingHint }}</span>
                     </div>
@@ -462,17 +492,30 @@ syncTasks();
                         type="file"
                         accept="application/pdf,.pdf"
                         required
-                        :disabled="scanForm.processing"
+                        :disabled="isScanProcessing"
                         @change="selectScanFile"
                     />
                     <div v-if="scanForm.errors.pdf" class="invalid-feedback d-block">{{ scanForm.errors.pdf }}</div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button class="btn btn-secondary" type="button" :disabled="scanForm.processing" @click="closeScan">{{ de.cancel }}</button>
-                        <button class="btn btn-primary" type="submit" :disabled="scanForm.processing || !scanForm.pdf">
-                            <span v-if="scanForm.processing" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            {{ scanForm.processing ? de.assessmentScanProcessing : de.assessmentScanSubmit }}
+                        <button class="btn btn-secondary" type="button" :disabled="isScanProcessing" @click="closeScan">{{ de.cancel }}</button>
+                        <button class="btn btn-outline-secondary" type="button" :disabled="isScanProcessing || !scanForm.pdf" @click="submitServerScan">{{ de.assessmentScanServerFallback }}</button>
+                        <button class="btn btn-primary" type="submit" :disabled="isScanProcessing || !scanForm.pdf">
+                            <span v-if="isScanProcessing" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            {{ isScanProcessing ? de.assessmentScanProcessing : de.assessmentScanSubmit }}
                         </button>
                     </div>
+                    <div v-if="scanProgress" class="mt-3" role="status" aria-live="polite">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>{{ de.assessmentScanPhase }}: {{ scanProgress.phase }}</span>
+                            <span v-if="scanProgress.totalPages">{{ scanProgress.currentPage }} / {{ scanProgress.totalPages }}</span>
+                        </div>
+                        <div class="progress mb-2" role="progressbar" :aria-valuenow="scanProgress.percent ?? 0" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" :style="{ width: `${scanProgress.percent ?? 0}%` }"></div>
+                        </div>
+                        <div class="small text-muted">{{ de.assessmentScanMarkers }}: {{ scanProgress.detectedMarkers }} · {{ de.assessmentScanUploadedFragments }}: {{ scanProgress.uploadedFragments }} / {{ scanProgress.queuedFragments }}</div>
+                    </div>
+                    <div v-if="scanResult" class="alert alert-success mt-3 mb-0">{{ de.assessmentScanCompleted }}</div>
+                    <div v-if="scanError" class="alert alert-danger mt-3 mb-0">{{ scanError }}</div>
                 </form>
             </section>
         </div></AppShell
