@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Documents\AssessmentDocument;
 use App\Documents\DocumentOutputFormat;
+use App\Http\Requests\AssessmentScanFragmentRequest;
+use App\Http\Requests\AssessmentScanSessionRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
-use App\Services\CompetencyResolver;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
+use App\Services\AssessmentScan\AssessmentScanSessionStore;
+use App\Services\CompetencyResolver;
 use App\Services\PhpOfficeDocumentRenderer;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -105,6 +108,38 @@ class AssessmentController extends Controller
             'assessment' => $assessment,
             'scan' => $scan->toArray(),
         ]);
+    }
+
+    public function createScanSession(AssessmentScanSessionRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+
+        return response()->json($sessions->create($assessment), 201);
+    }
+
+    public function storeScanFragment(AssessmentScanFragmentRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
+
+        $data = $request->validated();
+        $result = $sessions->storeFragment($session, collect($data)->except('fragment')->all(), $data['fragment']);
+
+        return response()->json($result, 201);
+    }
+
+    public function deleteScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
+        $sessions->delete($session);
+
+        return response()->noContent();
     }
 
     public function store(Request $request, TeachingGroup $teachingGroup)
