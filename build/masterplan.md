@@ -583,6 +583,9 @@ Aus strukturierten Inhalten differenzierte Materialien generieren.
 
 Providerunabhängige Interfaces:
 
+- strukturierte Dokumentobjekte mit registrierbaren PhpOffice-Templates für
+  DOCX- und ODT-Ausgaben als Grundlage für spätere Assessment-Exporte
+
 - AiTextProvider
 - ImageProvider
 - DocumentRenderer
