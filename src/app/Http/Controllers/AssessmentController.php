@@ -9,6 +9,7 @@ use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Services\CompetencyResolver;
+use App\Services\AssessmentScan\AssessmentPdfScanner;
 use App\Services\PhpOfficeDocumentRenderer;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -86,6 +87,23 @@ class AssessmentController extends Controller
             'Content-Disposition' => 'attachment; filename="'.$filename.'.odt"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
             'Pragma' => 'no-cache',
+        ]);
+    }
+
+    public function assess(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentPdfScanner $scanner)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+
+        $data = $request->validate([
+            'pdf' => ['required', 'file', 'mimes:pdf', 'max:51200'],
+        ]);
+        $scan = $scanner->scan($data['pdf']->getRealPath());
+
+        return Inertia::render('Assessment/Assess', [
+            'group' => $teachingGroup,
+            'assessment' => $assessment,
+            'scan' => $scan->toArray(),
         ]);
     }
 
