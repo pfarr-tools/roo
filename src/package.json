@@ -21,8 +21,10 @@
     "dependencies": {
         "@inertiajs/vue3": "^3.6.1",
         "@vitejs/plugin-vue": "^6.0.8",
+        "@zxing/browser": "^0.1.5",
         "bootstrap": "^5.3.8",
         "bootstrap-icons": "^1.13.1",
+        "pdfjs-dist": "^6.2.108",
         "sass": "^1.102.0",
         "vue": "^3.5.41"
     }
