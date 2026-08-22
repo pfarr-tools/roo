@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Assessment;
 use App\Models\Curriculum;
 use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumTopic;
@@ -10,7 +11,6 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
-use App\Models\Assessment;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;

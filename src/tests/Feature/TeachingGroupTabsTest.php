@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\Assessment;
+use App\Models\Organization;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
-use App\Models\ScheduleSlot;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

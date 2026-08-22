@@ -357,6 +357,7 @@ export default {
     assessmentStatsTasks: 'Aufgaben',
     assessmentStatsPoints: 'Punkte',
     assessmentStatsCompetencies: 'Kompetenzen',
+    downloadAssessmentOdt: 'ODT herunterladen',
     assessmentTasksWindowHint: 'Aufgaben aus den verplanten Stunden seit der letzten Lernstandserhebung.',
     assessmentCompetencyWithoutTask: 'Für diese Kompetenz ist noch keine Prüfungsaufgabe zugeordnet.',
     noAssessmentTasksInWindow: 'Im relevanten Zeitraum sind noch keine Prüfungsaufgaben Stunden zugeordnet.',

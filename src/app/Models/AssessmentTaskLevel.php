@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 class AssessmentTaskLevel extends Model
 {
     public $timestamps = false;
+
     public $incrementing = false;
 
     protected $table = 'assessment_task_levels';
+
     protected $primaryKey = null;
 }

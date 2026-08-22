@@ -141,14 +141,26 @@ const taskGroups = computed(() => {
     }));
 });
 function taskHasLevel(task, level) {
-    return !task.levels?.length || task.levels.includes(level);
+    const levels = task.levels?.length
+        ? task.levels
+        : task.level
+          ? [task.level]
+          : [];
+    return !levels.length || levels.includes(level);
+}
+function levelsForTask(task) {
+    return task.levels?.length
+        ? task.levels
+        : task.level
+          ? [task.level]
+          : [];
 }
 const isDifferentiated = computed(() =>
-    activeTasks.value.some((task) => task.levels?.length),
+    activeTasks.value.some((task) => levelsForTask(task).length),
 );
 const pointsForLevel = (level) =>
     activeTasks.value.reduce((total, task) => {
-        const levels = task.levels ?? [];
+        const levels = levelsForTask(task);
         return (
             total +
             (!levels.length || levels.includes(level)
@@ -200,7 +212,12 @@ syncTasks();
                 :disabled="form.processing"
             >
                 Speichern
-            </button></template
+            </button><a
+                v-if="assessment"
+                :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/download`"
+                class="btn btn-sm btn-outline-secondary ms-2"
+                :title="de.downloadAssessmentOdt"
+                >{{ de.downloadAssessmentOdt }}</a></template
         >
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">

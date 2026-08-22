@@ -2,8 +2,8 @@
 
 use App\Models\AssessmentTask;
 use App\Models\Organization;
-use App\Models\ScheduleSlot;
 use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
