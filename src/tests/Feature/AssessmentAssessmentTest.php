@@ -90,5 +90,8 @@ it('offers the assessment scan action in the existing assessment editor', functi
     $template = file_get_contents(resource_path('js/Pages/Assessments/Form.vue'));
 
     expect($template)->toContain('assessmentScanTitle')
-        ->and($template)->toContain('auswerten');
+        ->and($template)->toContain('auswerten')
+        ->and($template)->toContain('assessmentScanProcessing')
+        ->and($template)->toContain('assessmentScanProcessingHint')
+        ->and($template)->toContain('role="status"');
 });

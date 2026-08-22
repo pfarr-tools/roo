@@ -6,10 +6,12 @@ use Symfony\Component\Process\Process;
 
 final class DmtxReadDecoder implements DataMatrixDecoder
 {
+    private const SCAN_TIMEOUT_MILLISECONDS = 10000;
+
     /** @return iterable<array{payload:string, y_px:float}> */
     public function decode(string $imagePath): iterable
     {
-        $process = new Process(['dmtxread', '-R', '-q', '10', '-n', $imagePath]);
+        $process = new Process($this->commandArguments($imagePath));
         $exitCode = $process->run();
 
         if ($exitCode > 1) {
@@ -17,6 +19,21 @@ final class DmtxReadDecoder implements DataMatrixDecoder
         }
 
         yield from $this->parseOutput($process->getOutput());
+    }
+
+    /** @return list<string> */
+    public function commandArguments(string $imagePath): array
+    {
+        return [
+            'dmtxread',
+            '-R',
+            '-q',
+            '10',
+            '-m',
+            (string) self::SCAN_TIMEOUT_MILLISECONDS,
+            '-n',
+            $imagePath,
+        ];
     }
 
     /** @return list<array{payload:string, y_px:float}> */

@@ -108,6 +108,9 @@ function openScan() {
 function selectScanFile(event) {
     scanForm.pdf = event.target.files?.[0] ?? null
 }
+function closeScan() {
+    if (!scanForm.processing) scanOpen.value = false
+}
 function submitScan() {
     scanForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswerten`, {
         forceFormData: true,
@@ -240,7 +243,13 @@ syncTasks();
                 type="button"
                 :disabled="scanForm.processing"
                 @click="openScan"
-            >{{ de.assessmentScanTitle }}</button></template
+            ><span
+                v-if="scanForm.processing"
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+                aria-hidden="true"
+            ></span
+            >{{ scanForm.processing ? de.assessmentScanProcessing : de.assessmentScanTitle }}</button></template
         >
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">
@@ -428,7 +437,7 @@ syncTasks();
             v-if="scanOpen"
             class="roo-modal-backdrop"
             role="presentation"
-            @click.self="scanOpen = false"
+            @click.self="closeScan"
         >
             <section
                 class="roo-modal card border-0"
@@ -439,9 +448,13 @@ syncTasks();
                 <form class="card-body" @submit.prevent="submitScan">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h6 mb-0">{{ de.assessmentScanTitle }}</h2>
-                        <button class="btn-close" type="button" :aria-label="de.close" @click="scanOpen = false"></button>
+                        <button class="btn-close" type="button" :aria-label="de.close" :disabled="scanForm.processing" @click="closeScan"></button>
                     </div>
-                    <p class="small text-muted">{{ de.assessmentScanUploadHint }}</p>
+                    <p class="small text-muted" :class="{ 'mb-2': scanForm.processing }">{{ de.assessmentScanUploadHint }}</p>
+                    <div v-if="scanForm.processing" class="alert alert-info d-flex align-items-start gap-2" role="status" aria-live="polite">
+                        <span class="spinner-border spinner-border-sm mt-1 flex-shrink-0" aria-hidden="true"></span>
+                        <span>{{ de.assessmentScanProcessingHint }}</span>
+                    </div>
                     <label class="form-label" for="assessment-scan-pdf">{{ de.assessmentScanPdf }}</label>
                     <input
                         id="assessment-scan-pdf"
@@ -449,12 +462,16 @@ syncTasks();
                         type="file"
                         accept="application/pdf,.pdf"
                         required
+                        :disabled="scanForm.processing"
                         @change="selectScanFile"
                     />
                     <div v-if="scanForm.errors.pdf" class="invalid-feedback d-block">{{ scanForm.errors.pdf }}</div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button class="btn btn-secondary" type="button" :disabled="scanForm.processing" @click="scanOpen = false">{{ de.cancel }}</button>
-                        <button class="btn btn-primary" type="submit" :disabled="scanForm.processing || !scanForm.pdf">{{ de.assessmentScanSubmit }}</button>
+                        <button class="btn btn-secondary" type="button" :disabled="scanForm.processing" @click="closeScan">{{ de.cancel }}</button>
+                        <button class="btn btn-primary" type="submit" :disabled="scanForm.processing || !scanForm.pdf">
+                            <span v-if="scanForm.processing" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            {{ scanForm.processing ? de.assessmentScanProcessing : de.assessmentScanSubmit }}
+                        </button>
                     </div>
                 </form>
             </section>

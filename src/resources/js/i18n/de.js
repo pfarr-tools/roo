@@ -371,6 +371,8 @@ export default {
     assessmentScanUploadHint: 'Lade ein gescanntes PDF hoch. Roo erkennt zunächst nur Booklets und ROO-Marker.',
     assessmentScanPdf: 'Gescanntes PDF',
     assessmentScanSubmit: 'PDF auswerten',
+    assessmentScanProcessing: 'PDF wird ausgewertet …',
+    assessmentScanProcessingHint: 'Die Seiten werden gerendert und nach ROO-DataMatrix-Codes durchsucht. Das kann je nach Umfang des PDFs etwas dauern.',
     assessmentTasksWindowHint: 'Aufgaben aus den verplanten Stunden seit der letzten Lernstandserhebung.',
     assessmentCompetencyWithoutTask: 'Für diese Kompetenz ist noch keine Prüfungsaufgabe zugeordnet.',
     noAssessmentTasksInWindow: 'Im relevanten Zeitraum sind noch keine Prüfungsaufgaben Stunden zugeordnet.',

@@ -2,6 +2,7 @@
 
 use App\Services\AssessmentScan\AssessmentPdfScanner;
 use App\Services\AssessmentScan\DataMatrixDecoder;
+use App\Services\AssessmentScan\DmtxReadDecoder;
 use App\Services\AssessmentScan\PdfPageRenderer;
 use Tests\TestCase;
 
@@ -42,8 +43,18 @@ it('converts decoded marker coordinates from 300 dpi pixels to centimetres', fun
 });
 
 it('parses dmtxread corner prefixes and uses the top-most y coordinate', function () {
-    $decoder = new App\Services\AssessmentScan\DmtxReadDecoder;
+    $decoder = new DmtxReadDecoder;
 
     expect($decoder->parseOutput('10,100:30,100:30,120:10,120:ROO1|A=42|L=M|K=PAGE')[0])
         ->toMatchArray(['payload' => 'ROO1|A=42|L=M|K=PAGE', 'y_px' => 100.0]);
+});
+
+it('limits the decoder scan time for each rendered page', function () {
+    $decoder = new DmtxReadDecoder;
+
+    $arguments = $decoder->commandArguments('/tmp/page-1.png');
+
+    expect($arguments)
+        ->toContain('-m', '10000')
+        ->and($arguments[array_key_last($arguments)])->toBe('/tmp/page-1.png');
 });
