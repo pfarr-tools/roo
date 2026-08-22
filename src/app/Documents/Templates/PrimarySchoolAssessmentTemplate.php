@@ -1,0 +1,245 @@
+<?php
+
+namespace App\Documents\Templates;
+
+use App\Documents\AssessmentDocument;
+use App\Documents\Document;
+use App\Documents\DocumentTemplate;
+use InvalidArgumentException;
+use PfarrTools\RooRuling\PhpWord\RulingRenderer;
+use PfarrTools\RooRuling\RulingDefinition;
+use PfarrTools\RooRuling\RulingPreset;
+use PhpOffice\PhpWord\Element\Header;
+use PhpOffice\PhpWord\Element\Section;
+use PhpOffice\PhpWord\Element\Table;
+use PhpOffice\PhpWord\PhpWord;
+
+final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
+{
+    private const COMIC = 'Comic Neue';
+
+    private const ATKINSON = 'Atkinson Hyperlegible Next';
+
+    private const CONTENT_WIDTH_MM = 175.0;
+
+    public function key(): string
+    {
+        return 'assessment.primary-school-lower-secondary';
+    }
+
+    public function render(Document $document): PhpWord
+    {
+        if (! $document instanceof AssessmentDocument) {
+            throw new InvalidArgumentException('Das Grundschul-/Unterstufen-Template benötigt ein AssessmentDocument.');
+        }
+
+        $word = new PhpWord;
+        $word->setDefaultFontName(self::ATKINSON);
+        $word->setDefaultFontSize(14);
+        $word->addFontStyle('assessmentPageHeading', [
+            'name' => self::COMIC,
+            'size' => 24,
+            'bold' => true,
+        ]);
+        $section = $word->addSection([
+            'pageSizeW' => 11906,
+            'pageSizeH' => 16838,
+            'marginTop' => 567,
+            'marginRight' => 567,
+            'marginBottom' => 567,
+            'marginLeft' => 1134,
+            'borderTopSize' => 6,
+            'borderTopColor' => '000000',
+            'borderTopStyle' => 'single',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+            'borderRightStyle' => 'single',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+            'borderBottomStyle' => 'single',
+            'borderLeftSize' => 6,
+            'borderLeftColor' => '000000',
+            'borderLeftStyle' => 'single',
+        ]);
+
+        $this->addPageHeader($section->addHeader(Header::FIRST), $document->title, true);
+        $this->addPageHeader($section->addHeader(), $document->title, false);
+        $this->addFooter($section, $document->metadata);
+        foreach ($document->tasks as $number => $task) {
+            $this->addTask($section, $task, $number + 1, $document->gradeLevel);
+        }
+
+        return $word;
+    }
+
+    private function addPageHeader(Header $header, string $title, bool $includeName): void
+    {
+        $table = $header->addTable([
+            'width' => 10000,
+            'layout' => 'fixed',
+            'borderSize' => 0,
+            'cellMarginLeft' => 0,
+            'cellMarginRight' => 0,
+        ]);
+        $row = $table->addRow();
+        $row->addCell($includeName ? 7000 : 10000, ['borderSize' => 0])->addText($title, 'assessmentPageHeading', ['spaceAfter' => 0]);
+        if ($includeName) {
+            $row->addCell(3000, ['borderSize' => 0, 'cellMarginLeft' => 283])->addText('Name:', 'assessmentPageHeading', ['spaceAfter' => 0, 'alignment' => 'right']);
+        }
+
+        $header->addShape('line', [
+            'points' => '0,0 10000,0',
+            'width' => 10000,
+            'height' => 1,
+            'outline' => ['color' => '000000', 'weight' => 1],
+        ]);
+        $header->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $metadata */
+    private function addFooter(Section $section, array $metadata): void
+    {
+        $footer = $section->addFooter();
+        $font = [
+            'name' => self::ATKINSON,
+            'size' => 6,
+            'color' => '808080',
+        ];
+        $copyright = $footer->addTextRun([
+            'alignment' => 'right',
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+        ]);
+        $copyrightParts = array_values(array_filter([
+            '©',
+            (string) ($metadata['year'] ?? date('Y')),
+            $metadata['author'] ?? null,
+        ], fn (mixed $value): bool => is_string($value) && trim($value) !== ''));
+        $copyright->addText(implode(' ', array_map('trim', $copyrightParts)), $font);
+
+        $details = $footer->addTextRun([
+            'alignment' => 'right',
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+        ]);
+        $elements = array_values(array_filter([
+            $metadata['school'] ?? null,
+            $metadata['school_year'] ?? null,
+            $metadata['group'] ?? null,
+            $metadata['footer_title'] ?? null,
+            $metadata['date'] ?? null,
+        ], fn (mixed $value): bool => is_string($value) && trim($value) !== ''));
+
+        foreach ($elements as $index => $element) {
+            if ($index > 0) {
+                $details->addText(' · ', $font);
+            }
+            $details->addText(trim($element), $font);
+        }
+        if ($elements !== []) {
+            $details->addText(' · ', $font);
+        }
+        $details->addText('Seite ', $font);
+        $details->addField('PAGE', [], ['PreserveFormat'], null, $font);
+    }
+
+    /** @param array<string, mixed> $task */
+    private function addTask(Section $section, array $task, int $number, string $gradeLevel): void
+    {
+        $points = (int) ($task['max_points'] ?? 0);
+        $instruction = (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
+        $section->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => self::COMIC, 'size' => 14], ['spaceBefore' => 180, 'spaceAfter' => 120]);
+
+        $content = is_array($task['content'] ?? null) ? $task['content'] : [];
+        if (($task['task_type'] ?? '') === 'checkbox') {
+            $this->addCheckboxTask($section, $content);
+        } elseif (! empty($content['reading_text'])) {
+            $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
+        }
+
+        if (($task['task_type'] ?? '') !== 'checkbox') {
+            $this->addWritingLines($section, $content, $gradeLevel);
+        }
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addCheckboxTask(Section $section, array $content): void
+    {
+        foreach (array_values($content['options'] ?? []) as $option) {
+            $text = is_array($option) ? ($option['text'] ?? '') : (string) $option;
+            $section->addText('☐ '.$text, ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 80]);
+        }
+        $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addWritingLines(Section $section, array $content, string $gradeLevel): void
+    {
+        $count = max(1, (int) ($content['lines'] ?? 5));
+        $ruling = ! empty($content['lineated']) ? $this->rulingForGrade($gradeLevel) : RulingPreset::Grade4Plus;
+
+        $table = (new RulingRenderer)->render(
+            section: $section,
+            ruling: $this->visibleRuling($ruling->definition()),
+            count: $count,
+            widthMm: self::CONTENT_WIDTH_MM,
+            fontStyle: ['name' => self::ATKINSON, 'size' => 14],
+        );
+        $this->makeRulingBordersPrintable($table);
+        $section->addTextBreak(1);
+    }
+
+    private function visibleRuling(RulingDefinition $ruling): RulingDefinition
+    {
+        return new RulingDefinition(
+            zonesMm: $ruling->zonesMm,
+            gapMm: $ruling->gapMm,
+            leftBorder: $ruling->leftBorder,
+            rightBorder: $ruling->rightBorder,
+            topBorder: $ruling->topBorder,
+            lineColor: '000000',
+            lineSize: 8,
+            textZoneIndex: $ruling->textZoneIndex,
+            lineIndexes: $ruling->lineIndexes,
+            sideBorderZoneIndexes: $ruling->sideBorderZoneIndexes,
+        );
+    }
+
+    private function makeRulingBordersPrintable(Table $table): void
+    {
+        foreach ($table->getRows() as $row) {
+            foreach ($row->getCells() as $cell) {
+                $style = $cell->getStyle();
+                if ($style->getBorderBottomSize() > 0) {
+                    $style->setBorderBottomStyle('single');
+                    $style->setBorderBottomColor('000000');
+                }
+                if ($style->getBorderTopSize() > 0) {
+                    $style->setBorderTopStyle('single');
+                    $style->setBorderTopColor('000000');
+                }
+                if ($style->getBorderLeftSize() > 0) {
+                    $style->setBorderLeftStyle('single');
+                    $style->setBorderLeftColor('000000');
+                }
+                if ($style->getBorderRightSize() > 0) {
+                    $style->setBorderRightStyle('single');
+                    $style->setBorderRightColor('000000');
+                }
+            }
+        }
+    }
+
+    private function rulingForGrade(string $gradeLevel): RulingPreset
+    {
+        preg_match('/\d+/', $gradeLevel, $matches);
+        $grade = (int) ($matches[0] ?? 4);
+
+        return match (true) {
+            $grade <= 1 => RulingPreset::Grade1,
+            $grade === 2 => RulingPreset::Grade2,
+            $grade === 3 => RulingPreset::Grade3,
+            default => RulingPreset::Grade4Plus,
+        };
+    }
+}

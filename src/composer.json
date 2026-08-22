@@ -16,6 +16,7 @@
         "league/flysystem-aws-s3-v3": "^3.35",
         "meilisearch/meilisearch-php": "^1.17",
         "peregrinus/wscdoc": "dev-main",
+        "pfarr-tools/roo-ruling": "dev-main",
         "phpoffice/phpword": "^1.4"
     },
     "require-dev": {

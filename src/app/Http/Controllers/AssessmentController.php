@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Documents\AssessmentDocument;
+use App\Documents\DocumentOutputFormat;
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Services\CompetencyResolver;
+use App\Services\PhpOfficeDocumentRenderer;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class AssessmentController extends Controller
 {
@@ -33,6 +37,51 @@ class AssessmentController extends Controller
         $assessment->load('tasks.levels', 'tasks.competency');
 
         return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, $assessment, request('return_tab', 'assessments'), request('return_to', 'group')));
+    }
+
+    public function download(TeachingGroup $teachingGroup, Assessment $assessment, PhpOfficeDocumentRenderer $renderer): Response
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+
+        $assessment->load(['tasks.expectations', 'tasks.levels']);
+        $teachingGroup->loadMissing(['school', 'schoolYear']);
+        $differentiated = $assessment->is_differentiated;
+        $title = $assessment->title;
+        if ($differentiated) {
+            $title .= ' (M)';
+        }
+
+        $document = new AssessmentDocument(
+            title: $title,
+            tasks: $assessment->tasks->filter(fn (AssessmentTask $task): bool => $task->levels->isEmpty() || $task->levels->contains('level', 'M'))->map(fn (AssessmentTask $task): array => [
+                'title' => $task->title,
+                'task_type' => $task->task_type,
+                'content' => $task->content ?? [],
+                'max_points' => $task->expectations->isNotEmpty()
+                    ? $task->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1))
+                    : $task->max_points,
+                'levels' => $task->levels->pluck('level')->values()->all() ?: collect([$task->level])->filter()->values()->all(),
+            ])->values()->all(),
+            gradeLevel: (string) ($teachingGroup->gradeLevels()->orderBy('id')->value('grade_level') ?? ''),
+            metadata: [
+                'author' => auth()->user()?->name,
+                'roo_version' => config('app.version', '0.1.0'),
+                'year' => now()->year,
+                'school' => $teachingGroup->school?->name,
+                'school_year' => $teachingGroup->schoolYear?->name,
+                'group' => $teachingGroup->name,
+                'footer_title' => $assessment->title.($differentiated ? ' (M)' : ''),
+                'date' => $assessment->assessed_on?->format('d.m.Y'),
+            ],
+        );
+        $contents = $renderer->render($document, DocumentOutputFormat::ODT);
+        $filename = $this->downloadFilename($assessment->title);
+
+        return response($contents, 200, [
+            'Content-Type' => 'application/vnd.oasis.opendocument.text',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'.odt"',
+        ]);
     }
 
     public function store(Request $request, TeachingGroup $teachingGroup)
@@ -219,6 +268,13 @@ class AssessmentController extends Controller
         }
 
         return redirect()->route('teaching-groups.show', ['teachingGroup' => $teachingGroup, 'tab' => $data['return_tab'] ?? 'assessments']);
+    }
+
+    private function downloadFilename(string $title): string
+    {
+        $filename = preg_replace('/[^\pL\pN._-]+/u', '_', trim($title)) ?: 'lernstandserhebung';
+
+        return trim($filename, '._-') ?: 'lernstandserhebung';
     }
 
     private function validatedAssessment(Request $request): array

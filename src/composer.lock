@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de8fef0cc44418607b8e3eeacef4ec95",
+    "content-hash": "3f165f82aaa64748dcd086ecac1b9fa8",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3585,6 +3585,45 @@
                 "source": "https://github.com/potofcoffee/wscdoc/tree/main"
             },
             "time": "2026-08-19T15:21:14+00:00"
+        },
+        {
+            "name": "pfarr-tools/roo-ruling",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pfarr-tools/roo-ruling.git",
+                "reference": "bb72cedaac6ce45f91cd0b1b4037cb23e1666a64"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pfarr-tools/roo-ruling/zipball/bb72cedaac6ce45f91cd0b1b4037cb23e1666a64",
+                "reference": "bb72cedaac6ce45f91cd0b1b4037cb23e1666a64",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3",
+                "phpoffice/phpword": "^1.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.0 || ^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PfarrTools\\RooRuling\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "description": "Reusable handwriting rulings for PHPWord documents, including German primary-school Grade 1-3 presets.",
+            "support": {
+                "issues": "https://github.com/pfarr-tools/roo-ruling/issues",
+                "source": "https://github.com/pfarr-tools/roo-ruling/tree/main"
+            },
+            "time": "2026-08-22T10:30:31+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -11724,7 +11763,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "peregrinus/wscdoc": 20
+        "peregrinus/wscdoc": 20,
+        "pfarr-tools/roo-ruling": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
