@@ -9,7 +9,8 @@ die gefundenen Booklets und Aufgabenmarker in einer eigenen
 `Assessment/Assess`-Ansicht an.
 
 Die erste Version ordnet Booklets noch keinen Schüler:innen zu und speichert
-keine Scanergebnisse dauerhaft.
+keine Scanergebnisse dauerhaft. Die browserseitige Analyse lädt nur erkannte
+temporäre Antwortfragmente hoch; das Original-PDF verlässt den Browser nicht.
 
 ## Bestehende Marker-Verträge
 
@@ -29,8 +30,10 @@ zuletzt begonnenen Booklet-Gruppe zugeordnet.
 
 Der bestehende Assessment-Editor erhält bei einer vorhandenen Assessment ein
 Toolbar-Element „Auswerten“. Es öffnet ein vorhandenes Roo-Modal-Muster mit
-ausschließlich PDF-Dateien als Auswahl. Der Upload wird mit Inertia/FormData an
-einen geschützten Assessment-Endpunkt gesendet.
+ausschließlich PDF-Dateien als Auswahl. Die bevorzugte Browserpipeline liest
+die lokale Datei und sendet danach nur temporäre Fragmente per FormData an
+geschützte Assessment-Endpunkte. Für die serverseitige Fallback-Analyse wird
+die PDF-Datei weiterhin direkt an den bisherigen Upload-Endpunkt gesendet.
 
 Der Controller prüft die bestehende `update`-Autorisierung der
 Unterrichtsgruppe und die Zugehörigkeit des Assessments zur Gruppe. Nach
@@ -41,8 +44,48 @@ zeigt die Booklets sowie deren Marker in stabiler Seitenreihenfolge.
 
 ### PDF- und DataMatrix-Analyse
 
-Die Analyse wird durch einen zentralen `AssessmentPdfScanner` gekapselt. Der
-Scanner arbeitet pro PDF-Seite:
+Die bevorzugte Analyse erfolgt im Browser, damit die Lehrkraft den Fortschritt
+auch bei großen PDFs unmittelbar sieht. Die bestehende serverseitige Analyse
+bleibt als Fallback für inkompatible Browser oder nicht zuverlässig erkannte
+DataMatrix-Codes erhalten.
+
+Die Browserpipeline arbeitet seitenweise und hält niemals das gesamte gerenderte
+Dokument im Speicher:
+
+1. `pdfjs-dist` öffnet das lokale PDF und rendert eine Seite mit einer
+   festgelegten Auflösung in ein Canvas.
+2. Ein Web Worker sucht mit einem browserfähigen DataMatrix-Decoder nach
+   `ROO1`-Markern und meldet die gefundenen Payloads samt Bildkoordinaten an die
+   Vue-Oberfläche.
+3. Die bestehende Markerparser-Logik wird in eine äquivalente, gemeinsam
+   getestete Frontendfunktion übertragen. Seitenmarker beginnen Booklets;
+   START-/END-Marker begrenzen Antwortbereiche.
+4. Aus jedem abgeschlossenen Aufgabenbereich wird ein PNG-Fragment erzeugt.
+   Das Fragment wird zusammen mit Bookletnummer, Aufgaben-ID, Seiten- und
+   Positionsdaten einzeln per `FormData` an den geschützten temporären
+   Fragment-Endpunkt hochgeladen.
+5. Erst nach bestätigtem Upload wird die nächste Seite beziehungsweise das
+   nächste Fragment verarbeitet. Die Oberfläche zeigt Phase, aktuelle Seite,
+   erkannte Booklets, Fragmentstatus und Fehler an.
+
+Der Browserdecoder muss mindestens DataMatrix-Payload und Eck-/Positionsdaten
+liefern. Falls die Erkennung mehrerer Codes auf realen Roo-Scans nicht stabil
+genug ist, bleibt die Seitenanalyse serverseitig und nur die Fragment- und
+Uploadpipeline wird wiederverwendet.
+
+Die Antwortfragmente werden serverseitig nur temporär unter einer zufälligen
+Scan-Session-ID gespeichert. Jeder Upload wird autorisiert, auf die Assessment-
+Gruppe begrenzt und mit einer Prüfsumme bestätigt. Ein expliziter Abschluss
+beendet die Session; unvollständige Sessions laufen automatisch ab.
+
+Für die Verarbeitung im Worker werden große Bildpuffer als transferierbare
+Objekte übergeben. Es gibt höchstens einen aktiven Seiten- und einen aktiven
+Fragmentupload, damit Speicherbedarf und Serverlast begrenzt bleiben.
+
+### Serverseitige Fallback-Analyse
+
+Die serverseitige Fallback-Analyse bleibt durch einen zentralen
+`AssessmentPdfScanner` gekapselt. Der Scanner arbeitet pro PDF-Seite:
 
 1. `pdftoppm` rendert die Seite mit definierter Auflösung in ein temporäres
    PNG.
@@ -85,22 +128,36 @@ werden als Warnungen ausgegeben, ohne den gesamten Scan abzubrechen.
 
 ### Temporäre Dateien und Fehler
 
-PDF und gerenderte Seiten bleiben ausschließlich temporär und werden nach der
-Analyse in einem `finally`-Block entfernt. Die Uploadvalidierung beschränkt
-sich auf PDF-MIME-Typ und maximal 50 MB. Decoder- oder
-Renderfehler werden als deutsche Formularfehlermeldung zurückgegeben; interne
-Prozessausgaben und Dateipfade werden nicht an die Oberfläche oder in Logs mit
-personenbezogenen Daten übernommen.
+Bei der Fallback-Analyse bleiben PDF und gerenderte Seiten ausschließlich
+temporär und werden nach der Analyse in einem `finally`-Block entfernt. Die
+Uploadvalidierung beschränkt sich auf PDF-MIME-Typ und maximal 50 MB.
+
+Bei der Browserpipeline wird das lokale PDF nicht hochgeladen. Temporäre
+Fragmentuploads erhalten eine kurze Ablaufzeit und werden nach Abschluss oder
+Abbruch der Scan-Session gelöscht. Decoder-, Render- und Uploadfehler werden
+pro Seite oder Fragment angezeigt und können erneut versucht werden, ohne
+bereits bestätigte Uploads zu wiederholen. Interne Prozessausgaben und
+Dateipfade werden nicht an die Oberfläche oder in Logs mit personenbezogenen
+Daten übernommen.
 
 ## UI
 
 Der Editor-Button „Auswerten“ erscheint neben dem bestehenden ODT-Download.
-Das Modal enthält:
+Das Modal enthält zunächst:
 
 - Überschrift „Assessment auswerten“
 - PDF-Dateifeld
 - Hinweis, dass zunächst nur Booklets und ROO-Marker erkannt werden
 - Abbrechen und „PDF auswerten“
+
+Während der Browseranalyse zeigt ein Scanpanel:
+
+- aktuelle Phase und Seite von Seiten insgesamt
+- Anzahl erkannter Booklets und Marker
+- Anzahl hochgeladener, ausstehender und fehlgeschlagener Fragmente
+- einen laufenden, barrierefrei angekündigten Status
+- „Erneut versuchen“ für einzelne fehlgeschlagene Fragmente
+- „Abbrechen“ mit Aufräumen der temporären Scan-Session
 
 `Assessment/Assess` zeigt:
 
@@ -122,6 +179,12 @@ geliefert.
 - Feature-Test für PDF-Upload mit erfolgreicher Scannerantwort.
 - Feature-Test für abgewiesene Nicht-PDF-Dateien und fremde Assessments.
 - Frontend-Build und `git diff --check`.
+- Frontend-Unit-Tests für Markerparsing, Bookletgruppierung und
+  Fragmentgrenzen.
+- Frontend-Worker-Test mit einer kleinen PNG-Testseite und kontrollierten
+  Decoderergebnissen.
+- Feature-Tests für autorisierte temporäre Fragmentuploads, Prüfsummen,
+  Sessionablauf und fremde Assessments.
 
 Der reale Decoder wird über einen Fake-Adapter im Anwendungstest ersetzt; ein
 kleiner separater Integrationsnachweis im Docker-Container prüft den
@@ -135,3 +198,4 @@ verändern.
 - automatische Punkteerkennung oder Notenberechnung
 - Handschrift-/OCR-Auswertung
 - Bearbeitung oder Korrektur erkannter Marker in der Ergebnisansicht
+- serverseitige OCR- oder Handschriftanalyse der hochgeladenen Fragmente
