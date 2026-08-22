@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Documents\Document;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplateRegistry;
+use App\Documents\AssessmentDocument;
+use Com\Tecnick\Barcode\Barcode;
 use PhpOffice\PhpWord\IOFactory;
 use PfarrTools\RooRuling\PhpWord\OdtRulingPatcher;
 
@@ -24,7 +26,7 @@ class PhpOfficeDocumentRenderer
             $contents = (string) ob_get_contents();
 
             return $format === DocumentOutputFormat::ODT
-                ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document->metadata)
+                ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document)
                 : $contents;
         } finally {
             ob_end_clean();
@@ -44,7 +46,7 @@ class PhpOfficeDocumentRenderer
         try {
             IOFactory::createWriter($phpWord, $format->writerName())->save($temporaryPath);
             $contents = (string) file_get_contents($temporaryPath);
-            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document->metadata) : $contents);
+            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document) : $contents);
         } finally {
             unlink($temporaryPath);
         }
@@ -76,8 +78,7 @@ class PhpOfficeDocumentRenderer
         }
     }
 
-    /** @param array<string, mixed> $metadata */
-    private function addOdtPageFrame(string $contents, array $metadata = []): string
+    private function addOdtPageFrame(string $contents, Document $document): string
     {
         $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-');
         if ($temporaryPath === false) {
@@ -97,6 +98,10 @@ class PhpOfficeDocumentRenderer
 
                 return $contents;
             }
+
+            $metadata = $document->metadata;
+            $pageMarkerPng = $this->pageMarkerPng($this->pageMarker($metadata));
+            $taskMarkers = $this->taskMarkers($document);
 
             $styles = preg_replace(
                 '/(<style:page-layout-properties\b)([^>]*)(>)/',
@@ -123,7 +128,7 @@ class PhpOfficeDocumentRenderer
             ) ?: $styles;
             $styles = str_replace(
                 '</office:automatic-styles>',
-                '<style:style style:name="assessmentFooterParagraph" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/></style:style><style:style style:name="assessmentFooterText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080"/></style:style><style:style style:name="assessmentRooMarkParagraph" style:family="paragraph"><style:paragraph-properties style:writing-mode="lr-tb"/></style:style><style:style style:name="assessmentRooMarkText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080" fo:font-weight="normal"/></style:style><style:style style:name="assessmentRooMarkFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="background" style:wrap="run-through" style:vertical-pos="bottom" style:vertical-rel="paragraph-content" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentRooMarkImage" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none"/></style:style><style:style style:name="assessmentHeaderLine" style:family="graphic"><style:graphic-properties svg:stroke-width="0.049cm" svg:stroke-color="#000000" draw:fill-color="#000000" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentNameCell" style:family="table-cell"><style:table-cell-properties fo:padding-left="0.5cm"/></style:style></office:automatic-styles>',
+                '<style:style style:name="assessmentFooterParagraph" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/></style:style><style:style style:name="assessmentFooterText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080"/></style:style><style:style style:name="assessmentRooMarkParagraph" style:family="paragraph"><style:paragraph-properties style:writing-mode="lr-tb"/></style:style><style:style style:name="assessmentRooMarkText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080" fo:font-weight="normal"/></style:style><style:style style:name="assessmentRooMarkFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="background" style:wrap="run-through" style:vertical-pos="bottom" style:vertical-rel="paragraph-content" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentRooMarkImage" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none"/></style:style><style:style style:name="assessmentPageMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="page" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentTaskMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentHeaderLine" style:family="graphic"><style:graphic-properties svg:stroke-width="0.049cm" svg:stroke-color="#000000" draw:fill-color="#000000" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentNameCell" style:family="table-cell"><style:table-cell-properties fo:padding-left="0.5cm"/></style:style></office:automatic-styles>',
                 $styles,
             );
             $styles = preg_replace_callback(
@@ -153,17 +158,23 @@ class PhpOfficeDocumentRenderer
                 },
                 $styles,
             ) ?: $styles;
-            $styles = $this->addOdtFirstPageHeader($styles);
+            $styles = $this->addOdtFirstPageHeader($styles, $pageMarkerPng);
             $archive->addFromString('styles.xml', $styles);
             $iconPath = base_path('resources/images/branding/roo-icon.png');
             if (is_file($iconPath)) {
                 $archive->addFromString('Pictures/roo-icon.png', (string) file_get_contents($iconPath));
-                $manifest = $archive->getFromName('META-INF/manifest.xml');
-                if (is_string($manifest) && ! str_contains($manifest, 'Pictures/roo-icon.png')) {
-                    $manifest = str_replace('</manifest:manifest>', '<manifest:file-entry manifest:full-path="Pictures/roo-icon.png" manifest:media-type="image/png"/></manifest:manifest>', $manifest);
-                    $archive->addFromString('META-INF/manifest.xml', $manifest);
-                }
             }
+            if ($pageMarkerPng !== null) {
+                $archive->addFromString('Pictures/assessment-page-marker.png', $pageMarkerPng);
+            }
+            foreach ($taskMarkers as $marker) {
+                $archive->addFromString($marker['path'], $marker['png']);
+            }
+            $this->addManifestEntries($archive, array_values(array_filter([
+                is_file($iconPath) ? ['path' => 'Pictures/roo-icon.png', 'mediaType' => 'image/png'] : null,
+                $pageMarkerPng !== null ? ['path' => 'Pictures/assessment-page-marker.png', 'mediaType' => 'image/png'] : null,
+                ...array_map(static fn (array $marker): array => ['path' => $marker['path'], 'mediaType' => 'image/png'], $taskMarkers),
+            ])));
             $content = $archive->getFromName('content.xml');
             if (is_string($content)) {
                 $content = preg_replace(
@@ -172,6 +183,9 @@ class PhpOfficeDocumentRenderer
                     $content,
                     1,
                 ) ?: $content;
+                $content = str_replace('<text:tracked-changes/>', '', $content);
+                $content = $this->addOdtTaskMarkerStyle($content);
+                $content = $this->injectTaskMarkers($content, $taskMarkers);
                 $archive->addFromString('content.xml', $content);
             }
             $archive->close();
@@ -182,7 +196,112 @@ class PhpOfficeDocumentRenderer
         }
     }
 
-    private function addOdtFirstPageHeader(string $styles): string
+    /** @param array<string, mixed> $metadata */
+    private function pageMarker(array $metadata): string
+    {
+        $payload = implode('|', [
+            'ROO1',
+            'A='.(string) ($metadata['assessment_id'] ?? 'unknown'),
+            'L='.(string) ($metadata['level'] ?? 'standard'),
+            'K=PAGE',
+        ]);
+
+        return $payload;
+    }
+
+    private function pageMarkerPng(string $payload): ?string
+    {
+        try {
+            return (new Barcode)->getBarcodeObj(
+                type: 'DATAMATRIX',
+                code: $payload,
+                width: -4,
+                height: -4,
+                color: 'black',
+                padding: [2, 2, 2, 2],
+            )->getPngData(false);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return array<string, array{path: string, png: string}> */
+    private function taskMarkers(Document $document): array
+    {
+        if (! $document instanceof AssessmentDocument) {
+            return [];
+        }
+
+        $markers = [];
+        foreach ($document->tasks as $index => $task) {
+            $taskId = (string) ($task['task_id'] ?? $index + 1);
+            $safeId = preg_replace('/[^A-Za-z0-9_-]/', '_', $taskId) ?: (string) ($index + 1);
+
+            foreach (['START', 'END'] as $kind) {
+                $token = 'ROO_TASK_'.$kind.'_'.$taskId;
+                $payload = $this->taskMarkerPayload($taskId, $kind);
+                $png = $this->pageMarkerPng($payload);
+                if ($png !== null) {
+                    $markers[$token] = [
+                        'path' => 'Pictures/assessment-task-'.$safeId.'-'.strtolower($kind).'.png',
+                        'png' => $png,
+                    ];
+                }
+            }
+        }
+
+        return $markers;
+    }
+
+    private function taskMarkerPayload(string $taskId, string $kind): string
+    {
+        $payload = implode('|', ['ROO1', 'T='.$taskId, 'K='.$kind]);
+
+        return $payload;
+    }
+
+    private function addOdtTaskMarkerStyle(string $content): string
+    {
+        $style = '<style:style style:name="assessmentTaskMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" draw:wrap-influence-on-position="once-concurrent" style:flow-with-text="false"/></style:style>';
+
+        return str_replace('</office:automatic-styles>', $style.'</office:automatic-styles>', $content);
+    }
+
+    /** @param array<string, array{path: string, png: string}> $taskMarkers */
+    private function injectTaskMarkers(string $content, array $taskMarkers): string
+    {
+        foreach ($taskMarkers as $token => $marker) {
+            [$kind, $taskId] = array_pad(explode('_', substr($token, strlen('ROO_TASK_')), 2), 2, '');
+            $y = $kind === 'END' ? '-0.199cm' : '0cm';
+            $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="4" draw:name="assessmentTaskMarker'.htmlspecialchars($kind.$taskId, ENT_XML1).'" draw:style-name="assessmentTaskMarkerFrame" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" svg:x="-1.9cm" svg:y="'.$y.'" svg:width="0.8cm" svg:height="0.8cm"><draw:image xlink:href="'.htmlspecialchars($marker['path'], ENT_XML1).'" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
+            $pattern = '/<text:p(?![^>]*\/>)([^>]*)>(?:(?!<\/text:p>)[\s\S])*?'.preg_quote($token, '/').'(?:(?!<\/text:p>)[\s\S])*?<\/text:p>/';
+            $content = preg_replace($pattern, '<text:p$1>'.$frame.'</text:p>', $content, 1) ?: $content;
+        }
+
+        return $content;
+    }
+
+    /** @param list<array{path: string, mediaType: string}> $entries */
+    private function addManifestEntries(\ZipArchive $archive, array $entries): void
+    {
+        $manifest = $archive->getFromName('META-INF/manifest.xml');
+        if (! is_string($manifest)) {
+            return;
+        }
+
+        foreach ($entries as $entry) {
+            if (! str_contains($manifest, 'manifest:full-path="'.$entry['path'].'"')) {
+                $manifest = str_replace(
+                    '</manifest:manifest>',
+                    '<manifest:file-entry manifest:full-path="'.$entry['path'].'" manifest:media-type="'.$entry['mediaType'].'"/></manifest:manifest>',
+                    $manifest,
+                );
+            }
+        }
+        $archive->addFromString('META-INF/manifest.xml', $manifest);
+    }
+
+    private function addOdtFirstPageHeader(string $styles, ?string $pageMarkerPng): string
     {
         if (preg_match('/<style:master-page style:name="Standard1"[^>]*>.*?<\/style:master-page>/s', $styles, $masterMatches) !== 1) {
             return $styles;
@@ -196,10 +315,18 @@ class PhpOfficeDocumentRenderer
         $header = $headerMatches[0];
         $defaultHeader = str_replace('Name:', '', $header);
         $standardMaster = str_replace($header, $defaultHeader, $master);
+        $firstHeader = $pageMarkerPng !== null
+            ? preg_replace(
+                '/(<table:table-row>\s*<table:table-cell[^>]*><text:p[^>]*>)/s',
+                '$1<draw:frame text:anchor-type="paragraph" draw:z-index="3" draw:name="assessmentPageMarker" draw:style-name="assessmentPageMarkerFrame" svg:x="0.5cm" svg:y="1cm" svg:width="1.2cm" svg:height="1.2cm"><draw:image xlink:href="Pictures/assessment-page-marker.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>',
+                $header,
+                1,
+            ) ?: $header
+            : $header;
         $firstMaster = str_replace(
             'style:name="Standard1"',
             'style:name="FirstPage" style:next-style-name="Standard1"',
-            $master,
+            str_replace($header, $firstHeader, $master),
         );
 
         $styles = str_replace($master, $standardMaster, $styles);

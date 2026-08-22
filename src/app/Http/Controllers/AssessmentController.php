@@ -55,6 +55,7 @@ class AssessmentController extends Controller
         $document = new AssessmentDocument(
             title: $title,
             tasks: $assessment->tasks->filter(fn (AssessmentTask $task): bool => $task->levels->isEmpty() || $task->levels->contains('level', 'M'))->map(fn (AssessmentTask $task): array => [
+                'task_id' => (string) $task->getKey(),
                 'title' => $task->title,
                 'task_type' => $task->task_type,
                 'content' => $task->content ?? [],
@@ -66,6 +67,8 @@ class AssessmentController extends Controller
             gradeLevel: (string) ($teachingGroup->gradeLevels()->orderBy('id')->value('grade_level') ?? ''),
             metadata: [
                 'author' => auth()->user()?->name,
+                'assessment_id' => (string) $assessment->getKey(),
+                'level' => $differentiated ? 'M' : null,
                 'roo_version' => config('app.version', '0.1.0'),
                 'year' => now()->year,
                 'school' => $teachingGroup->school?->name,
@@ -81,6 +84,8 @@ class AssessmentController extends Controller
         return response($contents, 200, [
             'Content-Type' => 'application/vnd.oasis.opendocument.text',
             'Content-Disposition' => 'attachment; filename="'.$filename.'.odt"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
         ]);
     }
 

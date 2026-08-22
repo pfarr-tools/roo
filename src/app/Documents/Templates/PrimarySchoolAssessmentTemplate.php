@@ -68,6 +68,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         foreach ($document->tasks as $number => $task) {
             $this->addTask($section, $task, $number + 1, $document->gradeLevel);
         }
+        $section->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
         return $word;
     }
@@ -146,6 +147,8 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     /** @param array<string, mixed> $task */
     private function addTask(Section $section, array $task, int $number, string $gradeLevel): void
     {
+        $markerId = (string) ($task['task_id'] ?? $number);
+        $section->addText('ROO_TASK_START_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $points = (int) ($task['max_points'] ?? 0);
         $instruction = (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
         $section->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => self::COMIC, 'size' => 14], ['spaceBefore' => 180, 'spaceAfter' => 120]);
@@ -160,6 +163,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         if (($task['task_type'] ?? '') !== 'checkbox') {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
+        $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
     }
 
     /** @param array<string, mixed> $content */

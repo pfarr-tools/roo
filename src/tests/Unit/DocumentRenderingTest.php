@@ -60,6 +60,8 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ['title' => 'Schreibe einen Satz.', 'task_type' => 'free_text', 'max_points' => 3, 'content' => ['prompt' => 'Schreibe einen Satz.', 'lines' => 3, 'lineated' => true]],
     ], '2', [
         'author' => 'Christoph Muster',
+        'assessment_id' => '42',
+        'level' => 'M',
         'roo_version' => '0.1.0',
         'year' => 2026,
         'school' => 'Grundschule Musterstadt',
@@ -70,6 +72,11 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
     ]);
 
     $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $renderer = app(PhpOfficeDocumentRenderer::class);
+    $pageMarkerMethod = new ReflectionMethod($renderer, 'pageMarker');
+    $taskMarkerPayloadMethod = new ReflectionMethod($renderer, 'taskMarkerPayload');
+    expect($pageMarkerMethod->invoke($renderer, ['assessment_id' => '42', 'level' => 'M']))->toBe('ROO1|A=42|L=M|K=PAGE')
+        ->and($taskMarkerPayloadMethod->invoke($renderer, '7', 'START'))->toBe('ROO1|T=7|K=START');
     $path = tempnam(sys_get_temp_dir(), 'roo-test-odt-');
     file_put_contents($path, $contents);
     $archive = new ZipArchive;
@@ -78,6 +85,11 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
     $content = $archive->getFromName('content.xml');
     $manifest = $archive->getFromName('META-INF/manifest.xml');
     $icon = $archive->getFromName('Pictures/roo-icon.png');
+    $marker = $archive->getFromName('Pictures/assessment-page-marker.png');
+    $taskStartMarker = $archive->getFromName('Pictures/assessment-task-1-start.png');
+    $taskEndMarker = $archive->getFromName('Pictures/assessment-task-1-end.png');
+    $secondTaskStartMarker = $archive->getFromName('Pictures/assessment-task-2-start.png');
+    $secondTaskEndMarker = $archive->getFromName('Pictures/assessment-task-2-end.png');
     $archive->close();
     unlink($path);
 
@@ -86,6 +98,8 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and($styles)->toContain('fo:padding="0.4cm"')
         ->and($content)->not->toContain('Lösungsvorschläge')
         ->and($content)->not->toContain('Nur der erste Satz.')
+        ->and($content)->not->toContain('<text:tracked-changes/>')
+        ->and($content)->toMatch('/assessmentTaskMarkerEND2.*?<\/text:p>\s*<text:p[^>]*>(?:<text:span[^>]*\/>)*<\/text:p>.*?<\/text:section>/s')
         ->and($styles)->toContain('Grundschule Musterstadt')
         ->and($styles)->toContain('2026/27')
         ->and($styles)->toContain('4a')
@@ -97,13 +111,37 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and($styles)->toMatch('/<style:footer>.*<text:p[^>]*>.*assessmentRooMark.*<\/text:p><\/style:footer>/s')
         ->and($styles)->toContain('draw:transform="rotate (1.5707963267949) translate (1.00008333333333cm 0.252236111111111cm)"')
         ->and($styles)->toContain('assessmentRooMarkImage')
+        ->and($styles)->toContain('assessmentPageMarker')
+        ->and(substr_count((string) $styles, 'draw:name="assessmentPageMarker"'))->toBe(1)
+        ->and($styles)->toContain('svg:x="0.5cm"')
+        ->and($styles)->toContain('svg:y="1cm"')
+        ->and($styles)->toContain('Pictures/assessment-page-marker.png')
         ->and($styles)->toContain('text:anchor-type="char"')
         ->and($styles)->toContain('draw:mime-type="image/png"')
         ->and($styles)->toContain('ROO 0.1.0')
         ->and($styles)->toContain('text:style-name="assessmentRooMarkText">ROO 0.1.0')
         ->and($styles)->toContain('Pictures/roo-icon.png')
         ->and($manifest)->toContain('Pictures/roo-icon.png')
+        ->and($manifest)->toContain('Pictures/assessment-page-marker.png')
+        ->and($manifest)->toContain('Pictures/assessment-task-1-start.png')
+        ->and($manifest)->toContain('Pictures/assessment-task-1-end.png')
+        ->and($manifest)->toContain('Pictures/assessment-task-2-start.png')
+        ->and($manifest)->toContain('Pictures/assessment-task-2-end.png')
         ->and($icon)->not->toBeFalse()
+        ->and($marker)->not->toBeFalse()
+        ->and($taskStartMarker)->not->toBeFalse()
+        ->and($taskEndMarker)->not->toBeFalse()
+        ->and($secondTaskStartMarker)->not->toBeFalse()
+        ->and($secondTaskEndMarker)->not->toBeFalse()
+        ->and($content)->toContain('assessmentTaskMarkerSTART1')
+        ->and($content)->toContain('assessmentTaskMarkerEND1')
+        ->and($content)->toContain('<style:style style:name="assessmentTaskMarkerFrame" style:family="graphic">')
+        ->and($content)->toContain('style:horizontal-pos="from-left" style:horizontal-rel="paragraph" svg:x="-1.9cm" svg:y="0cm"')
+        ->and($content)->toContain('style:horizontal-pos="from-left" style:horizontal-rel="paragraph" svg:x="-1.9cm" svg:y="-0.199cm"')
+        ->and($content)->toContain('assessmentTaskMarkerSTART2')
+        ->and($content)->toContain('assessmentTaskMarkerEND2')
+        ->and($content)->not->toContain('ROO_TASK_START_1')
+        ->and($content)->not->toContain('ROO_TASK_END_1')
         ->and($styles)->toContain('fo:font-size="6pt"')
         ->and($styles)->toContain('fo:color="#808080"')
         ->and($styles)->toContain('© 2026 Christoph Muster')

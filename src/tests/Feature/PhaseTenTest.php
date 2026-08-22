@@ -7,10 +7,10 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
 use App\Models\Organization;
+use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
-use App\Models\ScheduledLesson;
 use App\Models\TeachingGroup;
 use App\Models\TeachingGroupGradeLevel;
 use App\Models\User;
@@ -41,7 +41,9 @@ it('legt eine Lernstandserhebung mit differenzierten Aufgaben an', function () {
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE Schöpfung', 'assessed_on' => '2026-11-12', 'tasks' => [['title' => 'Erkläre den Begriff', 'max_points' => 10, 'level' => 'M', 'competency_id' => $competency->id]]])->assertRedirect();
 
-    expect(Assessment::first()->tasks)->toHaveCount(1)->and(Assessment::first()->tasks->first()->level)->toBe('M');
+    expect(Assessment::first()->tasks)->toHaveCount(1)
+        ->and(Assessment::first()->tasks->first()->level)->toBe('M')
+        ->and(Assessment::first()->is_differentiated)->toBeTrue();
 });
 
 it('verwendet eine Bibliotheksaufgabe in mehreren Erhebungen und verlangt mehrere G/M/E-Niveaus', function () {
@@ -90,4 +92,21 @@ it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne
             ->has('assessmentCompetencies', 2)
             ->where('assessmentCompetencies.0.title', 'Du kannst Mit Aufgabe (3.1.2)')
             ->where('assessmentCompetencies.1.title', 'Du kannst Ohne Aufgabe (3.1.1)'));
+});
+
+it('lädt eine Lernstandserhebung als ODT herunter', function () {
+    $organization = Organization::create(['name' => 'ODT Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'ODT Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
+    $group->gradeLevels()->create(['grade_level' => '2']);
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Lesen', 'assessed_on' => '2026-10-01']);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/vnd.oasis.opendocument.text')
+        ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.odt"');
+
+    expect($response->headers->get('Cache-Control'))->toContain('no-store');
 });
