@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Documents\DocumentTemplateRegistry;
 use App\Documents\Templates\PrimarySchoolAssessmentTemplate;
+use App\Services\AssessmentScan\DataMatrixDecoder;
+use App\Services\AssessmentScan\DmtxReadDecoder;
+use App\Services\AssessmentScan\PdfPageRenderer;
+use App\Services\AssessmentScan\PopplerPdfPageRenderer;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -16,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DocumentTemplateRegistry::class, fn () => new DocumentTemplateRegistry([
             new PrimarySchoolAssessmentTemplate,
         ]));
+        $this->app->bind(DataMatrixDecoder::class, DmtxReadDecoder::class);
+        $this->app->bind(PdfPageRenderer::class, PopplerPdfPageRenderer::class);
     }
 
     /**
