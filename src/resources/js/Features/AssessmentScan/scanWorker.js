@@ -1,3 +1,4 @@
+import { decodeDataMatrix } from './browserDecoder'
 import { parseRooMarker } from './markerParser'
 
 const DPI = 300
@@ -30,7 +31,38 @@ export function pageProgress(currentPage, totalPages) {
 }
 
 export function createScanWorker(callbacks = {}) {
-    const worker = new Worker(new URL('./scanPage.worker.js', import.meta.url), { type: 'module' })
+    const workerUrl = new URL('./scanPage.worker.js', import.meta.url)
+    const pageOrigin = globalThis.location?.origin
+    const useWorker = !pageOrigin || workerUrl.origin === pageOrigin
+
+    if (!useWorker) {
+        return {
+            async scanPage({ pageNumber, bitmap }) {
+                try {
+                    const canvas = document.createElement('canvas')
+                    canvas.width = bitmap.width
+                    canvas.height = bitmap.height
+                    canvas.getContext('2d').drawImage(bitmap, 0, 0)
+                    bitmap.close()
+                    const decoded = await decodeDataMatrix(canvas)
+                    callbacks['page-result']?.({
+                        type: 'page-result',
+                        pageNumber,
+                        markers: normalizeDecodedMarkers(decoded, pageNumber),
+                    })
+                } catch (error) {
+                    callbacks.error?.({
+                        type: 'error',
+                        pageNumber,
+                        message: error instanceof Error ? error.message : String(error),
+                    })
+                }
+            },
+            terminate() {},
+        }
+    }
+
+    const worker = new Worker(workerUrl, { type: 'module' })
     worker.addEventListener('message', ({ data }) => callbacks[data.type]?.(data))
     worker.addEventListener('error', (error) => callbacks.error?.(error))
 

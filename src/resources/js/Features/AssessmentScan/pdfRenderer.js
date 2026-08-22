@@ -1,10 +1,14 @@
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+const pageOrigin = globalThis.location?.origin
+const workerOrigin = pageOrigin ? new URL(pdfWorkerUrl, globalThis.location.href).origin : pageOrigin
+const useWorker = !pageOrigin || workerOrigin === pageOrigin
+
+if (useWorker) pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 export async function openPdf(file) {
-    return pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise
+    return pdfjsLib.getDocument({ data: await file.arrayBuffer(), disableWorker: !useWorker }).promise
 }
 
 export async function renderPdfPage(pdf, pageNumber, dpi = 300) {
