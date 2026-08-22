@@ -85,3 +85,10 @@ it('rejects non-pdf uploads and assessments from another group', function () {
         ])
         ->assertNotFound();
 });
+
+it('offers the assessment scan action in the existing assessment editor', function () {
+    $template = file_get_contents(resource_path('js/Pages/Assessments/Form.vue'));
+
+    expect($template)->toContain('assessmentScanTitle')
+        ->and($template)->toContain('auswerten');
+});

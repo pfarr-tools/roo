@@ -98,6 +98,22 @@ function editTaskUrl(task) {
     return `${task.edit_url}?return_to=${encodeURIComponent(returnUrl)}`
 }
 const assessmentDate = computed(() => props.slot?.date || props.assessment?.assessed_on)
+const scanOpen = ref(false)
+const scanForm = useForm({ pdf: null })
+function openScan() {
+    scanForm.reset()
+    scanForm.clearErrors()
+    scanOpen.value = true
+}
+function selectScanFile(event) {
+    scanForm.pdf = event.target.files?.[0] ?? null
+}
+function submitScan() {
+    scanForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswerten`, {
+        forceFormData: true,
+        onSuccess: () => { scanOpen.value = false },
+    })
+}
 function save() {
     const url = props.assessment
         ? `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}`
@@ -217,7 +233,14 @@ syncTasks();
                 :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/download`"
                 class="btn btn-sm btn-outline-secondary ms-2"
                 :title="de.downloadAssessmentOdt"
-                >{{ de.downloadAssessmentOdt }}</a></template
+                >{{ de.downloadAssessmentOdt }}</a
+            ><button
+                v-if="assessment"
+                class="btn btn-sm btn-outline-primary ms-2"
+                type="button"
+                :disabled="scanForm.processing"
+                @click="openScan"
+            >{{ de.assessmentScanTitle }}</button></template
         >
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">
@@ -399,6 +422,41 @@ syncTasks();
                         </p>
                     </div>
                 </div>
+            </section>
+        </div>
+        <div
+            v-if="scanOpen"
+            class="roo-modal-backdrop"
+            role="presentation"
+            @click.self="scanOpen = false"
+        >
+            <section
+                class="roo-modal card border-0"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="de.assessmentScanTitle"
+            >
+                <form class="card-body" @submit.prevent="submitScan">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h6 mb-0">{{ de.assessmentScanTitle }}</h2>
+                        <button class="btn-close" type="button" :aria-label="de.close" @click="scanOpen = false"></button>
+                    </div>
+                    <p class="small text-muted">{{ de.assessmentScanUploadHint }}</p>
+                    <label class="form-label" for="assessment-scan-pdf">{{ de.assessmentScanPdf }}</label>
+                    <input
+                        id="assessment-scan-pdf"
+                        class="form-control"
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        required
+                        @change="selectScanFile"
+                    />
+                    <div v-if="scanForm.errors.pdf" class="invalid-feedback d-block">{{ scanForm.errors.pdf }}</div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button class="btn btn-secondary" type="button" :disabled="scanForm.processing" @click="scanOpen = false">{{ de.cancel }}</button>
+                        <button class="btn btn-primary" type="submit" :disabled="scanForm.processing || !scanForm.pdf">{{ de.assessmentScanSubmit }}</button>
+                    </div>
+                </form>
             </section>
         </div></AppShell
     >

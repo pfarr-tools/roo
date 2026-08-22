@@ -2,7 +2,7 @@
 
 namespace App\Services\AssessmentScan;
 
-final class AssessmentPdfScanner
+class AssessmentPdfScanner
 {
     public function __construct(
         private readonly DataMatrixDecoder $decoder,
