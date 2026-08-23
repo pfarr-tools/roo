@@ -57,6 +57,7 @@ import {
     bookletActionUrl,
     uploadErrorMessage,
     uploadProgressDetails,
+    scanPhaseLabel,
 } from '../../resources/js/Features/AssessmentEvaluation/presentation'
 
 function mount(component, props) {
@@ -146,9 +147,35 @@ describe('assessment evaluation presentation', () => {
         expect(uploadErrorMessage(new Error('Die Seite 3 konnte nicht verarbeitet werden.'))).toBe('Die Seite 3 konnte nicht verarbeitet werden.')
         expect(uploadErrorMessage()).toBe('Die Scan-Anfrage ist fehlgeschlagen.')
     })
+
+    it('renders German labels for scan processing phases', () => {
+        expect(scanPhaseLabel('rendering')).toBe('Seiten werden gerendert')
+        expect(scanPhaseLabel('complete')).toBe('Abschluss wird gespeichert')
+    })
 })
 
 describe('assessment evaluation components', () => {
+
+    it('reuses the existing scan client when completion is retried', async () => {
+        testState.startScan.mockRejectedValueOnce(new Error('Netzwerk unterbrochen.')).mockResolvedValueOnce({})
+        const { root, unmount } = mount(AssessmentScanUploadModal, { group, assessment })
+        const input = root.querySelector('#assessment-scan-pdf')
+        Object.defineProperty(input, 'files', { value: [new File(['pdf'], 'scan.pdf', { type: 'application/pdf' })] })
+        input.dispatchEvent(new Event('change'))
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+        await Promise.resolve()
+        await nextTick()
+
+        root.querySelector('.btn-outline-primary').click()
+        await nextTick()
+        await Promise.resolve()
+
+        expect(testState.scanClients).toHaveLength(1)
+        expect(testState.startScan).toHaveBeenCalledTimes(2)
+        unmount()
+    })
+
     it('switches freely between sections and tasks without a required sequence', async () => {
         const { root, unmount } = mount(Assess, {
             group,
@@ -442,7 +469,8 @@ describe('assessment evaluation components', () => {
         expect(root.textContent).toContain('Die Seite konnte nicht verarbeitet werden.')
         retryButton.click()
         await Promise.resolve()
-        expect(testState.scanClients).toHaveLength(2)
+        expect(testState.scanClients).toHaveLength(1)
+        expect(testState.startScan).toHaveBeenCalledTimes(2)
         unmount()
     })
 })

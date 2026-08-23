@@ -36,6 +36,18 @@ export function uploadProgressDetails(progress) {
     }
 }
 
+export function scanPhaseLabel(phase) {
+    return {
+        idle: de.assessmentScanPhaseIdle,
+        session: de.assessmentScanPhaseSession,
+        rendering: de.assessmentScanPhaseRendering,
+        page: de.assessmentScanPhasePage,
+        complete: de.assessmentScanPhaseComplete,
+        cancelled: de.assessmentScanPhaseCancelled,
+    }[phase] ?? de.assessmentScanPhaseIdle
+}
+
 export function uploadErrorMessage(error) {
     return error?.message || 'Die Scan-Anfrage ist fehlgeschlagen.'
 }
+import de from '../../i18n/de'

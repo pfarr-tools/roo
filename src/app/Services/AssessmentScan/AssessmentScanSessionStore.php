@@ -111,6 +111,29 @@ final class AssessmentScanSessionStore
         $this->filesystem()->delete($this->manifestPath($sessionId));
     }
 
+    public function pruneExpired(): int
+    {
+        $pruned = 0;
+        foreach ($this->filesystem()->allFiles('assessment-scans') as $path) {
+            if (! str_ends_with($path, '/session.json')) {
+                continue;
+            }
+            try {
+                $manifest = json_decode($this->filesystem()->get($path), true, 512, JSON_THROW_ON_ERROR);
+                if (! isset($manifest['expires_at']) || now()->lessThan($manifest['expires_at'])) {
+                    continue;
+                }
+            } catch (\JsonException) {
+                continue;
+            }
+            $sessionId = basename(dirname($path));
+            $this->delete($sessionId);
+            $pruned++;
+        }
+
+        return $pruned;
+    }
+
     public function complete(string $sessionId, array $scan, array $fragmentIds): void
     {
         $manifest = $this->manifest($sessionId);

@@ -13,7 +13,7 @@ final class SyncStudentAssessmentResult
         $booklet->loadMissing('reviews.items');
 
         if ($booklet->status !== 'open' || $booklet->student_id === null) {
-            $this->remove($booklet->student_id, $task);
+            $this->remove($booklet->student_id, $task, $booklet->assessment_id);
 
             return;
         }
@@ -21,7 +21,7 @@ final class SyncStudentAssessmentResult
         $review = $booklet->reviews->firstWhere('assessment_task_id', $task->getKey());
 
         if ($review === null) {
-            $this->remove($booklet->student_id, $task);
+            $this->remove($booklet->student_id, $task, $booklet->assessment_id);
 
             return;
         }
@@ -30,6 +30,7 @@ final class SyncStudentAssessmentResult
 
         StudentAssessmentResult::query()->updateOrCreate(
             [
+                'assessment_id' => $booklet->assessment_id,
                 'assessment_task_id' => $task->getKey(),
                 'student_id' => $booklet->student_id,
             ],
@@ -37,13 +38,14 @@ final class SyncStudentAssessmentResult
         );
     }
 
-    public function remove(?int $studentId, AssessmentTask $task): void
+    public function remove(?int $studentId, AssessmentTask $task, int $assessmentId): void
     {
         if ($studentId === null) {
             return;
         }
 
         StudentAssessmentResult::query()
+            ->where('assessment_id', $assessmentId)
             ->where('assessment_task_id', $task->getKey())
             ->where('student_id', $studentId)
             ->delete();
@@ -56,7 +58,7 @@ final class SyncStudentAssessmentResult
 
         foreach (AssessmentTask::query()->whereKey($taskIds)->get() as $task) {
             if ($previousStudentId !== null && ($previousStudentId !== $booklet->student_id || $booklet->status !== 'open')) {
-                $this->remove($previousStudentId, $task);
+                $this->remove($previousStudentId, $task, $booklet->assessment_id);
             }
 
             $this->handle($booklet, $task);

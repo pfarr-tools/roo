@@ -119,13 +119,13 @@ it('accepts a completed browser session without detected booklets', function () 
 it('scans uploaded pages on the server and creates task fragments', function () {
     Storage::fake('temporary');
     $fixture = browserScanResultFixture();
-    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['task']->id) implements DataMatrixDecoder
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['assessment']->id, $fixture['task']->id) implements DataMatrixDecoder
     {
-        public function __construct(private readonly int $taskId) {}
+        public function __construct(private readonly int $assessmentId, private readonly int $taskId) {}
 
         public function decode(string $imagePath): iterable
         {
-            yield ['payload' => 'ROO1|A=3|L=M|K=PAGE', 'x_px' => 2, 'y_px' => 2, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|A={$this->assessmentId}|L=M|K=PAGE", 'x_px' => 2, 'y_px' => 2, 'width_px' => 10, 'height_px' => 10];
             yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 2, 'y_px' => 20, 'width_px' => 10, 'height_px' => 10];
             yield ['payload' => "ROO1|T={$this->taskId}|K=END", 'x_px' => 2, 'y_px' => 70, 'width_px' => 10, 'height_px' => 10];
         }

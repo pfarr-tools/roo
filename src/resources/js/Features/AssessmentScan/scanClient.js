@@ -50,9 +50,11 @@ export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProg
 
     async function start() {
         cancelled = false
-        report({ phase: 'session', status: 'processing' })
-        const session = await jsonRequest(sessionUrl, { method: 'POST', body: JSON.stringify({}) })
-        sessionId = session.session_id
+        if (!sessionId) {
+            report({ phase: 'session', status: 'processing' })
+            const session = await jsonRequest(sessionUrl, { method: 'POST', body: JSON.stringify({}) })
+            sessionId = session.session_id
+        }
         const pdfDocument = await openPdf(pdf)
         report({ phase: 'rendering', totalPages: pdfDocument.numPages })
         for (let page = 1; page <= pdfDocument.numPages; page += 1) {

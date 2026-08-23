@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['assessment_id', 'session_id', 'booklet_ids'])]
+#[Fillable(['assessment_id', 'session_id', 'booklet_ids', 'warnings'])]
 class AssessmentScanMaterialization extends Model
 {
     protected function casts(): array
     {
-        return ['booklet_ids' => 'array'];
+        return ['booklet_ids' => 'array', 'warnings' => 'array'];
     }
 
     public function assessment(): BelongsTo

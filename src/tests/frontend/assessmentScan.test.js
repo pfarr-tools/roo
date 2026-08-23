@@ -74,3 +74,34 @@ it('opens the durable evaluation after all scanned pages were accepted', async (
     fetchMock.mockRestore()
     vi.unstubAllGlobals()
 })
+
+it('reuses the accepted scan session when the completion response was lost', async () => {
+    const { createScanClient } = await import('../../resources/js/Features/AssessmentScan/scanClient')
+    vi.stubGlobal('document', { querySelector: () => null })
+    vi.stubGlobal('URL', { createObjectURL: () => 'blob:page' })
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce(new Response(JSON.stringify({ session_id: 'session-1' }), { status: 201 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ markers: [] }), { status: 201 }))
+        .mockRejectedValueOnce(new Error('Netzwerk unterbrochen.'))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ markers: [] }), { status: 201 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ redirect_url: '/auswertung' }), { status: 200 }))
+    const client = createScanClient({
+        pdf: new File(['pdf'], 'scan.pdf', { type: 'application/pdf' }),
+        sessionUrl: '/session',
+        pageUrl: (sessionId) => `/session/${sessionId}/pages`,
+        completeUrl: (sessionId) => `/session/${sessionId}/complete`,
+    })
+
+    await expect(client.start()).rejects.toThrow('Netzwerk unterbrochen.')
+    await client.start()
+
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+        '/session',
+        '/session/session-1/pages',
+        '/session/session-1/complete',
+        '/session/session-1/pages',
+        '/session/session-1/complete',
+    ])
+    fetchMock.mockRestore()
+    vi.unstubAllGlobals()
+})

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Assessment;
+use App\Models\AssessmentScanMaterialization;
 use App\Models\AssessmentTask;
 use App\Models\Organization;
 use App\Models\School;
@@ -8,8 +9,8 @@ use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
-use App\Services\AssessmentScan\DataMatrixDecoder;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
+use App\Services\AssessmentScan\DataMatrixDecoder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -84,6 +85,36 @@ it('materializes uploaded pages and redirects their completion to the durable ev
     expect($fixture['assessment']->booklets()->count())->toBe(1)
         ->and($fixture['assessment']->booklets()->first()->fragments)->toHaveCount(1)
         ->and(app(AssessmentScanSessionStore::class)->manifest($session))->toBeNull();
+});
+
+it('returns the durable evaluation redirect when completion is retried after its session was deleted', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['assessment']->id) implements DataMatrixDecoder
+    {
+        public function __construct(private readonly int $assessmentId) {}
+
+        public function decode(string $imagePath): iterable
+        {
+            yield ['payload' => "ROO1|A={$this->assessmentId}|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
+        }
+    });
+    $sessionUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session";
+    $session = $this->actingAs($fixture['user'])->postJson($sessionUrl)->assertCreated()->json('session_id');
+    $this->actingAs($fixture['user'])->post("{$sessionUrl}/{$session}/pages", [
+        'image' => UploadedFile::fake()->image('page.png', 2480, 3508),
+        'page' => 1,
+    ])->assertCreated();
+
+    $completeUrl = "{$sessionUrl}/{$session}/complete";
+    $this->actingAs($fixture['user'])->postJson($completeUrl)->assertOk();
+    $this->actingAs($fixture['user'])->postJson($completeUrl)
+        ->assertOk()
+        ->assertJsonPath('redirect_url', url("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung"));
+
+    expect($fixture['assessment']->booklets()->count())->toBe(1)
+        ->and(AssessmentScanMaterialization::query()->where('assessment_id', $fixture['assessment']->id)->where('session_id', $session)->count())->toBe(1);
 });
 
 it('materializes PAGE groups with a cross-page task fragment then deletes the completed session', function () {
@@ -170,4 +201,47 @@ it('retains the completed session and rolls back booklets when a crop cannot be 
 
     expect($fixture['assessment']->booklets()->count())->toBe(0)
         ->and($sessions->manifest($session))->not->toBeNull();
+});
+
+it('quarantines foreign PAGE markers and retains a zero-booklet warning for the evaluation', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $sessions->storePage($session, 1, UploadedFile::fake()->image('foreign-page.png', 2480, 3508));
+    $sessions->storePageMarkers($session, 1, [
+        ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id + 1],
+    ]);
+    $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+
+    $booklets = app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+    $warnings = AssessmentScanMaterialization::query()->sole()->warnings;
+
+    expect($booklets)->toHaveCount(0)
+        ->and($warnings)->toContain('Seite 1: Der PAGE-Marker gehört zu einer anderen Lernstandserhebung und wurde ignoriert.')
+        ->and($warnings)->toContain('Es wurden keine passenden Booklet-Marker für diese Lernstandserhebung erkannt.');
+
+    $this->actingAs($fixture['user'])
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page->where('scan.warnings', $warnings));
+});
+
+it('retains unmatched task marker warnings for the durable evaluation', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $sessions->storePage($session, 1, UploadedFile::fake()->image('unmatched-page.png', 2480, 3508));
+    $sessions->storePageMarkers($session, 1, [
+        ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
+        ['kind' => 'START', 'page' => 1, 'y_cm' => 4.0, 'y_px' => 472, 'task_id' => (string) $fixture['task']->id],
+    ]);
+    $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+
+    app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+
+    expect(AssessmentScanMaterialization::query()->sole()->warnings)
+        ->toContain("Seite 1: START-Marker für Aufgabe {$fixture['task']->id} ohne END-Marker.");
 });

@@ -55,8 +55,9 @@ final class MaterializeAssessmentScan
                 $taskIds = $lockedAssessment->tasks()->pluck('assessment_tasks.id')->mapWithKeys(fn (int $id): array => [$id => true])->all();
                 $nextNumber = ((int) $lockedAssessment->booklets()->max('number')) + 1;
                 $materialized = new Collection;
+                $scan = $this->fragments->analysis($sessionId, $lockedAssessment->id);
 
-                foreach ($this->fragments->booklets($sessionId) as $scanBooklet) {
+                foreach ($scan['booklets'] as $scanBooklet) {
                     $booklet = AssessmentBooklet::create([
                         'assessment_id' => $lockedAssessment->id,
                         'number' => $nextNumber++,
@@ -101,6 +102,7 @@ final class MaterializeAssessmentScan
                     'assessment_id' => $lockedAssessment->id,
                     'session_id' => $sessionId,
                     'booklet_ids' => $materialized->modelKeys(),
+                    'warnings' => $scan['warnings'],
                 ]);
 
                 return $materialized;

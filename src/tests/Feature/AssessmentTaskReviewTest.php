@@ -2,6 +2,7 @@
 
 use App\Models\Assessment;
 use App\Models\AssessmentBooklet;
+use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskExpectation;
 use App\Models\Organization;
@@ -11,7 +12,10 @@ use App\Models\Student;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Models\User;
+use App\Services\AssessmentScan\AssessmentScanSessionStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -71,6 +75,14 @@ function assessmentTaskReviewFixture(): array
         'status' => 'open',
         'student_id' => $student->id,
     ]);
+    AssessmentBookletFragment::create([
+        'assessment_booklet_id' => $booklet->id,
+        'assessment_task_id' => $task->id,
+        'image_path' => "assessment-booklets/{$assessment->id}/{$booklet->id}/task.png",
+        'page' => 1,
+        'start_y_cm' => 4,
+        'end_y_cm' => 10,
+    ]);
 
     return compact('user', 'organization', 'group', 'assessment', 'task', 'expectation', 'student', 'replacementStudent', 'booklet');
 }
@@ -112,6 +124,14 @@ it('synchronizes a no-expectation task from signed extra points alone', function
         'title' => 'Zusatzaufgabe',
     ]));
     $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    AssessmentBookletFragment::create([
+        'assessment_booklet_id' => $fixture['booklet']->id,
+        'assessment_task_id' => $task->id,
+        'image_path' => "assessment-booklets/{$fixture['assessment']->id}/{$fixture['booklet']->id}/task-{$task->id}.png",
+        'page' => 1,
+        'start_y_cm' => 10,
+        'end_y_cm' => 16,
+    ]);
 
     $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture, $task), [
         'items' => [],
@@ -202,4 +222,112 @@ it('rejects awarded points above an expectation occurrence maximum', function ()
         ],
         'extra_points' => -1,
     ])->assertSessionHasErrors('items.0.awarded_points');
+});
+
+it('keeps synchronized results separate when two assessments reuse the same task', function () {
+    $fixture = assessmentTaskReviewFixture();
+    $secondAssessment = Assessment::create([
+        'organization_id' => $fixture['organization']->id,
+        'teaching_group_id' => $fixture['group']->id,
+        'title' => 'Zweite Lernstandserhebung',
+    ]);
+    $secondAssessment->tasks()->attach($fixture['task'], ['position' => 1]);
+    $secondBooklet = AssessmentBooklet::create([
+        'assessment_id' => $secondAssessment->id,
+        'number' => 1,
+        'status' => 'open',
+        'student_id' => $fixture['student']->id,
+    ]);
+    AssessmentBookletFragment::create([
+        'assessment_booklet_id' => $secondBooklet->id,
+        'assessment_task_id' => $fixture['task']->id,
+        'image_path' => "assessment-booklets/{$secondAssessment->id}/{$secondBooklet->id}/task.png",
+        'page' => 1,
+        'start_y_cm' => 4,
+        'end_y_cm' => 10,
+    ]);
+    $firstPayload = [
+        'items' => [
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 2],
+        ],
+        'extra_points' => 0,
+    ];
+    $secondPayload = [...$firstPayload, 'extra_points' => -1];
+
+    $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture), $firstPayload)->assertRedirect();
+    $this->actingAs($fixture['user'])->put("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$secondAssessment->id}/auswertung/booklets/{$secondBooklet->id}/tasks/{$fixture['task']->id}/review", $secondPayload)->assertRedirect();
+
+    expect(StudentAssessmentResult::query()->where('student_id', $fixture['student']->id)->orderBy('assessment_id')->get()->map(fn (StudentAssessmentResult $result): array => [
+        'assessment_id' => $result->assessment_id,
+        'points' => $result->points,
+    ])->all())->toBe([
+        ['assessment_id' => $fixture['assessment']->id, 'points' => '6.00'],
+        ['assessment_id' => $secondAssessment->id, 'points' => '5.00'],
+    ]);
+});
+
+it('rejects a task review when the booklet has no corresponding task fragment', function () {
+    $fixture = assessmentTaskReviewFixture();
+    $fixture['booklet']->fragments()->delete();
+
+    $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture), [
+        'items' => [
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 2],
+        ],
+        'extra_points' => 0,
+    ])->assertNotFound();
+
+    expect($fixture['booklet']->reviews()->count())->toBe(0);
+});
+
+it('deletes a booklet name and task crop when the booklet is deleted', function () {
+    Storage::fake('documents');
+    $fixture = assessmentTaskReviewFixture();
+    $booklet = $fixture['booklet'];
+    $fragment = $booklet->fragments()->sole();
+    $namePath = "assessment-booklets/{$fixture['assessment']->id}/{$booklet->id}/name.png";
+    Storage::disk('documents')->put($namePath, 'name crop');
+    Storage::disk('documents')->put($fragment->image_path, 'task crop');
+    $booklet->update(['name_fragment_path' => $namePath]);
+
+    $booklet->delete();
+
+    Storage::disk('documents')->assertMissing($namePath);
+    Storage::disk('documents')->assertMissing($fragment->image_path);
+});
+
+it('deletes all durable booklet crops when an assessment is deleted', function () {
+    Storage::fake('documents');
+    $fixture = assessmentTaskReviewFixture();
+    $booklet = $fixture['booklet'];
+    $fragment = $booklet->fragments()->sole();
+    $namePath = "assessment-booklets/{$fixture['assessment']->id}/{$booklet->id}/name.png";
+    Storage::disk('documents')->put($namePath, 'name crop');
+    Storage::disk('documents')->put($fragment->image_path, 'task crop');
+    $booklet->update(['name_fragment_path' => $namePath]);
+
+    $fixture['assessment']->delete();
+
+    Storage::disk('documents')->assertMissing($namePath);
+    Storage::disk('documents')->assertMissing($fragment->image_path);
+});
+
+it('prunes expired temporary scan sessions through the scheduled command', function () {
+    Storage::fake('temporary');
+    $fixture = assessmentTaskReviewFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $sessions->storePage($session, 1, UploadedFile::fake()->image('page.png', 2480, 3508));
+
+    $this->travel(61)->minutes();
+    $this->artisan('assessments:prune-scan-sessions')
+        ->expectsOutput('1 abgelaufene Scan-Session wurde gelöscht.')
+        ->assertSuccessful();
+
+    expect($sessions->manifest($session))->toBeNull();
+    $this->travelBack();
 });

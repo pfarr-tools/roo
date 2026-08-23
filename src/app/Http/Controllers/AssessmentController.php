@@ -12,6 +12,7 @@ use App\Http\Requests\AssessmentTaskReviewRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentBooklet;
 use App\Models\AssessmentBookletFragment;
+use App\Models\AssessmentScanMaterialization;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
@@ -129,12 +130,17 @@ class AssessmentController extends Controller
             'tasks.expectations',
             'booklets.fragments',
             'booklets.reviews.items',
+            'scanMaterializations',
         ]);
         $students = $teachingGroup->students()
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get(['students.id', 'students.first_name', 'students.last_name', 'students.class_name']);
         $booklets = $assessment->booklets->sortBy('number')->values();
+        $scanWarnings = $assessment->scanMaterializations
+            ->flatMap(fn (AssessmentScanMaterialization $materialization): array => $materialization->warnings ?? [])
+            ->unique()
+            ->values();
         $taskFragments = $booklets
             ->where('status', 'open')
             ->flatMap(function (AssessmentBooklet $booklet) use ($teachingGroup, $assessment): array {
@@ -177,7 +183,7 @@ class AssessmentController extends Controller
                     'start_page' => $booklet->fragments->min('page') ?? 1,
                     'markers' => [],
                 ])->values(),
-                'warnings' => [],
+                'warnings' => $scanWarnings,
             ],
             'fragments' => $taskFragments->map(fn (array $fragment): array => [
                 'fragment_id' => $fragment['id'],
@@ -251,6 +257,7 @@ class AssessmentController extends Controller
         $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
         $this->ensureBookletBelongsToAssessment($booklet, $assessment);
         abort_unless($assessment->tasks()->whereKey($assessmentTask->getKey())->exists(), 404);
+        abort_unless($booklet->fragments()->where('assessment_task_id', $assessmentTask->getKey())->exists(), 404);
         $reviews->handle($booklet, $assessmentTask, $request->validated());
 
         return back()->with('success', 'Aufgabenbewertung wurde gespeichert.');
@@ -333,6 +340,14 @@ class AssessmentController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        if (AssessmentScanMaterialization::query()
+            ->where('assessment_id', $assessment->getKey())
+            ->where('session_id', $session)
+            ->exists()) {
+            return response()->json([
+                'redirect_url' => route('assessments.evaluation', [$teachingGroup, $assessment]),
+            ]);
+        }
         $manifest = $sessions->manifest($session);
         abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
         $data = $request->validate(['scan' => ['sometimes', 'array'], 'fragment_ids' => ['sometimes', 'array']]);
@@ -425,9 +440,9 @@ class AssessmentController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessmentTask->assessments()->where('teaching_group_id', $teachingGroup->id)->exists(), 404);
-        $data = $request->validate(['student_id' => ['required', 'integer'], 'points' => ['nullable', 'integer', 'min:0'], 'level' => ['nullable', 'in:G,M,E'], 'numeric_grade' => ['nullable', 'regex:/^[1-6](?:[+-])?$/'], 'note' => ['nullable', 'string', 'max:2000']]);
+        $data = $request->validate(['student_id' => ['required', 'integer'], 'points' => ['nullable', 'numeric'], 'level' => ['nullable', 'in:G,M,E'], 'numeric_grade' => ['nullable', 'regex:/^[1-6](?:[+-])?$/'], 'note' => ['nullable', 'string', 'max:2000']]);
         abort_unless($teachingGroup->students()->whereKey($data['student_id'])->exists(), 422);
-        StudentAssessmentResult::updateOrCreate(['assessment_task_id' => $assessmentTask->id, 'student_id' => $data['student_id']], collect($data)->except('student_id')->all());
+        StudentAssessmentResult::updateOrCreate(['assessment_id' => null, 'assessment_task_id' => $assessmentTask->id, 'student_id' => $data['student_id']], collect($data)->except('student_id')->all());
 
         return back()->with('success', 'Ergebnis wurde gespeichert.');
     }

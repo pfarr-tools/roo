@@ -45,7 +45,16 @@ final class AssessmentScanFragmentBuilder
      */
     public function booklets(string $sessionId): array
     {
+        return $this->analysis($sessionId, null)['booklets'];
+    }
+
+    /**
+     * @return array{booklets:list<array{start_page:int,fragments:list<array{task_id:string,page:int,end_page:int,start_y_cm:float,end_y_cm:float}>}>,warnings:list<string>}
+     */
+    public function analysis(string $sessionId, ?int $assessmentId): array
+    {
         $booklets = [];
+        $warnings = [];
         $currentBooklet = null;
         $openTasks = [];
         $pages = $this->sessions->pages($sessionId);
@@ -56,6 +65,16 @@ final class AssessmentScanFragmentBuilder
             usort($markers, fn (array $left, array $right): int => $left['y_px'] <=> $right['y_px']);
             foreach ($markers as $marker) {
                 if ($marker['kind'] === 'PAGE') {
+                    foreach ($openTasks as $taskId => $start) {
+                        $warnings[] = "Seite {$start['page']}: START-Marker für Aufgabe {$taskId} ohne END-Marker.";
+                    }
+                    if ($assessmentId !== null && (int) ($marker['assessment_id'] ?? 0) !== $assessmentId) {
+                        $warnings[] = "Seite {$page['page']}: Der PAGE-Marker gehört zu einer anderen Lernstandserhebung und wurde ignoriert.";
+                        $currentBooklet = null;
+                        $openTasks = [];
+
+                        continue;
+                    }
                     $booklets[] = ['start_page' => $page['page'], 'fragments' => []];
                     $currentBooklet = array_key_last($booklets);
                     $openTasks = [];
@@ -63,14 +82,25 @@ final class AssessmentScanFragmentBuilder
                     continue;
                 }
                 if ($currentBooklet === null) {
+                    $warnings[] = "Seite {$page['page']}: {$marker['kind']}-Marker für Aufgabe {$marker['task_id']} ohne passendes Booklet.";
+
                     continue;
                 }
                 if ($marker['kind'] === 'START') {
+                    if (isset($openTasks[$marker['task_id']])) {
+                        $previous = $openTasks[$marker['task_id']];
+                        $warnings[] = "Seite {$previous['page']}: START-Marker für Aufgabe {$marker['task_id']} ohne END-Marker.";
+                    }
                     $openTasks[$marker['task_id']] = ['page' => $page['page'], 'marker' => $marker];
 
                     continue;
                 }
-                if ($marker['kind'] !== 'END' || ! isset($openTasks[$marker['task_id']])) {
+                if ($marker['kind'] !== 'END') {
+                    continue;
+                }
+                if (! isset($openTasks[$marker['task_id']])) {
+                    $warnings[] = "Seite {$page['page']}: END-Marker für Aufgabe {$marker['task_id']} ohne START-Marker.";
+
                     continue;
                 }
 
@@ -83,11 +113,20 @@ final class AssessmentScanFragmentBuilder
                         'start_y_cm' => (float) $start['marker']['y_cm'],
                         'end_y_cm' => (float) $marker['y_cm'],
                     ];
+                } else {
+                    $warnings[] = "Seite {$page['page']}: END-Marker für Aufgabe {$marker['task_id']} liegt vor dem START-Marker.";
                 }
                 unset($openTasks[$marker['task_id']]);
             }
         }
 
-        return $booklets;
+        foreach ($openTasks as $taskId => $start) {
+            $warnings[] = "Seite {$start['page']}: START-Marker für Aufgabe {$taskId} ohne END-Marker.";
+        }
+        if ($booklets === []) {
+            $warnings[] = 'Es wurden keine passenden Booklet-Marker für diese Lernstandserhebung erkannt.';
+        }
+
+        return ['booklets' => $booklets, 'warnings' => array_values(array_unique($warnings))];
     }
 }

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
 import { createScanClient } from '../AssessmentScan/scanClient'
-import { uploadErrorMessage, uploadProgressDetails } from './presentation'
+import { scanPhaseLabel, uploadErrorMessage, uploadProgressDetails } from './presentation'
 
 const props = defineProps({
     group: { type: Object, required: true },
@@ -23,7 +23,9 @@ const isScanProcessing = computed(() => scanForm.processing || browserScanning.v
 const progressDetails = computed(() => scanProgress.value ? uploadProgressDetails(scanProgress.value) : null)
 
 function selectScanFile(event) {
-    scanForm.pdf = event.target.files?.[0] ?? null
+    const pdf = event.target.files?.[0] ?? null
+    if (pdf !== scanForm.pdf) scanClient.value = null
+    scanForm.pdf = pdf
 }
 
 function close() {
@@ -38,20 +40,22 @@ async function submit() {
 
     browserScanning.value = true
     scanError.value = null
-    const sessionUrl = `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/session`
-    scanClient.value = createScanClient({
-        pdf: scanForm.pdf,
-        sessionUrl,
-        pageUrl: (sessionId) => `${sessionUrl}/${sessionId}/pages`,
-        completeUrl: (sessionId) => `${sessionUrl}/${sessionId}/complete`,
-        onProgress: (progress) => { scanProgress.value = progress },
-        onPagePreview: (url, page) => {
-            if (scanPreviewUrl.value) URL.revokeObjectURL(scanPreviewUrl.value)
-            scanPreviewUrl.value = url
-            scanPreviewPage.value = page
-        },
-        onComplete: (redirectUrl) => window.location.assign(redirectUrl),
-    })
+    if (!scanClient.value) {
+        const sessionUrl = `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/session`
+        scanClient.value = createScanClient({
+            pdf: scanForm.pdf,
+            sessionUrl,
+            pageUrl: (sessionId) => `${sessionUrl}/${sessionId}/pages`,
+            completeUrl: (sessionId) => `${sessionUrl}/${sessionId}/complete`,
+            onProgress: (progress) => { scanProgress.value = progress },
+            onPagePreview: (url, page) => {
+                if (scanPreviewUrl.value) URL.revokeObjectURL(scanPreviewUrl.value)
+                scanPreviewUrl.value = url
+                scanPreviewPage.value = page
+            },
+            onComplete: (redirectUrl) => window.location.assign(redirectUrl),
+        })
+    }
 
     try {
         scanResult.value = await scanClient.value.start()
@@ -91,7 +95,7 @@ async function submit() {
                         </div>
                         <div v-if="scanProgress && progressDetails" class="mt-3" role="status" aria-live="polite">
                             <div class="d-flex justify-content-between small text-muted mb-1">
-                                <span>{{ de.assessmentScanPhase }}: {{ scanProgress.phase }}</span>
+                                <span>{{ de.assessmentScanPhase }}: {{ scanPhaseLabel(scanProgress.phase) }}</span>
                                 <span v-if="progressDetails.page">{{ progressDetails.page }}</span>
                             </div>
                             <div class="progress mb-2" role="progressbar" :aria-valuenow="scanProgress.percent ?? 0" aria-valuemin="0" aria-valuemax="100">

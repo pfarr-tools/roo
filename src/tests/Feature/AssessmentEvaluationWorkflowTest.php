@@ -282,6 +282,14 @@ it('saves signed extra points for a task without expectations', function () {
         'title' => 'Aufgabe ohne Erwartung',
     ]));
     $fixture['assessment']->tasks()->attach($taskWithoutExpectations, ['position' => 2]);
+    AssessmentBookletFragment::create([
+        'assessment_booklet_id' => $fixture['booklets'][0]->id,
+        'assessment_task_id' => $taskWithoutExpectations->id,
+        'image_path' => "assessment-booklets/{$fixture['assessment']->id}/{$fixture['booklets'][0]->id}/task-{$taskWithoutExpectations->id}.png",
+        'page' => 1,
+        'start_y_cm' => 10,
+        'end_y_cm' => 16,
+    ]);
 
     $this->actingAs($fixture['user'])
         ->put("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$fixture['booklets'][0]->id}/tasks/{$taskWithoutExpectations->id}/review", [
