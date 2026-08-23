@@ -4,6 +4,7 @@ import AppShell from '../../Components/Ui/AppShell.vue'
 import AssessmentScanUploadModal from '../../Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'
 import BookletAssignment from '../../Features/AssessmentEvaluation/BookletAssignment.vue'
 import BookletList from '../../Features/AssessmentEvaluation/BookletList.vue'
+import TaskEvaluation from '../../Features/AssessmentEvaluation/TaskEvaluation.vue'
 import { evaluationSections } from '../../Features/AssessmentEvaluation/presentation'
 import de from '../../i18n/de'
 
@@ -14,12 +15,29 @@ const props = defineProps({
     students: { type: Array, default: () => [] },
     tasks: { type: Array, default: () => [] },
     booklets: { type: Array, default: () => [] },
+    taskFragments: { type: Array, default: () => [] },
     progress: { type: Object, default: () => ({}) },
 })
 
 const activeSection = ref('scans')
 const scanOpen = ref(false)
+const activeTaskId = ref(null)
+const taskOpenKey = ref(0)
 const openBooklets = computed(() => props.booklets.filter((booklet) => booklet.status === 'open'))
+const activeTask = computed(() => props.tasks.find((task) => task.id === activeTaskId.value) ?? null)
+const activeTaskFragments = computed(() => props.taskFragments.filter((fragment) => fragment.assessment_task_id === activeTaskId.value))
+
+function taskProgress(task) {
+    const fragments = props.taskFragments.filter((fragment) => fragment.assessment_task_id === task.id)
+    const completed = fragments.filter((fragment) => fragment.review !== null).length
+
+    return { total: fragments.length, completed, open: fragments.length - completed }
+}
+
+function openTask(taskId) {
+    activeTaskId.value = taskId
+    taskOpenKey.value += 1
+}
 </script>
 
 <template>
@@ -73,8 +91,19 @@ const openBooklets = computed(() => props.booklets.filter((booklet) => booklet.s
             <section v-else aria-labelledby="assessment-tasks-heading">
                 <h2 id="assessment-tasks-heading" class="h4 mb-1">{{ de.assessmentEvaluationTasks }}</h2>
                 <p class="text-muted mb-4">{{ de.assessmentEvaluationTasksIntro }}</p>
-                <div v-if="tasks.length" class="list-group">
-                    <div v-for="task in tasks" :key="task.id" class="list-group-item d-flex justify-content-between align-items-center"><span>{{ task.title }}</span><span class="badge text-bg-light">{{ task.expectations?.length ?? 0 }}</span></div>
+                <div v-if="tasks.length" class="row g-4">
+                    <div class="col-12 col-xl-4">
+                        <div class="list-group">
+                            <button v-for="task in tasks" :key="task.id" class="list-group-item list-group-item-action text-start" :class="{ active: activeTaskId === task.id }" type="button" @click="openTask(task.id)">
+                                <span class="d-block fw-semibold">{{ task.title }}</span>
+                                <span class="small">{{ taskProgress(task).open }} {{ de.assessmentEvaluationOpen }} · {{ taskProgress(task).completed }} {{ de.assessmentEvaluationCompleted }} · {{ taskProgress(task).total }} {{ de.assessmentEvaluationTotal }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-8">
+                        <TaskEvaluation v-if="activeTask" :group="group" :assessment="assessment" :task="activeTask" :fragments="activeTaskFragments" :open-key="taskOpenKey" />
+                        <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationChooseTask }}</p>
+                    </div>
                 </div>
                 <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoTasks }}</p>
             </section>

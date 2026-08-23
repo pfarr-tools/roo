@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 
-import { createApp, nextTick } from 'vue'
+import { createApp, nextTick, reactive } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const testState = vi.hoisted(() => ({
     forms: [],
     scanClients: [],
     startScan: vi.fn(),
+    routerPut: vi.fn(),
 }))
 
 vi.mock('@inertiajs/vue3', async () => {
@@ -25,6 +26,9 @@ vi.mock('@inertiajs/vue3', async () => {
 
         return form
     },
+    router: {
+        put: (...args) => testState.routerPut(...args),
+    },
     }
 })
 
@@ -39,6 +43,7 @@ vi.mock('../../resources/js/Features/AssessmentScan/scanClient', () => ({
 import AssessmentScanUploadModal from '../../resources/js/Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'
 import BookletAssignment from '../../resources/js/Features/AssessmentEvaluation/BookletAssignment.vue'
 import BookletList from '../../resources/js/Features/AssessmentEvaluation/BookletList.vue'
+import TaskEvaluation from '../../resources/js/Features/AssessmentEvaluation/TaskEvaluation.vue'
 import {
     evaluationSections,
     bookletStudentOptions,
@@ -69,6 +74,7 @@ beforeEach(() => {
     testState.forms.length = 0
     testState.scanClients.length = 0
     testState.startScan.mockReset()
+    testState.routerPut.mockReset()
 })
 
 describe('assessment evaluation presentation', () => {
@@ -136,6 +142,103 @@ describe('assessment evaluation presentation', () => {
 })
 
 describe('assessment evaluation components', () => {
+    it('renders repeated expectations independently and saves a reviewed task fragment', async () => {
+        const task = {
+            id: 21,
+            title: 'Schöpfung beschreiben',
+            expectations: [{ id: 31, text: 'Nennt Beispiele.', points: 2, repetitions: 2 }],
+        }
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task,
+            fragments: [{ id: 41, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        root.querySelector('[data-testid="full-points-41-31-1"]').click()
+        const points = root.querySelector('[data-testid="points-41-31-2"]')
+        points.value = '0.5'
+        points.dispatchEvent(new Event('input'))
+        const note = root.querySelector('[data-testid="note-41-31-2"]')
+        note.value = 'teilweise'
+        note.dispatchEvent(new Event('input'))
+        const extraPoints = root.querySelector('[data-testid="extra-points-41"]')
+        extraPoints.value = '-1'
+        extraPoints.dispatchEvent(new Event('input'))
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+
+        expect(testState.routerPut).toHaveBeenCalledWith(
+            '/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/booklets/8/tasks/21/review',
+            {
+                items: [
+                    { expectation_id: 31, occurrence: 1, awarded_points: 2, note: null },
+                    { expectation_id: 31, occurrence: 2, awarded_points: 0.5, note: 'teilweise' },
+                ],
+                extra_points: -1,
+                extra_note: null,
+            },
+            expect.objectContaining({ preserveScroll: true, preserveState: true }),
+        )
+        unmount()
+    })
+
+    it('shuffles task fragments whenever the task panel is opened again', async () => {
+        const task = { id: 21, title: 'Schöpfung beschreiben', expectations: [] }
+        const fragments = [
+            { id: 41, image_url: '/private/1.png', review: null },
+            { id: 42, image_url: '/private/2.png', review: null },
+            { id: 43, image_url: '/private/3.png', review: null },
+        ]
+        const random = vi.spyOn(Math, 'random')
+            .mockReturnValueOnce(0)
+            .mockReturnValueOnce(0)
+            .mockReturnValueOnce(0.99)
+            .mockReturnValueOnce(0.99)
+        const state = reactive({ group, assessment, task, fragments, openKey: 1 })
+        const root = document.createElement('div')
+        document.body.append(root)
+        const app = createApp({
+            components: { TaskEvaluation },
+            setup: () => ({ state }),
+            template: '<TaskEvaluation v-bind="state" />',
+        })
+        app.mount(root)
+        const firstOrder = [...root.querySelectorAll('[data-testid="task-fragment-id"]')].map((element) => element.textContent)
+        state.openKey = 2
+        await nextTick()
+        const secondOrder = [...root.querySelectorAll('[data-testid="task-fragment-id"]')].map((element) => element.textContent)
+
+        expect(firstOrder).not.toEqual(secondOrder)
+        random.mockRestore()
+        app.unmount()
+        root.remove()
+    })
+
+    it('keeps a review validation error on the affected task fragment only', async () => {
+        testState.routerPut.mockImplementation((url, data, options) => options.onError({ items: 'Bitte bewerte jede Ausprägung.' }))
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: { id: 21, title: 'Schöpfung beschreiben', expectations: [] },
+            fragments: [
+                { id: 41, booklet_id: 8, image_url: '/private/1.png', review: null },
+                { id: 42, booklet_id: 9, image_url: '/private/2.png', review: null },
+            ],
+            openKey: 1,
+        })
+
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+
+        const cards = root.querySelectorAll('.card')
+        expect(cards[0].textContent).toContain('Bitte bewerte jede Ausprägung.')
+        expect(cards[1].textContent).not.toContain('Bitte bewerte jede Ausprägung.')
+        unmount()
+    })
+
     it('renders the protected name fragment and submits an unassignment', async () => {
         const { root, unmount } = mount(BookletAssignment, {
             group,

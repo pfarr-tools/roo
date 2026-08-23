@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['assessment_task_id', 'student_id', 'points', 'level', 'numeric_grade', 'note'])]
 class StudentAssessmentResult extends Model
 {
+    protected function casts(): array
+    {
+        return ['points' => 'decimal:2'];
+    }
+
     public function task(): BelongsTo
     {
         return $this->belongsTo(AssessmentTask::class, 'assessment_task_id');

@@ -10,11 +10,14 @@ use Illuminate\Validation\ValidationException;
 
 final class AssignAssessmentBooklet
 {
+    public function __construct(private readonly SyncStudentAssessmentResult $resultSync) {}
+
     public function handle(AssessmentBooklet $booklet, TeachingGroup $teachingGroup, ?int $studentId): AssessmentBooklet
     {
         try {
             return DB::transaction(function () use ($booklet, $teachingGroup, $studentId): AssessmentBooklet {
                 $lockedBooklet = AssessmentBooklet::query()->lockForUpdate()->findOrFail($booklet->getKey());
+                $previousStudentId = $lockedBooklet->student_id;
 
                 if ($studentId !== null && ! $teachingGroup->students()->whereKey($studentId)->exists()) {
                     throw ValidationException::withMessages(['student_id' => 'Die ausgewählte Schüler:in gehört nicht zu dieser Unterrichtsgruppe.']);
@@ -22,8 +25,9 @@ final class AssignAssessmentBooklet
 
                 $this->ensureAvailable($lockedBooklet, $studentId, $lockedBooklet->status);
                 $lockedBooklet->update(['student_id' => $studentId]);
+                $this->resultSync->synchronizeBooklet($lockedBooklet->fresh(), $previousStudentId);
 
-                return $lockedBooklet;
+                return $lockedBooklet->fresh();
             });
         } catch (QueryException $exception) {
             $this->throwDuplicateAssignment($exception);
@@ -35,10 +39,12 @@ final class AssignAssessmentBooklet
         try {
             return DB::transaction(function () use ($booklet, $status): AssessmentBooklet {
                 $lockedBooklet = AssessmentBooklet::query()->lockForUpdate()->findOrFail($booklet->getKey());
+                $previousStudentId = $lockedBooklet->student_id;
                 $this->ensureAvailable($lockedBooklet, $lockedBooklet->student_id, $status);
                 $lockedBooklet->update(['status' => $status]);
+                $this->resultSync->synchronizeBooklet($lockedBooklet->fresh(), $previousStudentId);
 
-                return $lockedBooklet;
+                return $lockedBooklet->fresh();
             });
         } catch (QueryException $exception) {
             $this->throwDuplicateAssignment($exception, 'status');

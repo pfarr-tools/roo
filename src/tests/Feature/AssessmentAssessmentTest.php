@@ -88,7 +88,7 @@ it('rejects non-pdf uploads and assessments from another group', function () {
 
 it('offers the assessment scan action in the existing assessment editor', function () {
     $template = file_get_contents(resource_path('js/Pages/Assessments/Form.vue'));
-    $modal = file_get_contents(resource_path('js/Features/AssessmentScan/AssessmentScanUploadModal.vue'));
+    $modal = file_get_contents(resource_path('js/Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'));
 
     expect($template)->toContain('assessmentScanTitle')
         ->and($template)->toContain('lernstandserhebungen/${assessment.id}/auswertung')
@@ -99,7 +99,7 @@ it('offers the assessment scan action in the existing assessment editor', functi
 });
 
 it('lays out the scan upload modal beside a contained page preview', function () {
-    $template = file_get_contents(resource_path('js/Features/AssessmentScan/AssessmentScanUploadModal.vue'));
+    $template = file_get_contents(resource_path('js/Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'));
     $styles = file_get_contents(resource_path('scss/app.scss'));
 
     expect($template)->toContain('assessment-scan-modal')

@@ -10,13 +10,13 @@ use Illuminate\Validation\ValidationException;
 
 final class SaveAssessmentTaskReview
 {
+    public function __construct(private readonly SyncStudentAssessmentResult $resultSync) {}
+
     /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, extra_points: int|float|string|null, extra_note?: ?string} $data */
     public function handle(AssessmentBooklet $booklet, AssessmentTask $task, array $data): AssessmentTaskReview
     {
-        $expectedOccurrences = $task->expectations()
-            ->get(['id', 'repetitions'])
-            ->flatMap(fn ($expectation) => collect(range(1, max(1, (int) $expectation->repetitions)))
-                ->map(fn (int $occurrence): string => "{$expectation->id}:{$occurrence}"))
+        $expectedOccurrences = ExpectationOccurrences::forTask($task)
+            ->map(fn (array $occurrence): string => "{$occurrence['expectation_id']}:{$occurrence['occurrence']}")
             ->values();
         $providedOccurrences = collect($data['items'])
             ->map(fn (array $item): string => "{$item['expectation_id']}:{$item['occurrence']}")
@@ -69,6 +69,7 @@ final class SaveAssessmentTaskReview
             }
 
             $review->load('items');
+            $this->resultSync->handle($booklet->fresh(), $task);
 
             return $review;
         });
