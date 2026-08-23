@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -144,4 +145,22 @@ it('allows an assigned student only once among open booklets of an assessment', 
     ]))->toThrow(QueryException::class);
 
     expect(fn () => $discarded->update(['status' => 'open']))->toThrow(QueryException::class);
+});
+
+it('allows only one legacy result for the same task and student', function () {
+    $fixture = assessmentEvaluationDataFixture();
+
+    StudentAssessmentResult::create([
+        'assessment_id' => null,
+        'assessment_task_id' => $fixture['task']->id,
+        'student_id' => $fixture['student']->id,
+        'points' => 3,
+    ]);
+
+    expect(fn () => StudentAssessmentResult::create([
+        'assessment_id' => null,
+        'assessment_task_id' => $fixture['task']->id,
+        'student_id' => $fixture['student']->id,
+        'points' => 4,
+    ]))->toThrow(QueryException::class);
 });

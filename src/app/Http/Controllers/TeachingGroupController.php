@@ -388,6 +388,7 @@ class TeachingGroupController extends Controller
     {
         $this->authorize('delete', $teachingGroup);
         $studentIds = $teachingGroup->students()->pluck('students.id');
+        $teachingGroup->assessments()->get()->each->delete();
         $teachingGroup->delete();
         Student::whereIn('id', $studentIds)->get()->each->searchable();
 
