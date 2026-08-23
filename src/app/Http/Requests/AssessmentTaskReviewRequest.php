@@ -14,7 +14,7 @@ class AssessmentTaskReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['present', 'array'],
             'items.*.expectation_id' => ['required', 'integer', 'exists:assessment_task_expectations,id'],
             'items.*.occurrence' => ['required', 'integer', 'min:1'],
             'items.*.awarded_points' => ['required', 'numeric'],

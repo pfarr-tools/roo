@@ -244,6 +244,61 @@ it('requires a review row for every expectation occurrence', function () {
     expect(AssessmentTaskReview::query()->count())->toBe(0);
 });
 
+it('saves signed extra points for a task without expectations', function () {
+    $fixture = assessmentEvaluationWorkflowFixture();
+    $taskWithoutExpectations = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Aufgabe ohne Erwartung',
+    ]));
+    $fixture['assessment']->tasks()->attach($taskWithoutExpectations, ['position' => 2]);
+
+    $this->actingAs($fixture['user'])
+        ->put("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$fixture['booklets'][0]->id}/tasks/{$taskWithoutExpectations->id}/review", [
+            'items' => [],
+            'extra_points' => -2.5,
+            'extra_note' => 'Zusätzlicher Abzug',
+        ])
+        ->assertRedirect();
+
+    $review = AssessmentTaskReview::query()->sole();
+
+    expect($review->assessment_task_id)->toBe($taskWithoutExpectations->id)
+        ->and($review->extra_points)->toBe('-2.50')
+        ->and($review->items)->toHaveCount(0);
+});
+
+it('deletes obsolete review occurrences when repetitions decrease', function () {
+    $fixture = assessmentEvaluationWorkflowFixture();
+    $reviewUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$fixture['booklets'][0]->id}/tasks/{$fixture['task']->id}/review";
+
+    $this->actingAs($fixture['user'])
+        ->put($reviewUrl, [
+            'items' => [
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 2],
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 2],
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 2],
+            ],
+            'extra_points' => 0,
+        ])
+        ->assertRedirect();
+
+    $fixture['expectation']->update(['repetitions' => 1]);
+
+    $this->actingAs($fixture['user'])
+        ->put($reviewUrl, [
+            'items' => [
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 1],
+            ],
+            'extra_points' => 0,
+        ])
+        ->assertRedirect();
+
+    $review = AssessmentTaskReview::query()->sole();
+
+    expect($review->items()->pluck('occurrence')->all())->toBe([1])
+        ->and($review->items()->sole()->awarded_points)->toBe('1.00');
+});
+
 it('randomizes task fragments on each evaluation request', function () {
     $fixture = assessmentEvaluationWorkflowFixture(5);
     $url = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung";

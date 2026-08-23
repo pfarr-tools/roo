@@ -29,7 +29,7 @@ final class SaveAssessmentTaskReview
             throw ValidationException::withMessages(['items' => 'Für jede Erwartungsausprägung muss genau eine Bewertungszeile übermittelt werden.']);
         }
 
-        return DB::transaction(function () use ($booklet, $task, $data): AssessmentTaskReview {
+        return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences): AssessmentTaskReview {
             $review = AssessmentTaskReview::query()
                 ->where('assessment_booklet_id', $booklet->getKey())
                 ->where('assessment_task_id', $task->getKey())
@@ -47,6 +47,13 @@ final class SaveAssessmentTaskReview
                 'extra_points' => $data['extra_points'] ?? 0,
                 'extra_note' => $data['extra_note'] ?? null,
             ]);
+
+            $review->items->each(function ($item) use ($providedOccurrences): void {
+                $key = "{$item->assessment_task_expectation_id}:{$item->occurrence}";
+                if (! $providedOccurrences->contains($key)) {
+                    $item->delete();
+                }
+            });
 
             foreach ($data['items'] as $item) {
                 $review->items()->updateOrCreate(
