@@ -47,6 +47,14 @@ it('parses dmtxread corner prefixes and uses the top-most y coordinate', functio
 
     expect($decoder->parseOutput('10,100:30,100:30,120:10,120:ROO1|A=42|L=M|K=PAGE')[0])
         ->toMatchArray(['payload' => 'ROO1|A=42|L=M|K=PAGE', 'y_px' => 100.0]);
+
+    expect($decoder->parseOutput(
+        "ROO1|T=1|K=START\nROO1|A=3|L=M|K=PAGE",
+        "66,1294:157,1294:157,1204:66,1204:\n61,255:196,255:196,120:61,120:",
+    ))->toMatchArray([
+        ['payload' => 'ROO1|T=1|K=START', 'x_px' => 66.0, 'y_px' => 1204.0, 'width_px' => 91.0, 'height_px' => 90.0],
+        ['payload' => 'ROO1|A=3|L=M|K=PAGE', 'x_px' => 61.0, 'y_px' => 120.0, 'width_px' => 135.0, 'height_px' => 135.0],
+    ]);
 });
 
 it('limits the decoder scan time for each rendered page', function () {

@@ -378,6 +378,7 @@ export default {
     assessmentScanPhase: 'Phase',
     assessmentScanMarkers: 'Marker',
     assessmentScanUploadedFragments: 'Fragmente hochgeladen',
+    assessmentScanUploadedPages: 'Seiten hochgeladen',
     assessmentScanCompleted: 'Browseranalyse abgeschlossen. Die erkannten Fragmente sind temporär gespeichert.',
     assessmentScanFragments: 'Übermittelte Antwortfragmente',
     assessmentTasksWindowHint: 'Aufgaben aus den verplanten Stunden seit der letzten Lernstandserhebung.',

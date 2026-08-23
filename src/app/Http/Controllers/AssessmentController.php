@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Documents\AssessmentDocument;
 use App\Documents\DocumentOutputFormat;
 use App\Http\Requests\AssessmentScanFragmentRequest;
+use App\Http\Requests\AssessmentScanPageRequest;
 use App\Http\Requests\AssessmentScanSessionRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
+use App\Services\AssessmentScan\AssessmentScanFragmentBuilder;
+use App\Services\AssessmentScan\AssessmentScanGrouper;
+use App\Services\AssessmentScan\AssessmentScanPageProcessor;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
+use App\Services\AssessmentScan\RooMarker;
 use App\Services\CompetencyResolver;
 use App\Services\PhpOfficeDocumentRenderer;
 use Carbon\CarbonImmutable;
@@ -132,6 +137,20 @@ class AssessmentController extends Controller
         return response()->json($result, 201);
     }
 
+    public function storeScanPage(AssessmentScanPageRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions, AssessmentScanPageProcessor $processor)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+        $manifest = $sessions->manifest($session);
+        abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
+        $data = $request->validated();
+        $page = $sessions->storePage($session, $data['page'], $data['image']);
+        $markers = $processor->markers($page['path'], $page['page']);
+        $sessions->storePageMarkers($session, $page['page'], $markers);
+
+        return response()->json(['page' => $page['page'], 'markers' => $markers], 201);
+    }
+
     public function deleteScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
     {
         $this->authorize('update', $teachingGroup);
@@ -143,19 +162,25 @@ class AssessmentController extends Controller
         return response()->noContent();
     }
 
-    public function completeScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions)
+    public function completeScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions, AssessmentScanFragmentBuilder $fragments, AssessmentScanGrouper $grouper)
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
         $manifest = $sessions->manifest($session);
         abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
-        $data = $request->validate([
-            'scan' => ['required', 'array'],
-            'scan.booklets' => ['present', 'array'],
-            'scan.warnings' => ['present', 'array'],
-            'fragment_ids' => ['present', 'array'],
-        ]);
-        $sessions->complete($session, $data['scan'], $data['fragment_ids']);
+        $data = $request->validate(['scan' => ['sometimes', 'array'], 'fragment_ids' => ['sometimes', 'array']]);
+        if ($sessions->pages($session) !== []) {
+            $markers = collect($sessions->pages($session))->flatMap(fn (array $page): array => array_map(fn (array $marker): RooMarker => new RooMarker(
+                kind: $marker['kind'], page: $marker['page'], yCm: (float) $marker['y_cm'], assessmentId: $marker['assessment_id'] ?? null,
+                taskId: $marker['task_id'] ?? null, level: $marker['level'] ?? null, payload: $marker['payload'] ?? '',
+            ), $page['markers']))->values()->all();
+            $scan = $grouper->group($markers)->toArray();
+            $fragmentIds = $fragments->build($session);
+        } else {
+            $scan = $data['scan'] ?? ['booklets' => [], 'warnings' => []];
+            $fragmentIds = $data['fragment_ids'] ?? [];
+        }
+        $sessions->complete($session, $scan, $fragmentIds);
 
         return response()->json([
             'redirect_url' => route('assessments.scan-sessions.result', [$teachingGroup, $assessment, $session]),

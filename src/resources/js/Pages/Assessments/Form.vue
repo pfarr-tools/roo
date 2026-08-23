@@ -144,7 +144,7 @@ async function submitScan() {
     scanClient.value = createScanClient({
         pdf: scanForm.pdf,
         sessionUrl,
-        fragmentUrl: (sessionId) => `${sessionUrl}/${sessionId}/fragments`,
+        pageUrl: (sessionId) => `${sessionUrl}/${sessionId}/pages`,
         completeUrl: (sessionId) => `${sessionUrl}/${sessionId}/complete`,
         onProgress: (progress) => { scanProgress.value = progress },
         onPagePreview: (url, page) => {
@@ -532,7 +532,7 @@ syncTasks();
                         <div class="progress mb-2" role="progressbar" :aria-valuenow="scanProgress.percent ?? 0" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar" :style="{ width: `${scanProgress.percent ?? 0}%` }"></div>
                         </div>
-                        <div class="small text-muted">{{ de.assessmentScanMarkers }}: {{ scanProgress.detectedMarkers }} · {{ de.assessmentScanUploadedFragments }}: {{ scanProgress.uploadedFragments }} / {{ scanProgress.queuedFragments }}</div>
+                        <div class="small text-muted">{{ de.assessmentScanMarkers }}: {{ scanProgress.detectedMarkers }} · {{ de.assessmentScanUploadedPages }}: {{ scanProgress.uploadedPages }} / {{ scanProgress.totalPages }}</div>
                     </div>
                     <div v-if="scanResult" class="alert alert-success mt-3 mb-0">{{ de.assessmentScanCompleted }}</div>
                     <div v-if="scanError" class="alert alert-danger mt-3 mb-0">{{ scanError }}</div>

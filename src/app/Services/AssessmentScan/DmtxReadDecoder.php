@@ -18,7 +18,7 @@ final class DmtxReadDecoder implements DataMatrixDecoder
             throw new \RuntimeException('DataMatrix-Decoder konnte nicht ausgeführt werden.');
         }
 
-        yield from $this->parseOutput($process->getOutput());
+        yield from $this->parseOutput($process->getOutput(), $process->getErrorOutput());
     }
 
     /** @return list<string> */
@@ -37,7 +37,7 @@ final class DmtxReadDecoder implements DataMatrixDecoder
     }
 
     /** @return list<array{payload:string, y_px:float}> */
-    public function parseOutput(string $output): array
+    public function parseOutput(string $output, string $positionOutput = ''): array
     {
         $markers = [];
 
@@ -46,15 +46,46 @@ final class DmtxReadDecoder implements DataMatrixDecoder
                 continue;
             }
 
-            preg_match_all('/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?):/', $matches[1], $corners);
-            $ys = array_map('floatval', $corners[2] ?? []);
-            if (count($ys) !== 4) {
-                continue;
-            }
-
-            $markers[] = ['payload' => trim($matches[2]), 'y_px' => min($ys)];
+            $markers[] = $this->markerFromPosition($matches[1], $matches[2]);
         }
 
-        return $markers;
+        if ($positionOutput === '') {
+            return array_values(array_filter($markers));
+        }
+
+        preg_match_all('/((?:-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?:){4})/', $positionOutput, $positionMatches);
+        $positions = $positionMatches[1] ?? [];
+        $payloads = array_values(array_filter(
+            preg_split('/\R/', trim($output)) ?: [],
+            static fn (string $line): bool => trim($line) !== '',
+        ));
+
+        foreach ($payloads as $index => $payload) {
+            if (isset($positions[$index])) {
+                $markers[] = $this->markerFromPosition($positions[$index], $payload);
+            }
+        }
+
+        return array_values(array_filter($markers));
+    }
+
+    /** @return array{payload:string, y_px:float}|null */
+    private function markerFromPosition(string $position, string $payload): ?array
+    {
+        preg_match_all('/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?):/', $position, $corners);
+        $ys = array_map('floatval', $corners[2] ?? []);
+        if (count($ys) !== 4 || trim($payload) === '') {
+            return null;
+        }
+
+        $xs = array_map('floatval', $corners[1] ?? []);
+
+        return [
+            'payload' => trim($payload),
+            'x_px' => min($xs),
+            'y_px' => min($ys),
+            'width_px' => max($xs) - min($xs),
+            'height_px' => max($ys) - min($ys),
+        ];
     }
 }

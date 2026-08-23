@@ -50,6 +50,53 @@ final class AssessmentScanSessionStore
         return ['fragment_id' => $fragmentId, 'checksum' => $checksum];
     }
 
+    /** @return array{fragment_id:string, checksum:string} */
+    public function storeGeneratedFragment(string $sessionId, array $metadata, string $contents): array
+    {
+        $manifest = $this->manifest($sessionId);
+        abort_unless($manifest !== null, 404);
+        $fragmentId = (string) Str::ulid();
+        $path = "assessment-scans/{$sessionId}/{$fragmentId}.png";
+        $this->filesystem()->put($path, $contents);
+        $checksum = hash('sha256', $contents);
+        $manifest['fragments'][] = compact('fragmentId', 'path', 'checksum', 'metadata') + ['fragment_id' => $fragmentId];
+        $this->filesystem()->put($this->manifestPath($sessionId), json_encode($manifest, JSON_THROW_ON_ERROR));
+
+        return ['fragment_id' => $fragmentId, 'checksum' => $checksum];
+    }
+
+    /** @return array{page:int, path:string} */
+    public function storePage(string $sessionId, int $page, UploadedFile $image): array
+    {
+        $manifest = $this->manifest($sessionId);
+        abort_unless($manifest !== null, 404);
+        $path = $image->storeAs("assessment-scans/{$sessionId}/pages", "page-{$page}.png", 'temporary');
+        $manifest['pages'] = array_values(array_filter($manifest['pages'] ?? [], fn (array $item): bool => (int) $item['page'] !== $page));
+        $manifest['pages'][] = ['page' => $page, 'path' => $path, 'markers' => []];
+        $this->filesystem()->put($this->manifestPath($sessionId), json_encode($manifest, JSON_THROW_ON_ERROR));
+
+        return ['page' => $page, 'path' => $path];
+    }
+
+    public function storePageMarkers(string $sessionId, int $page, array $markers): void
+    {
+        $manifest = $this->manifest($sessionId);
+        abort_unless($manifest !== null, 404);
+        $manifest['pages'] = array_map(
+            fn (array $item): array => (int) $item['page'] === $page
+                ? [...$item, 'markers' => $markers]
+                : $item,
+            $manifest['pages'] ?? [],
+        );
+        $this->filesystem()->put($this->manifestPath($sessionId), json_encode($manifest, JSON_THROW_ON_ERROR));
+    }
+
+    /** @return list<array{page:int, path:string, markers:list<array<string,mixed>>}> */
+    public function pages(string $sessionId): array
+    {
+        return $this->manifest($sessionId)['pages'] ?? [];
+    }
+
     public function delete(string $sessionId): void
     {
         $this->filesystem()->deleteDirectory("assessment-scans/{$sessionId}");

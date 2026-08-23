@@ -6,6 +6,8 @@ use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\User;
+use App\Services\AssessmentScan\AssessmentScanSessionStore;
+use App\Services\AssessmentScan\DataMatrixDecoder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -106,4 +108,45 @@ it('accepts a completed browser session without detected booklets', function () 
             'fragment_ids' => [],
         ])
         ->assertOk();
+});
+
+it('scans uploaded pages on the server and creates task fragments', function () {
+    Storage::fake('temporary');
+    $fixture = browserScanResultFixture();
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class implements DataMatrixDecoder
+    {
+        public function decode(string $imagePath): iterable
+        {
+            yield ['payload' => 'ROO1|A=3|L=M|K=PAGE', 'x_px' => 2, 'y_px' => 2, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => 'ROO1|T=7|K=START', 'x_px' => 2, 'y_px' => 20, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => 'ROO1|T=7|K=END', 'x_px' => 2, 'y_px' => 70, 'width_px' => 10, 'height_px' => 10];
+        }
+    });
+
+    $session = $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session")
+        ->assertCreated()
+        ->json('session_id');
+
+    $this->actingAs($fixture['user'])
+        ->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/pages", [
+            'image' => UploadedFile::fake()->image('page.png', 100, 100),
+            'page' => 1,
+        ])
+        ->assertCreated()
+        ->assertJsonCount(3, 'markers');
+
+    expect(app(AssessmentScanSessionStore::class)->pages($session))->toHaveCount(1)
+        ->and(app(AssessmentScanSessionStore::class)->pages($session)[0]['markers'])->toHaveCount(3);
+
+    $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/complete", [])
+        ->assertOk();
+
+    $this->actingAs($fixture['user'])
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/ergebnis")
+        ->assertInertia(fn ($page) => $page
+            ->where('scan.booklets.0.number', 1)
+            ->where('fragments.0.booklet', 1)
+            ->where('fragments.0.task_id', '7'));
 });
