@@ -158,6 +158,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/bearbeiten', [AssessmentController::class, 'edit'])->name('assessments.edit');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/download', [AssessmentController::class, 'download'])->name('assessments.download');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswerten', [AssessmentController::class, 'assess'])->name('assessments.assess');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung', [AssessmentController::class, 'evaluation'])->name('assessments.evaluation');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/zuordnung', [AssessmentController::class, 'updateBookletAssignment'])->name('assessments.booklets.assignment.update');
+    Route::patch('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/status', [AssessmentController::class, 'updateBookletStatus'])->name('assessments.booklets.status.update');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/tasks/{assessmentTask}/review', [AssessmentController::class, 'updateTaskReview'])->name('assessments.task-reviews.update');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/name-fragment', [AssessmentController::class, 'showBookletNameFragment'])->name('assessments.booklets.name-fragment.show');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/fragments/{fragment}', [AssessmentController::class, 'showBookletFragment'])->name('assessments.booklet-fragments.show');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session', [AssessmentController::class, 'createScanSession'])->name('assessments.scan-sessions.store');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/fragments', [AssessmentController::class, 'storeScanFragment'])->name('assessments.scan-sessions.fragments.store');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/session/{session}/pages', [AssessmentController::class, 'storeScanPage'])->name('assessments.scan-sessions.pages.store');

@@ -4,13 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Documents\AssessmentDocument;
 use App\Documents\DocumentOutputFormat;
+use App\Http\Requests\AssessmentBookletAssignmentRequest;
 use App\Http\Requests\AssessmentScanFragmentRequest;
 use App\Http\Requests\AssessmentScanPageRequest;
 use App\Http\Requests\AssessmentScanSessionRequest;
+use App\Http\Requests\AssessmentTaskReviewRequest;
 use App\Models\Assessment;
+use App\Models\AssessmentBooklet;
+use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
+use App\Services\AssessmentEvaluation\AssignAssessmentBooklet;
+use App\Services\AssessmentEvaluation\SaveAssessmentTaskReview;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
 use App\Services\AssessmentScan\AssessmentScanFragmentBuilder;
 use App\Services\AssessmentScan\AssessmentScanGrouper;
@@ -114,6 +120,169 @@ class AssessmentController extends Controller
             'assessment' => $assessment,
             'scan' => $scan->toArray(),
         ]);
+    }
+
+    public function evaluation(TeachingGroup $teachingGroup, Assessment $assessment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+
+        $assessment->load([
+            'tasks.expectations',
+            'booklets.fragments',
+            'booklets.reviews.items',
+        ]);
+        $students = $teachingGroup->students()
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get(['students.id', 'students.first_name', 'students.last_name', 'students.class_name']);
+        $booklets = $assessment->booklets->sortBy('number')->values();
+        $taskFragments = $booklets
+            ->where('status', 'open')
+            ->flatMap(function (AssessmentBooklet $booklet) use ($teachingGroup, $assessment): array {
+                return $booklet->fragments->map(function (AssessmentBookletFragment $fragment) use ($booklet, $teachingGroup, $assessment): array {
+                    $review = $booklet->reviews->firstWhere('assessment_task_id', $fragment->assessment_task_id);
+
+                    return [
+                        'id' => $fragment->id,
+                        'booklet_id' => $booklet->id,
+                        'assessment_task_id' => $fragment->assessment_task_id,
+                        'image_url' => route('assessments.booklet-fragments.show', [$teachingGroup, $assessment, $fragment]),
+                        'page' => $fragment->page,
+                        'end_page' => $fragment->end_page,
+                        'start_y_cm' => $fragment->start_y_cm,
+                        'end_y_cm' => $fragment->end_y_cm,
+                        'review' => $review === null ? null : [
+                            'id' => $review->id,
+                            'extra_points' => $review->extra_points,
+                            'extra_note' => $review->extra_note,
+                            'items' => $review->items->map(fn ($item): array => [
+                                'expectation_id' => $item->assessment_task_expectation_id,
+                                'occurrence' => $item->occurrence,
+                                'awarded_points' => $item->awarded_points,
+                                'note' => $item->note,
+                            ])->values(),
+                        ],
+                    ];
+                })->all();
+            })
+            ->shuffle()
+            ->values();
+        $bookletNumbers = $booklets->mapWithKeys(fn (AssessmentBooklet $booklet): array => [$booklet->id => $booklet->number]);
+
+        return Inertia::render('Assessment/Assess', [
+            'group' => ['id' => $teachingGroup->id, 'name' => $teachingGroup->name],
+            'assessment' => ['id' => $assessment->id, 'title' => $assessment->title],
+            'scan' => [
+                'booklets' => $booklets->map(fn (AssessmentBooklet $booklet): array => [
+                    'number' => $booklet->number,
+                    'start_page' => $booklet->fragments->min('page') ?? 1,
+                    'markers' => [],
+                ])->values(),
+                'warnings' => [],
+            ],
+            'fragments' => $taskFragments->map(fn (array $fragment): array => [
+                'fragment_id' => $fragment['id'],
+                'booklet' => $bookletNumbers->get($fragment['booklet_id']),
+                'task_id' => $fragment['assessment_task_id'],
+                'page' => $fragment['page'],
+                'url' => $fragment['image_url'],
+            ])->values(),
+            'students' => $students->map(fn ($student): array => [
+                'id' => $student->id,
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'class_name' => $student->class_name,
+            ])->values(),
+            'tasks' => $assessment->tasks->map(fn (AssessmentTask $task): array => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'expectations' => $task->expectations->map(fn ($expectation): array => [
+                    'id' => $expectation->id,
+                    'text' => $expectation->text,
+                    'points' => $expectation->points,
+                    'repetitions' => $expectation->repetitions,
+                ])->values(),
+            ])->values(),
+            'booklets' => $booklets->map(fn (AssessmentBooklet $booklet): array => [
+                'id' => $booklet->id,
+                'number' => $booklet->number,
+                'status' => $booklet->status,
+                'student_id' => $booklet->student_id,
+                'name_fragment_url' => $booklet->name_fragment_path === null ? null : route('assessments.booklets.name-fragment.show', [$teachingGroup, $assessment, $booklet]),
+                'fragment_count' => $booklet->fragments->count(),
+                'reviewed_fragment_count' => $booklet->reviews->count(),
+            ])->values(),
+            'taskFragments' => $taskFragments,
+            'progress' => [
+                'total_booklets' => $booklets->count(),
+                'open_booklets' => $booklets->where('status', 'open')->count(),
+                'discarded_booklets' => $booklets->where('status', 'discarded')->count(),
+                'assigned_booklets' => $booklets->where('status', 'open')->whereNotNull('student_id')->count(),
+                'unassigned_booklets' => $booklets->where('status', 'open')->whereNull('student_id')->count(),
+                'reviewable_fragments' => $taskFragments->count(),
+                'reviewed_fragments' => $taskFragments->filter(fn (array $fragment): bool => $fragment['review'] !== null)->count(),
+            ],
+        ]);
+    }
+
+    public function updateBookletAssignment(AssessmentBookletAssignmentRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet, AssignAssessmentBooklet $assignment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $this->ensureBookletBelongsToAssessment($booklet, $assessment);
+        $assignment->handle($booklet, $teachingGroup, $request->validated('student_id'));
+
+        return back()->with('success', 'Booklet-Zuordnung wurde gespeichert.');
+    }
+
+    public function updateBookletStatus(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet, AssignAssessmentBooklet $assignment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $this->ensureBookletBelongsToAssessment($booklet, $assessment);
+        $data = $request->validate(['status' => ['required', 'in:open,discarded']]);
+        $assignment->updateStatus($booklet, $data['status']);
+
+        return back()->with('success', $data['status'] === 'discarded' ? 'Booklet wurde verworfen.' : 'Booklet wurde wiederhergestellt.');
+    }
+
+    public function updateTaskReview(AssessmentTaskReviewRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet, AssessmentTask $assessmentTask, SaveAssessmentTaskReview $reviews)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $this->ensureBookletBelongsToAssessment($booklet, $assessment);
+        abort_unless($assessment->tasks()->whereKey($assessmentTask->getKey())->exists(), 404);
+        $reviews->handle($booklet, $assessmentTask, $request->validated());
+
+        return back()->with('success', 'Aufgabenbewertung wurde gespeichert.');
+    }
+
+    public function showBookletNameFragment(TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $this->ensureBookletBelongsToAssessment($booklet, $assessment);
+        abort_unless($booklet->name_fragment_path !== null && Storage::disk('documents')->exists($booklet->name_fragment_path), 404);
+
+        return response()->file(Storage::disk('documents')->path($booklet->name_fragment_path), [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, no-store',
+        ])->setPrivate();
+    }
+
+    public function showBookletFragment(TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBookletFragment $fragment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $fragment->loadMissing('booklet');
+        abort_unless($fragment->booklet !== null && $fragment->booklet->assessment_id === $assessment->id, 404);
+        abort_unless(Storage::disk('documents')->exists($fragment->image_path), 404);
+
+        return response()->file(Storage::disk('documents')->path($fragment->image_path), [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, no-store',
+        ])->setPrivate();
     }
 
     public function createScanSession(AssessmentScanSessionRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentScanSessionStore $sessions)
@@ -275,6 +444,16 @@ class AssessmentController extends Controller
         $assessmentCompetencies = $this->assessmentCompetenciesForWindow($teachingGroup, $assessmentDate);
 
         return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'assessmentCompetencies' => $assessmentCompetencies, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+    }
+
+    private function ensureAssessmentBelongsToGroup(Assessment $assessment, TeachingGroup $teachingGroup): void
+    {
+        abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
+    }
+
+    private function ensureBookletBelongsToAssessment(AssessmentBooklet $booklet, Assessment $assessment): void
+    {
+        abort_unless($booklet->assessment_id === $assessment->id, 404);
     }
 
     private function assessmentCompetenciesForWindow(TeachingGroup $teachingGroup, ?CarbonInterface $assessmentDate): array
