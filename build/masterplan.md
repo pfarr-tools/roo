@@ -508,13 +508,45 @@ Ein Emoticon ist ein konfigurierbarer Nachweis, keine automatische Note.
 Fortschritt: `[~]` Wiederverwendbare, kompetenzbezogene Prüfungsaufgaben sind
 als Bibliothekseinträge angelegt, können Unterrichtsstunden zugeordnet und in
 mehreren gruppenbezogenen Lernstandserhebungen zusammengestellt werden.
-G/M/E-Niveaus sind mehrfach pro Aufgabe möglich; Ergebniserfassung und
-transparente Rundungsregeln folgen im nächsten Schnitt.
+G/M/E-Niveaus sind mehrfach pro Aufgabe möglich. Der Scan- und
+Auswertungsworkflow ist umgesetzt; weitergehende Noten- und
+Freigabefunktionen folgen in späteren Schnitten.
 
 Die Unterrichtsstundenansicht enthält einen eigenen Tab für inhaltsbezogene
 Kompetenzen. Aufgaben können dort neu angelegt, aus der Bibliothek (gefiltert
 auf Prüfungsaufgaben) zugeordnet, bearbeitet und aus der Stunde entfernt
 werden.
+
+### Scan- und Auswertungsworkflow
+
+- „Auswerten“ öffnet direkt den Auswertungsarbeitsraum einer
+  Lernstandserhebung. Dort bleiben die Bereiche Scans, Booklet-Zuordnung und
+  Aufgabenbewertung jederzeit frei auswählbar.
+- Gescanntes PDF wird im Browser seitenweise gerendert und nacheinander
+  hochgeladen. Der Server erkennt ROO-DataMatrix-Codes im linken 2-cm-Rand der
+  300-dpi-Seite; die ursprünglichen y-Koordinaten bleiben dadurch gültig.
+- Jeder PAGE-Marker erzeugt ein dauerhaftes, fortlaufend nummeriertes Booklet.
+  Mehrere PDFs und mehrere Booklets innerhalb eines PDFs werden gemeinsam
+  verarbeitet. START/END-Paare liefern private Aufgabenausschnitte;
+  unvollständige Paare werden ohne Fragment übersprungen. Wiederholte
+  Materialisierung derselben Scan-Session erzeugt keine Duplikate.
+- Für die Zuordnung wird der feste Namensausschnitt der ersten Bookletseite
+  angezeigt. Ein offenes Booklet kann genau einer Schüler:in der Gruppe
+  zugeordnet werden; Booklets sind verwerfbar, wiederherstellbar und ihre
+  Zuordnung bleibt korrigierbar.
+- Aufgabenfragmente werden bei jedem Öffnen einer Aufgabe neu gemischt.
+  Wiederholungen einer Erwartung erscheinen als eigene Bewertungszeilen mit
+  voller oder Teilpunktzahl und optionaler Begründung. Zusatzpunkte dürfen
+  bewusst unabhängig davon signiert vergeben werden. Gespeicherte Werte werden
+  in die bestehenden Ergebnisdatensätze der zugeordneten Schüler:innen
+  übertragen.
+- Namens- und Aufgabenfragmente liegen privat im Dokumentenspeicher und werden
+  ausschließlich über autorisierte Routen ausgeliefert. Temporäre
+  Scan-Manifeste enthalten keine Schülerdaten und laufen ab.
+
+Nicht Bestandteil dieses Workflows sind OCR für Schülerhandschriften und jede
+automatische Bewertung von Handschriften. Die Bewertung bleibt eine sichtbare,
+manuelle Entscheidung der Lehrkraft.
 
 ### Ziel
 
