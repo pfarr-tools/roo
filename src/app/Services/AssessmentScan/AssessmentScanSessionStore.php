@@ -12,8 +12,6 @@ final class AssessmentScanSessionStore
 {
     private const TTL_MINUTES = 60;
 
-    public function __construct(private readonly ?Filesystem $disk = null) {}
-
     /** @return array{session_id:string, expires_at:string} */
     public function create(Assessment $assessment): array
     {
@@ -97,6 +95,16 @@ final class AssessmentScanSessionStore
         return $this->manifest($sessionId)['pages'] ?? [];
     }
 
+    public function pageContents(string $sessionId, int $page): string
+    {
+        $stored = collect($this->pages($sessionId))->firstWhere('page', $page);
+        if ($stored === null) {
+            throw new \RuntimeException('Die Scan-Seite wurde nicht gefunden.');
+        }
+
+        return $this->filesystem()->get($stored['path']);
+    }
+
     public function delete(string $sessionId): void
     {
         $this->filesystem()->deleteDirectory("assessment-scans/{$sessionId}");
@@ -150,6 +158,6 @@ final class AssessmentScanSessionStore
 
     private function filesystem(): Filesystem
     {
-        return $this->disk ?? Storage::disk('temporary');
+        return Storage::disk('temporary');
     }
 }

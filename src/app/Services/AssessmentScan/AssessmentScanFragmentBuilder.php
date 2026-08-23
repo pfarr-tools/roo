@@ -61,4 +61,54 @@ final class AssessmentScanFragmentBuilder
 
         return $fragmentIds;
     }
+
+    /**
+     * @return list<array{start_page:int,fragments:list<array{task_id:string,page:int,start_y_cm:float,end_y_cm:float}>}>
+     */
+    public function booklets(string $sessionId): array
+    {
+        $booklets = [];
+        $currentBooklet = null;
+        $openTasks = [];
+        $pages = $this->sessions->pages($sessionId);
+        usort($pages, fn (array $left, array $right): int => $left['page'] <=> $right['page']);
+
+        foreach ($pages as $page) {
+            $markers = $page['markers'];
+            usort($markers, fn (array $left, array $right): int => $left['y_px'] <=> $right['y_px']);
+            foreach ($markers as $marker) {
+                if ($marker['kind'] === 'PAGE') {
+                    $booklets[] = ['start_page' => $page['page'], 'fragments' => []];
+                    $currentBooklet = array_key_last($booklets);
+                    $openTasks = [];
+
+                    continue;
+                }
+                if ($currentBooklet === null) {
+                    continue;
+                }
+                if ($marker['kind'] === 'START') {
+                    $openTasks[$marker['task_id']] = ['page' => $page['page'], 'marker' => $marker];
+
+                    continue;
+                }
+                if ($marker['kind'] !== 'END' || ! isset($openTasks[$marker['task_id']])) {
+                    continue;
+                }
+
+                $start = $openTasks[$marker['task_id']];
+                if ($start['page'] === $page['page'] && (float) $marker['y_cm'] > (float) $start['marker']['y_cm']) {
+                    $booklets[$currentBooklet]['fragments'][] = [
+                        'task_id' => (string) $marker['task_id'],
+                        'page' => $page['page'],
+                        'start_y_cm' => (float) $start['marker']['y_cm'],
+                        'end_y_cm' => (float) $marker['y_cm'],
+                    ];
+                }
+                unset($openTasks[$marker['task_id']]);
+            }
+        }
+
+        return $booklets;
+    }
 }
