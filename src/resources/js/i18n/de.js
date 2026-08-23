@@ -374,7 +374,6 @@ export default {
     assessmentScanProcessing: 'PDF wird ausgewertet …',
     assessmentScanProcessingHint: 'Die Seiten werden gerendert und nach ROO-DataMatrix-Codes durchsucht. Das kann je nach Umfang des PDFs etwas dauern.',
     assessmentScanPreview: 'Aktuell verarbeitete Seite',
-    assessmentScanServerFallback: 'Server-Fallback verwenden',
     assessmentScanPhase: 'Phase',
     assessmentScanMarkers: 'Marker',
     assessmentScanUploadedFragments: 'Fragmente hochgeladen',

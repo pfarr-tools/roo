@@ -130,12 +130,6 @@ function closeScan() {
         scanOpen.value = false
     }
 }
-function submitServerScan() {
-    scanForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswerten`, {
-        forceFormData: true,
-        onSuccess: () => { scanOpen.value = false },
-    })
-}
 async function submitScan() {
     if (!scanForm.pdf) return
     browserScanning.value = true
@@ -518,7 +512,6 @@ syncTasks();
                     <div v-if="scanForm.errors.pdf" class="invalid-feedback d-block">{{ scanForm.errors.pdf }}</div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button class="btn btn-secondary" type="button" :disabled="isScanProcessing" @click="closeScan">{{ de.cancel }}</button>
-                        <button class="btn btn-outline-secondary" type="button" :disabled="isScanProcessing || !scanForm.pdf" @click="submitServerScan">{{ de.assessmentScanServerFallback }}</button>
                         <button class="btn btn-primary" type="submit" :disabled="isScanProcessing || !scanForm.pdf">
                             <span v-if="isScanProcessing" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                             {{ isScanProcessing ? de.assessmentScanProcessing : de.assessmentScanSubmit }}
