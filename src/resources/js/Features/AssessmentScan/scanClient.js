@@ -41,7 +41,7 @@ function pageFragments(markers, page, canvas) {
     return fragments
 }
 
-export function createScanClient({ pdf, sessionUrl, fragmentUrl, completeUrl, onProgress = () => {}, onFragmentError = () => {} }) {
+export function createScanClient({ pdf, sessionUrl, fragmentUrl, completeUrl, onProgress = () => {}, onPagePreview = () => {}, onFragmentError = () => {} }) {
     let sessionId = null
     let worker = null
     let cancelled = false
@@ -94,6 +94,8 @@ export function createScanClient({ pdf, sessionUrl, fragmentUrl, completeUrl, on
             if (cancelled) throw new Error('Scan abgebrochen.')
             report({ phase: 'page', ...pageProgress(page, pdfDocument.numPages) })
             const rendered = await renderPdfPage(pdfDocument, page)
+            const previewBlob = await blobFromCanvas(rendered.canvas)
+            onPagePreview(URL.createObjectURL(previewBlob), page)
             const resultPromise = new Promise((resolve, reject) => results.set(page, { resolve, reject }))
             const bitmap = await createImageBitmap(rendered.canvas)
             worker.scanPage({ pageNumber: page, bitmap }, [bitmap])

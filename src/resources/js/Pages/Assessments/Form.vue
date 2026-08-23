@@ -105,21 +105,30 @@ const browserScanning = ref(false)
 const scanProgress = ref(null)
 const scanResult = ref(null)
 const scanError = ref(null)
+const scanPreviewUrl = ref(null)
+const scanPreviewPage = ref(null)
 const scanClient = ref(null)
 const isScanProcessing = computed(() => scanForm.processing || browserScanning.value)
 function openScan() {
+    if (scanPreviewUrl.value) URL.revokeObjectURL(scanPreviewUrl.value)
     scanForm.reset()
     scanForm.clearErrors()
     scanProgress.value = null
     scanResult.value = null
     scanError.value = null
+    scanPreviewUrl.value = null
+    scanPreviewPage.value = null
     scanOpen.value = true
 }
 function selectScanFile(event) {
     scanForm.pdf = event.target.files?.[0] ?? null
 }
 function closeScan() {
-    if (!isScanProcessing.value) scanOpen.value = false
+    if (!isScanProcessing.value) {
+        if (scanPreviewUrl.value) URL.revokeObjectURL(scanPreviewUrl.value)
+        scanPreviewUrl.value = null
+        scanOpen.value = false
+    }
 }
 function submitServerScan() {
     scanForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswerten`, {
@@ -138,6 +147,11 @@ async function submitScan() {
         fragmentUrl: (sessionId) => `${sessionUrl}/${sessionId}/fragments`,
         completeUrl: (sessionId) => `${sessionUrl}/${sessionId}/complete`,
         onProgress: (progress) => { scanProgress.value = progress },
+        onPagePreview: (url, page) => {
+            if (scanPreviewUrl.value) URL.revokeObjectURL(scanPreviewUrl.value)
+            scanPreviewUrl.value = url
+            scanPreviewPage.value = page
+        },
         onFragmentError: (_fragment, error) => { scanError.value = error.message },
     })
     try {
@@ -487,6 +501,10 @@ syncTasks();
                         <span class="spinner-border spinner-border-sm mt-1 flex-shrink-0" aria-hidden="true"></span>
                         <span>{{ de.assessmentScanProcessingHint }}</span>
                     </div>
+                    <figure v-if="scanPreviewUrl" class="border rounded bg-light p-2 mb-3">
+                        <figcaption class="small text-muted mb-2">{{ de.assessmentScanPreview }} {{ scanPreviewPage }}</figcaption>
+                        <img :src="scanPreviewUrl" class="img-fluid d-block mx-auto assessment-scan-preview" :alt="`${de.assessmentScanPreview} ${scanPreviewPage}`">
+                    </figure>
                     <label class="form-label" for="assessment-scan-pdf">{{ de.assessmentScanPdf }}</label>
                     <input
                         id="assessment-scan-pdf"
