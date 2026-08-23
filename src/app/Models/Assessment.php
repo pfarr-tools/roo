@@ -38,6 +38,11 @@ class Assessment extends Model
         return $this->belongsToMany(AssessmentTask::class, 'assessment_task_assessment')->withPivot('position')->orderBy('assessment_task_assessment.position')->withTimestamps();
     }
 
+    public function booklets(): HasMany
+    {
+        return $this->hasMany(AssessmentBooklet::class);
+    }
+
     public function getIsDifferentiatedAttribute(): bool
     {
         if ($this->relationLoaded('tasks')) {

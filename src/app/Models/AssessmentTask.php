@@ -67,6 +67,16 @@ class AssessmentTask extends Model
         return $this->hasMany(AssessmentTaskExpectation::class)->orderBy('position');
     }
 
+    public function fragments(): HasMany
+    {
+        return $this->hasMany(AssessmentBookletFragment::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(AssessmentTaskReview::class);
+    }
+
     public function lessons(): BelongsToMany
     {
         return $this->belongsToMany(Lesson::class, 'lesson_assessment_tasks')->withPivot('position')->withTimestamps();

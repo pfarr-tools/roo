@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 
 #[Fillable(['organization_id', 'school_id', 'first_name', 'last_name', 'class_name', 'notes'])]
@@ -44,5 +45,10 @@ class Student extends Model
     public function teachingGroups(): BelongsToMany
     {
         return $this->belongsToMany(TeachingGroup::class, 'teaching_group_memberships')->withPivot(['starts_on', 'ends_on'])->withTimestamps();
+    }
+
+    public function assessmentBooklets(): HasMany
+    {
+        return $this->hasMany(AssessmentBooklet::class);
     }
 }
