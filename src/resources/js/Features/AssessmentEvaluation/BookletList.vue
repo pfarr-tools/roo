@@ -1,7 +1,6 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
-import { bookletActionUrl } from './presentation'
+import BookletStatusControl from './BookletStatusControl.vue'
 
 const props = defineProps({
     group: { type: Object, required: true },
@@ -9,14 +8,6 @@ const props = defineProps({
     booklets: { type: Array, default: () => [] },
 })
 
-const statusForm = useForm({ status: 'open' })
-
-function updateStatus(booklet, status) {
-    statusForm.status = status
-    statusForm.patch(bookletActionUrl(props.group.id, props.assessment.id, booklet.id, 'status'), {
-        preserveScroll: true,
-    })
-}
 </script>
 
 <template>
@@ -35,23 +26,7 @@ function updateStatus(booklet, status) {
                         {{ booklet.reviewed_fragment_count }} {{ de.assessmentEvaluationReviewed }}
                     </p>
                 </div>
-                <div class="card-footer bg-transparent d-flex justify-content-end">
-                    <button
-                        v-if="booklet.status === 'open'"
-                        class="btn btn-sm btn-outline-danger"
-                        type="button"
-                        :disabled="statusForm.processing"
-                        @click="updateStatus(booklet, 'discarded')"
-                    >{{ de.assessmentEvaluationDiscard }}</button>
-                    <button
-                        v-else
-                        class="btn btn-sm btn-outline-secondary"
-                        type="button"
-                        :disabled="statusForm.processing"
-                        @click="updateStatus(booklet, 'open')"
-                    >{{ de.assessmentEvaluationRestore }}</button>
-                </div>
-                <div v-if="statusForm.errors.status" class="card-footer bg-transparent pt-0 text-danger small">{{ statusForm.errors.status }}</div>
+                <BookletStatusControl :group="group" :assessment="assessment" :booklet="booklet" />
             </div>
         </article>
     </div>

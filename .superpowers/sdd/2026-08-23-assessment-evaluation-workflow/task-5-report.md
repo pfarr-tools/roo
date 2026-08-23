@@ -33,3 +33,13 @@ Erledigt.
 
 Der Vite-Build gibt weiterhin die bestehenden Sass-Deprecation- sowie die
 Chunk-Size-Warnungen aus; der Build selbst ist erfolgreich.
+
+## Review-Fix Runde 1
+
+- `BookletStatusControl` kapselt Inertia-Formular, Verarbeitungszustand und
+  Validierungsfehler nun pro Booklet. Verwerfen und Wiederherstellen beeinflussen
+  damit keine anderen Karten mehr.
+- Vitest verwendet für die SFC-Interaktion `happy-dom` als reine
+  Entwicklungsabhängigkeit. Die Tests rendern die tatsächlichen Vue-Komponenten
+  und decken Namensausschnitt, Zuordnung, Zuordnung aufheben, getrennte
+  Statusaktionen, Vorschau, Verarbeitungsstatus und erneuten Scanversuch ab.
