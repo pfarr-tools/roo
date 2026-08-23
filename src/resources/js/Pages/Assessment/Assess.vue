@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppShell from '../../Components/Ui/AppShell.vue'
+import AssessmentScanUploadModal from '../../Features/AssessmentScan/AssessmentScanUploadModal.vue'
 import de from '../../i18n/de'
 
 const props = defineProps({
@@ -20,6 +21,7 @@ const fragmentGroups = computed(() => {
 
     return [...groups.entries()].map(([booklet, fragments]) => ({ booklet, fragments }))
 })
+const scanOpen = ref(false)
 </script>
 
 <template>
@@ -31,6 +33,7 @@ const fragmentGroups = computed(() => {
                 :title="de.close"
                 :aria-label="de.close"
             ><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+            <button class="btn btn-sm btn-primary ms-2" type="button" @click="scanOpen = true">{{ de.assessmentScanSubmit }}</button>
         </template>
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">{{ de.assessmentScanTitle }}</h1>
@@ -98,5 +101,6 @@ const fragmentGroups = computed(() => {
                 </div>
             </section>
         </div>
+        <AssessmentScanUploadModal v-if="scanOpen" :group="group" :assessment="assessment" @close="scanOpen = false" />
     </AppShell>
 </template>

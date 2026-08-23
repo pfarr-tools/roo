@@ -204,6 +204,15 @@ body {
 .dashboard-lesson-info { padding-top: .5rem; }
 .attachment-preview-image, .attachment-preview-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; object-fit: contain; }
 .roo-modal { width: min(100%, 46rem); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: var(--roo-cream); box-shadow: 0 1rem 3rem rgba(0,0,0,.2); }
+.assessment-scan-modal { width: min(100%, 72rem); height: 80vh; max-height: 80vh; overflow: hidden; }
+.assessment-scan-form { height: 100%; }
+.assessment-scan-form, .assessment-scan-layout, .assessment-scan-preview-pane, .assessment-scan-preview { min-height: 0; }
+.assessment-scan-controls { overflow-y: auto; }
+.assessment-scan-preview-image { width: 100%; min-height: 0; flex: 1 1 auto; object-fit: contain; }
+@media (max-width: 991.98px) {
+    .assessment-scan-modal { height: auto; overflow-y: auto; }
+    .assessment-scan-preview-pane { min-height: 18rem; }
+}
 .roo-modal-song-editor { width: min(96vw, 110rem) !important; max-width: none; max-height: 94vh; overflow-x: hidden; }
 .flux-generator-modal { width: min(52rem, calc(100vw - 2rem)); max-height: 94vh; overflow-y: auto; }
 .flux-result-image { aspect-ratio: 1; width: 100%; object-fit: contain; background: repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 50% / 1rem 1rem; }

@@ -21,7 +21,7 @@ function blobFromCanvas(canvas) {
     return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Das Fragment konnte nicht erzeugt werden.')), 'image/png'))
 }
 
-export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProgress = () => {}, onPagePreview = () => {} }) {
+export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProgress = () => {}, onPagePreview = () => {}, onComplete = () => {} }) {
     let sessionId = null
     let cancelled = false
     const state = {
@@ -75,6 +75,7 @@ export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProg
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
         })
+        if (completed.redirect_url) onComplete(completed.redirect_url)
         return { ...scan, ...completed }
     }
 

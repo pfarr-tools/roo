@@ -6,7 +6,9 @@ use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
+use App\Models\User;
 use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
+use App\Services\AssessmentScan\DataMatrixDecoder;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +19,7 @@ uses(RefreshDatabase::class);
 function assessmentScanMaterializationFixture(): array
 {
     $organization = Organization::create(['name' => 'Materialisierungsorganisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
     $school = School::create(['organization_id' => $organization->id, 'name' => 'Materialisierungsschule']);
     $schoolYear = SchoolYear::create([
         'organization_id' => $organization->id,
@@ -42,8 +45,46 @@ function assessmentScanMaterializationFixture(): array
     ]));
     $assessment->tasks()->attach($task, ['position' => 1]);
 
-    return compact('assessment', 'task');
+    return compact('assessment', 'task', 'user', 'group');
 }
+
+it('materializes uploaded pages and redirects their completion to the durable evaluation', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['assessment']->id, $fixture['task']->id) implements DataMatrixDecoder
+    {
+        public function __construct(private readonly int $assessmentId, private readonly int $taskId) {}
+
+        public function decode(string $imagePath): iterable
+        {
+            yield ['payload' => "ROO1|A={$this->assessmentId}|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 20, 'y_px' => 500, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=END", 'x_px' => 20, 'y_px' => 1200, 'width_px' => 10, 'height_px' => 10];
+        }
+    });
+
+    $session = $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session")
+        ->assertCreated()
+        ->json('session_id');
+
+    $this->actingAs($fixture['user'])
+        ->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/pages", [
+            'image' => UploadedFile::fake()->image('page.png', 2480, 3508),
+            'page' => 1,
+        ])
+        ->assertCreated();
+
+    $this->actingAs($fixture['user'])
+        ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/complete")
+        ->assertOk()
+        ->assertJsonPath('redirect_url', url("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung"));
+
+    expect($fixture['assessment']->booklets()->count())->toBe(1)
+        ->and($fixture['assessment']->booklets()->first()->fragments)->toHaveCount(1)
+        ->and(app(AssessmentScanSessionStore::class)->manifest($session))->toBeNull();
+});
 
 it('materializes PAGE groups with a cross-page task fragment then deletes the completed session', function () {
     Storage::fake('temporary');

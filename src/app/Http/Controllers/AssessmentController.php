@@ -16,13 +16,11 @@ use App\Models\AssessmentTask;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Services\AssessmentEvaluation\AssignAssessmentBooklet;
+use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
 use App\Services\AssessmentEvaluation\SaveAssessmentTaskReview;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
-use App\Services\AssessmentScan\AssessmentScanFragmentBuilder;
-use App\Services\AssessmentScan\AssessmentScanGrouper;
 use App\Services\AssessmentScan\AssessmentScanPageProcessor;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
-use App\Services\AssessmentScan\RooMarker;
 use App\Services\CompetencyResolver;
 use App\Services\PhpOfficeDocumentRenderer;
 use Carbon\CarbonImmutable;
@@ -331,7 +329,7 @@ class AssessmentController extends Controller
         return response()->noContent();
     }
 
-    public function completeScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions, AssessmentScanFragmentBuilder $fragments, AssessmentScanGrouper $grouper)
+    public function completeScanSession(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, string $session, AssessmentScanSessionStore $sessions, MaterializeAssessmentScan $materializer)
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
@@ -339,17 +337,15 @@ class AssessmentController extends Controller
         abort_unless($manifest !== null && $manifest['assessment_id'] === (string) $assessment->getKey(), 404);
         $data = $request->validate(['scan' => ['sometimes', 'array'], 'fragment_ids' => ['sometimes', 'array']]);
         if ($sessions->pages($session) !== []) {
-            $markers = collect($sessions->pages($session))->flatMap(fn (array $page): array => array_map(fn (array $marker): RooMarker => new RooMarker(
-                kind: $marker['kind'], page: $marker['page'], yCm: (float) $marker['y_cm'], assessmentId: $marker['assessment_id'] ?? null,
-                taskId: $marker['task_id'] ?? null, level: $marker['level'] ?? null, payload: $marker['payload'] ?? '',
-            ), $page['markers']))->values()->all();
-            $scan = $grouper->group($markers)->toArray();
-            $fragmentIds = $fragments->build($session);
-        } else {
-            $scan = $data['scan'] ?? ['booklets' => [], 'warnings' => []];
-            $fragmentIds = $data['fragment_ids'] ?? [];
+            $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+            $materializer->handle($assessment, $session);
+
+            return response()->json([
+                'redirect_url' => route('assessments.evaluation', [$teachingGroup, $assessment]),
+            ]);
         }
-        $sessions->complete($session, $scan, $fragmentIds);
+
+        $sessions->complete($session, $data['scan'] ?? ['booklets' => [], 'warnings' => []], $data['fragment_ids'] ?? []);
 
         return response()->json([
             'redirect_url' => route('assessments.scan-sessions.result', [$teachingGroup, $assessment, $session]),

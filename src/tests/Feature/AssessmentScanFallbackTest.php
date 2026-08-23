@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Assessment;
+use App\Models\AssessmentTask;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -37,8 +38,13 @@ function browserScanResultFixture(): array
         'teaching_group_id' => $group->id,
         'title' => 'Lernstandserhebung Ergebnis',
     ]);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $organization->id,
+        'title' => 'Aufgabe eins',
+    ]));
+    $assessment->tasks()->attach($task, ['position' => 1]);
 
-    return compact('user', 'group', 'assessment');
+    return compact('user', 'group', 'assessment', 'task');
 }
 
 it('hands a completed browser session to the assessment result page', function () {
@@ -113,13 +119,15 @@ it('accepts a completed browser session without detected booklets', function () 
 it('scans uploaded pages on the server and creates task fragments', function () {
     Storage::fake('temporary');
     $fixture = browserScanResultFixture();
-    $this->app->bind(DataMatrixDecoder::class, fn () => new class implements DataMatrixDecoder
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['task']->id) implements DataMatrixDecoder
     {
+        public function __construct(private readonly int $taskId) {}
+
         public function decode(string $imagePath): iterable
         {
             yield ['payload' => 'ROO1|A=3|L=M|K=PAGE', 'x_px' => 2, 'y_px' => 2, 'width_px' => 10, 'height_px' => 10];
-            yield ['payload' => 'ROO1|T=7|K=START', 'x_px' => 2, 'y_px' => 20, 'width_px' => 10, 'height_px' => 10];
-            yield ['payload' => 'ROO1|T=7|K=END', 'x_px' => 2, 'y_px' => 70, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 2, 'y_px' => 20, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=END", 'x_px' => 2, 'y_px' => 70, 'width_px' => 10, 'height_px' => 10];
         }
     });
 
@@ -141,12 +149,15 @@ it('scans uploaded pages on the server and creates task fragments', function () 
 
     $this->actingAs($fixture['user'])
         ->postJson("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/complete", [])
-        ->assertOk();
+        ->assertOk()
+        ->assertJsonPath('redirect_url', url("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung"));
 
     $this->actingAs($fixture['user'])
-        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session/{$session}/ergebnis")
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page
             ->where('scan.booklets.0.number', 1)
             ->where('fragments.0.booklet', 1)
-            ->where('fragments.0.task_id', '7'));
+            ->where('fragments.0.task_id', $fixture['task']->id));
+
+    expect(app(AssessmentScanSessionStore::class)->manifest($session))->toBeNull();
 });

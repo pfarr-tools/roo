@@ -88,10 +88,25 @@ it('rejects non-pdf uploads and assessments from another group', function () {
 
 it('offers the assessment scan action in the existing assessment editor', function () {
     $template = file_get_contents(resource_path('js/Pages/Assessments/Form.vue'));
+    $modal = file_get_contents(resource_path('js/Features/AssessmentScan/AssessmentScanUploadModal.vue'));
 
     expect($template)->toContain('assessmentScanTitle')
-        ->and($template)->toContain('auswerten')
-        ->and($template)->toContain('assessmentScanProcessing')
-        ->and($template)->toContain('assessmentScanProcessingHint')
-        ->and($template)->toContain('role="status"');
+        ->and($template)->toContain('lernstandserhebungen/${assessment.id}/auswertung')
+        ->and($template)->not->toContain('createScanClient')
+        ->and($modal)->toContain('assessmentScanProcessing')
+        ->and($modal)->toContain('assessmentScanProcessingHint')
+        ->and($modal)->toContain('role="status"');
+});
+
+it('lays out the scan upload modal beside a contained page preview', function () {
+    $template = file_get_contents(resource_path('js/Features/AssessmentScan/AssessmentScanUploadModal.vue'));
+    $styles = file_get_contents(resource_path('scss/app.scss'));
+
+    expect($template)->toContain('assessment-scan-modal')
+        ->and($template)->toContain('assessment-scan-preview-pane')
+        ->and($styles)->toContain('.assessment-scan-modal')
+        ->and($styles)->toContain('max-height: 80vh')
+        ->and($styles)->toContain('.assessment-scan-form { height: 100%')
+        ->and($styles)->toContain('.assessment-scan-preview-image')
+        ->and($styles)->toContain('object-fit: contain');
 });
