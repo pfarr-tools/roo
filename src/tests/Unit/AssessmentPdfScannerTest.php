@@ -64,5 +64,49 @@ it('limits the decoder scan time for each rendered page', function () {
 
     expect($arguments)
         ->toContain('-m', '10000')
+        ->not->toContain('-S')
         ->and($arguments[array_key_last($arguments)])->toBe('/tmp/page-1.png');
+});
+
+it('decodes a temporary two-centimetre left-margin crop and keeps original coordinates', function () {
+    $sourcePath = tempnam(sys_get_temp_dir(), 'roo-dmtx-source-');
+    $source = imagecreatetruecolor(1000, 400);
+    imagepng($source, $sourcePath);
+    imagedestroy($source);
+    $cropPath = null;
+    $cropWidth = null;
+    $cropHeight = null;
+    $command = null;
+
+    try {
+        $decoder = new DmtxReadDecoder(processRunner: function (array $arguments) use (&$command, &$cropPath, &$cropWidth, &$cropHeight): array {
+            $command = $arguments;
+            $cropPath = $arguments[array_key_last($arguments)];
+            $crop = imagecreatefrompng($cropPath);
+            $cropWidth = imagesx($crop);
+            $cropHeight = imagesy($crop);
+            imagedestroy($crop);
+
+            return [
+                'exit_code' => 1,
+                'output' => "ROO1|T=1|K=START\n",
+                'position_output' => '50,100:100,100:100,150:50,150:',
+            ];
+        });
+
+        $markers = iterator_to_array($decoder->decode($sourcePath));
+
+        expect($command)->toContain('dmtxread')
+            ->and($command)->not->toContain('-S')
+            ->and($cropWidth)->toBe(236)
+            ->and($cropHeight)->toBe(400)
+            ->and($markers)->toMatchArray([
+                ['payload' => 'ROO1|T=1|K=START', 'x_px' => 50.0, 'y_px' => 100.0, 'width_px' => 50.0, 'height_px' => 50.0],
+            ])
+            ->and(file_exists($cropPath))->toBeFalse();
+    } finally {
+        if (file_exists($sourcePath)) {
+            unlink($sourcePath);
+        }
+    }
 });

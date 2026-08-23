@@ -25,7 +25,7 @@ it('expands every expectation repetition into an independently scoreable occurre
     $secondExpectation = AssessmentTaskExpectation::create([
         'assessment_task_id' => $task->id,
         'text' => 'Begründe deine Auswahl.',
-        'points' => 1.5,
+        'points' => 1,
         'repetitions' => 1,
         'position' => 2,
     ]);
@@ -34,6 +34,6 @@ it('expands every expectation repetition into an independently scoreable occurre
         ['expectation_id' => $firstExpectation->id, 'occurrence' => 1, 'text' => 'Nenne Beispiele.', 'points' => '2.00'],
         ['expectation_id' => $firstExpectation->id, 'occurrence' => 2, 'text' => 'Nenne Beispiele.', 'points' => '2.00'],
         ['expectation_id' => $firstExpectation->id, 'occurrence' => 3, 'text' => 'Nenne Beispiele.', 'points' => '2.00'],
-        ['expectation_id' => $secondExpectation->id, 'occurrence' => 1, 'text' => 'Begründe deine Auswahl.', 'points' => '1.50'],
+        ['expectation_id' => $secondExpectation->id, 'occurrence' => 1, 'text' => 'Begründe deine Auswahl.', 'points' => '1.00'],
     ]);
 });

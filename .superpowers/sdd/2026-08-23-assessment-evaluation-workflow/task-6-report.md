@@ -39,3 +39,20 @@ Erledigt.
 
 Der Vite-Build meldet weiterhin die bestehenden Sass-Deprecation- und
 Chunk-Size-Warnungen; der Build selbst ist erfolgreich.
+
+## Fix-Runde: Bewertungsgrenzen und Scan-Decodierung
+
+- Erwartungspunkte werden serverseitig mit mindestens null und höchstens der
+  Punktzahl der jeweiligen Erwartung validiert. Zusatzpunkte bleiben signiert
+  und ohne fachliche Obergrenze.
+- Die Bewertungsoberfläche setzt für Erwartungspunkte `min="0"` und die
+  jeweilige Maximalpunktzahl, begrenzt manuelle Eingaben entsprechend und
+  markiert einen zuvor bewerteten Fall bei jeder Änderung von Punkten oder
+  Erläuterungen wieder als offen.
+- `DmtxReadDecoder` verarbeitet keinen verkleinerten Vollseiten-Scan mehr.
+  Stattdessen erzeugt er vor `dmtxread` einen temporären, 236 Pixel breiten
+  linken Rand-Crop (2 cm bei 300 dpi) und entfernt ihn im `finally`-Block.
+  Die Decoder-Koordinaten bleiben dadurch unverändert im Originalmaßstab.
+- Neue Regressionstests decken negative und überhöhte Erwartungspunkte,
+  den zurückgesetzten Bewertungsstatus, Cropbreite, Bereinigung,
+  Decoder-Kommando und Originalkoordinaten ab.

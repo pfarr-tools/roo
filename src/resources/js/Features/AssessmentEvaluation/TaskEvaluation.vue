@@ -69,7 +69,22 @@ function reviewUrl(fragment) {
 
 function awardFullPoints(reviewCase, item) {
     item.awarded_points = item.points
+    markDirty(reviewCase)
+}
+
+function markDirty(reviewCase) {
     reviewCase.saved = false
+}
+
+function normalizeAwardedPoints(reviewCase, item) {
+    const points = Number(item.awarded_points)
+    const maximum = Number(item.points)
+
+    if (Number.isFinite(points) && Number.isFinite(maximum)) {
+        item.awarded_points = Math.min(Math.max(points, 0), maximum)
+    }
+
+    markDirty(reviewCase)
 }
 
 function save(reviewCase) {
@@ -125,18 +140,18 @@ watch(() => props.openKey, resetCases, { immediate: true })
                                 <button :data-testid="`full-points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" class="btn btn-sm btn-outline-primary" type="button" :disabled="reviewCase.processing" @click="awardFullPoints(reviewCase, item)">{{ de.assessmentEvaluationFullPoints }}</button>
                             </div>
                             <label class="form-label" :for="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`">{{ de.assessmentEvaluationAwardedPoints }}</label>
-                            <input :id="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" :data-testid="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" v-model="item.awarded_points" class="form-control" type="number" step="0.01" :disabled="reviewCase.processing">
+                            <input :id="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" :data-testid="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" v-model="item.awarded_points" class="form-control" type="number" min="0" :max="item.points" step="0.01" :disabled="reviewCase.processing" @input="normalizeAwardedPoints(reviewCase, item)">
                             <label class="form-label mt-2" :for="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`">{{ de.assessmentEvaluationExplanationOptional }}</label>
-                            <textarea :id="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" :data-testid="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" v-model="item.note" class="form-control" rows="2" :disabled="reviewCase.processing"></textarea>
+                            <textarea :id="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" :data-testid="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`" v-model="item.note" class="form-control" rows="2" :disabled="reviewCase.processing" @input="markDirty(reviewCase)"></textarea>
                         </div>
                     </div>
                     <p v-else class="text-muted">{{ de.assessmentEvaluationNoExpectations }}</p>
 
                     <div class="border-top mt-4 pt-3">
                         <label class="form-label" :for="`extra-points-${reviewCase.fragment.id}`">{{ de.assessmentEvaluationExtraPoints }}</label>
-                        <input :id="`extra-points-${reviewCase.fragment.id}`" :data-testid="`extra-points-${reviewCase.fragment.id}`" v-model="reviewCase.extra_points" class="form-control" type="number" step="0.01" :disabled="reviewCase.processing">
+                        <input :id="`extra-points-${reviewCase.fragment.id}`" :data-testid="`extra-points-${reviewCase.fragment.id}`" v-model="reviewCase.extra_points" class="form-control" type="number" step="0.01" :disabled="reviewCase.processing" @input="markDirty(reviewCase)">
                         <label class="form-label mt-2" :for="`extra-note-${reviewCase.fragment.id}`">{{ de.assessmentEvaluationExtraExplanationOptional }}</label>
-                        <textarea :id="`extra-note-${reviewCase.fragment.id}`" v-model="reviewCase.extra_note" class="form-control" rows="2" :disabled="reviewCase.processing"></textarea>
+                        <textarea :id="`extra-note-${reviewCase.fragment.id}`" v-model="reviewCase.extra_note" class="form-control" rows="2" :disabled="reviewCase.processing" @input="markDirty(reviewCase)"></textarea>
                     </div>
 
                     <div v-if="reviewCase.errors.items || reviewCase.errors.extra_points" class="invalid-feedback d-block mt-3">{{ reviewCase.errors.items || reviewCase.errors.extra_points }}</div>

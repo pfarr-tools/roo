@@ -177,3 +177,29 @@ it('recalculates a result after obsolete expectation occurrences are removed', f
     expect($fixture['booklet']->reviews()->sole()->items()->count())->toBe(1)
         ->and(StudentAssessmentResult::query()->sole()->points)->toBe('1.00');
 });
+
+it('rejects negative awarded points for an expectation occurrence', function () {
+    $fixture = assessmentTaskReviewFixture();
+
+    $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture), [
+        'items' => [
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => -0.01],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 2],
+        ],
+        'extra_points' => -1,
+    ])->assertSessionHasErrors('items.0.awarded_points');
+});
+
+it('rejects awarded points above an expectation occurrence maximum', function () {
+    $fixture = assessmentTaskReviewFixture();
+
+    $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture), [
+        'items' => [
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 2.01],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 2],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 2],
+        ],
+        'extra_points' => -1,
+    ])->assertSessionHasErrors('items.0.awarded_points');
+});

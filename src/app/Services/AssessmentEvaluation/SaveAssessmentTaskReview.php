@@ -15,9 +15,12 @@ final class SaveAssessmentTaskReview
     /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, extra_points: int|float|string|null, extra_note?: ?string} $data */
     public function handle(AssessmentBooklet $booklet, AssessmentTask $task, array $data): AssessmentTaskReview
     {
-        $expectedOccurrences = ExpectationOccurrences::forTask($task)
+        $occurrences = ExpectationOccurrences::forTask($task);
+        $expectedOccurrences = $occurrences
             ->map(fn (array $occurrence): string => "{$occurrence['expectation_id']}:{$occurrence['occurrence']}")
             ->values();
+        $maximumPoints = $occurrences
+            ->mapWithKeys(fn (array $occurrence): array => ["{$occurrence['expectation_id']}:{$occurrence['occurrence']}" => (float) $occurrence['points']]);
         $providedOccurrences = collect($data['items'])
             ->map(fn (array $item): string => "{$item['expectation_id']}:{$item['occurrence']}")
             ->values();
@@ -27,6 +30,13 @@ final class SaveAssessmentTaskReview
             || $providedOccurrences->diff($expectedOccurrences)->isNotEmpty()
             || $expectedOccurrences->diff($providedOccurrences)->isNotEmpty()) {
             throw ValidationException::withMessages(['items' => 'Für jede Erwartungsausprägung muss genau eine Bewertungszeile übermittelt werden.']);
+        }
+
+        foreach ($data['items'] as $index => $item) {
+            $key = "{$item['expectation_id']}:{$item['occurrence']}";
+            if ((float) $item['awarded_points'] > $maximumPoints->get($key)) {
+                throw ValidationException::withMessages(["items.{$index}.awarded_points" => 'Die vergebenen Punkte dürfen die maximale Punktzahl dieser Erwartung nicht überschreiten.']);
+            }
         }
 
         return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences): AssessmentTaskReview {

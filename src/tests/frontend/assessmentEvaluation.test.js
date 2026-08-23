@@ -157,6 +157,8 @@ describe('assessment evaluation components', () => {
         })
 
         expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('min')).toBe('0')
+        expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('max')).toBe('2')
         root.querySelector('[data-testid="full-points-41-31-1"]').click()
         const points = root.querySelector('[data-testid="points-41-31-2"]')
         points.value = '0.5'
@@ -183,6 +185,52 @@ describe('assessment evaluation components', () => {
             expect.objectContaining({ preserveScroll: true, preserveState: true }),
         )
         unmount()
+    })
+
+    it('marks a reviewed task fragment open again when any review field changes', async () => {
+        const task = {
+            id: 21,
+            title: 'Schöpfung beschreiben',
+            expectations: [{ id: 31, text: 'Nennt Beispiele.', points: 2, repetitions: 1 }],
+        }
+        const fragments = [{
+            id: 41,
+            booklet_id: 8,
+            image_url: '/private/task.png',
+            review: {
+                items: [{ expectation_id: 31, occurrence: 1, awarded_points: 2, note: 'vollständig' }],
+                extra_points: 1,
+                extra_note: 'Zusatz',
+            },
+        }]
+        const state = reactive({ group, assessment, task, fragments, openKey: 1 })
+        const root = document.createElement('div')
+        document.body.append(root)
+        const app = createApp({
+            components: { TaskEvaluation },
+            setup: () => ({ state }),
+            template: '<TaskEvaluation v-bind="state" />',
+        })
+        app.mount(root)
+
+        for (const selector of [
+            '[data-testid="points-41-31-1"]',
+            '[data-testid="note-41-31-1"]',
+            '[data-testid="extra-points-41"]',
+            '#extra-note-41',
+        ]) {
+            expect(root.querySelector('.text-bg-success')).not.toBeNull()
+            const field = root.querySelector(selector)
+            field.value = `${field.value}x`
+            field.dispatchEvent(new Event('input'))
+            await nextTick()
+            expect(root.querySelector('.text-bg-success')).toBeNull()
+            state.openKey += 1
+            await nextTick()
+        }
+
+        app.unmount()
+        root.remove()
     })
 
     it('shuffles task fragments whenever the task panel is opened again', async () => {
