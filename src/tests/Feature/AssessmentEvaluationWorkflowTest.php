@@ -12,7 +12,12 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\User;
+use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
+use App\Services\AssessmentScan\AssessmentScanSessionStore;
+use App\Services\AssessmentScan\DataMatrixDecoder;
+use App\Services\AssessmentScan\DmtxReadDecoder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -205,6 +210,32 @@ it('discards and restores a booklet', function () {
     expect($fixture['booklets'][0]->fresh()->status)->toBe('open');
 });
 
+it('allows a new open booklet for a student after the previously assigned booklet was discarded', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(2);
+    $firstBooklet = $fixture['booklets'][0];
+    $secondBooklet = $fixture['booklets'][1];
+    $assignmentUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$firstBooklet->id}/zuordnung";
+    $statusUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$firstBooklet->id}/status";
+    $secondAssignmentUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$secondBooklet->id}/zuordnung";
+
+    $this->actingAs($fixture['user'])
+        ->put($assignmentUrl, ['student_id' => $fixture['student']->id])
+        ->assertRedirect();
+
+    $this->actingAs($fixture['user'])
+        ->patch($statusUrl, ['status' => 'discarded'])
+        ->assertRedirect();
+
+    $this->actingAs($fixture['user'])
+        ->put($secondAssignmentUrl, ['student_id' => $fixture['student']->id])
+        ->assertRedirect();
+
+    expect($firstBooklet->fresh()->status)->toBe('discarded')
+        ->and($firstBooklet->fresh()->student_id)->toBe($fixture['student']->id)
+        ->and($secondBooklet->fresh()->status)->toBe('open')
+        ->and($secondBooklet->fresh()->student_id)->toBe($fixture['student']->id);
+});
+
 it('persists a complete review for every expectation occurrence', function () {
     $fixture = assessmentEvaluationWorkflowFixture();
 
@@ -322,4 +353,147 @@ it('streams a booklet fragment only through an authorized private route', functi
         ->assertHeader('Content-Type', 'image/png')
         ->assertHeaderContains('Cache-Control', 'private')
         ->assertHeaderContains('Cache-Control', 'no-store');
+});
+
+it('materializes PAGE markers from repeated PDF uploads as distinct booklets', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentEvaluationWorkflowFixture();
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['assessment']->id, $fixture['task']->id) implements DataMatrixDecoder
+    {
+        public function __construct(private readonly int $assessmentId, private readonly int $taskId) {}
+
+        public function decode(string $imagePath): iterable
+        {
+            yield ['payload' => "ROO1|A={$this->assessmentId}|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 20, 'y_px' => 500, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=END", 'x_px' => 20, 'y_px' => 1200, 'width_px' => 10, 'height_px' => 10];
+        }
+    });
+    $sessionUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session";
+    $firstSession = $this->actingAs($fixture['user'])->postJson($sessionUrl)->assertCreated()->json('session_id');
+    $secondSession = $this->actingAs($fixture['user'])->postJson($sessionUrl)->assertCreated()->json('session_id');
+
+    foreach ([1, 2] as $page) {
+        $this->actingAs($fixture['user'])
+            ->post("{$sessionUrl}/{$firstSession}/pages", [
+                'image' => UploadedFile::fake()->image("first-pdf-page-{$page}.png", 2480, 3508),
+                'page' => $page,
+            ])
+            ->assertCreated()
+            ->assertJsonCount(3, 'markers');
+    }
+    $this->actingAs($fixture['user'])
+        ->post("{$sessionUrl}/{$secondSession}/pages", [
+            'image' => UploadedFile::fake()->image('second-pdf-page-1.png', 2480, 3508),
+            'page' => 1,
+        ])
+        ->assertCreated()
+        ->assertJsonCount(3, 'markers');
+
+    $this->actingAs($fixture['user'])->postJson("{$sessionUrl}/{$firstSession}/complete")->assertOk();
+    $this->actingAs($fixture['user'])->postJson("{$sessionUrl}/{$secondSession}/complete")->assertOk();
+
+    $booklets = $fixture['assessment']->booklets()->with('fragments')->orderBy('number')->get();
+
+    expect($booklets->pluck('number')->all())->toBe([1, 2, 3, 4])
+        ->and($booklets->map(fn (AssessmentBooklet $booklet): int => $booklet->fragments->count())->all())->toBe([1, 1, 1, 1]);
+});
+
+it('keeps a booklet but omits its task fragment when a marker pair is incomplete', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentEvaluationWorkflowFixture();
+    $this->app->bind(DataMatrixDecoder::class, fn () => new class($fixture['assessment']->id, $fixture['task']->id) implements DataMatrixDecoder
+    {
+        public function __construct(private readonly int $assessmentId, private readonly int $taskId) {}
+
+        public function decode(string $imagePath): iterable
+        {
+            yield ['payload' => "ROO1|A={$this->assessmentId}|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 20, 'y_px' => 500, 'width_px' => 10, 'height_px' => 10];
+        }
+    });
+    $sessionUrl = "/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/session";
+    $session = $this->actingAs($fixture['user'])->postJson($sessionUrl)->assertCreated()->json('session_id');
+
+    $this->actingAs($fixture['user'])
+        ->post("{$sessionUrl}/{$session}/pages", [
+            'image' => UploadedFile::fake()->image('incomplete-markers.png', 2480, 3508),
+            'page' => 1,
+        ])
+        ->assertCreated()
+        ->assertJsonCount(2, 'markers');
+    $this->actingAs($fixture['user'])->postJson("{$sessionUrl}/{$session}/complete")->assertOk();
+
+    $booklets = $fixture['assessment']->booklets()->with('fragments')->orderBy('number')->get();
+
+    expect($booklets->pluck('number')->all())->toBe([1, 2])
+        ->and($booklets[1]->fragments)->toHaveCount(0);
+});
+
+it('returns the original booklet when a completed scan materialization is retried', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentEvaluationWorkflowFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $sessions->storePage($session, 1, UploadedFile::fake()->image('retry-page.png', 2480, 3508));
+    $sessions->storePageMarkers($session, 1, [
+        ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
+    ]);
+    $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+    $temporary = Storage::disk('temporary');
+    $sessionFiles = collect($temporary->allFiles("assessment-scans/{$session}"))
+        ->mapWithKeys(fn (string $path): array => [$path => $temporary->get($path)]);
+
+    $first = app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+    $sessionFiles->each(fn (string $contents, string $path) => $temporary->put($path, $contents));
+    $retried = app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+
+    expect($retried->pluck('id')->all())->toBe($first->pluck('id')->all())
+        ->and($fixture['assessment']->booklets()->count())->toBe(2)
+        ->and($sessions->manifest($session))->toBeNull();
+});
+
+it('decodes only the two-centimetre left margin while retaining the original y coordinate', function () {
+    $sourcePath = tempnam(sys_get_temp_dir(), 'roo-dmtx-feature-');
+    if ($sourcePath === false) {
+        throw new RuntimeException('Temporäre Scan-Datei konnte nicht angelegt werden.');
+    }
+    $source = imagecreatetruecolor(2480, 3508);
+    imagepng($source, $sourcePath);
+    imagedestroy($source);
+    $cropPath = null;
+    $cropWidth = null;
+    $cropHeight = null;
+
+    try {
+        $decoder = new DmtxReadDecoder(processRunner: function (array $arguments) use (&$cropPath, &$cropWidth, &$cropHeight): array {
+            $cropPath = $arguments[array_key_last($arguments)];
+            $crop = imagecreatefrompng($cropPath);
+            $cropWidth = imagesx($crop);
+            $cropHeight = imagesy($crop);
+            imagedestroy($crop);
+
+            return [
+                'exit_code' => 1,
+                'output' => "ROO1|A=7|K=PAGE\n",
+                'position_output' => '50,1181.1:100,1181.1:100,1231.1:50,1231.1:',
+            ];
+        });
+
+        $markers = iterator_to_array($decoder->decode($sourcePath));
+
+        expect($cropWidth)->toBe(236)
+            ->and($cropHeight)->toBe(3508)
+            ->and($markers)->toMatchArray([
+                ['payload' => 'ROO1|A=7|K=PAGE', 'x_px' => 50.0, 'y_px' => 1181.1, 'width_px' => 50.0, 'height_px' => 50.0],
+            ])
+            ->and(file_exists($cropPath))->toBeFalse();
+    } finally {
+        if (file_exists($sourcePath)) {
+            unlink($sourcePath);
+        }
+    }
 });

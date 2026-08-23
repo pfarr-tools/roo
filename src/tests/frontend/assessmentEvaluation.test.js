@@ -40,6 +40,13 @@ vi.mock('../../resources/js/Features/AssessmentScan/scanClient', () => ({
     }),
 }))
 
+vi.mock('../../resources/js/Components/Ui/AppShell.vue', () => ({
+    default: {
+        template: '<div><slot name="toolbar"></slot><slot></slot></div>',
+    },
+}))
+
+import Assess from '../../resources/js/Pages/Assessment/Assess.vue'
 import AssessmentScanUploadModal from '../../resources/js/Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'
 import BookletAssignment from '../../resources/js/Features/AssessmentEvaluation/BookletAssignment.vue'
 import BookletList from '../../resources/js/Features/AssessmentEvaluation/BookletList.vue'
@@ -142,6 +149,49 @@ describe('assessment evaluation presentation', () => {
 })
 
 describe('assessment evaluation components', () => {
+    it('switches freely between sections and tasks without a required sequence', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            scan: { warnings: [] },
+            students: [],
+            booklets: [],
+            progress: {},
+            tasks: [
+                { id: 21, title: 'Schöpfung beschreiben', expectations: [] },
+                { id: 22, title: 'Verantwortung erklären', expectations: [] },
+            ],
+            taskFragments: [
+                { id: 41, booklet_id: 8, assessment_task_id: 21, image_url: '/private/task-one.png', review: null },
+                { id: 42, booklet_id: 9, assessment_task_id: 22, image_url: '/private/task-two.png', review: null },
+            ],
+        })
+        const sections = root.querySelectorAll('nav button')
+
+        sections[2].click()
+        await nextTick()
+        expect(root.querySelector('#assessment-tasks-heading')).not.toBeNull()
+
+        root.querySelectorAll('.list-group button')[0].click()
+        await nextTick()
+        expect(root.querySelector('h3').textContent).toBe('Schöpfung beschreiben')
+
+        sections[1].click()
+        await nextTick()
+        expect(root.querySelector('#assessment-booklets-heading')).not.toBeNull()
+
+        sections[2].click()
+        await nextTick()
+        root.querySelectorAll('.list-group button')[1].click()
+        await nextTick()
+        expect(root.querySelector('h3').textContent).toBe('Verantwortung erklären')
+
+        sections[0].click()
+        await nextTick()
+        expect(root.querySelector('#assessment-scans-heading')).not.toBeNull()
+        unmount()
+    })
+
     it('renders repeated expectations independently and saves a reviewed task fragment', async () => {
         const task = {
             id: 21,
