@@ -27,33 +27,51 @@ final class AssessmentTemplateCropper
         );
     }
 
-    public function taskFragment(string $pageContents, float $startYCm, float $endYCm): string
+    /** @param list<string> $pageContents */
+    public function taskFragment(array $pageContents, float $startYCm, float $endYCm): string
     {
-        if ($endYCm <= $startYCm) {
+        if ($pageContents === [] || (count($pageContents) === 1 && $endYCm <= $startYCm)) {
             throw new RuntimeException('Der Aufgabenausschnitt benötigt eine positive Höhe.');
         }
 
-        $image = imagecreatefromstring($pageContents);
-        if ($image === false) {
-            throw new RuntimeException('Die Scan-Seite konnte nicht als Bild gelesen werden.');
-        }
+        $images = array_map($this->imageFromContents(...), $pageContents);
+        $crops = [];
 
         try {
-            $startY = $this->pixels($startYCm);
-            $endY = min(imagesy($image), $this->pixels($endYCm));
+            foreach ($images as $index => $image) {
+                $startY = $index === 0 ? $this->pixels($startYCm) : 0;
+                $endY = $index === array_key_last($images) ? min(imagesy($image), $this->pixels($endYCm)) : imagesy($image);
+                $height = $endY - $startY;
+                if ($height <= 0) {
+                    throw new RuntimeException('Der Aufgabenausschnitt benötigt eine positive Höhe.');
+                }
+                $crops[] = $this->cropImage($image, 0, $startY, imagesx($image), $height);
+            }
 
-            return $this->encode($this->cropImage($image, 0, $startY, imagesx($image), $endY - $startY));
+            $width = max(array_map(imagesx(...), $crops));
+            $height = array_sum(array_map(imagesy(...), $crops));
+            $assembled = imagecreatetruecolor($width, $height);
+            imagefill($assembled, 0, 0, imagecolorallocate($assembled, 255, 255, 255));
+            $offset = 0;
+            foreach ($crops as $crop) {
+                imagecopy($assembled, $crop, 0, $offset, 0, 0, imagesx($crop), imagesy($crop));
+                $offset += imagesy($crop);
+            }
+
+            return $this->encode($assembled);
         } finally {
-            imagedestroy($image);
+            foreach ($crops as $crop) {
+                imagedestroy($crop);
+            }
+            foreach ($images as $image) {
+                imagedestroy($image);
+            }
         }
     }
 
     private function crop(string $pageContents, float $xCm, float $yCm, float $widthCm, float $heightCm): string
     {
-        $image = imagecreatefromstring($pageContents);
-        if ($image === false) {
-            throw new RuntimeException('Die Scan-Seite konnte nicht als Bild gelesen werden.');
-        }
+        $image = $this->imageFromContents($pageContents);
 
         try {
             return $this->encode($this->cropImage(
@@ -76,6 +94,16 @@ final class AssessmentTemplateCropper
         }
 
         return $crop;
+    }
+
+    private function imageFromContents(string $contents): \GdImage
+    {
+        $image = @imagecreatefromstring($contents);
+        if ($image === false) {
+            throw new RuntimeException('Die Scan-Seite konnte nicht als Bild gelesen werden.');
+        }
+
+        return $image;
     }
 
     private function encode(\GdImage $image): string

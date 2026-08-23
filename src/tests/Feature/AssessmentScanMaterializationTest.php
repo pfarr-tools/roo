@@ -45,7 +45,7 @@ function assessmentScanMaterializationFixture(): array
     return compact('assessment', 'task');
 }
 
-it('materializes PAGE groups with private name and task fragments then deletes the completed session', function () {
+it('materializes PAGE groups with a cross-page task fragment then deletes the completed session', function () {
     Storage::fake('temporary');
     Storage::fake('documents');
     $fixture = assessmentScanMaterializationFixture();
@@ -56,12 +56,15 @@ it('materializes PAGE groups with private name and task fragments then deletes t
     $sessions->storePageMarkers($session, 1, [
         ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
         ['kind' => 'START', 'page' => 1, 'y_cm' => 4.0, 'y_px' => 472, 'task_id' => (string) $fixture['task']->id],
-        ['kind' => 'END', 'page' => 1, 'y_cm' => 12.0, 'y_px' => 1417, 'task_id' => (string) $fixture['task']->id],
     ]);
     $sessions->storePage($session, 2, UploadedFile::fake()->image('second-page.png', 2480, 3508));
     $sessions->storePageMarkers($session, 2, [
-        ['kind' => 'PAGE', 'page' => 2, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
-        ['kind' => 'START', 'page' => 2, 'y_cm' => 5.0, 'y_px' => 591, 'task_id' => (string) $fixture['task']->id],
+        ['kind' => 'END', 'page' => 2, 'y_cm' => 12.0, 'y_px' => 1417, 'task_id' => (string) $fixture['task']->id],
+    ]);
+    $sessions->storePage($session, 3, UploadedFile::fake()->image('third-page.png', 2480, 3508));
+    $sessions->storePageMarkers($session, 3, [
+        ['kind' => 'PAGE', 'page' => 3, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
+        ['kind' => 'START', 'page' => 3, 'y_cm' => 5.0, 'y_px' => 591, 'task_id' => (string) $fixture['task']->id],
     ]);
     $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
     Storage::disk('temporary')->assertExists("assessment-scans/{$session}/pages/page-1.png");
@@ -74,6 +77,7 @@ it('materializes PAGE groups with private name and task fragments then deletes t
         ->and($booklets[0]->fragments)->toHaveCount(1)
         ->and($booklets[0]->fragments->sole()->assessment_task_id)->toBe($fixture['task']->id)
         ->and($booklets[0]->fragments->sole()->page)->toBe(1)
+        ->and($booklets[0]->fragments->sole()->end_page)->toBe(2)
         ->and($booklets[0]->fragments->sole()->start_y_cm)->toBe('4.000')
         ->and($booklets[0]->fragments->sole()->end_y_cm)->toBe('12.000');
 
@@ -81,4 +85,48 @@ it('materializes PAGE groups with private name and task fragments then deletes t
     Storage::disk('documents')->assertExists($booklets[1]->name_fragment_path);
     Storage::disk('documents')->assertExists($booklets[0]->fragments->sole()->image_path);
     expect($sessions->manifest($session))->toBeNull();
+});
+
+it('returns the previously materialized booklets when a completed session is retried after deletion fails', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $sessions->storePage($session, 1, UploadedFile::fake()->image('page.png', 2480, 3508));
+    $sessions->storePageMarkers($session, 1, [
+        ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
+    ]);
+    $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+    $temporary = Storage::disk('temporary');
+    $sessionFiles = collect($temporary->allFiles("assessment-scans/{$session}"))
+        ->mapWithKeys(fn (string $path): array => [$path => $temporary->get($path)]);
+
+    $first = app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+    $sessionFiles->each(fn (string $contents, string $path) => $temporary->put($path, $contents));
+    $retried = app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session);
+
+    expect($retried->pluck('id')->all())->toBe($first->pluck('id')->all())
+        ->and($fixture['assessment']->booklets()->count())->toBe(1)
+        ->and($sessions->manifest($session))->toBeNull();
+});
+
+it('retains the completed session and rolls back booklets when a crop cannot be created', function () {
+    Storage::fake('temporary');
+    Storage::fake('documents');
+    $fixture = assessmentScanMaterializationFixture();
+    $sessions = app(AssessmentScanSessionStore::class);
+    $session = $sessions->create($fixture['assessment'])['session_id'];
+    $stored = $sessions->storePage($session, 1, UploadedFile::fake()->image('page.png', 2480, 3508));
+    Storage::disk('temporary')->put($stored['path'], 'not a PNG');
+    $sessions->storePageMarkers($session, 1, [
+        ['kind' => 'PAGE', 'page' => 1, 'y_cm' => 1.0, 'y_px' => 118, 'assessment_id' => $fixture['assessment']->id],
+    ]);
+    $sessions->complete($session, ['booklets' => [], 'warnings' => []], []);
+
+    expect(fn () => app(MaterializeAssessmentScan::class)->handle($fixture['assessment'], $session))
+        ->toThrow(RuntimeException::class);
+
+    expect($fixture['assessment']->booklets()->count())->toBe(0)
+        ->and($sessions->manifest($session))->not->toBeNull();
 });
