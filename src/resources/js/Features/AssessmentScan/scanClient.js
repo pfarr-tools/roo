@@ -30,6 +30,7 @@ export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProg
         currentPage: 0,
         detectedBooklets: 0,
         detectedMarkers: 0,
+        detectedFragments: 0,
         uploadedPages: 0,
         status: 'idle',
     }
@@ -62,7 +63,10 @@ export function createScanClient({ pdf, sessionUrl, pageUrl, completeUrl, onProg
             onPagePreview(URL.createObjectURL(previewBlob), page)
             const result = await uploadPage(sessionId, page, previewBlob)
             allMarkers.push(...(result.markers ?? []))
-            report({ detectedMarkers: allMarkers.length })
+            report({
+                detectedMarkers: allMarkers.length,
+                detectedFragments: allMarkers.filter((marker) => marker.kind === 'END').length,
+            })
             report({ uploadedPages: state.uploadedPages + 1 })
             rendered.canvas.width = 0
             rendered.canvas.height = 0
