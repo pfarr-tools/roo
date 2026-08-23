@@ -86,9 +86,8 @@ beforeEach(() => {
 })
 
 describe('assessment evaluation presentation', () => {
-    it('keeps scans, booklet assignment, and task evaluation freely selectable', () => {
+    it('offers booklet assignment and task evaluation as the only sections', () => {
         expect(evaluationSections.map((section) => section.id)).toEqual([
-            'scans',
             'booklets',
             'tasks',
         ])
@@ -179,7 +178,7 @@ describe('assessment evaluation components', () => {
     it('switches freely between sections and tasks without a required sequence', async () => {
         const { root, unmount } = mount(Assess, {
             group,
-            assessment,
+            assessment: { ...assessment, title: 'Jesus und seine Gleichnisse' },
             scan: { warnings: [] },
             students: [],
             booklets: [],
@@ -193,29 +192,55 @@ describe('assessment evaluation components', () => {
                 { id: 42, booklet_id: 9, assessment_task_id: 22, image_url: '/private/task-two.png', review: null },
             ],
         })
-        const sections = root.querySelectorAll('nav button')
+        expect(root.querySelector('h1').textContent).toBe('Jesus und seine Gleichnisse auswerten')
+        expect(root.querySelectorAll('.assessment-evaluation-stat')).toHaveLength(4)
+        expect(root.querySelectorAll('.card')).toHaveLength(0)
 
-        sections[2].click()
-        await nextTick()
-        expect(root.querySelector('#assessment-tasks-heading')).not.toBeNull()
-
-        root.querySelectorAll('.list-group button')[0].click()
-        await nextTick()
-        expect(root.querySelector('h3').textContent).toBe('Schöpfung beschreiben')
+        const sections = root.querySelectorAll('[role="tab"]')
 
         sections[1].click()
         await nextTick()
-        expect(root.querySelector('#assessment-booklets-heading')).not.toBeNull()
+        expect(root.querySelector('#assessment-tasks-heading')).not.toBeNull()
 
-        sections[2].click()
+        const taskSelect = root.querySelector('#assessment-task-select')
+        expect(taskSelect).not.toBeNull()
+        expect(root.querySelector('.col-xl-4')).toBeNull()
+        taskSelect.value = '21'
+        taskSelect.dispatchEvent(new Event('change'))
         await nextTick()
-        root.querySelectorAll('.list-group button')[1].click()
-        await nextTick()
-        expect(root.querySelector('h3').textContent).toBe('Verantwortung erklären')
+        expect(root.querySelector('h3').textContent).toBe('Schöpfung beschreiben')
 
         sections[0].click()
         await nextTick()
-        expect(root.querySelector('#assessment-scans-heading')).not.toBeNull()
+        expect(root.querySelector('#assessment-booklets-heading')).not.toBeNull()
+
+        sections[1].click()
+        await nextTick()
+        taskSelect.value = '22'
+        taskSelect.dispatchEvent(new Event('change'))
+        await nextTick()
+        expect(root.querySelector('h3').textContent).toBe('Verantwortung erklären')
+
+        unmount()
+    })
+
+    it('puts discard next to unassigned booklets', () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            scan: { warnings: [] },
+            booklets: [
+                { id: 8, number: 1, status: 'open', student_id: null, name_fragment_url: null },
+                { id: 9, number: 2, status: 'open', student_id: 12, name_fragment_url: null },
+            ],
+            progress: {},
+        })
+
+        const assignmentTab = root.querySelector('[aria-controls="booklets-panel"]')
+        assignmentTab.click()
+
+        expect(root.textContent).toContain('Verwerfen')
+        expect(root.querySelectorAll('.btn-outline-danger')).toHaveLength(1)
         unmount()
     })
 
@@ -233,13 +258,35 @@ describe('assessment evaluation components', () => {
             openKey: 1,
         })
 
+        expect(root.querySelector('article').classList.contains('col-xxl-6')).toBe(false)
         expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.querySelector('[data-testid="expectation-row"] .row').classList.contains('align-items-start')).toBe(true)
+        expect(root.querySelector('[data-testid="extra-points-row"] .row').classList.contains('align-items-start')).toBe(true)
+        expect(root.querySelector('[data-testid="expectation-row"]').classList.contains('p-3')).toBe(false)
+        const fullPointsButton = root.querySelector('[data-testid="full-points-41-31-1"]')
+        expect(fullPointsButton.textContent.trim()).toBe('')
+        expect(fullPointsButton.getAttribute('aria-label')).toBe('Volle Punktzahl')
+        expect(fullPointsButton.classList.contains('btn-outline-danger')).toBe(true)
+        expect(fullPointsButton.querySelector('.bi-x-lg')).not.toBeNull()
         expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('min')).toBe('0')
         expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('max')).toBe('2')
-        root.querySelector('[data-testid="full-points-41-31-1"]').click()
+        fullPointsButton.click()
+        await nextTick()
+        expect(fullPointsButton.classList.contains('btn-outline-success')).toBe(true)
+        expect(fullPointsButton.querySelector('.bi-check-lg')).not.toBeNull()
+        expect(root.querySelector('[data-testid="points-41-31-1"]').value).toBe('2')
+        fullPointsButton.click()
+        await nextTick()
+        expect(fullPointsButton.classList.contains('btn-outline-danger')).toBe(true)
+        expect(root.querySelector('[data-testid="points-41-31-1"]').value).toBe('0')
+        fullPointsButton.click()
+        await nextTick()
+        expect(fullPointsButton.classList.contains('btn-outline-success')).toBe(true)
         const points = root.querySelector('[data-testid="points-41-31-2"]')
         points.value = '0.5'
         points.dispatchEvent(new Event('input'))
+        await nextTick()
+        expect(root.querySelector('[data-testid="full-points-41-31-2"]').classList.contains('btn-outline-danger')).toBe(true)
         const note = root.querySelector('[data-testid="note-41-31-2"]')
         note.value = 'teilweise'
         note.dispatchEvent(new Event('input'))
@@ -435,13 +482,13 @@ describe('assessment evaluation components', () => {
         )
         expect(testState.forms.map((form) => form.status)).toEqual(['discarded', 'open'])
         testState.forms[0].processing = true
-        testState.forms[0].errors.status = 'Das Booklet kann noch nicht verworfen werden.'
+        testState.forms[0].errors.status = 'Das Exemplar kann noch nicht verworfen werden.'
         await nextTick()
         const cards = root.querySelectorAll('.card')
         expect(cards[0].querySelector('button').disabled).toBe(true)
         expect(cards[1].querySelector('button').disabled).toBe(false)
-        expect(cards[0].textContent).toContain('Das Booklet kann noch nicht verworfen werden.')
-        expect(cards[1].textContent).not.toContain('Das Booklet kann noch nicht verworfen werden.')
+        expect(cards[0].textContent).toContain('Das Exemplar kann noch nicht verworfen werden.')
+        expect(cards[1].textContent).not.toContain('Das Exemplar kann noch nicht verworfen werden.')
         unmount()
     })
 

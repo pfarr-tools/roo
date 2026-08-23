@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
+import BookletStatusControl from './BookletStatusControl.vue'
 import { bookletActionUrl, bookletStudentOptions } from './presentation'
 
 const props = defineProps({
@@ -76,5 +77,11 @@ function unassign() {
                 </div>
             </form>
         </div>
+        <BookletStatusControl
+            v-if="!booklet.student_id"
+            :group="group"
+            :assessment="assessment"
+            :booklet="booklet"
+        />
     </article>
 </template>

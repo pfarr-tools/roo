@@ -1,5 +1,4 @@
 export const evaluationSections = [
-    { id: 'scans', label: 'assessmentEvaluationScans' },
     { id: 'booklets', label: 'assessmentEvaluationAssignments' },
     { id: 'tasks', label: 'assessmentEvaluationTasks' },
 ]

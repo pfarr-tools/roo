@@ -65,14 +65,14 @@ final class AssignAssessmentBooklet
             ->exists();
 
         if ($assignedElsewhere) {
-            throw ValidationException::withMessages(['student_id' => 'Diese Schüler:in ist bereits einem offenen Booklet zugeordnet.']);
+            throw ValidationException::withMessages(['student_id' => 'Diese Schüler:in ist bereits einem offenen Exemplar zugeordnet.']);
         }
     }
 
     private function throwDuplicateAssignment(QueryException $exception, string $key = 'student_id'): never
     {
         if (str_contains($exception->getMessage(), 'assessment_booklets_active_student_unique')) {
-            throw ValidationException::withMessages([$key => 'Diese Schüler:in ist bereits einem offenen Booklet zugeordnet.']);
+            throw ValidationException::withMessages([$key => 'Diese Schüler:in ist bereits einem offenen Exemplar zugeordnet.']);
         }
 
         throw $exception;

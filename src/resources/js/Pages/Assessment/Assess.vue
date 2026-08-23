@@ -1,11 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue'
 import AppShell from '../../Components/Ui/AppShell.vue'
+import Tab from '../../Components/Ui/Tabs/Tab.vue'
+import TabHeader from '../../Components/Ui/Tabs/TabHeader.vue'
+import TabHeaders from '../../Components/Ui/Tabs/TabHeaders.vue'
+import Tabs from '../../Components/Ui/Tabs/Tabs.vue'
 import AssessmentScanUploadModal from '../../Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'
 import BookletAssignment from '../../Features/AssessmentEvaluation/BookletAssignment.vue'
-import BookletList from '../../Features/AssessmentEvaluation/BookletList.vue'
 import TaskEvaluation from '../../Features/AssessmentEvaluation/TaskEvaluation.vue'
-import { evaluationSections } from '../../Features/AssessmentEvaluation/presentation'
 import de from '../../i18n/de'
 
 const props = defineProps({
@@ -19,11 +21,12 @@ const props = defineProps({
     progress: { type: Object, default: () => ({}) },
 })
 
-const activeSection = ref('scans')
+const activeSection = ref('booklets')
 const scanOpen = ref(false)
 const activeTaskId = ref(null)
 const taskOpenKey = ref(0)
 const openBooklets = computed(() => props.booklets.filter((booklet) => booklet.status === 'open'))
+const unassignedBooklets = computed(() => openBooklets.value.filter((booklet) => !booklet.student_id))
 const activeTask = computed(() => props.tasks.find((task) => task.id === activeTaskId.value) ?? null)
 const activeTaskFragments = computed(() => props.taskFragments.filter((fragment) => fragment.assessment_task_id === activeTaskId.value))
 
@@ -37,6 +40,10 @@ function taskProgress(task) {
 function openTask(taskId) {
     activeTaskId.value = taskId
     taskOpenKey.value += 1
+}
+
+function selectTask(event) {
+    openTask(Number(event.target.value))
 }
 </script>
 
@@ -55,29 +62,21 @@ function openTask(taskId) {
         </template>
 
         <div class="container-full px-3 py-4">
-            <h1 class="h2 mb-1">{{ de.assessmentEvaluationTitle }}</h1>
-            <p class="text-muted mb-4">{{ assessment.title }}</p>
+            <h1 class="h2 mb-1">{{ assessment.title }} auswerten</h1>
+            <p class="text-muted mb-4">
+                <span class="assessment-evaluation-stat">{{ de.assessmentEvaluationBooklets }}: {{ progress.total_booklets ?? booklets.length }}</span> ·
+                <span class="assessment-evaluation-stat">{{ de.assessmentEvaluationAssigned }}: {{ progress.assigned_booklets ?? 0 }}</span> ·
+                <span class="assessment-evaluation-stat">{{ de.assessmentEvaluationOpen }}: {{ progress.unassigned_booklets ?? unassignedBooklets.length }}</span> ·
+                <span class="assessment-evaluation-stat">{{ de.assessmentEvaluationDiscarded }}: {{ progress.discarded_booklets ?? 0 }}</span>
+            </p>
 
-            <div class="row g-3 mb-4">
-                <div class="col-sm-6 col-lg-3"><div class="card card-body h-100"><div class="small text-muted">{{ de.assessmentEvaluationBooklets }}</div><div class="fs-3">{{ progress.total_booklets ?? booklets.length }}</div></div></div>
-                <div class="col-sm-6 col-lg-3"><div class="card card-body h-100"><div class="small text-muted">{{ de.assessmentEvaluationAssignStudent }}</div><div class="fs-3">{{ progress.assigned_booklets ?? 0 }} / {{ progress.open_booklets ?? openBooklets.length }}</div></div></div>
-                <div class="col-sm-6 col-lg-3"><div class="card card-body h-100"><div class="small text-muted">{{ de.assessmentEvaluationOpen }}</div><div class="fs-3">{{ progress.unassigned_booklets ?? 0 }}</div></div></div>
-                <div class="col-sm-6 col-lg-3"><div class="card card-body h-100"><div class="small text-muted">{{ de.assessmentEvaluationDiscarded }}</div><div class="fs-3">{{ progress.discarded_booklets ?? 0 }}</div></div></div>
-            </div>
+            <TabHeaders :aria-label="de.assessmentEvaluationTitle">
+                <TabHeader id="booklets" :title="de.assessmentEvaluationAssignments" :active-tab="activeSection" icon="person-check" @select="activeSection = $event" />
+                <TabHeader id="tasks" :title="de.assessmentEvaluationTasks" :active-tab="activeSection" icon="clipboard-check" @select="activeSection = $event" />
+            </TabHeaders>
 
-            <nav class="nav nav-pills gap-2 mb-4" :aria-label="de.assessmentEvaluationTitle">
-                <button v-for="section in evaluationSections" :key="section.id" class="nav-link" :class="{ active: activeSection === section.id }" type="button" :aria-pressed="activeSection === section.id" @click="activeSection = section.id">{{ de[section.label] }}</button>
-            </nav>
-
-            <section v-if="activeSection === 'scans'" aria-labelledby="assessment-scans-heading">
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                    <div><h2 id="assessment-scans-heading" class="h4 mb-1">{{ de.assessmentEvaluationScans }}</h2><p class="text-muted mb-0">{{ de.assessmentEvaluationScansIntro }}</p></div>
-                    <button class="btn btn-outline-primary" type="button" @click="scanOpen = true"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.assessmentScanSubmit }}</button>
-                </div>
-                <BookletList :group="group" :assessment="assessment" :booklets="booklets" />
-            </section>
-
-            <section v-else-if="activeSection === 'booklets'" aria-labelledby="assessment-booklets-heading">
+            <Tabs :active-tab="activeSection">
+            <Tab id="booklets" :active-tab="activeSection">
                 <h2 id="assessment-booklets-heading" class="h4 mb-1">{{ de.assessmentEvaluationAssignments }}</h2>
                 <p class="text-muted mb-4">{{ de.assessmentEvaluationAssignmentsIntro }}</p>
                 <div v-if="openBooklets.length" class="row g-3">
@@ -86,27 +85,27 @@ function openTask(taskId) {
                     </div>
                 </div>
                 <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoOpenBooklets }}</p>
-            </section>
+            </Tab>
 
-            <section v-else aria-labelledby="assessment-tasks-heading">
+            <Tab id="tasks" :active-tab="activeSection">
                 <h2 id="assessment-tasks-heading" class="h4 mb-1">{{ de.assessmentEvaluationTasks }}</h2>
                 <p class="text-muted mb-4">{{ de.assessmentEvaluationTasksIntro }}</p>
-                <div v-if="tasks.length" class="row g-4">
-                    <div class="col-12 col-xl-4">
-                        <div class="list-group">
-                            <button v-for="task in tasks" :key="task.id" class="list-group-item list-group-item-action text-start" :class="{ active: activeTaskId === task.id }" type="button" @click="openTask(task.id)">
-                                <span class="d-block fw-semibold">{{ task.title }}</span>
-                                <span class="small">{{ taskProgress(task).open }} {{ de.assessmentEvaluationOpen }} · {{ taskProgress(task).completed }} {{ de.assessmentEvaluationCompleted }} · {{ taskProgress(task).total }} {{ de.assessmentEvaluationTotal }}</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-12 col-xl-8">
+                <div v-if="tasks.length">
+                    <label class="form-label" for="assessment-task-select">{{ de.assessmentEvaluationChooseTask }}</label>
+                    <select id="assessment-task-select" class="form-select" :value="activeTaskId ?? ''" @change="selectTask">
+                        <option value="">{{ de.assessmentEvaluationChooseTask }}</option>
+                        <option v-for="task in tasks" :key="task.id" :value="task.id">
+                            {{ task.title }} · {{ taskProgress(task).open }} {{ de.assessmentEvaluationOpen }} · {{ taskProgress(task).completed }} {{ de.assessmentEvaluationCompleted }} · {{ taskProgress(task).total }} {{ de.assessmentEvaluationTotal }}
+                        </option>
+                    </select>
+                    <div class="mt-4">
                         <TaskEvaluation v-if="activeTask" :group="group" :assessment="assessment" :task="activeTask" :fragments="activeTaskFragments" :open-key="taskOpenKey" />
                         <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationChooseTask }}</p>
                     </div>
                 </div>
                 <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoTasks }}</p>
-            </section>
+            </Tab>
+            </Tabs>
 
             <div v-if="scan.warnings?.length" class="alert alert-warning mt-4" role="alert">
                 <h2 class="h6">{{ de.assessmentScanWarnings }}</h2>
