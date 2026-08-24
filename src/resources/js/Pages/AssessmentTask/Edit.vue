@@ -26,6 +26,7 @@ const form = useForm({ title: '', task_type: 'free_text', content: emptyContent(
 
 function resetForm() {
     const content = { ...emptyContent(), ...(props.task?.content ?? {}) }
+    if (props.task?.task_type === 'checkbox' && !props.task?.content?.checkbox_scoring_mode) content.checkbox_scoring_mode = 'correct_selections'
     content.options = (content.options ?? []).map((option, index) => ({ id: option.id ?? `option-${index + 1}`, ...option }))
     form.defaults({ title: props.task?.title ?? '', task_type: props.task?.task_type ?? 'free_text', content, expectations: props.task?.expectations?.length ? props.task.expectations.map(expectation => ({ text: expectation.text ?? '', points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })) : [emptyExpectation()], solution: props.task?.solution ?? '', education_plan_id: props.task?.education_plan_id ?? '', education_plan_competency_id: props.task?.education_plan_competency_id ?? '', levels: props.task?.levels?.map(level => level.level ?? level) ?? [] })
     form.reset()
