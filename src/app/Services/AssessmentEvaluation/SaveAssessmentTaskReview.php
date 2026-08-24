@@ -7,12 +7,16 @@ use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskReview;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 
 final class SaveAssessmentTaskReview
 {
-    public function __construct(private readonly SyncStudentAssessmentResult $resultSync) {}
+    public function __construct(
+        private readonly SyncStudentAssessmentResult $resultSync,
+        private readonly AssessmentTaskEvaluatorRegistry $evaluators,
+    ) {}
 
-    /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, extra_points: int|float|string|null, extra_note?: ?string} $data */
+    /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, options?: list<array{id: string, selected: bool}>, extra_points: int|float|string|null, extra_note?: ?string} $data */
     public function handle(AssessmentBooklet $booklet, AssessmentTask $task, array $data): AssessmentTaskReview
     {
         $occurrences = ExpectationOccurrences::forTask($task);
@@ -32,6 +36,13 @@ final class SaveAssessmentTaskReview
             throw ValidationException::withMessages(['items' => 'Für jede Erwartungsausprägung muss genau eine Bewertungszeile übermittelt werden.']);
         }
 
+        $evaluator = $this->evaluators->for($task);
+        try {
+            $evaluator?->validate($task, $data['options'] ?? []);
+        } catch (InvalidArgumentException $exception) {
+            throw ValidationException::withMessages(['options' => $exception->getMessage()]);
+        }
+
         foreach ($data['items'] as $index => $item) {
             $key = "{$item['expectation_id']}:{$item['occurrence']}";
             if ((float) $item['awarded_points'] > $maximumPoints->get($key)) {
@@ -39,7 +50,7 @@ final class SaveAssessmentTaskReview
             }
         }
 
-        return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences): AssessmentTaskReview {
+        return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences, $evaluator): AssessmentTaskReview {
             $review = AssessmentTaskReview::query()
                 ->where('assessment_booklet_id', $booklet->getKey())
                 ->where('assessment_task_id', $task->getKey())
@@ -78,7 +89,15 @@ final class SaveAssessmentTaskReview
                 );
             }
 
-            $review->load('items');
+            $review->options()->delete();
+            foreach ($data['options'] ?? [] as $option) {
+                $review->options()->create([
+                    'option_id' => $option['id'],
+                    'selected' => $option['selected'],
+                ]);
+            }
+
+            $review->load('items', 'options');
             $this->resultSync->handle($booklet->fresh(), $task);
 
             return $review;

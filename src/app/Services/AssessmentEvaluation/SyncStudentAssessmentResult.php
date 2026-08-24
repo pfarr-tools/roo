@@ -8,9 +8,11 @@ use App\Models\StudentAssessmentResult;
 
 final class SyncStudentAssessmentResult
 {
+    public function __construct(private readonly AssessmentTaskEvaluatorRegistry $evaluators) {}
+
     public function handle(AssessmentBooklet $booklet, AssessmentTask $task): void
     {
-        $booklet->loadMissing('reviews.items');
+        $booklet->loadMissing('reviews.items', 'reviews.options');
 
         if ($booklet->status !== 'open' || $booklet->student_id === null) {
             $this->remove($booklet->student_id, $task, $booklet->assessment_id);
@@ -27,6 +29,13 @@ final class SyncStudentAssessmentResult
         }
 
         $points = $review->items->sum(fn ($item): float => (float) $item->awarded_points) + (float) $review->extra_points;
+        $evaluator = $this->evaluators->for($task);
+        if ($evaluator !== null) {
+            $points += $evaluator->score($task, $review->options->map(fn ($option): array => [
+                'id' => $option->option_id,
+                'selected' => $option->selected,
+            ])->all());
+        }
 
         StudentAssessmentResult::query()->updateOrCreate(
             [

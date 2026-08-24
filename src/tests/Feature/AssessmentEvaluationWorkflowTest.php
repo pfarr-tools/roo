@@ -10,9 +10,11 @@ use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
+use App\Services\AssessmentEvaluation\SaveAssessmentTaskReview;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
 use App\Services\AssessmentScan\DataMatrixDecoder;
 use App\Services\AssessmentScan\DmtxReadDecoder;
@@ -122,6 +124,47 @@ it('renders the evaluation workspace with group students, booklet progress, and 
             ->where('progress.reviewable_fragments', 1)
             ->where('tasks.0.expectations.0.repetitions', 3)
             ->where('taskFragments.0.assessment_task_id', $fixture['task']->id));
+});
+
+it('stores checkbox selections and synchronizes option and manual points', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Checkbox-Aufgabe',
+        'task_type' => 'checkbox',
+        'content' => [
+            'options' => [
+                ['id' => 'a1', 'text' => 'Richtig', 'correct' => true],
+                ['id' => 'a2', 'text' => 'Falsch', 'correct' => false],
+            ],
+            'points_per_correct_answer' => 2,
+        ],
+    ]));
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    $expectation = AssessmentTaskExpectation::create([
+        'assessment_task_id' => $task->id,
+        'text' => 'Zusatzmerkmal',
+        'points' => 1,
+        'repetitions' => 1,
+        'position' => 1,
+    ]);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $task, [
+        'options' => [
+            ['id' => 'a1', 'selected' => true],
+            ['id' => 'a2', 'selected' => true],
+        ],
+        'items' => [[
+            'expectation_id' => $expectation->id,
+            'occurrence' => 1,
+            'awarded_points' => 1,
+        ]],
+        'extra_points' => 0,
+    ]);
+
+    expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['a1' => true, 'a2' => true])
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('3.00');
 });
 
 it('rejects assessment booklets and fragments outside the requested group', function () {
