@@ -311,6 +311,36 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('shows live assigned and maximum points for checkbox evaluation', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 22,
+                title: 'Angekreuzte Antworten',
+                task_type: 'checkbox',
+                max_points: 2,
+                content: {
+                    options: [
+                        { text: 'Richtig', correct: true },
+                        { text: 'Falsch', correct: false },
+                    ],
+                    points_per_correct_answer: 2,
+                },
+                expectations: [],
+            },
+            fragments: [{ id: 42, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('0 / 2 Punkte')
+        root.querySelectorAll('input[type="checkbox"]')[0].click()
+        await nextTick()
+        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('2 / 2 Punkte')
+
+        unmount()
+    })
+
     it('renders the checkbox evaluator for migrated checkbox tasks', () => {
         const { root, unmount } = mount(TaskEvaluation, {
             group,

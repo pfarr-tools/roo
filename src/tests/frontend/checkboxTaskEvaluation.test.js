@@ -28,3 +28,25 @@ it('renders and emits changed checkbox selections', async () => {
     app.unmount()
     root.remove()
 })
+
+it('toggles only the clicked option when legacy options have no ids', async () => {
+    const root = document.createElement('div')
+    document.body.append(root)
+    const selections = []
+    const app = createApp(CheckboxTaskEvaluation, {
+        options: [
+            { text: 'Erste Antwort', selected: false },
+            { text: 'Zweite Antwort', selected: false },
+        ],
+        'onUpdate:selection': value => selections.push(value),
+    })
+    app.mount(root)
+
+    root.querySelectorAll('input[type="checkbox"]')[0].click()
+    await nextTick()
+
+    expect(selections[0].map(option => option.selected)).toEqual([true, false])
+
+    app.unmount()
+    root.remove()
+})

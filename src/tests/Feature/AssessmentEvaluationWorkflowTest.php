@@ -191,6 +191,7 @@ it('exposes checkbox definitions and saved selections in evaluation props', func
         ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page
             ->where('tasks.0.task_type', 'checkbox')
+            ->where('tasks.0.max_points', 8)
             ->where('tasks.0.content.options.0.id', 'a1')
             ->where('tasks.0.content.points_per_correct_answer', 2)
             ->where('taskFragments.0.review.options.0.option_id', 'a1')

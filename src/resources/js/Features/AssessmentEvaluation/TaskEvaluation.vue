@@ -14,6 +14,11 @@ const props = defineProps({
 
 const reviewCases = ref([])
 
+const maximumPoints = computed(() => Number(props.task.max_points ?? props.task.expectations.reduce(
+    (sum, expectation) => sum + Number(expectation.points ?? 0) * Math.max(1, Number(expectation.repetitions ?? 1)),
+    0,
+)))
+
 const occurrences = computed(() => props.task.expectations.flatMap((expectation) => Array.from(
     { length: Math.max(1, Number(expectation.repetitions ?? 1)) },
     (_, index) => ({
@@ -42,8 +47,8 @@ function buildReviewCase(fragment) {
     ]))
 
     const existingOptions = new Map((fragment.review?.options ?? []).map((option) => [option.option_id, option.selected]))
-    const options = (props.task.content?.options ?? []).map(option => ({
-        id: option.id,
+    const options = (props.task.content?.options ?? []).map((option, index) => ({
+        id: option.id ?? `option-${index + 1}`,
         text: option.text,
         correct: option.correct,
         selected: existingOptions.get(option.id) ?? false,
@@ -68,6 +73,19 @@ function buildReviewCase(fragment) {
         processing: false,
         saved: fragment.review !== null,
     }
+}
+
+function assignedPoints(reviewCase) {
+    const automaticPoints = reviewCase.options
+        .filter(option => option.selected && option.correct)
+        .length * Number(props.task.content?.points_per_correct_answer ?? 0)
+    const manualPoints = reviewCase.items.reduce((sum, item) => sum + Number(item.awarded_points ?? 0), 0)
+
+    return automaticPoints + manualPoints + Number(reviewCase.extra_points ?? 0)
+}
+
+function formatPoints(points) {
+    return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(points)
 }
 
 function specializedCheckbox(reviewCase) {
@@ -150,7 +168,10 @@ watch(() => props.openKey, resetCases, { immediate: true })
                     <span class="visually-hidden" data-testid="task-fragment-id">{{ reviewCase.fragment.id }}</span>
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
                         <h3 class="h5 mb-0">{{ task.title }}</h3>
-                        <span v-if="reviewCase.saved" class="badge text-bg-success">{{ de.assessmentEvaluationReviewed }}</span>
+                        <div class="text-end">
+                            <div :data-testid="`points-summary-${reviewCase.fragment.id}`" class="h4 mb-1">{{ formatPoints(assignedPoints(reviewCase)) }} / {{ formatPoints(maximumPoints) }} {{ de.assessmentEvaluationPoints }}</div>
+                            <span v-if="reviewCase.saved" class="badge text-bg-success">{{ de.assessmentEvaluationReviewed }}</span>
+                        </div>
                     </div>
 
                     <CheckboxTaskEvaluation v-if="specializedCheckbox(reviewCase)" :options="reviewCase.options" :processing="reviewCase.processing" @update:selection="updateOptions(reviewCase, $event)" />

@@ -205,6 +205,7 @@ class AssessmentController extends Controller
                 'id' => $task->id,
                 'title' => $task->title,
                 'task_type' => $task->task_type,
+                'max_points' => $task->maximumPoints(),
                 'content' => [
                     'options' => data_get($task->content, 'options', []),
                     'points_per_correct_answer' => data_get($task->content, 'points_per_correct_answer'),

@@ -422,6 +422,7 @@ export default {
     assessmentEvaluationFullPoints: 'Volle Punktzahl',
     assessmentEvaluationZeroPoints: 'Keine Punkte',
     assessmentEvaluationAwardedPoints: 'Vergebene Punkte',
+    assessmentEvaluationPoints: 'Punkte',
     assessmentEvaluationExplanationOptional: 'Erläuterung (optional)',
     assessmentEvaluationExtraPoints: 'Zusatzpunkte',
     assessmentEvaluationExtraExplanationOptional: 'Erläuterung zu Zusatzpunkten (optional)',
