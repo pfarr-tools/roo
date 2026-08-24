@@ -19,6 +19,9 @@ class AssessmentTaskReviewRequest extends FormRequest
             'items.*.occurrence' => ['required', 'integer', 'min:1'],
             'items.*.awarded_points' => ['required', 'numeric', 'min:0'],
             'items.*.note' => ['nullable', 'string', 'max:2000'],
+            'options' => ['sometimes', 'array'],
+            'options.*.id' => ['required', 'string', 'max:100'],
+            'options.*.selected' => ['required', 'boolean'],
             'extra_points' => ['present', 'nullable', 'numeric'],
             'extra_note' => ['nullable', 'string', 'max:2000'],
         ];

@@ -130,6 +130,7 @@ class AssessmentController extends Controller
             'tasks.expectations',
             'booklets.fragments',
             'booklets.reviews.items',
+            'booklets.reviews.options',
             'scanMaterializations',
         ]);
         $students = $teachingGroup->students()
@@ -166,6 +167,10 @@ class AssessmentController extends Controller
                                 'awarded_points' => $item->awarded_points,
                                 'note' => $item->note,
                             ])->values(),
+                            'options' => $review->options->map(fn ($option): array => [
+                                'option_id' => $option->option_id,
+                                'selected' => $option->selected,
+                            ])->values(),
                         ],
                     ];
                 })->all();
@@ -201,6 +206,12 @@ class AssessmentController extends Controller
             'tasks' => $assessment->tasks->map(fn (AssessmentTask $task): array => [
                 'id' => $task->id,
                 'title' => $task->title,
+                'task_type' => $task->task_type,
+                'content' => [
+                    'options' => data_get($task->content, 'options', []),
+                    'points_per_correct_answer' => data_get($task->content, 'points_per_correct_answer'),
+                ],
+                'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
                 'expectations' => $task->expectations->map(fn ($expectation): array => [
                     'id' => $expectation->id,
                     'text' => $expectation->text,

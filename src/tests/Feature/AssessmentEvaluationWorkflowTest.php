@@ -6,6 +6,7 @@ use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskExpectation;
 use App\Models\AssessmentTaskReview;
+use App\Models\AssessmentTaskReviewOption;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -165,6 +166,35 @@ it('stores checkbox selections and synchronizes option and manual points', funct
 
     expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['a1' => true, 'a2' => true])
         ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('3.00');
+});
+
+it('exposes checkbox definitions and saved selections in evaluation props', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    AssessmentTask::withoutEvents(fn () => $fixture['task']->update([
+        'task_type' => 'checkbox',
+        'content' => [
+            'options' => [['id' => 'a1', 'text' => 'Richtig', 'correct' => true]],
+            'points_per_correct_answer' => 2,
+        ],
+    ]));
+    $review = AssessmentTaskReview::create([
+        'assessment_booklet_id' => $fixture['booklets'][0]->id,
+        'assessment_task_id' => $fixture['task']->id,
+    ]);
+    AssessmentTaskReviewOption::create([
+        'assessment_task_review_id' => $review->id,
+        'option_id' => 'a1',
+        'selected' => true,
+    ]);
+
+    $this->actingAs($fixture['user'])
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page
+            ->where('tasks.0.task_type', 'checkbox')
+            ->where('tasks.0.content.options.0.id', 'a1')
+            ->where('tasks.0.content.points_per_correct_answer', 2)
+            ->where('taskFragments.0.review.options.0.option_id', 'a1')
+            ->where('taskFragments.0.review.options.0.selected', true));
 });
 
 it('rejects assessment booklets and fragments outside the requested group', function () {
