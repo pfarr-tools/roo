@@ -77,6 +77,20 @@ class AssessmentTask extends Model
         return $this->hasMany(AssessmentTaskReview::class);
     }
 
+    public function maximumPoints(): ?int
+    {
+        $manualPoints = $this->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
+
+        if ($this->task_type !== 'checkbox' || ($this->content['evaluation_mode'] ?? null) === 'legacy_checkbox') {
+            return $manualPoints ?: $this->max_points;
+        }
+
+        $correctOptions = collect($this->content['options'] ?? [])->where('correct', true)->count();
+        $optionPoints = $correctOptions * (int) ($this->content['points_per_correct_answer'] ?? 0);
+
+        return $optionPoints + $manualPoints;
+    }
+
     public function lessons(): BelongsToMany
     {
         return $this->belongsToMany(Lesson::class, 'lesson_assessment_tasks')->withPivot('position')->withTimestamps();
