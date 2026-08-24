@@ -17,7 +17,7 @@ final class CheckboxTaskEvaluator
     {
         $this->validate($task, $options);
         $definitions = collect($task->content['options'] ?? [])->keyBy('id');
-        $points = (float) ($task->content['points_per_correct_answer'] ?? 0);
+        $points = (float) $task->checkboxPointsPerCorrectAnswer();
 
         return collect($options)
             ->filter(fn (array $option): bool => (bool) $option['selected'] && (bool) ($definitions->get($option['id'])['correct'] ?? false))
@@ -36,7 +36,7 @@ final class CheckboxTaskEvaluator
             throw $this->invalid('Die Checkbox-Optionen benötigen eindeutige IDs.');
         }
 
-        if (! is_numeric($points) || (float) $points < 0) {
+        if ($points !== null && (! is_numeric($points) || (float) $points < 0)) {
             throw $this->invalid('Die Punktzahl pro korrekte Antwort ist ungültig.');
         }
 

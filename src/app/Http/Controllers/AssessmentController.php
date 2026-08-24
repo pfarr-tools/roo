@@ -208,7 +208,7 @@ class AssessmentController extends Controller
                 'max_points' => $task->maximumPoints(),
                 'content' => [
                     'options' => data_get($task->content, 'options', []),
-                    'points_per_correct_answer' => data_get($task->content, 'points_per_correct_answer'),
+                    'points_per_correct_answer' => $task->task_type === 'checkbox' ? $task->checkboxPointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                 ],
                 'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
                 'expectations' => $task->expectations->map(fn ($expectation): array => [

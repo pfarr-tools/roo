@@ -43,6 +43,24 @@ it('rejects duplicate and unknown checkbox options', function () {
     ]))->toThrow(InvalidArgumentException::class);
 });
 
+it('scores legacy checkbox tasks without an explicit points setting', function () {
+    $task = new AssessmentTask([
+        'task_type' => 'checkbox',
+        'max_points' => 2,
+        'content' => [
+            'options' => [
+                ['id' => 'a1', 'text' => 'Richtig', 'correct' => true],
+                ['id' => 'a2', 'text' => 'Auch richtig', 'correct' => true],
+            ],
+        ],
+    ]);
+
+    expect((new CheckboxTaskEvaluator())->score($task, [
+        ['id' => 'a1', 'selected' => true],
+        ['id' => 'a2', 'selected' => false],
+    ]))->toBe(1.0);
+});
+
 it('specializes migrated legacy checkbox tasks', function () {
     $task = checkboxTask(['evaluation_mode' => 'legacy_checkbox']);
 

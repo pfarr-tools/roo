@@ -86,9 +86,16 @@ class AssessmentTask extends Model
         }
 
         $correctOptions = collect($this->content['options'] ?? [])->where('correct', true)->count();
-        $optionPoints = $correctOptions * (int) ($this->content['points_per_correct_answer'] ?? 0);
+        $optionPoints = $correctOptions * $this->checkboxPointsPerCorrectAnswer();
 
         return $optionPoints + $manualPoints;
+    }
+
+    public function checkboxPointsPerCorrectAnswer(): int
+    {
+        $points = $this->content['points_per_correct_answer'] ?? null;
+
+        return is_numeric($points) && (int) $points >= 0 ? (int) $points : 1;
     }
 
     public function lessons(): BelongsToMany
