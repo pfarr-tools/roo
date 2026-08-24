@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
+import CheckboxTaskEvaluation from './CheckboxTaskEvaluation.vue'
 import de from '../../i18n/de'
 
 const props = defineProps({
@@ -40,8 +41,17 @@ function buildReviewCase(fragment) {
         item,
     ]))
 
+    const existingOptions = new Map((fragment.review?.options ?? []).map((option) => [option.option_id, option.selected]))
+    const options = (props.task.content?.options ?? []).map(option => ({
+        id: option.id,
+        text: option.text,
+        correct: option.correct,
+        selected: existingOptions.get(option.id) ?? false,
+    }))
+
     return {
         fragment,
+        options,
         items: occurrences.value.map((occurrence) => {
             const existing = existingItems.get(`${occurrence.expectation_id}:${occurrence.occurrence}`)
 
@@ -58,6 +68,15 @@ function buildReviewCase(fragment) {
         processing: false,
         saved: fragment.review !== null,
     }
+}
+
+function specializedCheckbox(reviewCase) {
+    return props.task.task_type === 'checkbox' && props.task.evaluation_mode !== 'legacy_checkbox'
+}
+
+function updateOptions(reviewCase, options) {
+    reviewCase.options = options
+    markDirty(reviewCase)
 }
 
 function resetCases() {
@@ -95,6 +114,7 @@ function save(reviewCase) {
     reviewCase.errors = {}
 
     router.put(reviewUrl(reviewCase.fragment), {
+        options: specializedCheckbox(reviewCase) ? reviewCase.options.map(option => ({ id: option.id, selected: option.selected })) : undefined,
         items: reviewCase.items.map((item) => ({
             expectation_id: item.expectation_id,
             occurrence: item.occurrence,
@@ -132,6 +152,8 @@ watch(() => props.openKey, resetCases, { immediate: true })
                         <h3 class="h5 mb-0">{{ task.title }}</h3>
                         <span v-if="reviewCase.saved" class="badge text-bg-success">{{ de.assessmentEvaluationReviewed }}</span>
                     </div>
+
+                    <CheckboxTaskEvaluation v-if="specializedCheckbox(reviewCase)" :options="reviewCase.options" :processing="reviewCase.processing" @update:selection="updateOptions(reviewCase, $event)" />
 
                     <div v-if="reviewCase.items.length" class="vstack gap-2">
                         <div v-for="item in reviewCase.items" :key="`${item.expectation_id}:${item.occurrence}`" class="border rounded p-2" data-testid="expectation-row">

@@ -1,0 +1,30 @@
+// @vitest-environment happy-dom
+
+import { createApp, nextTick } from 'vue'
+import { expect, it } from 'vitest'
+import CheckboxTaskEvaluation from '../../resources/js/Features/AssessmentEvaluation/CheckboxTaskEvaluation.vue'
+
+it('renders and emits changed checkbox selections', async () => {
+    const root = document.createElement('div')
+    document.body.append(root)
+    const selections = []
+    const app = createApp(CheckboxTaskEvaluation, {
+        options: [
+            { id: 'a1', text: 'Richtig', selected: false },
+            { id: 'a2', text: 'Falsch', selected: true },
+        ],
+        'onUpdate:selection': value => selections.push(value),
+    })
+    app.mount(root)
+
+    expect(root.querySelectorAll('input[type="checkbox"]')).toHaveLength(2)
+    root.querySelector('#checkbox-option-a1').click()
+    await nextTick()
+    expect(selections[0]).toEqual([
+        { id: 'a1', text: 'Richtig', selected: true },
+        { id: 'a2', text: 'Falsch', selected: true },
+    ])
+
+    app.unmount()
+    root.remove()
+})

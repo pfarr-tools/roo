@@ -425,6 +425,8 @@ export default {
     assessmentEvaluationExplanationOptional: 'Erläuterung (optional)',
     assessmentEvaluationExtraPoints: 'Zusatzpunkte',
     assessmentEvaluationExtraExplanationOptional: 'Erläuterung zu Zusatzpunkten (optional)',
+    assessmentEvaluationCheckboxOptions: 'Angekreuzte Antwortmöglichkeiten',
+    assessmentEvaluationCheckboxHint: 'Korrekte Auswahl wird von Roo automatisch bepunktet.',
     assessmentEvaluationNoTasks: 'Für diese Lernstandserhebung sind noch keine Aufgaben hinterlegt.',
     assessmentTasksWindowHint: 'Aufgaben aus den verplanten Stunden seit der letzten Lernstandserhebung.',
     assessmentCompetencyWithoutTask: 'Für diese Kompetenz ist noch keine Prüfungsaufgabe zugeordnet.',
