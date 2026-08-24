@@ -311,6 +311,29 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('renders the checkbox evaluator for migrated checkbox tasks', () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 22,
+                title: 'Angekreuzte Antworten',
+                task_type: 'checkbox',
+                evaluation_mode: 'legacy_checkbox',
+                content: {
+                    options: [{ id: 'a1', text: 'Richtige Antwort', correct: true }],
+                    points_per_correct_answer: 1,
+                },
+                expectations: [],
+            },
+            fragments: [{ id: 42, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelector('[data-testid="checkbox-task-evaluation"]')).not.toBeNull()
+        unmount()
+    })
+
     it('marks a reviewed task fragment open again when any review field changes', async () => {
         const task = {
             id: 21,

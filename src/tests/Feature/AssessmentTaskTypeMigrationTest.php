@@ -41,3 +41,21 @@ it('preserves legacy checkbox expectations while marking their evaluation mode',
 
     expect($task->fresh()->content['evaluation_mode'])->toBe('legacy_checkbox');
 });
+
+it('normalizes old checkbox options for specialized evaluation', function () {
+    $organization = Organization::create(['name' => 'Checkbox organisation']);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $organization->id,
+        'title' => 'Alte Checkbox-Aufgabe',
+        'task_type' => 'checkbox',
+        'content' => ['options' => [['text' => 'Ja', 'correct' => true]]],
+    ]));
+
+    $migration = require base_path('database/migrations/2026_08_24_292000_normalize_checkbox_content.php');
+    $migration->up();
+
+    expect($task->fresh()->content)->toMatchArray([
+        'options' => [['text' => 'Ja', 'correct' => true, 'id' => 'option-1']],
+        'points_per_correct_answer' => 1,
+    ]);
+});

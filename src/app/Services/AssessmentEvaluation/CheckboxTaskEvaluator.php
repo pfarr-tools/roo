@@ -9,8 +9,7 @@ final class CheckboxTaskEvaluator
 {
     public function supports(AssessmentTask $task): bool
     {
-        return $task->task_type === 'checkbox'
-            && ($task->content['evaluation_mode'] ?? null) !== 'legacy_checkbox';
+        return $task->task_type === 'checkbox';
     }
 
     /** @param list<array{id: string, selected: bool}> $options */

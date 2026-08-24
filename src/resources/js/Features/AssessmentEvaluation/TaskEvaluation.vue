@@ -71,7 +71,7 @@ function buildReviewCase(fragment) {
 }
 
 function specializedCheckbox(reviewCase) {
-    return props.task.task_type === 'checkbox' && props.task.evaluation_mode !== 'legacy_checkbox'
+    return props.task.task_type === 'checkbox'
 }
 
 function updateOptions(reviewCase, options) {

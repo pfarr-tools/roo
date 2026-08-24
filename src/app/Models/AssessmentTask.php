@@ -81,7 +81,7 @@ class AssessmentTask extends Model
     {
         $manualPoints = $this->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
 
-        if ($this->task_type !== 'checkbox' || ($this->content['evaluation_mode'] ?? null) === 'legacy_checkbox') {
+        if ($this->task_type !== 'checkbox') {
             return $manualPoints ?: $this->max_points;
         }
 

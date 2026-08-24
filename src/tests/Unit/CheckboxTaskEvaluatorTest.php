@@ -43,8 +43,8 @@ it('rejects duplicate and unknown checkbox options', function () {
     ]))->toThrow(InvalidArgumentException::class);
 });
 
-it('does not specialize legacy checkbox tasks', function () {
+it('specializes migrated legacy checkbox tasks', function () {
     $task = checkboxTask(['evaluation_mode' => 'legacy_checkbox']);
 
-    expect((new CheckboxTaskEvaluator())->supports($task))->toBeFalse();
+    expect((new CheckboxTaskEvaluator())->supports($task))->toBeTrue();
 });
