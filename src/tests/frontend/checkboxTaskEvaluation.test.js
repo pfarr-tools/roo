@@ -51,7 +51,7 @@ it('toggles only the clicked option when legacy options have no ids', async () =
     root.remove()
 })
 
-it('colors each option according to its current answer state', () => {
+it('prefixes each option with a status icon without coloring the label text', () => {
     const root = document.createElement('div')
     document.body.append(root)
     const app = createApp(CheckboxTaskEvaluation, {
@@ -63,8 +63,13 @@ it('colors each option according to its current answer state', () => {
     app.mount(root)
 
     const labels = root.querySelectorAll('label')
-    expect(labels[0].classList.contains('text-success')).toBe(true)
-    expect(labels[1].classList.contains('text-danger')).toBe(true)
+    const icons = root.querySelectorAll('label i')
+    expect(labels[0].classList.contains('text-success')).toBe(false)
+    expect(labels[0].classList.contains('text-danger')).toBe(false)
+    expect(icons[0].classList.contains('bi-check-lg')).toBe(true)
+    expect(icons[0].classList.contains('text-success')).toBe(true)
+    expect(icons[1].classList.contains('bi-x-lg')).toBe(true)
+    expect(icons[1].classList.contains('text-danger')).toBe(true)
 
     app.unmount()
     root.remove()
