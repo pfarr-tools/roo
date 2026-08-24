@@ -85,6 +85,40 @@ it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien',
         ->and($resource->copyrights)->toBe('FLUX.2 [flex] / Black Forest Labs / Ada Beispiel');
 });
 
+it('macht hochgeladene Bilder zu geschützten Bibliotheksressourcen', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Bildbibliothek']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+
+    $response = $this->actingAs($user)->postJson('/ressourcen/bibliothek/bilder', [
+        'image' => UploadedFile::fake()->image('Karte.png'),
+        'description' => 'Eine Karte',
+        'copyrights' => 'Ada Beispiel',
+    ]);
+
+    $response->assertCreated()->assertJsonPath('image.name', 'Karte.png')->assertJsonPath('image.description', 'Eine Karte')->assertJsonPath('image.copyrights', 'Ada Beispiel');
+    $resource = ResourceReference::firstOrFail();
+    expect($resource->mime_type)->toBe('image/png')
+        ->and($resource->source)->toBe('user_upload')
+        ->and($resource->description)->toBe('Eine Karte')
+        ->and($resource->copyrights)->toBe('Ada Beispiel')
+        ->and(Storage::disk('local')->exists($resource->storage_path))->toBeTrue();
+});
+
+it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
+    $organization = Organization::create(['name' => 'Keine Bild-URLs']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Bildaufgabe',
+        'task_type' => 'free_text_images',
+        'content' => ['prompt' => 'Ordne zu'],
+        'images' => [['url' => 'https://example.test/bild.png', 'label' => '', 'answer' => '']],
+        'expectations' => [],
+        'levels' => [],
+    ])->assertSessionHasErrors('images.0.resource_id');
+});
+
 it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie Stunden zu', function () {
     $organization = Organization::create(['name' => 'Aufgaben Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
@@ -94,18 +128,21 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
+    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
 
-    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text_images', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
     $task = AssessmentTask::firstOrFail();
     expect($task->teaching_unit_competency_id)->toBe($competency->id)
-        ->and($task->task_type)->toBe('free_text')
+        ->and($task->task_type)->toBe('free_text_images')
         ->and($task->content['lines'])->toBe(5)
         ->and($task->content['lineated'])->toBeTrue()
         ->and($task->max_points)->toBe(3)
         ->and($task->expectations)->toHaveCount(1)
         ->and($task->expectations->first()->repetitions)->toBe(3)
-        ->and($task->levels()->pluck('level')->all())->toBe(['G', 'M']);
+        ->and($task->levels()->pluck('level')->all())->toBe(['G', 'M'])
+        ->and($task->images)->toHaveCount(1)
+        ->and($task->images->first()->resource_reference_id)->toBe($image->id);
     $this->actingAs($user)->get('/bibliothek/pruefungsaufgaben/neu')
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('method', 'post'));
     $this->actingAs($user)->get("/bibliothek/pruefungsaufgaben/{$task->id}/bearbeiten")

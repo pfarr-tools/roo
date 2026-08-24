@@ -19,7 +19,7 @@ function checkboxTask(array $content = []): AssessmentTask
 }
 
 it('scores only selected correct checkbox options', function () {
-    $evaluator = new CheckboxTaskEvaluator();
+    $evaluator = new CheckboxTaskEvaluator;
     expect($evaluator->score(checkboxTask(), [
         ['id' => 'a1', 'selected' => true],
         ['id' => 'a2', 'selected' => true],
@@ -30,7 +30,7 @@ it('scores only selected correct checkbox options', function () {
 it('scores every option with a correct current state when configured', function () {
     $task = checkboxTask(['checkbox_scoring_mode' => 'correct_states']);
 
-    expect((new CheckboxTaskEvaluator())->score($task, [
+    expect((new CheckboxTaskEvaluator)->score($task, [
         ['id' => 'a1', 'selected' => true],
         ['id' => 'a2', 'selected' => false],
         ['id' => 'a3', 'selected' => false],
@@ -38,7 +38,7 @@ it('scores every option with a correct current state when configured', function 
 });
 
 it('rejects duplicate and unknown checkbox options', function () {
-    $evaluator = new CheckboxTaskEvaluator();
+    $evaluator = new CheckboxTaskEvaluator;
     expect(fn () => $evaluator->validate(checkboxTask(), [
         ['id' => 'a1', 'selected' => true],
         ['id' => 'a1', 'selected' => false],
@@ -65,7 +65,7 @@ it('scores legacy checkbox tasks without an explicit points setting', function (
         ],
     ]);
 
-    expect((new CheckboxTaskEvaluator())->score($task, [
+    expect((new CheckboxTaskEvaluator)->score($task, [
         ['id' => 'a1', 'selected' => true],
         ['id' => 'a2', 'selected' => false],
     ]))->toBe(1.0);
@@ -79,7 +79,7 @@ it('accepts generated ids for legacy checkbox options', function () {
         ],
     ]);
 
-    expect((new CheckboxTaskEvaluator())->score($task, [
+    expect((new CheckboxTaskEvaluator)->score($task, [
         ['id' => 'option-1', 'selected' => true],
     ]))->toBe(1.0);
 });
@@ -87,5 +87,5 @@ it('accepts generated ids for legacy checkbox options', function () {
 it('specializes migrated legacy checkbox tasks', function () {
     $task = checkboxTask(['evaluation_mode' => 'legacy_checkbox']);
 
-    expect((new CheckboxTaskEvaluator())->supports($task))->toBeTrue();
+    expect((new CheckboxTaskEvaluator)->supports($task))->toBeTrue();
 });

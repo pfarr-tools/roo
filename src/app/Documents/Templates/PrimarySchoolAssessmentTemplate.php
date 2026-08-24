@@ -10,9 +10,11 @@ use PfarrTools\RooRuling\PhpWord\RulingRenderer;
 use PfarrTools\RooRuling\RulingDefinition;
 use PfarrTools\RooRuling\RulingPreset;
 use PhpOffice\PhpWord\Element\Header;
+use PhpOffice\PhpWord\Element\Cell;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Style\Cell as CellStyle;
 
 final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
 {
@@ -40,6 +42,10 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             'name' => self::COMIC,
             'size' => 24,
             'bold' => true,
+        ]);
+        $word->addParagraphStyle('imageMatchingSolution', [
+            'alignment' => 'center',
+            'spaceAfter' => 240,
         ]);
         $section = $word->addSection([
             'pageSizeW' => 11906,
@@ -156,14 +162,99 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $content = is_array($task['content'] ?? null) ? $task['content'] : [];
         if (($task['task_type'] ?? '') === 'checkbox') {
             $this->addCheckboxTask($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'image_matching') {
+            $this->addImageMatchingTask($section, $content);
+            $this->addImageCredits($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (($task['task_type'] ?? '') !== 'checkbox') {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addImageMatchingTask(Section $section, array $content): void
+    {
+        $widthCm = min(4.0, max(1.5, (float) ($content['image_width_cm'] ?? 3.0)));
+        $widthPx = (int) round($widthCm * 37.7952756);
+        $imageWidthTwips = (int) round($widthCm * 1440 / 2.54);
+        $images = collect($content['images'] ?? [])
+            ->filter(fn ($image): bool => is_array($image) && ! empty($image['path']) && is_file($image['path']))
+            ->values();
+
+        if ($images->isEmpty()) {
+            return;
+        }
+
+        $solutions = $images->pluck('answer')->filter(fn ($answer): bool => trim((string) $answer) !== '')->map(fn ($answer): string => trim((string) $answer))->values()->all();
+        shuffle($solutions);
+        $rowCount = (int) ceil($images->count() / 2);
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+            'borderSize' => 0,
+            'cellMargin' => 80,
+            'cellMarginBottom' => 113,
+        ]);
+
+        foreach (range(0, $rowCount - 1) as $rowIndex) {
+            $row = $table->addRow();
+            $this->addImageMatchingCell($row->addCell($imageWidthTwips, ['borderSize' => 0]), $images->get($rowIndex * 2), $widthPx, $imageWidthTwips);
+            $middle = $row->addCell(self::CONTENT_WIDTH_MM * 56.6929 - ($imageWidthTwips * 2), [
+                'borderSize' => 0,
+                'valign' => 'center',
+                'vMerge' => $rowIndex === 0 ? CellStyle::VMERGE_RESTART : CellStyle::VMERGE_CONTINUE,
+            ]);
+            if ($rowIndex === 0) {
+                foreach ($solutions as $solution) {
+                    $middle->addText($solution, ['name' => self::ATKINSON, 'size' => 14], 'imageMatchingSolution');
+                }
+            }
+            $this->addImageMatchingCell($row->addCell($imageWidthTwips, ['borderSize' => 0]), $images->get($rowIndex * 2 + 1), $widthPx, $imageWidthTwips);
+        }
+        $section->addTextBreak(1);
+    }
+
+    private function addImageMatchingCell(Cell $cell, mixed $image, int $widthPx, int $widthTwips): void
+    {
+        if (! is_array($image)) {
+            return;
+        }
+
+        $inner = $cell->addTable(['width' => $widthTwips, 'layout' => 'fixed', 'borderSize' => 4, 'borderColor' => '000000', 'cellMargin' => 40, 'cellMarginBottom' => 113]);
+        $innerCell = $inner->addRow()->addCell($widthTwips, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'center', 'cellMarginBottom' => 113]);
+        $imageStyle = ['width' => $widthPx, 'alignment' => 'center'];
+        $dimensions = @getimagesize($image['path']);
+        if (is_array($dimensions) && ($dimensions[0] ?? 0) > 0 && ($dimensions[1] ?? 0) > 0) {
+            $imageStyle['height'] = (int) round($widthPx * $dimensions[1] / $dimensions[0]);
+        }
+        $innerCell->addImage($image['path'], $imageStyle);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addImageCredits(Section $section, array $content): void
+    {
+        $usedCredits = collect($content['images'] ?? [])
+            ->filter(fn ($image): bool => is_array($image) && trim((string) ($image['copyright'] ?? '')) !== '')
+            ->map(fn ($image): string => trim((string) $image['copyright']));
+        $credits = $usedCredits
+            ->unique()
+            ->values();
+
+        if ($credits->isEmpty()) {
+            return;
+        }
+
+        $label = $usedCredits->count() === 1 ? 'Bild: ' : 'Bilder: ';
+        $section->addText($label.implode('; ', $credits->all()), [
+            'name' => self::ATKINSON,
+            'size' => 6,
+            'bold' => false,
+            'color' => '808080',
+        ], ['spaceBefore' => 0, 'spaceAfter' => 120]);
     }
 
     /** @param array<string, mixed> $content */

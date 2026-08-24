@@ -165,3 +165,48 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and(substr_count((string) $styles, 'Name:'))->toBe(1)
         ->and($content)->toContain('style:master-page-name="FirstPage"');
 });
+
+it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalte', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $document = new AssessmentDocument('LSE Bildzuordnung', [
+        [
+            'title' => 'Ordne zu',
+            'task_type' => 'image_matching',
+            'max_points' => 3,
+            'content' => [
+                'prompt' => 'Ordne die Bilder den Lösungen zu.',
+                'image_width_cm' => 4,
+                'images' => [
+                    ['path' => $image, 'answer' => 'Erste Lösung', 'copyright' => 'Ada Beispiel'],
+                    ['path' => $image, 'answer' => 'Zweite Lösung', 'copyright' => 'Ben Beispiel'],
+                    ['path' => $image, 'answer' => 'Dritte Lösung', 'copyright' => 'Ada Beispiel'],
+                ],
+            ],
+        ],
+    ], '2');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-image-matching-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $stylesXml = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($contents)->toStartWith('PK')
+        ->and($contentXml)->toContain('Erste Lösung')
+        ->and($contentXml)->toContain('Zweite Lösung')
+        ->and($contentXml)->toContain('Dritte Lösung')
+        ->and($contentXml)->toContain('table:number-rows-spanned="2"')
+        ->and($contentXml)->toContain('Bilder: Ada Beispiel; Ben Beispiel')
+        ->and($stylesXml)->toContain('style:name="imageMatchingSolution"')
+        ->and($stylesXml)->toContain('fo:margin-bottom="12pt"')
+        ->and($stylesXml)->toContain('fo:text-align="center"')
+        ->and($contentXml)->toContain('table:style-name="assessmentImageCell"')
+        ->and($contentXml)->toContain('table:style-name="assessmentImageMatchingMiddleCell"')
+        ->and($contentXml)->not->toContain('table:style-name="RooRulingZoneRow10"')
+        ->and($stylesXml)->toContain('fo:border="0.05cm solid #000000"')
+        ->and($contentXml)->toContain('fo:border="0.06pt solid #000000"');
+});

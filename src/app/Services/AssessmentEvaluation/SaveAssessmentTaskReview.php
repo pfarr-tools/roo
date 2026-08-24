@@ -50,7 +50,7 @@ final class SaveAssessmentTaskReview
             }
         }
 
-        return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences, $evaluator): AssessmentTaskReview {
+        return DB::transaction(function () use ($booklet, $task, $data, $providedOccurrences): AssessmentTaskReview {
             $review = AssessmentTaskReview::query()
                 ->where('assessment_booklet_id', $booklet->getKey())
                 ->where('assessment_task_id', $task->getKey())

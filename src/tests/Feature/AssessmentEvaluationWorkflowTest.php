@@ -5,9 +5,11 @@ use App\Models\AssessmentBooklet;
 use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskExpectation;
+use App\Models\AssessmentTaskImage;
 use App\Models\AssessmentTaskReview;
 use App\Models\AssessmentTaskReviewOption;
 use App\Models\Organization;
+use App\Models\ResourceReference;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
@@ -166,6 +168,28 @@ it('stores checkbox selections and synchronizes option and manual points', funct
 
     expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['a1' => true, 'a2' => true])
         ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('3.00');
+});
+
+it('stores image matching selections and synchronizes their points', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Bildzuordnung',
+        'task_type' => 'image_matching',
+        'content' => ['points_per_correct_answer' => 2],
+    ]));
+    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['organization_id' => $fixture['organization']->id, 'original_name' => 'Löwe.png', 'storage_path' => 'library/loewe.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-1', 'position' => 0, 'label' => 'Löwe', 'answer' => 'Mut']);
+    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['organization_id' => $fixture['organization']->id, 'original_name' => 'Taube.png', 'storage_path' => 'library/taube.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-2', 'position' => 1, 'label' => 'Taube', 'answer' => 'Frieden']);
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $task, [
+        'options' => [['id' => 'pair-1', 'selected' => true], ['id' => 'pair-2', 'selected' => false]],
+        'items' => [],
+        'extra_points' => 0,
+    ]);
+
+    expect(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('2.00');
 });
 
 it('exposes checkbox definitions and saved selections in evaluation props', function () {

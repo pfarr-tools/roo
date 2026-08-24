@@ -77,12 +77,21 @@ class AssessmentTask extends Model
         return $this->hasMany(AssessmentTaskReview::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(AssessmentTaskImage::class)->with('resource')->orderBy('position');
+    }
+
     public function maximumPoints(): ?int
     {
         $manualPoints = $this->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
 
-        if ($this->task_type !== 'checkbox') {
+        if (! in_array($this->task_type, ['checkbox', 'image_matching'], true)) {
             return $manualPoints ?: $this->max_points;
+        }
+
+        if ($this->task_type === 'image_matching') {
+            return $this->images()->count() * $this->pointsPerCorrectAnswer() + $manualPoints;
         }
 
         $options = collect($this->content['options'] ?? []);
@@ -99,6 +108,20 @@ class AssessmentTask extends Model
         $points = $this->content['points_per_correct_answer'] ?? null;
 
         return is_numeric($points) && (int) $points >= 0 ? (int) $points : 1;
+    }
+
+    public function pointsPerCorrectAnswer(): float
+    {
+        $points = $this->content['points_per_correct_answer'] ?? null;
+
+        return is_numeric($points) && (float) $points >= 0 ? (float) $points : 1.0;
+    }
+
+    public function imageWidthCm(): float
+    {
+        $width = $this->content['image_width_cm'] ?? 3.0;
+
+        return min(4.0, max(1.5, is_numeric($width) ? (float) $width : 3.0));
     }
 
     public function checkboxScoringMode(): string

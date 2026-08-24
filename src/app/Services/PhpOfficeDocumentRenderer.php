@@ -26,7 +26,7 @@ class PhpOfficeDocumentRenderer
             $contents = (string) ob_get_contents();
 
             return $format === DocumentOutputFormat::ODT
-                ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document)
+                ? $this->addOdtPageFrame($this->patchOdtVerticalMerges($this->patchOdtRulings($contents, $document), $document), $document)
                 : $contents;
         } finally {
             ob_end_clean();
@@ -46,7 +46,7 @@ class PhpOfficeDocumentRenderer
         try {
             IOFactory::createWriter($phpWord, $format->writerName())->save($temporaryPath);
             $contents = (string) file_get_contents($temporaryPath);
-            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtRulings($contents, $document), $document) : $contents);
+            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtVerticalMerges($this->patchOdtRulings($contents, $document), $document), $document) : $contents);
         } finally {
             unlink($temporaryPath);
         }
@@ -76,6 +76,106 @@ class PhpOfficeDocumentRenderer
         } finally {
             unlink($temporaryPath);
         }
+    }
+
+    private function patchOdtVerticalMerges(string $contents, Document $document): string
+    {
+        if (! $document instanceof AssessmentDocument) {
+            return $contents;
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-merge-');
+        if ($temporaryPath === false) {
+            return $contents;
+        }
+
+        try {
+            file_put_contents($temporaryPath, $contents);
+            $archive = new \ZipArchive;
+            if ($archive->open($temporaryPath) !== true) {
+                return $contents;
+            }
+            $content = $archive->getFromName('content.xml');
+            if (! is_string($content)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $content = str_replace('draw:style-name="fr1"', 'draw:style-name="assessmentImageFrame"', $content);
+            $content = str_replace(
+                '</office:automatic-styles>',
+                '<style:style style:name="assessmentImageFrame" style:family="graphic"><style:graphic-properties fo:border="0.06pt solid #000000"/></style:style><style:style style:name="assessmentImageCell" style:family="table-cell"><style:table-cell-properties fo:padding-bottom="0.2cm"/></style:style><style:style style:name="assessmentImageMatchingMiddleCell" style:family="table-cell"><style:table-cell-properties style:vertical-align="middle"/></style:style></office:automatic-styles>',
+                $content,
+            );
+
+            $dom = new \DOMDocument;
+            $dom->preserveWhiteSpace = true;
+            if (! $dom->loadXML($content)) {
+                $archive->close();
+
+                return $contents;
+            }
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+            $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+            $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+            foreach ($xpath->query('//style:style[@style:name="fr1"]/style:graphic-properties') as $graphicProperties) {
+                $graphicProperties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:border', '0.06pt solid #000000');
+            }
+            foreach ($xpath->query('//table:table') as $table) {
+                $rows = $this->directChildren($table, 'table-row');
+                $columns = $this->directChildren($table, 'table-column');
+                if (count($columns) !== 3 || count($rows) < 2) {
+                    continue;
+                }
+                $firstCells = $this->directChildren($rows[0], 'table-cell');
+                if (count($firstCells) !== 3 || count($this->directChildren($firstCells[0], 'table')) === 0 || count($this->directChildren($firstCells[2], 'table')) === 0 || trim($firstCells[1]->textContent) === '') {
+                    continue;
+                }
+
+                foreach ($rows as $row) {
+                    $row->removeAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'style-name');
+                    $cells = $this->directChildren($row, 'table-cell');
+                    foreach ($cells as $cell) {
+                        $cell->removeAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'style-name');
+                    }
+                    $cells[0]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:style-name', 'assessmentImageCell');
+                    $cells[2]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:style-name', 'assessmentImageCell');
+                }
+
+                $firstCells[1]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:style-name', 'assessmentImageMatchingMiddleCell');
+                $firstCells[1]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:number-rows-spanned', (string) count($rows));
+                for ($rowIndex = 1; $rowIndex < count($rows); $rowIndex++) {
+                    $cells = $this->directChildren($rows[$rowIndex], 'table-cell');
+                    if (count($cells) !== 3) {
+                        continue;
+                    }
+                    $covered = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:covered-table-cell');
+                    $cells[1]->parentNode->replaceChild($covered, $cells[1]);
+                }
+            }
+
+            $archive->addFromString('content.xml', $dom->saveXML());
+            $archive->close();
+
+            return (string) file_get_contents($temporaryPath);
+        } finally {
+            unlink($temporaryPath);
+        }
+    }
+
+    /** @return list<\DOMElement> */
+    private function directChildren(\DOMNode $node, string $localName): array
+    {
+        $children = [];
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof \DOMElement && $child->localName === $localName) {
+                $children[] = $child;
+            }
+        }
+
+        return $children;
     }
 
     private function addOdtPageFrame(string $contents, Document $document): string

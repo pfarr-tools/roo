@@ -3,6 +3,7 @@
 namespace App\Services\AssessmentEvaluation;
 
 use App\Models\AssessmentTask;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
 final class CheckboxTaskEvaluator
@@ -63,7 +64,7 @@ final class CheckboxTaskEvaluator
         return new InvalidArgumentException($message);
     }
 
-    private function definitions(AssessmentTask $task): \Illuminate\Support\Collection
+    private function definitions(AssessmentTask $task): Collection
     {
         return collect($task->content['options'] ?? [])->values()->map(
             fn (array $option, int $index): array => [

@@ -6,10 +6,17 @@ use App\Models\AssessmentTask;
 
 final class AssessmentTaskEvaluatorRegistry
 {
-    public function __construct(private readonly CheckboxTaskEvaluator $checkbox) {}
+    public function __construct(
+        private readonly CheckboxTaskEvaluator $checkbox,
+        private readonly ImageMatchingTaskEvaluator $imageMatching,
+    ) {}
 
-    public function for(AssessmentTask $task): ?CheckboxTaskEvaluator
+    public function for(AssessmentTask $task): CheckboxTaskEvaluator|ImageMatchingTaskEvaluator|null
     {
-        return $this->checkbox->supports($task) ? $this->checkbox : null;
+        if ($this->checkbox->supports($task)) {
+            return $this->checkbox;
+        }
+
+        return $this->imageMatching->supports($task) ? $this->imageMatching : null;
     }
 }

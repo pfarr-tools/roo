@@ -59,7 +59,7 @@ class AssessmentController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
 
-        $assessment->load(['tasks.expectations', 'tasks.levels']);
+        $assessment->load(['tasks.expectations', 'tasks.levels', 'tasks.images.resource']);
         $teachingGroup->loadMissing(['school', 'schoolYear']);
         $differentiated = $assessment->is_differentiated;
         $title = $assessment->title;
@@ -73,7 +73,7 @@ class AssessmentController extends Controller
                 'task_id' => (string) $task->getKey(),
                 'title' => $task->title,
                 'task_type' => $task->task_type,
-                'content' => $task->content ?? [],
+                'content' => $this->downloadTaskContent($task),
                 'max_points' => $task->maximumPoints(),
                 'levels' => $task->levels->pluck('level')->values()->all() ?: collect([$task->level])->filter()->values()->all(),
             ])->values()->all(),
@@ -126,6 +126,7 @@ class AssessmentController extends Controller
 
         $assessment->load([
             'tasks.expectations',
+            'tasks.images.resource',
             'booklets.fragments',
             'booklets.reviews.items',
             'booklets.reviews.options',
@@ -209,9 +210,12 @@ class AssessmentController extends Controller
                 'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
                 'content' => [
                     'options' => data_get($task->content, 'options', []),
-                    'points_per_correct_answer' => $task->task_type === 'checkbox' ? $task->checkboxPointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
+                    'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
+                    'image_width_cm' => $task->task_type === 'image_matching' ? $task->imageWidthCm() : null,
+                    'images' => $task->images->map(fn ($image): array => ['path' => Storage::disk('local')->path($image->resource->storage_path), 'label' => $image->label, 'answer' => $image->answer])->values()->all(),
                 ],
+                'images' => $task->images->map(fn ($image): array => ['id' => $image->identifier, 'label' => $image->label, 'answer' => $image->answer, 'image_url' => route('resources.library.files.preview', $image->resource)])->values(),
                 'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
                 'expectations' => $task->expectations->map(fn ($expectation): array => [
                     'id' => $expectation->id,
@@ -617,6 +621,26 @@ class AssessmentController extends Controller
         $filename = preg_replace('/[^\pL\pN._-]+/u', '_', trim($title)) ?: 'lernstandserhebung';
 
         return trim($filename, '._-') ?: 'lernstandserhebung';
+    }
+
+    /** @return array<string, mixed> */
+    private function downloadTaskContent(AssessmentTask $task): array
+    {
+        $content = is_array($task->content) ? $task->content : [];
+
+        if ($task->task_type === 'image_matching') {
+            $content['images'] = $task->images
+                ->filter(fn ($image): bool => $image->resource !== null)
+                ->map(fn ($image): array => [
+                    'path' => Storage::disk('local')->path($image->resource->storage_path),
+                    'answer' => $image->answer,
+                    'copyright' => $image->resource->copyrights,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $content;
     }
 
     private function validatedAssessment(Request $request): array
