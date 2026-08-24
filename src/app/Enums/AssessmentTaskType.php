@@ -8,7 +8,6 @@ enum AssessmentTaskType: string
     case FILL_TABLE = 'fill_table';
     case FREE_TEXT_IMAGES = 'free_text_images';
     case CHECKBOX = 'checkbox';
-    case MULTIPLE_CHOICE = 'multiple_choice';
     case MATCHING_TABLE = 'matching_table';
     case IMAGE_MATCHING = 'image_matching';
     case IMAGE_LABELING = 'image_labeling';

@@ -7,6 +7,7 @@ use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskExpectation;
 use App\Models\AssessmentTaskReview;
 use App\Models\AssessmentTaskReviewItem;
+use App\Models\AssessmentTaskReviewOption;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -119,6 +120,27 @@ it('stores repeated expectation review rows separately', function () {
 
     expect($review->items()->orderBy('occurrence')->pluck('occurrence')->all())->toBe([1, 2, 3])
         ->and($review->items()->firstOrFail()->awarded_points)->toBe('2.50');
+});
+
+it('stores checkbox option selections separately from expectation review rows', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $booklet = AssessmentBooklet::create([
+        'assessment_id' => $fixture['assessment']->id,
+        'number' => 1,
+        'status' => 'open',
+    ]);
+    $review = AssessmentTaskReview::create([
+        'assessment_booklet_id' => $booklet->id,
+        'assessment_task_id' => $fixture['task']->id,
+    ]);
+
+    $review->options()->createMany([
+        ['option_id' => 'a1', 'selected' => true],
+        ['option_id' => 'a2', 'selected' => false],
+    ]);
+
+    expect($review->options()->orderBy('option_id')->get()->map(fn (AssessmentTaskReviewOption $option): array => [$option->option_id, $option->selected])->all())
+        ->toBe([['a1', true], ['a2', false]]);
 });
 
 it('allows an assigned student only once among open booklets of an assessment', function () {

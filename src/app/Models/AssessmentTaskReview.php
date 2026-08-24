@@ -29,4 +29,10 @@ class AssessmentTaskReview extends Model
     {
         return $this->hasMany(AssessmentTaskReviewItem::class);
     }
+
+    public function options(): HasMany
+    {
+        return $this->hasMany(AssessmentTaskReviewOption::class);
+    }
+
 }
