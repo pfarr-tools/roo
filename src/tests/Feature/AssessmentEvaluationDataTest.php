@@ -85,13 +85,13 @@ it('persists a booklet with its fragment and task review', function () {
     $review = AssessmentTaskReview::create([
         'assessment_booklet_id' => $booklet->id,
         'assessment_task_id' => $fixture['task']->id,
-        'extra_points' => -1.5,
+        'extra_points' => -2,
         'extra_note' => 'Formfehler',
     ]);
 
     expect($fixture['assessment']->booklets()->sole()->id)->toBe($booklet->id)
         ->and($booklet->fragments()->sole()->id)->toBe($fragment->id)
-        ->and($booklet->reviews()->sole()->extra_points)->toBe('-1.50')
+        ->and($booklet->reviews()->sole()->extra_points)->toBe(-2)
         ->and($fixture['task']->fragments()->sole()->image_path)->toBe('assessment-booklets/1/task-1.png')
         ->and($fixture['task']->reviews()->sole()->id)->toBe($review->id)
         ->and($fixture['student']->assessmentBooklets()->sole()->id)->toBe($booklet->id);

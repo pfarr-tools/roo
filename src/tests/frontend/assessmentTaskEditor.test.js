@@ -53,6 +53,8 @@ it('shows checkbox points and keeps expectations manual', async () => {
     await nextTick()
 
     expect(root.querySelector('#assessment-task-points-per-correct-answer')).not.toBeNull()
+    expect(root.querySelector('#assessment-task-checkbox-scoring-mode')).not.toBeNull()
+    expect(root.querySelector('#assessment-task-checkbox-scoring-mode').value).toBe('correct_states')
     expect(root.textContent).not.toContain('Automatische Erwartungen')
     unmount()
 })

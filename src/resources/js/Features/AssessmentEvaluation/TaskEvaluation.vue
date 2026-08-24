@@ -77,7 +77,9 @@ function buildReviewCase(fragment) {
 
 function assignedPoints(reviewCase) {
     const automaticPoints = reviewCase.options
-        .filter(option => option.selected && option.correct)
+        .filter(option => props.task.checkbox_scoring_mode === 'correct_states'
+            ? option.selected === option.correct
+            : option.selected && option.correct)
         .length * Number(props.task.content?.points_per_correct_answer ?? 0)
     const manualPoints = reviewCase.items.reduce((sum, item) => sum + Number(item.awarded_points ?? 0), 0)
 
@@ -204,7 +206,7 @@ watch(() => props.openKey, resetCases, { immediate: true })
                             <div class="col-12 col-sm-auto fw-semibold pt-1">{{ de.assessmentEvaluationExtraPoints }}</div>
                             <div class="col-12 col-sm-3 col-lg-2">
                                 <label class="visually-hidden" :for="`extra-points-${reviewCase.fragment.id}`">{{ de.assessmentEvaluationExtraPoints }}</label>
-                                <input :id="`extra-points-${reviewCase.fragment.id}`" :data-testid="`extra-points-${reviewCase.fragment.id}`" v-model="reviewCase.extra_points" class="form-control form-control-sm" type="number" step="0.01" :disabled="reviewCase.processing" @input="markDirty(reviewCase)">
+                                <input :id="`extra-points-${reviewCase.fragment.id}`" :data-testid="`extra-points-${reviewCase.fragment.id}`" v-model="reviewCase.extra_points" class="form-control form-control-sm" type="number" step="1" :disabled="reviewCase.processing" @input="markDirty(reviewCase)">
                             </div>
                             <div class="col-12 col-lg">
                                 <label class="visually-hidden" :for="`extra-note-${reviewCase.fragment.id}`">{{ de.assessmentEvaluationExtraExplanationOptional }}</label>

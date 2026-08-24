@@ -103,7 +103,7 @@ it('synchronizes full partial and zero occurrence scores with notes and signed e
             ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 1.5, 'note' => 'teilweise erfüllt'],
             ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 0, 'note' => 'fehlt'],
         ],
-        'extra_points' => -1.25,
+        'extra_points' => -1,
         'extra_note' => 'Formfehler',
     ])->assertRedirect();
 
@@ -112,7 +112,7 @@ it('synchronizes full partial and zero occurrence scores with notes and signed e
 
     expect($result->student_id)->toBe($fixture['student']->id)
         ->and($result->assessment_task_id)->toBe($fixture['task']->id)
-        ->and($result->points)->toBe('2.25')
+        ->and($result->points)->toBe('2.50')
         ->and($review->items->pluck('note')->all())->toBe([null, 'teilweise erfüllt', 'fehlt'])
         ->and($review->extra_note)->toBe('Formfehler');
 });
@@ -135,11 +135,11 @@ it('synchronizes a no-expectation task from signed extra points alone', function
 
     $this->actingAs($fixture['user'])->put(taskReviewUrl($fixture, $task), [
         'items' => [],
-        'extra_points' => -2.5,
+        'extra_points' => -2,
         'extra_note' => 'Zusätzlicher Abzug',
     ])->assertRedirect();
 
-    expect(StudentAssessmentResult::query()->sole()->points)->toBe('-2.50');
+    expect(StudentAssessmentResult::query()->sole()->points)->toBe('-2.00');
 });
 
 it('moves and removes synchronized results when a booklet is reassigned or discarded', function () {

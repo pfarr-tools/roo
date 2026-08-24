@@ -16,7 +16,7 @@ final class SaveAssessmentTaskReview
         private readonly AssessmentTaskEvaluatorRegistry $evaluators,
     ) {}
 
-    /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, options?: list<array{id: string, selected: bool}>, extra_points: int|float|string|null, extra_note?: ?string} $data */
+    /** @param array{items: list<array{expectation_id: int, occurrence: int, awarded_points: int|float|string, note?: ?string}>, options?: list<array{id: string, selected: bool}>, extra_points: int|string|null, extra_note?: ?string} $data */
     public function handle(AssessmentBooklet $booklet, AssessmentTask $task, array $data): AssessmentTaskReview
     {
         $occurrences = ExpectationOccurrences::forTask($task);

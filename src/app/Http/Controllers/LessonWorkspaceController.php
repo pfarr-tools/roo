@@ -86,6 +86,7 @@ class LessonWorkspaceController extends Controller
             'content.reading_text' => ['nullable', 'string', 'max:50000'],
             'content.options' => ['nullable', 'array'],
             'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])],
             'content.options.*.id' => ['required_with:content.options', 'string', 'max:100'],
             'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'],
             'content.options.*.correct' => ['sometimes', 'boolean'],
@@ -107,7 +108,7 @@ class LessonWorkspaceController extends Controller
             'levels' => ['sometimes', 'array'],
             'levels.*' => ['in:G,M,E'],
         ]);
-        $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']]);
+        $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']]);
         $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
             'organization_id' => $group->organization_id,
@@ -140,7 +141,7 @@ class LessonWorkspaceController extends Controller
         $expectations = $this->validatedExpectations($request);
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['nullable', 'array'], 'content.images.*.url' => ['required_with:content.images', 'url', 'max:2000'], 'content.images.*.label' => ['nullable', 'string', 'max:255'], 'content.images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
-        $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']]);
+        $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']]);
         $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
         $attributes = ['title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {

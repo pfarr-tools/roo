@@ -12,7 +12,7 @@ class AssessmentTaskReview extends Model
 {
     protected function casts(): array
     {
-        return ['extra_points' => 'decimal:2'];
+        return ['extra_points' => 'integer'];
     }
 
     public function booklet(): BelongsTo

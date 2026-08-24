@@ -50,3 +50,22 @@ it('toggles only the clicked option when legacy options have no ids', async () =
     app.unmount()
     root.remove()
 })
+
+it('colors each option according to its current answer state', () => {
+    const root = document.createElement('div')
+    document.body.append(root)
+    const app = createApp(CheckboxTaskEvaluation, {
+        options: [
+            { id: 'a1', text: 'Korrekt', correct: true, selected: true },
+            { id: 'a2', text: 'Nicht korrekt', correct: false, selected: true },
+        ],
+    })
+    app.mount(root)
+
+    const labels = root.querySelectorAll('label')
+    expect(labels[0].classList.contains('text-success')).toBe(true)
+    expect(labels[1].classList.contains('text-danger')).toBe(true)
+
+    app.unmount()
+    root.remove()
+})

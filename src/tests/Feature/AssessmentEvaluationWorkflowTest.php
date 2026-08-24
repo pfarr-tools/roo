@@ -192,6 +192,7 @@ it('exposes checkbox definitions and saved selections in evaluation props', func
         ->assertInertia(fn ($page) => $page
             ->where('tasks.0.task_type', 'checkbox')
             ->where('tasks.0.max_points', 8)
+            ->where('tasks.0.checkbox_scoring_mode', 'correct_selections')
             ->where('tasks.0.content.options.0.id', 'a1')
             ->where('tasks.0.content.points_per_correct_answer', 2)
             ->where('taskFragments.0.review.options.0.option_id', 'a1')
@@ -320,14 +321,14 @@ it('persists a complete review for every expectation occurrence', function () {
                 ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 1.5, 'note' => 'teilweise'],
                 ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 0, 'note' => null],
             ],
-            'extra_points' => -1.25,
+            'extra_points' => -1,
             'extra_note' => 'Formfehler',
         ])
         ->assertRedirect();
 
     $review = AssessmentTaskReview::query()->sole();
 
-    expect($review->extra_points)->toBe('-1.25')
+    expect($review->extra_points)->toBe(-1)
         ->and($review->extra_note)->toBe('Formfehler')
         ->and($review->items()->orderBy('occurrence')->pluck('occurrence')->all())->toBe([1, 2, 3])
         ->and($review->items()->orderBy('occurrence')->pluck('awarded_points')->all())->toBe(['2.00', '1.50', '0.00']);
@@ -368,7 +369,7 @@ it('saves signed extra points for a task without expectations', function () {
     $this->actingAs($fixture['user'])
         ->put("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$fixture['booklets'][0]->id}/tasks/{$taskWithoutExpectations->id}/review", [
             'items' => [],
-            'extra_points' => -2.5,
+            'extra_points' => -2,
             'extra_note' => 'Zusätzlicher Abzug',
         ])
         ->assertRedirect();
@@ -376,8 +377,23 @@ it('saves signed extra points for a task without expectations', function () {
     $review = AssessmentTaskReview::query()->sole();
 
     expect($review->assessment_task_id)->toBe($taskWithoutExpectations->id)
-        ->and($review->extra_points)->toBe('-2.50')
+        ->and($review->extra_points)->toBe(-2)
         ->and($review->items)->toHaveCount(0);
+});
+
+it('rejects fractional extra points', function () {
+    $fixture = assessmentEvaluationWorkflowFixture();
+
+    $this->actingAs($fixture['user'])
+        ->put("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/booklets/{$fixture['booklets'][0]->id}/tasks/{$fixture['task']->id}/review", [
+            'items' => [
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 0],
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 0],
+                ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 0],
+            ],
+            'extra_points' => -1.5,
+        ])
+        ->assertSessionHasErrors('extra_points');
 });
 
 it('deletes obsolete review occurrences when repetitions decrease', function () {

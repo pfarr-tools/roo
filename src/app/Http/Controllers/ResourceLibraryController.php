@@ -385,6 +385,7 @@ class ResourceLibraryController extends Controller
     {
         $request->validate([
             'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])],
             'content.options.*.id' => ['required_with:content.options', 'string', 'max:100'],
         ]);
     }

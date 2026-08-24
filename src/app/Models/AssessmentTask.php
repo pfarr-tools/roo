@@ -85,7 +85,10 @@ class AssessmentTask extends Model
             return $manualPoints ?: $this->max_points;
         }
 
-        $correctOptions = collect($this->content['options'] ?? [])->where('correct', true)->count();
+        $options = collect($this->content['options'] ?? []);
+        $correctOptions = $this->checkboxScoringMode() === 'correct_states'
+            ? $options->count()
+            : $options->where('correct', true)->count();
         $optionPoints = $correctOptions * $this->checkboxPointsPerCorrectAnswer();
 
         return $optionPoints + $manualPoints;
@@ -96,6 +99,13 @@ class AssessmentTask extends Model
         $points = $this->content['points_per_correct_answer'] ?? null;
 
         return is_numeric($points) && (int) $points >= 0 ? (int) $points : 1;
+    }
+
+    public function checkboxScoringMode(): string
+    {
+        return ($this->content['checkbox_scoring_mode'] ?? null) === 'correct_states'
+            ? 'correct_states'
+            : 'correct_selections';
     }
 
     public function lessons(): BelongsToMany

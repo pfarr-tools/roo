@@ -20,7 +20,14 @@ final class CheckboxTaskEvaluator
         $points = (float) $task->checkboxPointsPerCorrectAnswer();
 
         return collect($options)
-            ->filter(fn (array $option): bool => (bool) $option['selected'] && (bool) ($definitions->get($option['id'])['correct'] ?? false))
+            ->filter(function (array $option) use ($definitions, $task): bool {
+                $selected = (bool) $option['selected'];
+                $correct = (bool) ($definitions->get($option['id'])['correct'] ?? false);
+
+                return $task->checkboxScoringMode() === 'correct_states'
+                    ? $selected === $correct
+                    : $selected && $correct;
+            })
             ->count() * $points;
     }
 

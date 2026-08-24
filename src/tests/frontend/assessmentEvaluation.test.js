@@ -319,7 +319,8 @@ describe('assessment evaluation components', () => {
                 id: 22,
                 title: 'Angekreuzte Antworten',
                 task_type: 'checkbox',
-                max_points: 2,
+                max_points: 4,
+                checkbox_scoring_mode: 'correct_states',
                 content: {
                     options: [
                         { text: 'Richtig', correct: true },
@@ -333,10 +334,10 @@ describe('assessment evaluation components', () => {
             openKey: 1,
         })
 
-        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('0 / 2 Punkte')
+        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('2 / 4 Punkte')
         root.querySelectorAll('input[type="checkbox"]')[0].click()
         await nextTick()
-        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('2 / 2 Punkte')
+        expect(root.querySelector('[data-testid="points-summary-42"]').textContent).toContain('4 / 4 Punkte')
 
         unmount()
     })

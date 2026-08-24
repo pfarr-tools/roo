@@ -22,7 +22,7 @@ class AssessmentTaskReviewRequest extends FormRequest
             'options' => ['sometimes', 'array'],
             'options.*.id' => ['required', 'string', 'max:100'],
             'options.*.selected' => ['required', 'boolean'],
-            'extra_points' => ['present', 'nullable', 'numeric'],
+            'extra_points' => ['present', 'nullable', 'integer'],
             'extra_note' => ['nullable', 'string', 'max:2000'],
         ];
     }

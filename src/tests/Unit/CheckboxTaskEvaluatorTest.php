@@ -27,6 +27,16 @@ it('scores only selected correct checkbox options', function () {
     ]))->toBe(2.0);
 });
 
+it('scores every option with a correct current state when configured', function () {
+    $task = checkboxTask(['checkbox_scoring_mode' => 'correct_states']);
+
+    expect((new CheckboxTaskEvaluator())->score($task, [
+        ['id' => 'a1', 'selected' => true],
+        ['id' => 'a2', 'selected' => false],
+        ['id' => 'a3', 'selected' => false],
+    ]))->toBe(4.0);
+});
+
 it('rejects duplicate and unknown checkbox options', function () {
     $evaluator = new CheckboxTaskEvaluator();
     expect(fn () => $evaluator->validate(checkboxTask(), [
