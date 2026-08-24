@@ -16,7 +16,7 @@ final class CheckboxTaskEvaluator
     public function score(AssessmentTask $task, array $options): float
     {
         $this->validate($task, $options);
-        $definitions = collect($task->content['options'] ?? [])->keyBy('id');
+        $definitions = $this->definitions($task)->keyBy('id');
         $points = (float) $task->checkboxPointsPerCorrectAnswer();
 
         return collect($options)
@@ -27,7 +27,7 @@ final class CheckboxTaskEvaluator
     /** @param list<array{id: string, selected: bool}> $options */
     public function validate(AssessmentTask $task, array $options): void
     {
-        $definitions = collect($task->content['options'] ?? []);
+        $definitions = $this->definitions($task);
         $definitionIds = $definitions->pluck('id')->filter(fn ($id): bool => is_string($id) && $id !== '')->values();
         $providedIds = array_map(fn (array $option): mixed => $option['id'] ?? null, $options);
         $points = $task->content['points_per_correct_answer'] ?? null;
@@ -54,5 +54,17 @@ final class CheckboxTaskEvaluator
     private function invalid(string $message): InvalidArgumentException
     {
         return new InvalidArgumentException($message);
+    }
+
+    private function definitions(AssessmentTask $task): \Illuminate\Support\Collection
+    {
+        return collect($task->content['options'] ?? [])->values()->map(
+            fn (array $option, int $index): array => [
+                ...$option,
+                'id' => is_string($option['id'] ?? null) && $option['id'] !== ''
+                    ? $option['id']
+                    : 'option-'.($index + 1),
+            ],
+        );
     }
 }

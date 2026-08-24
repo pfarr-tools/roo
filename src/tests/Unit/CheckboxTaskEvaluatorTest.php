@@ -61,6 +61,19 @@ it('scores legacy checkbox tasks without an explicit points setting', function (
     ]))->toBe(1.0);
 });
 
+it('accepts generated ids for legacy checkbox options', function () {
+    $task = new AssessmentTask([
+        'task_type' => 'checkbox',
+        'content' => [
+            'options' => [['text' => 'Richtig', 'correct' => true]],
+        ],
+    ]);
+
+    expect((new CheckboxTaskEvaluator())->score($task, [
+        ['id' => 'option-1', 'selected' => true],
+    ]))->toBe(1.0);
+});
+
 it('specializes migrated legacy checkbox tasks', function () {
     $task = checkboxTask(['evaluation_mode' => 'legacy_checkbox']);
 
