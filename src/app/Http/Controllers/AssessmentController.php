@@ -74,9 +74,7 @@ class AssessmentController extends Controller
                 'title' => $task->title,
                 'task_type' => $task->task_type,
                 'content' => $task->content ?? [],
-                'max_points' => $task->expectations->isNotEmpty()
-                    ? $task->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1))
-                    : $task->max_points,
+                'max_points' => $task->maximumPoints(),
                 'levels' => $task->levels->pluck('level')->values()->all() ?: collect([$task->level])->filter()->values()->all(),
             ])->values()->all(),
             gradeLevel: (string) ($teachingGroup->gradeLevels()->orderBy('id')->value('grade_level') ?? ''),
@@ -584,9 +582,7 @@ class AssessmentController extends Controller
             return [
                 'id' => $task->id,
                 'title' => $task->title,
-                'max_points' => $task->expectations->isNotEmpty()
-                    ? $task->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1))
-                    : $task->max_points,
+                'max_points' => $task->maximumPoints(),
                 'levels' => $task->levels->pluck('level')->values()->all() ?: collect([$task->level])->filter()->values()->all(),
                 'competency_id' => $competencyId,
                 'education_plan_competency_id' => $educationPlanCompetency?->id,
