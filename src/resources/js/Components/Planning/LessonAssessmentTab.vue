@@ -23,7 +23,13 @@ const tasksFor = competency => props.assessmentTasks.filter(task => (
     || (competency.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.education_plan_competency_id))
     || (competency.source_identifier && String(task.competency_identifier ?? task.source_identifier) === String(competency.source_identifier))
 ))
-function newUrl() { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/neu' }
+function newUrl(competency) {
+    const params = new URLSearchParams()
+    if (competency.education_plan_id) params.set('education_plan_id', competency.education_plan_id)
+    if (competency.education_plan_competency_id) params.set('education_plan_competency_id', competency.education_plan_competency_id)
+    const query = params.toString()
+    return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/neu' + (query ? '?' + query : '')
+}
 function editUrl(task) { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/' + task.id + '/bearbeiten' }
 async function remove(task) {
     if (!await requestConfirmation({ message: de.removeAssessmentTaskConfirm })) return

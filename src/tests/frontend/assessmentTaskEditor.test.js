@@ -9,12 +9,13 @@ let submitError = false;
 vi.mock("@inertiajs/vue3", () => ({
     router: { visit: vi.fn() },
     useForm(initial) {
+        let defaults = { ...initial };
         const form = reactive({
             ...initial,
             processing: false,
             errors: {},
-            defaults: vi.fn(),
-            reset: vi.fn(),
+            defaults: vi.fn((values) => { defaults = values; }),
+            reset: vi.fn(() => Object.assign(form, defaults)),
             data: vi.fn(() => ({ ...form })),
             transform: vi.fn((callback) => {
                 transformedPayload = callback();
@@ -86,6 +87,24 @@ it("shows checkbox points and keeps expectations manual", async () => {
         root.querySelector("#assessment-task-checkbox-scoring-mode").value,
     ).toBe("correct_states");
     expect(root.textContent).not.toContain("Automatische Erwartungen");
+    unmount();
+});
+
+it("prefills the education plan and competency for a new task", async () => {
+    const { root, unmount } = mount({
+        educationPlans: [{ id: 7, title: "Bildungsplan" }],
+        initialEducationPlanId: 7,
+        initialCompetency: {
+            id: 55,
+            external_identifier: "3.1.1",
+            text: "Kann unterscheiden",
+        },
+    });
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-plan").value).toBe("7");
+    expect(root.textContent).toContain("3.1.1 – Kann unterscheiden");
+
     unmount();
 });
 

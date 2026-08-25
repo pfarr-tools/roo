@@ -30,6 +30,31 @@ case "$COMMAND" in
     exec docker compose exec app bash "$@"
     ;;
   artisan)
+    if [[ "${1:-}" == "test" ]]; then
+      cat >&2 <<'EOF'
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! ACHTUNG: ./roo artisan test kann die normale PostgreSQL-Datenbank löschen !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Verwende für Tests den sicheren Befehl:
+
+  ./roo test [Testoptionen]
+
+Dieser setzt APP_ENV=testing und verwendet eine isolierte SQLite-In-Memory-
+Datenbank. Nur wenn du ausdrücklich gegen die normale Datenbank testen willst,
+kannst du hier fortfahren.
+EOF
+      confirmation=''
+      if ! read -r -p 'Wirklich ./roo artisan test ausführen? Tippe exakt "ja": ' confirmation < /dev/tty; then
+        echo 'Abbruch: Keine interaktive Bestätigung erhalten.' >&2
+        exit 2
+      fi
+      if [[ "$confirmation" != "ja" ]]; then
+        echo 'Abbruch: ./roo artisan test wurde nicht bestätigt.' >&2
+        exit 2
+      fi
+    fi
     exec docker compose exec -e XDG_CONFIG_HOME=/tmp/config app php artisan "$@"
     ;;
   data)

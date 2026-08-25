@@ -16,6 +16,8 @@ const props = defineProps({
     submitUrl: { type: String, required: true },
     method: { type: String, default: "post" },
     competencyId: { type: [String, Number], default: "" },
+    initialEducationPlanId: { type: [String, Number], default: "" },
+    initialCompetency: { type: Object, default: null },
     educationPlans: { type: Array, default: () => [] },
     task: { type: Object, default: null },
     imageLibrary: { type: Array, default: () => [] },
@@ -114,14 +116,19 @@ function resetForm() {
               }))
             : [emptyExpectation()],
         solution: props.task?.solution ?? "",
-        education_plan_id: props.task?.education_plan_id ?? "",
+        education_plan_id:
+            props.task?.education_plan_id ?? props.initialEducationPlanId ?? "",
         education_plan_competency_id:
-            props.task?.education_plan_competency_id ?? "",
+            props.task?.education_plan_competency_id ??
+            props.initialCompetency?.id ??
+            "",
         levels: props.task?.levels?.map((level) => level.level ?? level) ?? [],
     });
     form.reset();
     if (props.task?.education_plan_competency)
         setSelectedCompetency(props.task.education_plan_competency);
+    else if (!props.task && props.initialCompetency)
+        setSelectedCompetency(props.initialCompetency);
     else {
         selectedCompetencyNumber.value = "";
         selectedCompetencyWording.value = props.task?.competency ?? "";

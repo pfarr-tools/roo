@@ -67,6 +67,23 @@ class LessonWorkspaceController extends Controller
 
     private function assessmentTaskForm(Request $request, ScheduleSlot $scheduleSlot, ?AssessmentTask $task): Response
     {
+        $initialCompetency = null;
+        $initialEducationPlanId = null;
+        if (! $task && $request->filled('education_plan_competency_id')) {
+            $candidate = $scheduleSlot->scheduledLesson?->lesson?->competencies()
+                ->with(['educationPlanCompetency.variants', 'educationPlanCompetency.area.version'])
+                ->where('education_plan_competency_id', $request->integer('education_plan_competency_id'))
+                ->first();
+            $educationPlanCompetency = $candidate?->educationPlanCompetency;
+            $initialEducationPlanId = $educationPlanCompetency?->area?->version?->education_plan_id;
+            if ($educationPlanCompetency && (! $request->filled('education_plan_id') || (int) $request->input('education_plan_id') === $initialEducationPlanId)) {
+                $initialCompetency = $educationPlanCompetency->only(['id', 'external_identifier', 'number', 'text', 'is_active', 'position']);
+                $initialCompetency['variants'] = $educationPlanCompetency->variants->map(fn ($variant): array => ['education_plan_level_id' => $variant->education_plan_level_id])->values()->all();
+            } else {
+                $initialEducationPlanId = null;
+            }
+        }
+
         return Inertia::render('AssessmentTask/Edit', [
             'scheduleSlotId' => $scheduleSlot->id,
             'backUrl' => route('lessons.show', $scheduleSlot).'?tab=assessment',
@@ -75,6 +92,8 @@ class LessonWorkspaceController extends Controller
                 : route('lessons.assessment-tasks.store', $scheduleSlot),
             'method' => $task ? 'put' : 'post',
             'task' => $task,
+            'initialEducationPlanId' => $initialEducationPlanId,
+            'initialCompetency' => $initialCompetency,
             'imageLibrary' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name'])->map(fn (ResourceReference $image): array => ['id' => $image->id, 'name' => $image->original_name, 'preview_url' => route('resources.library.files.preview', $image)])->values(),
             'imageUploadUrl' => route('resources.library.images.store'),
             'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title']),
@@ -287,7 +306,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency.variants.level',
             'scheduledLesson.lesson.assessmentTasks.levels',
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
-            'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
+            'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area.version',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.unit.competencies.curriculumEducationPlanReference',
             'scheduledLesson.lesson.phases.socialForm',
@@ -296,7 +315,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.phases.materialItems',
             'scheduledLesson.lesson.phases.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.phases.songs.parts',
-            'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
+            'scheduledLesson.lesson.competencies.educationPlanCompetency.area.version',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.variants',
             'scheduledLesson.lesson.competencies.curriculumEducationPlanReference',
             'scheduledLesson.lesson.competencies.curriculumEducationPlanReference.educationPlanCompetency.area',
@@ -331,6 +350,7 @@ class LessonWorkspaceController extends Controller
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency) + [
                 'education_plan_competency_id' => $competency->education_plan_competency_id,
+                'education_plan_id' => $competency->educationPlanCompetency?->area?->version?->education_plan_id,
                 'source_identifier' => $competency->educationPlanCompetency?->external_identifier,
             ])
             ->groupBy('kind')

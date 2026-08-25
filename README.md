@@ -106,10 +106,16 @@ App-Key, führt Migrationen aus und legt die benötigten Storage-Buckets an.
 ./roo logs
 ./roo shell
 ./roo artisan migrate
-./roo artisan test
 ./roo pint
 ./roo test
 ```
+
+Für Tests muss `./roo test` verwendet werden. Dieser Befehl setzt die
+Testumgebung und verwendet eine isolierte SQLite-In-Memory-Datenbank.
+`./roo artisan test` ist standardmäßig gesperrt, weil Laravel-Tests mit
+`RefreshDatabase` sonst versehentlich die normale PostgreSQL-Datenbank
+zurücksetzen können. Eine ausdrückliche Bestätigung ist nur für diesen
+bewussten Ausnahmefall möglich.
 
 Produktionsbefehle kapseln die Verwendung von `compose.production.yaml`:
 

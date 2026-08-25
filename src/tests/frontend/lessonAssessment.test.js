@@ -55,4 +55,25 @@ describe('LessonAssessmentTab', () => {
 
         unmount()
     })
+
+    it('prefills the new-task link with the competency and education plan', async () => {
+        const { root, unmount } = mount({
+            scheduleSlotId: 81,
+            groupId: 1,
+            lessonId: 81,
+            competencies: [{
+                id: 101,
+                education_plan_id: 7,
+                education_plan_competency_id: 55,
+                label: '3.2.1 (3) – Kompetenz',
+            }],
+        })
+
+        await nextTick()
+
+        expect(root.querySelector('a[href*="/pruefungsaufgaben/neu"]').getAttribute('href'))
+            .toBe('/unterricht/81/pruefungsaufgaben/neu?education_plan_id=7&education_plan_competency_id=55')
+
+        unmount()
+    })
 })
