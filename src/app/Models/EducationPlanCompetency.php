@@ -27,9 +27,9 @@ class EducationPlanCompetency extends Model
         return $this->hasMany(EducationPlanCompetenceVariant::class, 'education_plan_competency_id');
     }
 
-    public function curriculumCompetencies(): HasMany
+    public function curriculumTopicReferences(): HasMany
     {
-        return $this->hasMany(CurriculumTopicCompetency::class);
+        return $this->hasMany(CurriculumTopicEducationPlanReference::class, 'education_plan_competency_id');
     }
 
     public function relations(): HasMany

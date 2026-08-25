@@ -4,7 +4,7 @@ use App\Models\Assessment;
 use App\Models\Curriculum;
 use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumTopic;
-use App\Models\CurriculumTopicCompetency;
+use App\Models\CurriculumTopicEducationPlanReference;
 use App\Models\CurriculumVersion;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
@@ -63,7 +63,7 @@ it('übernimmt eine Curriculum-UE als unabhängige eigene UE mit Herkunft', func
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => 'religion', 'title' => 'Religion', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => 'K1', 'text' => 'Fragen stellen', 'position' => 1, 'is_active' => true]);
-    CurriculumTopicCompetency::create(['curriculum_topic_id' => $topic->id, 'education_plan_competency_id' => $competency->id, 'competency_kind' => 'content', 'display' => 'Fragen stellen', 'position' => 1]);
+    CurriculumTopicEducationPlanReference::create(['curriculum_topic_id' => $topic->id, 'education_plan_competency_id' => $competency->id, 'competency_kind' => 'content', 'position' => 1]);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/curriculum-themen/{$topic->id}/uebernehmen")->assertRedirect();
 

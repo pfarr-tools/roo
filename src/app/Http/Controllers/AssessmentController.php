@@ -508,15 +508,15 @@ class AssessmentController extends Controller
         return $teachingGroup->teachingUnits()
             ->with(['lessons' => fn ($query) => $query
                 ->whereHas('scheduledLessons.slot', $slotFilter)
-                ->with(['competencies.educationPlanCompetency.area', 'competencies.educationPlanCompetency.variants', 'competencies.curriculumCompetency.educationPlanCompetency.area', 'competencies.curriculumCompetency.educationPlanCompetency.variants'])])
+                ->with(['competencies.educationPlanCompetency.area', 'competencies.educationPlanCompetency.variants'])])
             ->get()
             ->flatMap->lessons
             ->flatMap->competencies
             ->filter(fn ($competency) => $competency->educationPlanCompetency?->area?->kind === 'content'
-                || $competency->curriculumCompetency?->competency_kind === 'content')
+                || $competency->educationPlanCompetency?->area?->kind === 'content')
             ->map(function ($competency): array {
                 $educationPlanCompetency = $competency->educationPlanCompetency
-                    ?? $competency->curriculumCompetency?->educationPlanCompetency;
+                    ?? $competency->educationPlanCompetency;
 
                 return [
                     'key' => $educationPlanCompetency

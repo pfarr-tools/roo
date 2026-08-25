@@ -74,10 +74,10 @@ class YearPlanningWorkspace
                 'notes' => $topic->notes,
             ]);
 
-            foreach ($topic->competencies as $competency) {
+            foreach ($topic->educationPlanReferences as $competency) {
                 $unit->competencies()->create([
                     'education_plan_competency_id' => $competency->education_plan_competency_id,
-                    'curriculum_topic_competency_id' => $competency->id,
+                    'curriculum_topic_education_plan_reference_id' => $competency->id,
                     'source_curriculum_topic_id' => $topic->id,
                     'local_wording' => null,
                 ]);
@@ -88,7 +88,7 @@ class YearPlanningWorkspace
                 $unit->lessons()->create(['title' => $topic->title.' – '.$position.'. Stunde', 'position' => $position, 'duration' => 1]);
             }
 
-            return $unit->load(['competencies.curriculumCompetency', 'lessons']);
+            return $unit->load(['competencies.curriculumEducationPlanReference', 'lessons']);
         });
     }
 
@@ -110,7 +110,7 @@ class YearPlanningWorkspace
             ]);
             $competencies = [];
             foreach ($source->competencies as $competency) {
-                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_competency_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary']));
+                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_education_plan_reference_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary']));
                 $competencies[$competency->id] = $copyCompetency;
             }
             foreach ($source->lessons as $lesson) {
@@ -606,17 +606,17 @@ class YearPlanningWorkspace
         $lessonCompetencies = $units->flatMap(fn ($unit) => $unit->lessons->flatMap->competencies);
         $plannedEducation = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
         $lessonEducation = $lessonCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
-        $curriculumCompetencies = $group->curricula()->with(['versions.topics.competencies' => fn ($query) => $query->forGroup($group)])->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->competencies;
-        $curriculumIds = $curriculumCompetencies->pluck('id')->unique();
+        $curriculumReferences = $group->curricula()->with(['versions.topics.educationPlanReferences' => fn ($query) => $query->forGroup($group)])->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->educationPlanReferences;
+        $curriculumIds = $curriculumReferences->pluck('id')->unique();
         $coveredEducationIds = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique();
-        $coveredCurriculumIds = $curriculumCompetencies->filter(fn ($competency) => $coveredEducationIds->contains($competency->education_plan_competency_id) || $unitCompetencies->pluck('curriculum_topic_competency_id')->contains($competency->id))->pluck('id')->unique();
+        $coveredCurriculumIds = $curriculumReferences->filter(fn ($reference) => $coveredEducationIds->contains($reference->education_plan_competency_id) || $unitCompetencies->pluck('curriculum_topic_education_plan_reference_id')->contains($reference->id))->pluck('id')->unique();
 
         return [
             'teaching_unit_competencies' => $unitCompetencies->count(),
             'lesson_competencies' => $lessonCompetencies->count(),
             'education_plan_planned' => $plannedEducation->count(),
             'education_plan_lesson' => $lessonEducation->count(),
-            'education_plan_total' => $curriculumCompetencies->pluck('education_plan_competency_id')->filter()->unique()->count(),
+            'education_plan_total' => $curriculumReferences->pluck('education_plan_competency_id')->filter()->unique()->count(),
             'curriculum_covered' => $coveredCurriculumIds->intersect($curriculumIds)->count(),
             'curriculum_total' => $curriculumIds->count(),
         ];

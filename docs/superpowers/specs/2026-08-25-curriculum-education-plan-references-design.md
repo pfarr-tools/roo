@@ -108,6 +108,10 @@ identifier-format mismatch, denomination/binding mismatch, or a real source
 data defect. Safe importer fixes are added and retested until the import can
 resolve all valid references without guessing.
 
+The supplied curriculum JSON files therefore provide a concrete `plan_code`
+for each denominational binding. Incorrectly assigned source identifiers are
+corrected in the JSON source instead of being hidden by importer fallbacks.
+
 ## Non-goals
 
 - Redesigning EducationPlan import or its official text model.

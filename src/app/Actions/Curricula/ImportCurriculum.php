@@ -6,7 +6,7 @@ use App\Models\Curriculum;
 use App\Models\CurriculumEducationPlanBinding;
 use App\Models\CurriculumImportRun;
 use App\Models\CurriculumTopic;
-use App\Models\CurriculumTopicCompetency;
+use App\Models\CurriculumTopicEducationPlanReference;
 use App\Models\CurriculumTopicPerspective;
 use App\Models\CurriculumTopicProfile;
 use App\Models\CurriculumVersion;
@@ -71,14 +71,7 @@ class ImportCurriculum
                         'raw_data' => $binding,
                     ]);
                 }
-                $planVersionIds = EducationPlanVersion::whereIn('education_plan_id', CurriculumEducationPlanBinding::where('curriculum_version_id', $version->id)->whereNotNull('education_plan_id')->pluck('education_plan_id'))->pluck('id');
-                $findCompetency = function (?string $identifier) use ($planVersionIds): ?int {
-                    if (! $identifier) {
-                        return null;
-                    }
-
-                    return EducationPlanCompetency::where('external_identifier', $identifier)->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $planVersionIds))->value('id');
-                };
+                $bindings = $version->bindings()->get();
                 foreach ($payload['units'] as $position => $unit) {
                     $topic = CurriculumTopic::create([
                         'curriculum_version_id' => $version->id, 'external_identifier' => $unit['id'] ?? null,
@@ -97,17 +90,17 @@ class ImportCurriculum
                     }
                     $competencyPosition = 0;
                     foreach ($unit['process_competencies'] ?? [] as $competency) {
-                        $this->createCompetency($topic, $competency['denomination'] ?? null, 'process', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
+                        $this->createCompetency($topic, $competency['denomination'] ?? null, 'process', $competency['id'] ?? null, $competencyPosition++, $bindings);
                     }
                     foreach ($unit['denominational_profiles'] ?? [] as $denomination => $profile) {
                         CurriculumTopicProfile::create(['curriculum_topic_id' => $topic->id, 'denomination' => $denomination, 'perspective' => $profile['perspective'] ?? []]);
                         foreach ($profile['content_competencies'] ?? [] as $competency) {
                             $references = $competency['references'] ?? [];
                             if ($references === []) {
-                                $this->createCompetency($topic, $denomination, 'content', $competency, $competencyPosition++, $findCompetency($competency['id'] ?? null));
+                                $this->createCompetency($topic, $denomination, 'content', $competency['id'] ?? null, $competencyPosition++, $bindings);
                             }
                             foreach ($references as $reference) {
-                                $this->createCompetency($topic, $denomination, 'content', ['id' => $reference['id'] ?? null, 'display' => $reference['display'] ?? null, 'text' => $competency['text'] ?? null, 'raw' => $competency['raw'] ?? null], $competencyPosition++, $findCompetency($reference['id'] ?? null));
+                                $this->createCompetency($topic, $denomination, 'content', $reference['id'] ?? null, $competencyPosition++, $bindings);
                             }
                         }
                     }
@@ -123,14 +116,47 @@ class ImportCurriculum
         });
     }
 
-    private function createCompetency(CurriculumTopic $topic, ?string $denomination, string $kind, array $data, int $position, ?int $educationPlanCompetencyId = null): void
+    private function createCompetency(CurriculumTopic $topic, ?string $denomination, string $kind, ?string $identifier, int $position, $bindings): void
     {
-        CurriculumTopicCompetency::create([
-            'curriculum_topic_id' => $topic->id, 'education_plan_competency_id' => $educationPlanCompetencyId, 'denomination' => $denomination, 'competency_kind' => $kind,
-            'external_identifier' => $data['id'] ?? ($data['references'][0]['id'] ?? null),
-            'display' => $data['display'] ?? ($data['references'][0]['display'] ?? null), 'text' => $data['text'] ?? null,
-            'raw_text' => $data['raw'] ?? null, 'position' => $position,
+        CurriculumTopicEducationPlanReference::create([
+            'curriculum_topic_id' => $topic->id,
+            'education_plan_competency_id' => $this->resolveCompetency($topic, $identifier, $denomination, $bindings),
+            'denomination' => $denomination,
+            'competency_kind' => $kind,
+            'position' => $position,
         ]);
+    }
+
+    private function resolveCompetency(CurriculumTopic $topic, ?string $identifier, ?string $denomination, $bindings): int
+    {
+        $denominationalPlanVersionIds = $bindings
+            ->filter(fn (CurriculumEducationPlanBinding $binding): bool => $binding->denomination === $denomination && $binding->education_plan_id !== null)
+            ->flatMap(fn (CurriculumEducationPlanBinding $binding) => EducationPlanVersion::where('education_plan_id', $binding->education_plan_id)->pluck('id'))
+            ->unique()
+            ->values();
+
+        $competencies = $this->competenciesForVersions($identifier, $denominationalPlanVersionIds);
+
+        if ($identifier === null || $competencies->count() !== 1) {
+            $bindingSummary = $bindings->map(fn (CurriculumEducationPlanBinding $binding): string => sprintf('%s=%s', $binding->denomination ?: 'common', $binding->plan_code ?: 'nicht aufgelöst'))->implode(', ');
+            throw new \RuntimeException(sprintf(
+                'Kompetenzreferenz konnte nicht eindeutig aufgelöst werden (Thema „%s“, Kennung „%s“, Konfession „%s“, Bindungen: %s).',
+                $topic->title,
+                $identifier ?: 'leer',
+                $denomination ?: 'common',
+                $bindingSummary ?: 'keine',
+            ));
+        }
+
+        return $competencies->first()->id;
+    }
+
+    private function competenciesForVersions(?string $identifier, $versionIds)
+    {
+        return EducationPlanCompetency::query()
+            ->where('external_identifier', $identifier)
+            ->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $versionIds))
+            ->get();
     }
 
     private function assertPayload(array $payload): void

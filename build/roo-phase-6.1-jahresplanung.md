@@ -69,14 +69,16 @@ Curriculum
 
 Eine `CurriculumUnit` ist ein Vorschlag, keine tatsächlich verwendete Unterrichtseinheit.
 
-Curriculum-Kompetenzen müssen – direkt oder über eine eigene Curriculum-Kompetenz – auf die zugrunde liegenden `EducationPlanCompetency`-Objekte zurückführbar sein.
+Curriculum-Kompetenzzuordnungen sind direkte Referenzen auf die zugrunde
+liegenden `EducationPlanCompetency`-Objekte.
 
-Wo ein Curriculum eigene Kompetenzformulierungen besitzt, soll die Herkunft erhalten bleiben:
+Das Curriculum besitzt keine eigene Kompetenzformulierung; die gesetzliche
+Darstellung kommt ausschließlich aus dem referenzierten Bildungsplan:
 
 ```text
 EducationPlanCompetency
         ↑
-CurriculumCompetency
+CurriculumTopicEducationPlanReference
 ```
 
 ### 2.3 Eigene Unterrichtseinheit
@@ -581,7 +583,7 @@ Wenn eine völlig eigene UE dieselben Kompetenzen abdeckt, muss dies ebenfalls b
 
 Die maßgebliche Auswertung erfolgt gegen `EducationPlanCompetency`.
 
-Mehrere Curriculum-Kompetenzen bzw. UEs dürfen dieselbe EducationPlan-Kompetenz referenzieren. Sie wird bei der Abdeckung trotzdem nur einmal gezählt.
+Mehrere Curriculum-Referenzen bzw. UEs dürfen dieselbe EducationPlan-Kompetenz referenzieren. Sie wird bei der Abdeckung trotzdem nur einmal gezählt.
 
 Coverage darf niemals allein anhand identischer Kompetenztexte berechnet werden.
 
@@ -668,7 +670,7 @@ Insbesondere sicherstellen:
 
 - EducationPlan ↔ EducationPlanCompetency
 - Curriculum ↔ CurriculumUnit
-- Curriculum-Kompetenz ↔ EducationPlan-Kompetenz
+- Curriculum-Referenz ↔ EducationPlan-Kompetenz
 - CurriculumUnit ↔ optionale Stunden-Vorschläge
 - TeachingUnit
 - TeachingUnitCompetency

@@ -13,7 +13,7 @@ use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
 use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
 use App\Models\CurriculumEducationPlanBinding;
-use App\Models\CurriculumTopicCompetency;
+use App\Models\CurriculumTopicEducationPlanReference;
 use App\Models\EducationPlanCompetency;
 use App\Models\PhaseTemplate;
 use App\Models\School;
@@ -51,18 +51,18 @@ class TeachingGroupController extends Controller
         $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
         $organizationId = auth()->user()->organization_id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
-        $planCompetencies = CurriculumTopicCompetency::query()
+        $planCompetencies = CurriculumTopicEducationPlanReference::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
             ->whereHas('topic', fn ($query) => $query->whereIn('year', $gradeLevels))
             ->forGroup($teachingGroup)->with(['topic:id,title,year', 'educationPlanCompetency.area:id,kind'])->orderBy('competency_kind')->orderBy('position')->get();
-        $plannedCompetencies = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies:id,teaching_unit_id,curriculum_topic_competency_id,education_plan_competency_id'])->get()
-            ->flatMap(fn ($unit) => $unit->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['curriculum_id' => $competency->curriculum_topic_competency_id, 'education_id' => $competency->education_plan_competency_id, 'hours' => $lesson->duration])))
+        $plannedCompetencies = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies:id,teaching_unit_id,curriculum_topic_education_plan_reference_id,education_plan_competency_id'])->get()
+            ->flatMap(fn ($unit) => $unit->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['curriculum_id' => $competency->curriculum_topic_education_plan_reference_id, 'education_id' => $competency->education_plan_competency_id, 'hours' => $lesson->duration])))
             ->groupBy('curriculum_id');
         $coveredEducationHours = $plannedCompetencies->filter(fn ($items, $id) => $id === '' || $id === null)->flatten(1)->groupBy('education_id')->map(fn ($items) => $items->sum('hours'));
         $coveredHours = $plannedCompetencies->reject(fn ($items, $id) => $id === '' || $id === null)->map(fn ($items) => $items->sum('hours'));
         $competencies = $planCompetencies->map(function ($competency) use ($competencyResolver, $coveredHours, $coveredEducationHours): array {
             $presentation = $competencyResolver->present($competency);
-            $text = $presentation['text'] ?: $competency->educationPlanCompetency?->text ?: $competency->text ?: $competency->raw_text;
+            $text = $presentation['text'] ?: $competency->educationPlanCompetency?->text;
             $presentation['text'] = $text;
             $presentation['label'] = $presentation['identifier'] && $text ? $presentation['identifier'].' – '.$text : ($text ?: $presentation['identifier']);
 
@@ -74,12 +74,12 @@ class TeachingGroupController extends Controller
                 'covered_hours' => $coveredHours->get($competency->id, 0) ?: $coveredEducationHours->get($competency->education_plan_competency_id, 0),
             ];
         })->values();
-        $curriculumEducationIds = CurriculumTopicCompetency::query()
+        $curriculumEducationIds = CurriculumTopicEducationPlanReference::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
             ->forGroup($teachingGroup)->pluck('education_plan_competency_id')->filter()->unique();
-        $curriculumCompetencyIdentifiers = CurriculumTopicCompetency::query()
+        $curriculumEducationPlanReferenceIdentifiers = CurriculumTopicEducationPlanReference::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
-            ->forGroup($teachingGroup)->pluck('external_identifier')->filter()->unique();
+            ->forGroup($teachingGroup)->with('educationPlanCompetency:id,external_identifier')->get()->pluck('educationPlanCompetency.external_identifier')->filter()->unique();
         $curriculumVersionIds = $teachingGroup->curricula()->with('versions:id,curriculum_id')->get()->flatMap->versions->pluck('id');
         $educationPlanIds = CurriculumEducationPlanBinding::whereIn('curriculum_version_id', $curriculumVersionIds)->whereNotNull('education_plan_id')->pluck('education_plan_id')->unique();
         $educationPlanAreas = EducationPlanCompetency::query()
@@ -101,7 +101,7 @@ class TeachingGroupController extends Controller
             ->with(['area:id,education_plan_stage_id,kind', 'variants:id,education_plan_competency_id,text,position'])
             ->orderBy('external_identifier')->get();
         $missingCompetencies = $missingCompetencies
-            ->reject(fn ($competency) => $curriculumCompetencyIdentifiers->contains($competency->external_identifier))
+            ->reject(fn ($competency) => $curriculumEducationPlanReferenceIdentifiers->contains($competency->external_identifier))
             ->map(function ($competency) use ($competencyResolver, $coveredEducationHours): array {
                 $presentation = $competencyResolver->present($competency);
 

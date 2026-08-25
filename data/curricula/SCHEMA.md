@@ -171,12 +171,14 @@ Offene Liste gemeinsamer Unterrichtsinhalte, derzeit vor allem:
   "role": "denominational_basis",
   "denomination": "evangelical",
   "subject": "Evangelische Religionslehre",
-  "plan_code": null
+  "plan_code": "BP2016BW_ALLG_GS_REV"
 }
 ```
 
-Die `plan_code`-Auflösung kann später gegen die in Roo importierten
-EducationPlans erfolgen.
+`plan_code` muss auf den zugehörigen importierten Bildungsplan zeigen, sobald
+Kompetenzreferenzen importiert werden. Kompetenznummern werden mit
+Konfession und Bildungsplanbindung gegen `EducationPlanCompetency` aufgelöst;
+Curriculum-Texte sind keine Fallback-Datenquelle.
 
 ## `raw_rows`
 

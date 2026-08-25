@@ -79,7 +79,7 @@ const selectedCompetencies = computed(() => pickerCompetencies.value
 
 const competencyHours = competency => props.lessons.reduce((total, lesson) => {
     const optionIds = new Set([competency.id, competency.education_plan_competency_id].filter(value => value !== null && value !== undefined).map(String))
-    const represented = (lesson.competencies ?? []).some(item => [item.curriculum_topic_competency_id, item.education_plan_competency_id, item.curriculum_competency?.id, item.education_plan_competency?.id].filter(value => value !== null && value !== undefined).some(value => optionIds.has(String(value))))
+    const represented = (lesson.competencies ?? []).some(item => [item.curriculum_topic_education_plan_reference_id, item.education_plan_competency_id, item.education_plan_competency?.id].filter(value => value !== null && value !== undefined).some(value => optionIds.has(String(value))))
     return total + (represented ? Number(lesson.duration ?? 0) : 0)
 }, 0)
 const coveredHoursFor = competency => Object.prototype.hasOwnProperty.call(pickerCoveredHours.value, String(competency.id))

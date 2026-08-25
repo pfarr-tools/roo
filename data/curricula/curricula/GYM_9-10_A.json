@@ -34,13 +34,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_GYM_REV"
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_GYM_RRK"
     }
   ],
   "units": [
@@ -3622,92 +3622,6 @@
                 {
                   "id": "3.3.6.3",
                   "display": "3.3.6 (3)"
-                }
-              ]
-            },
-            {
-              "id": "3.3.6.1",
-              "number": 1,
-              "display": "3.3.6 (1)",
-              "denomination": "evangelical",
-              "text": "an Beispielen erläutern, wie der Glaube an Jesus Christus in Musik, Architektur und Kunst immer neue Ausdrucksformen gefunden hat",
-              "levels_mentioned": [
-                "G",
-                "M"
-              ],
-              "raw": "3.3.6 (1) an Beispielen erläutern, wie der Glaube an Jesus Christus in Musik, Architektur und Kunst immer neue Ausdrucksformen gefunden hat",
-              "references": [
-                {
-                  "id": "3.3.6.1",
-                  "display": "3.3.6 (1)"
-                }
-              ]
-            },
-            {
-              "id": "3.3.6.6",
-              "number": 6,
-              "display": "3.3.6 (6)",
-              "denomination": "evangelical",
-              "text": "prüfen, inwiefern Elemente der Liturgie Erfahrungsräume des Glaubens eröffnen (zum Beispiel Gebet, Kirchenmusik, Gesang, Tanz, Stille)",
-              "levels_mentioned": [
-                "G",
-                "E"
-              ],
-              "raw": "3.3.6 (6) prüfen, inwiefern Elemente der Liturgie Erfahrungsräume des Glaubens eröffnen (zum Beispiel Gebet, Kirchenmusik, Gesang, Tanz, Stille)",
-              "references": [
-                {
-                  "id": "3.3.6.6",
-                  "display": "3.3.6 (6)"
-                }
-              ]
-            },
-            {
-              "id": "3.3.6.3",
-              "number": 3,
-              "display": "3.3.6 (3)",
-              "denomination": "evangelical",
-              "text": "entfalten, welche Bedeutung die geschichtlich gewachsene Eucharistiefeier für die Gemeinschaft der Katholischen Kirche hat",
-              "levels_mentioned": [
-                "G",
-                "E"
-              ],
-              "raw": "3.3.6 (3) entfalten, welche Bedeutung die geschichtlich gewachsene Eucharistiefeier für die Gemeinschaft der Katholischen Kirche hat",
-              "references": [
-                {
-                  "id": "3.3.6.3",
-                  "display": "3.3.6 (3)"
-                }
-              ]
-            },
-            {
-              "id": "3.3.6.4",
-              "number": 4,
-              "display": "3.3.6 (4)",
-              "denomination": "evangelical",
-              "text": "an einem neutestamentlichen Beispiel zeigen, wie eine Gemeinde darum ringt, Glauben und Leben zu verbinden (zum Beispiel Gal; 1Kor)",
-              "levels_mentioned": [
-                "G"
-              ],
-              "raw": "3.3.6 (4) an einem neutestamentlichen Beispiel zeigen, wie eine Gemeinde darum ringt, Glauben und Leben zu verbinden (zum Beispiel Gal; 1Kor)",
-              "references": [
-                {
-                  "id": "3.3.6.4",
-                  "display": "3.3.6 (4)"
-                }
-              ]
-            },
-            {
-              "id": "3.3.6.5",
-              "number": 5,
-              "display": "3.3.6 (5)",
-              "denomination": "evangelical",
-              "text": "sich ausgehend von einer aktuellen Herausforderung mit der Frage auseinandersetzen, wie glaubwürdiges diakonisches Handeln der Kirche heute aussehen kann (zum Beispiel Integration von Flüchtlingen)",
-              "levels_mentioned": [],
-              "raw": "3.3.6 (5) sich ausgehend von einer aktuellen Herausforderung mit der Frage auseinandersetzen, wie glaubwürdiges diakonisches Handeln der Kirche heute aussehen kann (zum Beispiel Integration von Flüchtlingen)",
-              "references": [
-                {
-                  "id": "3.3.6.5",
-                  "display": "3.3.6 (5)"
                 }
               ]
             }

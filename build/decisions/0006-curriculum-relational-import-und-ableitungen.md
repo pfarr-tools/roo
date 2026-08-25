@@ -13,8 +13,9 @@ Ausgangspunkt für ein schulisches Curriculum dienen.
 
 Curricula werden wie Bildungspläne relational gespeichert. Eine
 `CurriculumVersion` hält zusätzlich den unveränderten Quell-Payload. Eine
-Unterrichtseinheit wird als `CurriculumTopic` modelliert; Kompetenzreferenzen
-und konfessionelle Perspektiven werden in eigenen Tabellen geführt. Nicht
+Unterrichtseinheit wird als `CurriculumTopic` modelliert; direkte
+EducationPlan-Kompetenzreferenzen und konfessionelle Perspektiven werden in
+eigenen Tabellen geführt. Nicht
 aufgelöste Bildungsplanbindungen bleiben mit `plan_code` erhalten und werden
 später verknüpft, sobald der Bildungsplan importiert ist.
 
@@ -28,6 +29,9 @@ konkreten Curriculum-Einheit gespeichert. Das verhindert, dass spätere
 
 - Die 16 vorhandenen JSON-Dateien sind mit einem idempotenten Artisan-Import
   importierbar.
+- Offizielle Kompetenztexte, Nummern und Varianten werden ausschließlich aus
+  dem gebundenen EducationPlan geladen; Curriculum-Daten enthalten nur
+  Referenz-ID, Konfession, Art und Position.
 - Offene Werte wie Schulart, Konfession und `shared_plan.type` werden nicht in
   Datenbank-Enums eingeschränkt.
 - Die UI kann Einheiten aus mehreren Quellen in ein eigenes Curriculum

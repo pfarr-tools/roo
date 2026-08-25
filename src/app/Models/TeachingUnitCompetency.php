@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['teaching_unit_id', 'education_plan_competency_id', 'curriculum_topic_competency_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary'])]
+#[Fillable(['teaching_unit_id', 'education_plan_competency_id', 'curriculum_topic_education_plan_reference_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary'])]
 class TeachingUnitCompetency extends Model
 {
     protected function casts(): array
@@ -25,9 +25,9 @@ class TeachingUnitCompetency extends Model
         return $this->belongsTo(EducationPlanCompetency::class);
     }
 
-    public function curriculumCompetency(): BelongsTo
+    public function curriculumEducationPlanReference(): BelongsTo
     {
-        return $this->belongsTo(CurriculumTopicCompetency::class, 'curriculum_topic_competency_id');
+        return $this->belongsTo(CurriculumTopicEducationPlanReference::class, 'curriculum_topic_education_plan_reference_id');
     }
 
     public function lessons(): BelongsToMany

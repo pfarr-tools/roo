@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\TeachingGroup;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['curriculum_topic_id', 'education_plan_competency_id', 'denomination', 'competency_kind', 'external_identifier', 'display', 'text', 'raw_text', 'position'])]
-class CurriculumTopicCompetency extends Model
+#[Fillable(['curriculum_topic_id', 'education_plan_competency_id', 'denomination', 'competency_kind', 'position'])]
+class CurriculumTopicEducationPlanReference extends Model
 {
+    protected $table = 'curriculum_topic_education_plan_references';
+
     public $timestamps = false;
 
     public function topic(): BelongsTo

@@ -65,7 +65,7 @@ const competencyKind = competency => {
         || competency.competency_area?.kind
         || competency.area?.kind
         || competency.education_plan_competency?.area?.kind
-        || competency.curriculum_competency?.competency_kind
+        || competency.education_plan_competency?.area?.kind
         || 'content'
     return String(kind).toLowerCase().includes('process') ? 'process' : 'content'
 }

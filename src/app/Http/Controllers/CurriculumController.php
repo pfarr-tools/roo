@@ -39,7 +39,7 @@ class CurriculumController extends Controller
     {
         $available = Curriculum::query()->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->orderBy('title')->get(['id', 'title', 'school_type', 'grades']);
         $selectedIds = collect([$request->integer('left'), $request->integer('right')])->filter()->unique()->values();
-        $selected = Curriculum::with(['versions' => fn ($query) => $query->latest('id'), 'versions.topics' => fn ($query) => $query->withCount('competencies')->orderByRaw('year is null desc')->orderBy('year')->orderBy('position')])->whereIn('id', $selectedIds)->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get()->keyBy('id');
+        $selected = Curriculum::with(['versions' => fn ($query) => $query->latest('id'), 'versions.topics' => fn ($query) => $query->withCount('educationPlanReferences')->orderByRaw('year is null desc')->orderBy('year')->orderBy('position')])->whereIn('id', $selectedIds)->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get()->keyBy('id');
 
         return Inertia::render('Curricula/Compare', ['curricula' => $available, 'left' => $this->comparisonData($selected->get($selectedIds->get(0))), 'right' => $this->comparisonData($selected->get($selectedIds->get(1))), 'selected' => ['left' => $selectedIds->get(0), 'right' => $selectedIds->get(1)]]);
     }
@@ -49,7 +49,7 @@ class CurriculumController extends Controller
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'school_type' => ['nullable', 'string', 'max:50'], 'grades' => ['nullable', 'array'], 'grades.*' => ['integer', 'min:1', 'max:13'], 'denominations' => ['nullable', 'array'], 'denominations.*' => ['string', 'max:50'], 'source_version_ids' => ['nullable', 'array'], 'source_version_ids.*' => ['integer', 'exists:curriculum_versions,id']]);
         $curriculum = DB::transaction(function () use ($data): Curriculum {
             $sourceVersionIds = array_values($data['source_version_ids'] ?? []);
-            $sourceVersions = CurriculumVersion::with(['curriculum', 'bindings', 'topics.competencies', 'topics.profiles', 'topics.perspectives'])->whereIn('id', $sourceVersionIds)->where('is_editable', false)->whereHas('curriculum', fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get();
+            $sourceVersions = CurriculumVersion::with(['curriculum', 'bindings', 'topics.educationPlanReferences', 'topics.profiles', 'topics.perspectives'])->whereIn('id', $sourceVersionIds)->where('is_editable', false)->whereHas('curriculum', fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->get();
             abort_if($sourceVersions->count() !== count(array_unique($sourceVersionIds)), 422, 'Mindestens eine Vorlage ist nicht verfügbar.');
             $grades = array_values($data['grades'] ?? []);
             if ($grades === []) {
@@ -67,8 +67,8 @@ class CurriculumController extends Controller
                 foreach ($source->topics as $topic) {
                     $sourceGrades = $source->curriculum->grades ?? [];
                     $copy = $version->topics()->create($topic->only(['external_identifier', 'number', 'title', 'position', 'hours', 'notes', 'preparation_questions', 'shared_plan', 'raw_rows']) + ['source_curriculum_version_id' => $source->id, 'year' => $topic->year ?? (count($sourceGrades) === 1 ? (int) $sourceGrades[0] : null), 'position' => $position++]);
-                    foreach ($topic->competencies as $competency) {
-                        $copy->competencies()->create($competency->only(['education_plan_competency_id', 'denomination', 'competency_kind', 'external_identifier', 'display', 'raw_text', 'position']));
+                    foreach ($topic->educationPlanReferences as $reference) {
+                        $copy->educationPlanReferences()->create($reference->only(['education_plan_competency_id', 'denomination', 'competency_kind', 'position']));
                     }
                     foreach ($topic->profiles as $profile) {
                         $copy->profiles()->create($profile->only(['denomination', 'perspective']));
@@ -88,7 +88,7 @@ class CurriculumController extends Controller
     public function storeVersion(Curriculum $curriculum): RedirectResponse
     {
         $this->ensureVisible($curriculum);
-        $source = $curriculum->versions()->with(['bindings', 'topics.competencies', 'topics.profiles', 'topics.perspectives'])->latest('id')->firstOrFail();
+        $source = $curriculum->versions()->with(['bindings', 'topics.educationPlanReferences', 'topics.profiles', 'topics.perspectives'])->latest('id')->firstOrFail();
         abort_unless($source->is_editable, 403);
 
         $number = ((int) $curriculum->versions()->where('external_identifier', 'like', 'custom-%')->pluck('external_identifier')->map(fn (string $id): int => (int) str_replace('custom-', '', $id))->max()) + 1;
@@ -98,8 +98,8 @@ class CurriculumController extends Controller
         }
         foreach ($source->topics as $topic) {
             $copy = $version->topics()->create($topic->only(['source_curriculum_version_id', 'external_identifier', 'number', 'title', 'position', 'year', 'hours', 'notes', 'preparation_questions', 'shared_plan', 'raw_rows']));
-            foreach ($topic->competencies as $competency) {
-                $copy->competencies()->create($competency->only(['education_plan_competency_id', 'denomination', 'competency_kind', 'external_identifier', 'display', 'raw_text', 'position']));
+            foreach ($topic->educationPlanReferences as $reference) {
+                $copy->educationPlanReferences()->create($reference->only(['education_plan_competency_id', 'denomination', 'competency_kind', 'position']));
             }
             foreach ($topic->profiles as $profile) {
                 $copy->profiles()->create($profile->only(['denomination', 'perspective']));
@@ -115,7 +115,7 @@ class CurriculumController extends Controller
     public function show(Curriculum $curriculum): Response
     {
         $this->ensureVisible($curriculum);
-        $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.perspectives', 'topics.competencies.educationPlanCompetency', 'topics.sourceVersion.curriculum'])->firstOrFail();
+        $version = $curriculum->versions()->latest('id')->with(['bindings.educationPlan', 'topics' => fn ($q) => $q->orderByRaw('year is null desc')->orderBy('year')->orderBy('position'), 'topics.profiles', 'topics.perspectives', 'topics.educationPlanReferences.educationPlanCompetency.area', 'topics.educationPlanReferences.educationPlanCompetency.variants', 'topics.sourceVersion.curriculum'])->firstOrFail();
 
         return Inertia::render('Curricula/Show', ['curriculum' => $curriculum, 'version' => $version, 'educationPlans' => $this->educationPlanOptions(), 'schoolTypes' => $this->schoolTypeOptions(), 'canToggleEditing' => app()->environment() !== 'production' && $curriculum->external_identifier !== null]);
     }
@@ -178,7 +178,6 @@ class CurriculumController extends Controller
                     $binding['education_plan_id'] = EducationPlan::where('external_identifier', $binding['plan_code'] ?? '')->value('id');
                     $version->bindings()->create(collect($binding)->only(['education_plan_id', 'plan_code', 'denomination', 'subject'])->all() + ['role' => 'denominational_basis']);
                 }
-                $this->resolveTopicCompetencies($version);
             }
         });
 
@@ -239,19 +238,21 @@ class CurriculumController extends Controller
             'competencies' => ['array'],
             'competencies.*.denomination' => ['nullable', 'string', 'max:50'],
             'competencies.*.competency_kind' => ['required', 'in:content,process'],
-            'competencies.*.external_identifier' => ['required', 'string', 'max:100'],
-            'competencies.*.display' => ['nullable', 'string', 'max:255'],
-            'competencies.*.raw_text' => ['nullable', 'string', 'max:10000'],
+            'competencies.*.education_plan_competency_id' => ['required', 'integer'],
         ]);
         abort_unless($topic->version->is_editable, 403);
         $planVersionIds = EducationPlanVersion::whereIn('education_plan_id', $topic->version->bindings()->whereNotNull('education_plan_id')->pluck('education_plan_id'))->pluck('id');
-        $topic->competencies()->delete();
+        $topic->educationPlanReferences()->delete();
         foreach ($data['competencies'] ?? [] as $position => $competency) {
-            $match = EducationPlanCompetency::where('external_identifier', $competency['external_identifier'])
-                ->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $planVersionIds))->first();
-            $topic->competencies()->create($competency + ['display' => $match?->external_identifier, 'raw_text' => $match?->text, 'education_plan_competency_id' => $match?->id, 'position' => $position]);
+            abort_unless(EducationPlanCompetency::whereKey($competency['education_plan_competency_id'])
+                ->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $planVersionIds->all()))->exists(), 422);
+            $topic->educationPlanReferences()->create([
+                'education_plan_competency_id' => $competency['education_plan_competency_id'],
+                'denomination' => $competency['denomination'] ?? null,
+                'competency_kind' => $competency['competency_kind'],
+                'position' => $position,
+            ]);
         }
-        $this->resolveTopicCompetencies($topic->version);
 
         return back();
     }
@@ -289,24 +290,6 @@ class CurriculumController extends Controller
         return $curriculumTypes->merge($planTypes)->filter()->unique()->sort()->values()->all();
     }
 
-    private function resolveTopicCompetencies(CurriculumVersion $version): void
-    {
-        $planIds = $version->bindings()->whereNotNull('education_plan_id')->pluck('education_plan_id');
-        $versionIds = EducationPlanVersion::whereIn('education_plan_id', $planIds)->pluck('id');
-        $version->load('topics.competencies');
-        foreach ($version->topics as $topic) {
-            foreach ($topic->competencies as $competency) {
-                $match = EducationPlanCompetency::whereIn('external_identifier', [$competency->external_identifier])
-                    ->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', $versionIds))->first();
-                $competency->update([
-                    'education_plan_competency_id' => $match?->id,
-                    'display' => $match?->external_identifier ?? $competency->display,
-                    'raw_text' => $match?->text ?? $competency->raw_text,
-                ]);
-            }
-        }
-    }
-
     private function ensureVisible(Curriculum $curriculum): void
     {
         abort_unless($curriculum->organization_id === null || $curriculum->organization_id === auth()->user()->organization_id, 404);
@@ -319,6 +302,6 @@ class CurriculumController extends Controller
         }
         $version = $curriculum->versions->first();
 
-        return ['id' => $curriculum->id, 'title' => $curriculum->title, 'school_type' => $curriculum->school_type, 'grades' => $curriculum->grades, 'topics' => $version?->topics->map(fn ($topic) => ['number' => $topic->number, 'title' => $topic->title, 'year' => $topic->year, 'hours' => $topic->hours, 'competencies_count' => $topic->competencies_count])->values()->all() ?? []];
+        return ['id' => $curriculum->id, 'title' => $curriculum->title, 'school_type' => $curriculum->school_type, 'grades' => $curriculum->grades, 'topics' => $version?->topics->map(fn ($topic) => ['number' => $topic->number, 'title' => $topic->title, 'year' => $topic->year, 'hours' => $topic->hours, 'competencies_count' => $topic->education_plan_references_count])->values()->all() ?? []];
     }
 }

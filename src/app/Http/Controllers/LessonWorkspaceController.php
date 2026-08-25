@@ -289,7 +289,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
-            'scheduledLesson.lesson.unit.competencies.curriculumCompetency',
+            'scheduledLesson.lesson.unit.competencies.curriculumEducationPlanReference',
             'scheduledLesson.lesson.phases.socialForm',
             'scheduledLesson.lesson.phases.resources',
             'scheduledLesson.lesson.phases.resourceLinks',
@@ -298,9 +298,9 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.phases.songs.parts',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.area',
             'scheduledLesson.lesson.competencies.educationPlanCompetency.variants',
-            'scheduledLesson.lesson.competencies.curriculumCompetency',
-            'scheduledLesson.lesson.competencies.curriculumCompetency.educationPlanCompetency.area',
-            'scheduledLesson.lesson.competencies.curriculumCompetency.educationPlanCompetency.variants',
+            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference',
+            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference.educationPlanCompetency.area',
+            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference.educationPlanCompetency.variants',
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
@@ -331,7 +331,7 @@ class LessonWorkspaceController extends Controller
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency) + [
                 'education_plan_competency_id' => $competency->education_plan_competency_id,
-                'source_identifier' => $competency->curriculumCompetency?->external_identifier ?: $competency->educationPlanCompetency?->external_identifier,
+                'source_identifier' => $competency->educationPlanCompetency?->external_identifier,
             ])
             ->groupBy('kind')
             ->map(fn ($competencies) => $competencies->values())

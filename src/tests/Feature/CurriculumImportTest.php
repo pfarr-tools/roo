@@ -3,10 +3,25 @@
 use App\Actions\Curricula\ImportCurriculum;
 use App\Actions\EducationPlans\ImportEducationPlan;
 use App\Models\Curriculum;
+use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanVersion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    foreach ([
+        'BP2016BW_ALLG_GS_REV.json',
+        'BP2016BW_ALLG_GS_RRK.json',
+        'BP2016BW_ALLG_GYM_REV.json',
+        'BP2016BW_ALLG_GYM_RRK.json',
+        'BP2016BW_ALLG_SEK1_REV.json',
+        'BP2016BW_ALLG_SEK1_RRK.json',
+    ] as $file) {
+        app(ImportEducationPlan::class)->execute(base_path('../data/bildungsplaene/plans/'.$file));
+    }
+});
 
 it('imports every curriculum from the provided package', function () {
     $files = array_values(array_filter(glob(base_path('../data/curricula/curricula/*.json')), fn (string $file): bool => ! str_ends_with($file, '.validation.json')));
@@ -111,11 +126,13 @@ it('assigns all copied units when the source covers exactly one grade', function
         ->and($own->topics()->where('year', 10)->count())->toBe(5);
 });
 
-it('imports all units when the source omits optional year metadata', function () {
+it('imports all units with their assigned years', function () {
     $result = app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));
 
     expect($result['version']->topics()->count())->toBe(17)
-        ->and($result['version']->topics()->whereNull('year')->count())->toBe(17);
+        ->and($result['version']->topics()->where('year', 1)->count())->toBe(9)
+        ->and($result['version']->topics()->where('year', 2)->count())->toBe(8)
+        ->and($result['version']->topics()->whereNull('year')->count())->toBe(0);
 });
 
 it('derives the visible grade metadata from selected sources when none is entered', function () {
@@ -150,9 +167,10 @@ it('creates a blank curriculum and supports denominational process competencies'
     ])->assertRedirect();
     $own = Curriculum::where('title', 'Kompetenztest')->firstOrFail();
     $topic = $own->topics()->firstOrFail();
+    $competencyId = $topic->educationPlanReferences()->value('education_plan_competency_id');
 
     $this->put("/curricula/{$own->id}/themen/{$topic->id}/kompetenzen", [
-        'competencies' => [['denomination' => 'catholic', 'competency_kind' => 'process', 'external_identifier' => '2.1.1', 'display' => '2.1.1', 'raw_text' => 'Gemeinsame Kompetenz']],
+        'competencies' => [['denomination' => 'catholic', 'competency_kind' => 'process', 'education_plan_competency_id' => $competencyId]],
     ])->assertRedirect();
 
     expect($topic->fresh()->competencies()->where('competency_kind', 'process')->value('denomination'))->toBe('catholic');
@@ -172,15 +190,18 @@ it('allows selecting a Bildungsplan binding and resolves matching competencies',
     ])->assertRedirect();
 
     expect($imported['version']->fresh()->bindings()->where('education_plan_id', $plan['plan']->id)->exists())->toBeTrue()
-        ->and($imported['version']->topics()->firstOrFail()->competencies()->whereNotNull('education_plan_competency_id')->exists())->toBeTrue()
-        ->and($imported['version']->topics()->firstOrFail()->competencies()->whereNotNull('education_plan_competency_id')->first()->raw_text)->not->toBeNull();
+        ->and($imported['version']->topics()->firstOrFail()->educationPlanReferences()->whereNotNull('education_plan_competency_id')->exists())->toBeTrue()
+        ->and($imported['version']->topics()->firstOrFail()->educationPlanReferences()->whereNotNull('education_plan_competency_id')->first()->educationPlanCompetency->text)->not->toBeNull();
 
     $topic = $imported['version']->topics()->firstOrFail();
+    $unboundCompetencyId = EducationPlanCompetency::query()
+        ->whereHas('area', fn ($query) => $query->whereIn('education_plan_version_id', EducationPlanVersion::query()->whereHas('plan', fn ($query) => $query->where('external_identifier', 'BP2016BW_ALLG_GS_RRK'))->pluck('id')))
+        ->value('id');
     $this->actingAs($user)->put("/curricula/{$imported['curriculum']->id}/themen/{$topic->id}/kompetenzen", [
-        'competencies' => [['denomination' => 'catholic', 'competency_kind' => 'process', 'external_identifier' => '2.1.1']],
+        'competencies' => [['denomination' => 'catholic', 'competency_kind' => 'process', 'education_plan_competency_id' => $unboundCompetencyId]],
     ])->assertForbidden();
     $this->actingAs($user)->put("/curricula/{$imported['curriculum']->id}/themen/{$topic->id}/kompetenzen", [
-        'competencies' => [['denomination' => 'evangelical', 'competency_kind' => 'content', 'external_identifier' => '2.2.4']],
+        'competencies' => [['denomination' => 'evangelical', 'competency_kind' => 'content', 'education_plan_competency_id' => $unboundCompetencyId]],
     ])->assertForbidden();
 
     app(ImportCurriculum::class)->execute(base_path('../data/curricula/curricula/GS_1-2_A.json'));

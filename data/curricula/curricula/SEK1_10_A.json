@@ -33,13 +33,13 @@
       "role": "denominational_basis",
       "denomination": "evangelical",
       "subject": "Evangelische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_SEK1_REV"
     },
     {
       "role": "denominational_basis",
       "denomination": "catholic",
       "subject": "Katholische Religionslehre",
-      "plan_code": null
+      "plan_code": "BP2016BW_ALLG_SEK1_RRK"
     }
   ],
   "units": [

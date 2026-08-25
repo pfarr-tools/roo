@@ -189,7 +189,8 @@ Bildungspläne dürfen nicht als ein einziger JSON-Block gespeichert werden.
 
 ## Phase 3 – Curricula
 
-Fortschritt: `[~]` Importmodell, relationale Curriculumdaten, eine
+Fortschritt: `[~]` Importmodell, relationale Curriculumdaten, direkte
+EducationPlan-Referenzen, eine
 bearbeitbare Arbeitsoberfläche für eigene Curricula, die
 Curriculum-Schulzuordnung, ein read-only Curriculumvergleich und das Kopieren
 eigener Fassungen sind umgesetzt. Weitere Fassungsfunktionen folgen im
@@ -205,7 +206,7 @@ Schulen verwendet werden.
 - Curriculum
 - CurriculumVersion
 - CurriculumTopic
-- CurriculumTopicCompetence
+- CurriculumTopicEducationPlanReference
 - CurriculumSchoolAssignment
 - CurriculumNote
 - DenominationalPerspective
@@ -214,7 +215,7 @@ Schulen verwendet werden.
 
 - Curriculum erstellen und versionieren
 - Themen nach Jahrgang ordnen
-- Kompetenzen zuordnen
+- offizielle EducationPlan-Kompetenzen konfessionsbezogen zuordnen
 - Zeitbedarf hinterlegen
 - KoKo-Hinweise evangelisch/katholisch/gemeinsam
 - n:m-Zuordnung zu Schulen mit Gültigkeitszeitraum

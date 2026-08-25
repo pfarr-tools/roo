@@ -2,17 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\CurriculumTopicCompetency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
  * Resolves the canonical presentation of a competency relation.
  *
- * TeachingUnitCompetency is the assignment record. Its wording can come from
- * the local wording, the curriculum snapshot, the education plan, or a level
- * variant. Consumers should use the returned presentation instead of guessing
- * which relation contains the text.
+ * TeachingUnitCompetency is the assignment record. Its wording comes from an
+ * optional local wording or the official education plan, with level variants
+ * as an additional source. Consumers should use the returned presentation
+ * instead of guessing which relation contains the text.
  */
 class CompetencyResolver
 {
@@ -65,61 +64,33 @@ class CompetencyResolver
     public function kind(Model $competency): string
     {
         $plan = $this->related($competency, 'educationPlanCompetency');
-        $curriculum = $this->related($competency, 'curriculumCompetency');
-
-        return $plan?->area?->kind ?? $curriculum?->competency_kind ?? 'content';
+        return $plan?->area?->kind ?? 'content';
     }
 
     public function text(Model $competency): string
     {
         $plan = $this->related($competency, 'educationPlanCompetency') ?? $competency;
-        $curriculum = $this->related($competency, 'curriculumCompetency');
-        $curricula = $this->relatedMany($competency, 'curriculumCompetencies');
         $identifier = $this->identifier($competency);
-
-        $curriculumText = $this->clean($curriculum?->text, $identifier)
-            ?: $this->clean($curriculum?->raw_text, $identifier)
-            ?: $this->displayText($curriculum?->display, $identifier);
         $variants = collect($this->relatedMany($competency, 'variants'));
-        if ($variants->isEmpty()) {
-            $variants = collect($this->relatedMany($plan, 'variants'));
-        }
+        if ($variants->isEmpty()) $variants = collect($this->relatedMany($plan, 'variants'));
         $variants = $variants
             ->pluck('text')
             ->filter()
             ->implode(' / ');
 
-        if (! $curriculumText && $curricula->isNotEmpty()) {
-            $curriculumText = $curricula
-                ->map(fn ($item) => $this->clean($item->text, $identifier) ?: $this->clean($item->raw_text, $identifier) ?: $this->displayText($item->display, $identifier))
-                ->filter()
-                ->first();
-        }
-
-        $ownCurriculumText = $competency instanceof CurriculumTopicCompetency
-            ? ($this->clean($competency->text, $identifier) ?: $this->clean($competency->raw_text, $identifier) ?: $this->displayText($competency->display, $identifier))
-            : '';
-
         return (string) ($this->clean($competency->local_wording, $identifier)
-            ?: $curriculumText
-            ?: $ownCurriculumText
             ?: $this->clean($plan?->text, $identifier)
             ?: $variants
-            ?: $this->clean($competency->text, $identifier)
-            ?: $this->clean($competency->raw_text, $identifier)
-            ?: $this->displayText($competency->display, $this->identifier($competency))
             ?: '');
     }
 
     public function identifier(Model $competency): string
     {
         $plan = $this->related($competency, 'educationPlanCompetency');
-        $curriculum = $this->related($competency, 'curriculumCompetency');
         $raw = $competency->external_identifier
             ?: $competency->number
             ?: $plan?->external_identifier
-            ?: $plan?->number
-            ?: $curriculum?->external_identifier;
+            ?: $plan?->number;
 
         return $this->formatIdentifier($raw);
     }
@@ -157,10 +128,4 @@ class CompetencyResolver
         return trim((string) preg_replace('/^\s*'.$identifierPattern.'\s*(?:[-–:]\s*)?[GME]?\s*/iu', '', $text));
     }
 
-    private function displayText(mixed $value, string $identifier): string
-    {
-        $display = $this->clean($value);
-
-        return $display && $display !== $identifier ? $display : '';
-    }
 }

@@ -25,9 +25,14 @@ class CurriculumTopic extends Model
         return $this->belongsTo(CurriculumVersion::class, 'source_curriculum_version_id');
     }
 
+    public function educationPlanReferences(): HasMany
+    {
+        return $this->hasMany(CurriculumTopicEducationPlanReference::class, 'curriculum_topic_id');
+    }
+
     public function competencies(): HasMany
     {
-        return $this->hasMany(CurriculumTopicCompetency::class);
+        return $this->educationPlanReferences();
     }
 
     public function profiles(): HasMany

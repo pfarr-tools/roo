@@ -39,11 +39,11 @@ EducationPlanImportRun
 Curriculum
   └── CurriculumVersion
        └── CurriculumTopic
-            └── Competence (n:m)
+            └── CurriculumTopicEducationPlanReference
   └── CurriculumSchoolAssignment (mandantenbezogen, zeitlich gültig)
 
 CurriculumTopic
-  ├── CurriculumTopicCompetency (offene Referenzen, konfessionell oder prozessbezogen)
+  ├── CurriculumTopicEducationPlanReference (direkte EducationPlan-Referenz)
   ├── CurriculumTopicProfile (offene konfessionelle Perspektive)
   └── year (Jahrgangszuordnung einer konkreten Curriculumfassung)
 
@@ -174,12 +174,12 @@ bleibt in `raw_payload` erhalten. Dadurch können Parser später verbessert
 werden, ohne die Originalquelle erneut zu beschaffen.
 
 Die Felder `denominations`, `shared_plan.type`, Schularten und Rollen von
-Bildungsplanbindungen bleiben offene Strings. Kompetenzreferenzen speichern
-ihre erkannte Kennung, Anzeigeform und den unveränderten Referenztext. Eine
-Binding darf zunächst nur `plan_code` besitzen; wird der zugehörige
-Bildungsplan später importiert, kann `education_plan_id` ergänzt werden.
+Bildungsplanbindungen bleiben offene Strings. Eine Binding darf zunächst nur
+`plan_code` besitzen; beim Curriculum-Import muss der zugehörige Bildungsplan
+jedoch vorhanden und jede Kompetenznummer innerhalb der konfessionellen
+Binding eindeutig aufgelöst sein.
 
-`CurriculumTopicCompetency.denomination` ist für importierte
+`CurriculumTopicEducationPlanReference.denomination` ist für importierte
 prozessbezogene Kompetenzen verpflichtend, weil die offiziellen
 Curriculum-Quellen jede Prozesskompetenz konfessionell kennzeichnen.
 Die Datenbank lässt das Feld dennoch nullable, damit ein eigenes Curriculum
@@ -200,13 +200,13 @@ Startzuordnung übernommen. Dadurch können redaktionell gepflegte
 Jahrgangsverteilungen zwischen Quelle und Datenbank ausgetauscht werden.
 
 Curriculumfassungen besitzen `CurriculumEducationPlanBinding`-Einträge je
-Konfession und Rolle. Der `plan_code` kann in der Curriculumansicht gegen
-einen importierten Bildungsplan aufgelöst werden. Die einzelnen
-`CurriculumTopicCompetency`-Referenzen werden über ihre externe Kennung auf
-`EducationPlanCompetency` verknüpft; nicht auflösbare Referenzen bleiben mit
-Rohtext und Kennung erhalten. Beim Import muss jede Prozesskompetenz eine
-Konfession tragen; bei eigenen Curricula sind gemeinsame Prozesskompetenzen
-als noch nicht zugeordnete Entwürfe möglich.
+Konfession und Rolle. Der `plan_code` verweist auf einen importierten
+Bildungsplan. Die einzelnen
+`CurriculumTopicEducationPlanReference`-Referenzen werden über ihre externe
+Kennung direkt auf `EducationPlanCompetency` verknüpft; Curriculumtexte und
+Rohtexte werden nicht als Fallback gespeichert. Beim Import muss jede
+Prozesskompetenz eine Konfession tragen; bei eigenen Curricula sind gemeinsame
+Prozesskompetenzen als noch nicht zugeordnete Entwürfe möglich.
 
 Die Curriculumansicht stellt die Bildungsplanbindungen sowie getrennte
 Bearbeitungsdialoge für inhaltsbezogene und prozessbezogene Kompetenzen bereit.
