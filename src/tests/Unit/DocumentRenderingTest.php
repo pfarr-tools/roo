@@ -210,3 +210,127 @@ it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalt
         ->and($stylesXml)->toContain('fo:border="0.05cm solid #000000"')
         ->and($contentXml)->toContain('fo:border="0.06pt solid #000000"');
 });
+
+it('rendert Bildbeschriftung mit Lösungstexten', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $document = new AssessmentDocument('LSE Bildbeschriftung', [[
+        'task_id' => 'label-1',
+        'title' => 'Beschrifte das Bild',
+        'task_type' => 'image_labeling',
+        'max_points' => 2,
+        'content' => [
+            'prompt' => 'Beschrifte das Bild.',
+            'image_label_width_cm' => 6,
+            'show_solutions' => true,
+            'image' => [
+                'path' => $image,
+                'labels' => [
+                    ['x_percent' => 20, 'y_percent' => 25, 'solution' => 'Stamm', 'lines' => 1],
+                    ['x_percent' => 80, 'y_percent' => 75, 'solution' => 'Zweig', 'lines' => 2],
+                    ['x_percent' => 30, 'y_percent' => 35, 'solution' => 'Ast', 'lines' => 1],
+                ],
+            ],
+        ],
+    ]], '4/2');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-image-labeling-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    $contentDom = new DOMDocument;
+    $contentDom->loadXML($contentXml);
+    $contentXPath = new DOMXPath($contentDom);
+    $contentXPath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+    $contentXPath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+    $connectorLine = $contentXPath->query('//draw:line[@draw:name="assessmentImageLabelingLine0"]')->item(0);
+    $firstRulingLine = $contentXPath->query('//draw:line[@draw:name="assessmentImageLabelingRulingLine0_9"]')->item(0);
+    $secondConnectorLine = $contentXPath->query('//draw:line[@draw:name="assessmentImageLabelingLine1"]')->item(0);
+    $secondFirstRulingLine = $contentXPath->query('//draw:line[@draw:name="assessmentImageLabelingRulingLine1_9"]')->item(0);
+    $thirdFirstRulingLine = $contentXPath->query('//draw:line[@draw:name="assessmentImageLabelingRulingLine2_6"]')->item(0);
+    $imageFrame = $contentXPath->query('//draw:frame[@draw:style-name="assessmentImageLabelingImageFrame"]')->item(0);
+    $canvasHeight = (float) str_replace('cm', '', $contentXPath->evaluate('string(//style:style[@style:name="assessmentImageLabelingCanvas_label_1"]/style:paragraph-properties/@fo:min-height)'));
+    $imageHeight = (float) str_replace('cm', '', $imageFrame?->getAttribute('svg:height') ?? '0');
+    $image = $imageFrame?->getElementsByTagNameNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'image')->item(0);
+
+    expect($contentXml)->toContain('Lösungstexte')
+        ->and($contentXml)->toContain('Stamm · Zweig · Ast')
+        ->and($contentXml)->toContain('ROO_IMAGE_LABELING_label-1')
+        ->and($contentXml)->toContain('assessmentImageLabelingCanvas_label_1')
+        ->and($contentXml)->toContain('assessmentImageLabelingLine0')
+        ->and($contentXml)->toContain('assessmentImageLabelingLine1')
+        ->and($contentXml)->not->toContain('draw:text-box')
+        ->and($contentXml)->toContain('assessmentImageLabelingRulingLine0_9')
+        ->and($contentXml)->toContain('assessmentImageLabelingRulingLine1_9')
+        ->and(substr_count($contentXml, 'assessmentImageLabelingRulingLine'))->toBe(40)
+        ->and($contentXml)->toContain('assessmentImageLabelingRulingStyle0_0')
+        ->and($contentXml)->toContain('svg:stroke-color="#808080"')
+        ->and($contentXml)->toContain('svg:stroke-color="#000000"')
+        ->and($contentXml)->toContain('svg:stroke-width="0.5pt"')
+        ->and((float) str_replace('cm', '', $firstRulingLine->getAttribute('svg:x1')))->toBe(0.0)
+        ->and((float) str_replace('cm', '', $firstRulingLine->getAttribute('svg:x2')))->toBe(5.4)
+        ->and((float) str_replace('cm', '', $connectorLine->getAttribute('svg:y1')))->toBe((float) str_replace('cm', '', $firstRulingLine->getAttribute('svg:y1')) - 0.5)
+        ->and((float) str_replace('cm', '', $connectorLine->getAttribute('svg:y2')))->toEqualWithDelta($imageHeight * 0.25, 0.000001)
+        ->and((float) str_replace('cm', '', $secondFirstRulingLine->getAttribute('svg:x1')))->toBe(12.1)
+        ->and((float) str_replace('cm', '', $secondFirstRulingLine->getAttribute('svg:x2')))->toBe(17.1)
+        ->and((float) str_replace('cm', '', $thirdFirstRulingLine->getAttribute('svg:y1')) - (float) str_replace('cm', '', $firstRulingLine->getAttribute('svg:y2')))->toEqualWithDelta(0.5, 0.000001)
+        ->and((float) str_replace('cm', '', $secondConnectorLine->getAttribute('svg:y1')))->toBe((float) str_replace('cm', '', $secondFirstRulingLine->getAttribute('svg:y1')) - 0.5)
+        ->and((float) str_replace('cm', '', $secondConnectorLine->getAttribute('svg:y2')))->toEqualWithDelta($imageHeight * 0.75, 0.000001)
+        ->and($canvasHeight)->toBeGreaterThanOrEqual($imageHeight + 0.5)
+        ->and($imageFrame->getAttribute('svg:width'))->toBe('17.5cm')
+        ->and($image->getAttribute('xlink:href'))->toContain('assessment-image-labeling-padded');
+});
+
+it('rendert einseitige Bildbeschriftungs-Anordnungen', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $renderCoordinates = function (string $layout, float $xPercent) use ($image): array {
+        $document = new AssessmentDocument('Einseitige Bildbeschriftung', [[
+            'task_id' => 'label-1',
+            'title' => 'Beschrifte das Bild',
+            'task_type' => 'image_labeling',
+            'max_points' => 1,
+            'content' => [
+                'prompt' => 'Beschrifte das Bild.',
+                'image_label_width_cm' => 6,
+                'image_label_layout' => $layout,
+                'show_solutions' => true,
+                'image' => [
+                    'path' => $image,
+                    'labels' => [['x_percent' => $xPercent, 'y_percent' => 50, 'solution' => 'Lösung', 'lines' => 1]],
+                ],
+            ],
+        ]], '4/2');
+
+        $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+        $path = tempnam(sys_get_temp_dir(), 'roo-test-image-labeling-layout-');
+        file_put_contents($path, $contents);
+        $archive = new ZipArchive;
+        $archive->open($path);
+        $contentXml = $archive->getFromName('content.xml');
+        $archive->close();
+        unlink($path);
+
+        $dom = new DOMDocument;
+        $dom->loadXML($contentXml);
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+        $connector = $xpath->query('//draw:line[@draw:name="assessmentImageLabelingLine0"]')->item(0);
+
+        return [
+            'connectorX1' => (float) str_replace('cm', '', $connector->getAttribute('svg:x1')),
+            'connectorX2' => (float) str_replace('cm', '', $connector->getAttribute('svg:x2')),
+        ];
+    };
+
+    expect($renderCoordinates('left', 20))->toEqual([
+        'connectorX1' => 6.35,
+        'connectorX2' => 1.2,
+    ])->and($renderCoordinates('right', 80))->toEqual([
+        'connectorX1' => 11.15,
+        'connectorX2' => 16.3,
+    ]);
+});

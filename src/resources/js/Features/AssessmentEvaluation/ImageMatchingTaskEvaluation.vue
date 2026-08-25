@@ -1,7 +1,9 @@
 <script setup>
+import de from "../../i18n/de";
 const props = defineProps({
     options: { type: Array, default: () => [] },
     processing: { type: Boolean, default: false },
+    labeling: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["update:selection"]);
@@ -39,7 +41,7 @@ function toggle(option) {
                 :alt="option.label || 'Bild'"
                 style="width: 6rem; max-height: 6rem; object-fit: contain"
             />
-            <span>{{ option.label }} – {{ option.answer }}</span>
+            <span>{{ labeling ? `${de.assessmentTaskCorrectlyLabeled} ${option.text}` : `${option.label} – ${option.answer}` }}</span>
         </label>
     </div>
 </template>

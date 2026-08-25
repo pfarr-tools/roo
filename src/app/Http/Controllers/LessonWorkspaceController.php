@@ -49,7 +49,7 @@ class LessonWorkspaceController extends Controller
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
 
-        $assessmentTask->load(['educationPlanCompetency.variants', 'levels', 'expectations', 'images.resource']);
+        $assessmentTask->load(['educationPlanCompetency.variants', 'levels', 'expectations', 'images.resource', 'images.labels']);
         $assessmentTask->setRelation('images', $assessmentTask->images->map(fn ($image): array => [
             'resource_reference_id' => $image->resource_reference_id,
             'identifier' => $image->identifier,
@@ -58,6 +58,7 @@ class LessonWorkspaceController extends Controller
             'answer' => $image->answer,
             'resource' => ['original_name' => $image->resource?->original_name],
             'preview_url' => $image->resource === null ? null : route('resources.library.files.preview', $image->resource),
+            'labels' => $image->labels->map(fn ($label): array => ['id' => $label->id, 'position' => $label->position, 'x_percent' => (float) $label->x_percent, 'y_percent' => (float) $label->y_percent, 'solution' => $label->solution, 'lines' => $label->lines])->values()->all(),
         ]));
         $assessmentTask->setAttribute('has_differentiation', $assessmentTask->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
 
@@ -124,7 +125,8 @@ class LessonWorkspaceController extends Controller
             'levels' => ['sometimes', 'array'],
             'levels.*' => ['in:G,M,E'],
         ]);
-        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
+        $labeling = $this->validatedImageLabeling($request, $data['task_type']);
+        $data['content'] = ($data['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
             'organization_id' => $group->organization_id,
             'title' => $data['title'],
@@ -144,6 +146,8 @@ class LessonWorkspaceController extends Controller
         $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
         $lesson->assessmentTasks()->syncWithoutDetaching([$task->id]);
         $this->syncTaskImages($task, $this->orderedTaskImages($request, $data['images'] ?? []), $group->organization_id);
+        $this->syncTaskImageLabels($task, $labeling['labels']);
+        $task->update(['max_points' => $task->maximumPoints()]);
 
         return back()->with('success', 'Prüfungsaufgabe wurde angelegt und der Stunde zugeordnet.');
     }
@@ -158,7 +162,8 @@ class LessonWorkspaceController extends Controller
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
-        $data['content'] = ($data['content'] ?? []) + $checkboxContent;
+        $labeling = $this->validatedImageLabeling($request, $data['task_type']);
+        $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'];
         $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
         $attributes = ['title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
@@ -174,6 +179,8 @@ class LessonWorkspaceController extends Controller
         $assessmentTask->levels()->delete();
         $assessmentTask->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
         $this->syncTaskImages($assessmentTask, $this->orderedTaskImages($request, $data['images'] ?? []), $group->organization_id);
+        $this->syncTaskImageLabels($assessmentTask, $labeling['labels']);
+        $assessmentTask->update(['max_points' => $assessmentTask->maximumPoints()]);
 
         return back()->with('success', 'Prüfungsaufgabe wurde gespeichert.');
     }
@@ -198,6 +205,47 @@ class LessonWorkspaceController extends Controller
         foreach ($images as $position => $image) {
             $task->images()->create(['resource_reference_id' => $image['resource_id'], 'identifier' => $image['identifier'] ?? 'pair-'.Str::uuid(), 'position' => $position, 'label' => $image['label'] ?? null, 'answer' => $image['answer'] ?? null]);
         }
+    }
+
+    /** @return array{content: array<string, mixed>, labels: list<array<string, mixed>>} */
+    private function validatedImageLabeling(Request $request, string $taskType): array
+    {
+        if ($taskType !== 'image_labeling') {
+            return ['content' => [], 'labels' => []];
+        }
+
+        $data = $request->validate([
+            'content.image_label_width_cm' => ['required', 'numeric', 'min:4', 'max:8'],
+            'content.points_per_correct_answer' => ['required', 'numeric', 'min:0', 'max:10000'],
+            'content.show_solutions' => ['required', 'boolean'],
+            'image_labels' => ['array'],
+            'image_labels.*.position' => ['required', 'integer', 'min:0'],
+            'image_labels.*.x_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'image_labels.*.y_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'image_labels.*.solution' => ['required', 'string', 'max:2000'],
+            'image_labels.*.lines' => ['sometimes', 'integer', 'min:1', 'max:9'],
+        ]);
+
+        return ['content' => $data['content'] ?? [], 'labels' => $data['image_labels'] ?? []];
+    }
+
+    /** @param list<array<string, mixed>> $labels */
+    private function syncTaskImageLabels(AssessmentTask $task, array $labels): void
+    {
+        if ($task->task_type !== 'image_labeling') {
+            return;
+        }
+
+        $image = $task->images()->first();
+        abort_unless($image !== null && $task->images()->count() === 1, 422, 'Für diese Aufgabe muss genau ein Bild ausgewählt werden.');
+        $image->labels()->delete();
+        $image->labels()->createMany(collect($labels)->sortBy('position')->values()->map(fn (array $label, int $position): array => [
+            'position' => $position,
+            'x_percent' => $label['x_percent'],
+            'y_percent' => $label['y_percent'],
+            'solution' => $label['solution'],
+            'lines' => $label['lines'] ?? 1,
+        ])->all());
     }
 
     private function orderedTaskImages(Request $request, array $images): array

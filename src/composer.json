@@ -5,6 +5,12 @@
     "description": "The skeleton application for the Laravel framework.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/potofcoffee/PHPWord.git"
+        }
+    ],
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.0",
@@ -17,7 +23,7 @@
         "meilisearch/meilisearch-php": "^1.17",
         "peregrinus/wscdoc": "dev-main",
         "pfarr-tools/roo-ruling": "dev-main",
-        "phpoffice/phpword": "^1.4",
+        "phpoffice/phpword": "dev-new-features-and-fixes",
         "tecnickcom/tc-lib-barcode": "^2.6"
     },
     "require-dev": {

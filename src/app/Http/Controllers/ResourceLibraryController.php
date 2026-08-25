@@ -44,7 +44,7 @@ class ResourceLibraryController extends Controller
     public function editAssessmentTask(Request $request, int $assessmentTask)
     {
         $task = $this->item($request, 'assessment-task', $assessmentTask);
-        $task->load(['educationPlanCompetency.variants', 'competency.educationPlanCompetency.variants', 'competency.educationPlanCompetency.area.version', 'levels', 'expectations', 'images.resource']);
+        $task->load(['educationPlanCompetency.variants', 'competency.educationPlanCompetency.variants', 'competency.educationPlanCompetency.area.version', 'levels', 'expectations', 'images.resource', 'images.labels']);
         $task->setRelation('images', $task->images->map(fn ($image): array => [
             'resource_reference_id' => $image->resource_reference_id,
             'identifier' => $image->identifier,
@@ -53,6 +53,7 @@ class ResourceLibraryController extends Controller
             'answer' => $image->answer,
             'resource' => ['original_name' => $image->resource?->original_name],
             'preview_url' => $image->resource === null ? null : route('resources.library.files.preview', $image->resource),
+            'labels' => $image->labels->map(fn ($label): array => ['id' => $label->id, 'position' => $label->position, 'x_percent' => (float) $label->x_percent, 'y_percent' => (float) $label->y_percent, 'solution' => $label->solution, 'lines' => $label->lines])->values()->all(),
         ]));
         if (! $task->education_plan_competency_id && $task->competency?->education_plan_competency_id) {
             $task->setAttribute('education_plan_competency_id', $task->competency->education_plan_competency_id);
@@ -349,8 +350,9 @@ class ResourceLibraryController extends Controller
         $expectations = $this->validatedExpectations($request);
         $this->validateCheckboxContent($request);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
-        $data['content'] = ($data['content'] ?? []) + $checkboxContent + ['lineated' => $request->boolean('content.lineated')];
+        $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
@@ -367,6 +369,8 @@ class ResourceLibraryController extends Controller
         $task->levels()->delete();
         $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
         $this->syncTaskImages($task, $this->orderedTaskImages($request, $data['images'] ?? []), $request);
+        $this->syncTaskImageLabels($task, $labeling['labels']);
+        $task->update(['max_points' => $task->maximumPoints()]);
 
         return back()->with('success', 'Prüfungsaufgabe wurde zur Bibliothek hinzugefügt.');
     }
@@ -407,8 +411,9 @@ class ResourceLibraryController extends Controller
             'assessment-task' => ['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer'], 'levels' => ['sometimes', 'array']],
         };
         $validated = $request->validate($rules);
+        $labeling = $this->validatedImageLabeling($request, $validated['task_type'] ?? '');
         if ($kind === 'assessment-task') {
-            $validated['content'] = ($validated['content'] ?? []) + ($request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
+            $validated['content'] = ($validated['content'] ?? []) + ($request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         }
         if ($kind === 'assessment-task') {
             abort_unless(EducationPlan::whereKey($validated['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
@@ -419,6 +424,8 @@ class ResourceLibraryController extends Controller
             $item->load('expectations');
             $item->update(['max_points' => $item->maximumPoints()]);
             $this->syncTaskImages($item, $this->orderedTaskImages($request, $validated['images'] ?? []), $request);
+            $this->syncTaskImageLabels($item, $labeling['labels']);
+            $item->update(['max_points' => $item->maximumPoints()]);
         } else {
             $item->update($validated);
         }
@@ -463,6 +470,48 @@ class ResourceLibraryController extends Controller
                 'answer' => $image['answer'] ?? null,
             ]);
         }
+    }
+
+    /** @return array{content: array<string, mixed>, labels: list<array<string, mixed>>} */
+    private function validatedImageLabeling(Request $request, string $taskType): array
+    {
+        if ($taskType !== 'image_labeling') {
+            return ['content' => [], 'labels' => []];
+        }
+
+        $data = $request->validate([
+            'content.image_label_width_cm' => ['required', 'numeric', 'min:4', 'max:8'],
+            'content.image_label_layout' => ['sometimes', Rule::in(['center', 'left', 'right'])],
+            'content.points_per_correct_answer' => ['required', 'numeric', 'min:0', 'max:10000'],
+            'content.show_solutions' => ['required', 'boolean'],
+            'image_labels' => ['array'],
+            'image_labels.*.position' => ['required', 'integer', 'min:0'],
+            'image_labels.*.x_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'image_labels.*.y_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'image_labels.*.solution' => ['required', 'string', 'max:2000'],
+            'image_labels.*.lines' => ['sometimes', 'integer', 'min:1', 'max:9'],
+        ]);
+
+        return ['content' => $data['content'] ?? [], 'labels' => $data['image_labels'] ?? []];
+    }
+
+    /** @param list<array<string, mixed>> $labels */
+    private function syncTaskImageLabels(AssessmentTask $task, array $labels): void
+    {
+        if ($task->task_type !== 'image_labeling') {
+            return;
+        }
+
+        $image = $task->images()->first();
+        abort_unless($image !== null && $task->images()->count() === 1, 422, 'Für diese Aufgabe muss genau ein Bild ausgewählt werden.');
+        $image->labels()->delete();
+        $image->labels()->createMany(collect($labels)->sortBy('position')->values()->map(fn (array $label, int $position): array => [
+            'position' => $position,
+            'x_percent' => $label['x_percent'],
+            'y_percent' => $label['y_percent'],
+            'solution' => $label['solution'],
+            'lines' => $label['lines'] ?? 1,
+        ])->all());
     }
 
     private function orderedTaskImages(Request $request, array $images): array

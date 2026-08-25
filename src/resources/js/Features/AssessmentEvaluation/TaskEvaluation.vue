@@ -73,6 +73,8 @@ function buildReviewCase(fragment) {
     const definitions =
         props.task.task_type === "image_matching"
             ? (props.task.images ?? [])
+            : props.task.task_type === "image_labeling"
+              ? (props.task.label_options ?? [])
             : (props.task.content?.options ?? []);
     const options = definitions.map((option, index) => ({
         id: option.id ?? `option-${index + 1}`,
@@ -113,7 +115,7 @@ function buildReviewCase(fragment) {
 function assignedPoints(reviewCase) {
     const automaticPoints =
         reviewCase.options.filter((option) =>
-            props.task.task_type === "image_matching"
+            ["image_matching", "image_labeling"].includes(props.task.task_type)
                 ? option.selected
                 : props.task.checkbox_scoring_mode === "correct_states"
                   ? option.selected === option.correct
@@ -141,6 +143,10 @@ function specializedCheckbox(reviewCase) {
 
 function specializedImageMatching() {
     return props.task.task_type === "image_matching";
+}
+
+function specializedImageLabeling() {
+    return props.task.task_type === "image_labeling";
 }
 
 function updateOptions(reviewCase, options) {
@@ -186,7 +192,7 @@ function save(reviewCase) {
         reviewUrl(reviewCase.fragment),
         {
             options:
-                specializedCheckbox(reviewCase) || specializedImageMatching()
+                specializedCheckbox(reviewCase) || specializedImageMatching() || specializedImageLabeling()
                     ? reviewCase.options.map((option) => ({
                           id: option.id,
                           selected: option.selected,
@@ -270,6 +276,13 @@ watch(() => props.openKey, resetCases, { immediate: true });
                         v-if="specializedImageMatching()"
                         :options="reviewCase.options"
                         :processing="reviewCase.processing"
+                        @update:selection="updateOptions(reviewCase, $event)"
+                    />
+                    <ImageMatchingTaskEvaluation
+                        v-if="specializedImageLabeling()"
+                        :options="reviewCase.options"
+                        :processing="reviewCase.processing"
+                        :labeling="true"
                         @update:selection="updateOptions(reviewCase, $event)"
                     />
 

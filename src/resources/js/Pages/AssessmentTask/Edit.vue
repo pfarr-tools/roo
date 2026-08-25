@@ -31,6 +31,7 @@ const competencyPickerOpen = ref(false);
 const imageUploadOpen = ref(false);
 const imageLibraryOpen = ref(false);
 const imageLibrarySearch = ref("");
+const activeImageLabel = ref(null);
 const draggedImageIndex = ref(null);
 const saveError = ref("");
 const selectedCompetencyText = ref("");
@@ -52,6 +53,10 @@ const emptyContent = () => ({
     points_per_correct_answer: 1,
     checkbox_scoring_mode: "correct_states",
     image_width_cm: 3,
+    image_label_width_cm: 6,
+    image_label_layout: "center",
+    points_per_correct_answer: 1,
+    show_solutions: false,
     columns: [""],
     rows: [{ label: "", answer: "" }],
     questions: [{ label: "", lines: 3 }],
@@ -62,6 +67,7 @@ const form = useForm({
     task_type: "free_text",
     content: emptyContent(),
     images: [],
+    image_labels: [],
     expectations: [emptyExpectation()],
     solution: "",
     education_plan_id: "",
@@ -91,6 +97,14 @@ function resetForm() {
             preview_url: image.preview_url ?? image.resource?.preview_url ?? "",
             label: image.label ?? "",
             answer: image.answer ?? "",
+        })),
+        image_labels: (props.task?.images?.[0]?.labels ?? []).map((label, index) => ({
+            id: label.id,
+            position: label.position ?? index,
+            x_percent: Number(label.x_percent),
+            y_percent: Number(label.y_percent),
+            solution: label.solution ?? "",
+            lines: label.lines ?? 1,
         })),
         expectations: props.task?.expectations?.length
             ? props.task.expectations.map((expectation) => ({
@@ -201,15 +215,34 @@ function openImageLibrary() {
     imageLibraryOpen.value = true;
 }
 function addLibraryImage(libraryImage) {
-    form.images.push({
+    const image = {
         identifier:
             "pair-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
         resource_id: libraryImage.id,
         name: libraryImage.name,
         preview_url: libraryImage.preview_url,
         answer: "",
-    });
+    };
+    if (form.task_type === "image_labeling") form.images = [image];
+    else form.images.push(image);
     imageLibraryOpen.value = false;
+}
+function addImageLabel(event) {
+    if (form.task_type !== "image_labeling" || !form.images[0]?.preview_url) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    form.image_labels.push({
+        position: form.image_labels.length,
+        x_percent: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
+        y_percent: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)),
+        solution: "",
+        lines: 1,
+    });
+    activeImageLabel.value = form.image_labels.length - 1;
+}
+function removeImageLabel(index) {
+    form.image_labels.splice(index, 1);
+    form.image_labels.forEach((label, position) => { label.position = position; });
+    activeImageLabel.value = null;
 }
 const filteredImageLibrary = computed(() => {
     const query = imageLibrarySearch.value.trim().toLocaleLowerCase("de");
@@ -289,7 +322,12 @@ function save() {
     const content = { ...payload.content };
     if (!usesOptions(form.task_type)) delete content.options;
     if (form.task_type !== "image_matching") delete content.image_width_cm;
-    if (!["checkbox", "image_matching"].includes(form.task_type)) {
+    if (form.task_type !== "image_labeling") {
+        delete content.image_label_width_cm;
+        delete content.image_label_layout;
+        delete content.show_solutions;
+    }
+    if (!["checkbox", "image_matching", "image_labeling"].includes(form.task_type)) {
         delete content.points_per_correct_answer;
         delete content.checkbox_scoring_mode;
     }
@@ -302,6 +340,12 @@ function save() {
         payload.images = payload.images
             .filter((image) => image.resource_id)
             .map((image, position) => ({ ...image, position }));
+    if (form.task_type === "image_labeling") {
+        payload.images = payload.images.slice(0, 1);
+        payload.image_labels = form.image_labels.map((label, position) => ({ ...label, position, lines: Number(label.lines) || 1 }));
+    } else {
+        delete payload.image_labels;
+    }
     if (!usesQuestions(form.task_type)) delete content.questions;
     if (form.task_type !== "reading_text") delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
@@ -515,7 +559,7 @@ function save() {
                             <div
                                 v-if="
                                     usesOptions(form.task_type) ||
-                                    form.task_type === 'image_matching'
+                                    ['image_matching', 'image_labeling'].includes(form.task_type)
                                 "
                                 class="mt-4"
                             >
@@ -527,7 +571,7 @@ function save() {
                                 </h3>
                                 <div
                                     v-if="
-                                        ['checkbox', 'image_matching'].includes(
+                                        ['checkbox', 'image_matching', 'image_labeling'].includes(
                                             form.task_type,
                                         )
                                     "
@@ -578,6 +622,23 @@ function save() {
                                             </option>
                                         </select></template
                                     >
+                                </div>
+                                <div v-if="form.task_type === 'image_labeling'" class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="assessment-task-label-image-width">{{ de.assessmentTaskImageWidth }}: {{ Number(form.content.image_label_width_cm).toFixed(1).replace('.', ',') }} cm</label>
+                                        <input id="assessment-task-label-image-width" v-model.number="form.content.image_label_width_cm" class="form-range" type="range" min="4" max="8" step="0.1" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" for="assessment-task-label-layout">{{ de.assessmentTaskImageLabelLayout }}</label>
+                                        <select id="assessment-task-label-layout" v-model="form.content.image_label_layout" class="form-select">
+                                            <option value="center">{{ de.assessmentTaskImageLabelLayoutCenter }}</option>
+                                            <option value="left">{{ de.assessmentTaskImageLabelLayoutLeft }}</option>
+                                            <option value="right">{{ de.assessmentTaskImageLabelLayoutRight }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <label class="form-check mb-2"><input v-model="form.content.show_solutions" class="form-check-input" type="checkbox" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label>
+                                    </div>
                                 </div>
                                 <div
                                     v-if="form.task_type === 'checkbox'"
@@ -730,8 +791,23 @@ function save() {
                                         step="0.1"
                                     />
                                 </div>
+                                <div v-if="form.task_type === 'image_labeling'" class="mb-3">
+                                    <div v-if="form.images[0]?.preview_url" class="image-labeling-stage mx-auto" @click="addImageLabel">
+                                        <img :src="form.images[0].preview_url" :alt="form.images[0].name || de.assessmentTaskImages" class="img-fluid d-block" />
+                                        <button v-for="(label, index) in form.image_labels" :key="label.id || index" type="button" class="image-labeling-point" :class="{ active: activeImageLabel === index }" :style="{ left: `${label.x_percent}%`, top: `${label.y_percent}%` }" :aria-label="`${de.assessmentTaskLabelPoint} ${index + 1}`" @click.stop="activeImageLabel = index" @mouseenter="activeImageLabel = index"><span>{{ index + 1 }}</span></button>
+                                    </div>
+                                    <p v-else class="text-muted">{{ de.assessmentTaskChooseImage }}</p>
+                                    <div v-for="(label, index) in form.image_labels" :key="label.id || `label-${index}`" class="input-group input-group-sm mt-2" @mouseenter="activeImageLabel = index" @mouseleave="activeImageLabel = null">
+                                        <span class="input-group-text">{{ index + 1 }}</span>
+                                        <input v-model="label.solution" class="form-control" :class="{ 'border-primary': activeImageLabel === index }" :placeholder="de.assessmentTaskLabelSolution" @focus="activeImageLabel = index" />
+                                        <label class="input-group-text" :for="`assessment-task-label-lines-${index}`">{{ de.assessmentTaskLabelLines }}</label>
+                                        <input :id="`assessment-task-label-lines-${index}`" v-model.number="label.lines" class="form-control w-auto" style="max-width: 3.25rem" type="number" min="1" max="9" inputmode="numeric" />
+                                        <button type="button" class="btn btn-outline-danger" :aria-label="de.remove" @mouseenter="activeImageLabel = index" @focus="activeImageLabel = index" @click="removeImageLabel(index)"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
                                 <div
                                     v-for="(image, index) in form.images"
+                                    v-if="form.task_type === 'image_matching'"
                                     :key="image.identifier || index"
                                     class="border rounded p-2 mb-2"
                                     draggable="true"
@@ -841,6 +917,7 @@ function save() {
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-outline-secondary"
+                                        v-if="form.task_type === 'image_matching'"
                                         :disabled="form.images.length < 2"
                                         @click="shuffleImages"
                                     >
@@ -1156,3 +1233,33 @@ function save() {
         </div>
     </AppShell>
 </template>
+
+<style scoped>
+.image-labeling-stage {
+    position: relative;
+    width: min(100%, 52rem);
+    cursor: crosshair;
+}
+
+.image-labeling-stage img {
+    width: 100%;
+    height: auto;
+}
+
+.image-labeling-point {
+    position: absolute;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    transform: translate(-50%, -50%);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #dc3545;
+    color: #fff;
+    box-shadow: 0 0 0 1px #212529;
+}
+
+.image-labeling-point.active {
+    background: #0d6efd;
+}
+</style>

@@ -29,7 +29,7 @@ final class AssessmentDocument extends Document
         $counts = [];
 
         foreach ($this->tasks as $task) {
-            if (($task['task_type'] ?? '') === 'checkbox') {
+            if (in_array($task['task_type'] ?? '', ['checkbox', 'image_labeling'], true)) {
                 continue;
             }
 
@@ -56,8 +56,8 @@ final class AssessmentDocument extends Document
 
     private function rulingForGrade(): RulingPreset
     {
-        preg_match('/\d+/', $this->gradeLevel, $matches);
-        $grade = (int) ($matches[0] ?? 4);
+        preg_match_all('/\d+/', $this->gradeLevel, $matches);
+        $grade = $matches[0] === [] ? 4 : min(array_map('intval', $matches[0]));
 
         return match (true) {
             $grade <= 1 => RulingPreset::Grade1,

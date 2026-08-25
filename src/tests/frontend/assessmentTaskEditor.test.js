@@ -113,6 +113,62 @@ it("shows image matching points and the shared image width slider", async () => 
     unmount();
 });
 
+it("creates and removes image-label reference points", async () => {
+    const { root, unmount } = mount({
+        imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],
+    });
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bild beschriften"))
+        .click();
+    await nextTick();
+    expect(root.querySelector("#assessment-task-label-image-width").getAttribute("min")).toBe("4");
+    expect(root.querySelector("#assessment-task-label-image-width").getAttribute("max")).toBe("8");
+
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bibliothek"))
+        .click();
+    await nextTick();
+    root.querySelector(".list-group button").click();
+    await nextTick();
+    root.querySelector(".image-labeling-stage").click();
+    await nextTick();
+
+    expect(root.querySelectorAll(".image-labeling-point")).toHaveLength(1);
+    expect(root.querySelectorAll("input[placeholder='Lösung für diesen Punkt']")).toHaveLength(1);
+    root.querySelector(".input-group .btn-outline-danger").click();
+    await nextTick();
+    expect(root.querySelectorAll(".image-labeling-point")).toHaveLength(0);
+    unmount();
+});
+
+it("offers the three image-label layouts and submits the selected layout", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bild beschriften"))
+        .click();
+    await nextTick();
+
+    const layout = root.querySelector("#assessment-task-label-layout");
+    expect(Array.from(layout.options).map((option) => option.value)).toEqual([
+        "center",
+        "left",
+        "right",
+    ]);
+    expect(layout.value).toBe("center");
+    layout.value = "right";
+    layout.dispatchEvent(new Event("change", { bubbles: true }));
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.image_label_layout).toBe("right");
+    unmount();
+});
+
 it("does not submit the empty options placeholder for image matching", async () => {
     transformedPayload = undefined;
     const { root, unmount } = mount();

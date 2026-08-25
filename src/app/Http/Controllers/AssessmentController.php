@@ -210,12 +210,13 @@ class AssessmentController extends Controller
                 'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
                 'content' => [
                     'options' => data_get($task->content, 'options', []),
-                    'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
+                    'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
                     'image_width_cm' => $task->task_type === 'image_matching' ? $task->imageWidthCm() : null,
                     'images' => $task->images->map(fn ($image): array => ['path' => Storage::disk('local')->path($image->resource->storage_path), 'label' => $image->label, 'answer' => $image->answer])->values()->all(),
                 ],
                 'images' => $task->images->map(fn ($image): array => ['id' => $image->identifier, 'label' => $image->label, 'answer' => $image->answer, 'image_url' => route('resources.library.files.preview', $image->resource)])->values(),
+                'label_options' => $task->images->flatMap->labels->map(fn ($label): array => ['id' => (string) $label->id, 'text' => $label->solution])->values(),
                 'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
                 'expectations' => $task->expectations->map(fn ($expectation): array => [
                     'id' => $expectation->id,
@@ -638,6 +639,22 @@ class AssessmentController extends Controller
                 ])
                 ->values()
                 ->all();
+        }
+
+        if ($task->task_type === 'image_labeling') {
+            $image = $task->images->first();
+            if ($image?->resource !== null) {
+                $content['image'] = [
+                    'path' => Storage::disk('local')->path($image->resource->storage_path),
+                    'copyright' => $image->resource->copyrights,
+                    'labels' => $image->labels->map(fn ($label): array => [
+                        'x_percent' => (float) $label->x_percent,
+                        'y_percent' => (float) $label->y_percent,
+                        'solution' => $label->solution,
+                        'lines' => $label->lines,
+                    ])->values()->all(),
+                ];
+            }
         }
 
         return $content;

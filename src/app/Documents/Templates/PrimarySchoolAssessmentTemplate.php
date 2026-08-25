@@ -165,11 +165,15 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         } elseif (($task['task_type'] ?? '') === 'image_matching') {
             $this->addImageMatchingTask($section, $content);
             $this->addImageCredits($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'image_labeling') {
+            $this->addImageLabelingSolutions($section, $content);
+            $this->addImageLabelingTask($section, $content, $markerId);
+            $this->addImageCredits($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -235,9 +239,49 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     }
 
     /** @param array<string, mixed> $content */
+    private function addImageLabelingSolutions(Section $section, array $content): void
+    {
+        if (empty($content['show_solutions'])) {
+            return;
+        }
+
+        $solutions = collect($content['image']['labels'] ?? [])
+            ->map(fn ($label): string => trim((string) ($label['solution'] ?? '')))
+            ->filter()
+            ->unique()
+            ->values();
+        if ($solutions->isEmpty()) {
+            return;
+        }
+
+        $section->addText('Lösungstexte', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+        $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14, 'bold' => false], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addImageLabelingTask(Section $section, array $content, string $markerId): void
+    {
+        $image = $content['image'] ?? null;
+        if (! is_array($image) || ! is_file((string) ($image['path'] ?? ''))) {
+            return;
+        }
+
+        $widthCm = min(8.0, max(4.0, (float) ($content['image_label_width_cm'] ?? 6.0)));
+        $widthPx = (int) round($widthCm * 37.7952756);
+        $run = $section->addTextRun(['spaceBefore' => 0, 'spaceAfter' => 0]);
+        $run->addText('ROO_IMAGE_LABELING_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF']);
+        $run->addImage($image['path'], ['width' => $widthPx, 'alignment' => 'center']);
+        $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
     private function addImageCredits(Section $section, array $content): void
     {
-        $usedCredits = collect($content['images'] ?? [])
+        $imageEntries = $content['images'] ?? [];
+        if (isset($content['image']) && is_array($content['image'])) {
+            $imageEntries[] = $content['image'];
+        }
+        $usedCredits = collect($imageEntries)
             ->filter(fn ($image): bool => is_array($image) && trim((string) ($image['copyright'] ?? '')) !== '')
             ->map(fn ($image): string => trim((string) $image['copyright']));
         $credits = $usedCredits
@@ -327,8 +371,8 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
 
     private function rulingForGrade(string $gradeLevel): RulingPreset
     {
-        preg_match('/\d+/', $gradeLevel, $matches);
-        $grade = (int) ($matches[0] ?? 4);
+        preg_match_all('/\d+/', $gradeLevel, $matches);
+        $grade = $matches[0] === [] ? 4 : min(array_map('intval', $matches[0]));
 
         return match (true) {
             $grade <= 1 => RulingPreset::Grade1,

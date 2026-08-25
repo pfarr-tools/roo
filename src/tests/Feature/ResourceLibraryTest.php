@@ -119,6 +119,36 @@ it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
     ])->assertSessionHasErrors('images.0.resource_id');
 });
 
+it('speichert Referenzpunkte für Bildbeschriftungen', function () {
+    $organization = Organization::create(['name' => 'Beschriftungs Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Beschriftungsschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Pflanzen', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann beschriften']);
+    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Pflanze.png', 'storage_path' => 'library/pflanze.png', 'mime_type' => 'image/png', 'size' => 10]);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Beschrifte die Pflanze',
+        'task_type' => 'image_labeling',
+        'content' => ['prompt' => 'Beschrifte die Pflanze.', 'image_label_width_cm' => 6.5, 'image_label_layout' => 'left', 'points_per_correct_answer' => 2, 'show_solutions' => true],
+        'images' => [['resource_id' => $image->id]],
+        'image_labels' => [['position' => 0, 'x_percent' => 25.5, 'y_percent' => 75, 'solution' => 'Stamm']],
+        'expectations' => [],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ])->assertRedirect();
+
+    $task = AssessmentTask::firstOrFail();
+    expect($task->task_type)->toBe('image_labeling')
+        ->and($task->max_points)->toBe(2)
+        ->and($task->content['image_label_layout'])->toBe('left')
+        ->and($task->images)->toHaveCount(1)
+        ->and($task->images->first()->labels)->toHaveCount(1)
+        ->and((float) $task->images->first()->labels->first()->x_percent)->toBe(25.5);
+});
+
 it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie Stunden zu', function () {
     $organization = Organization::create(['name' => 'Aufgaben Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);

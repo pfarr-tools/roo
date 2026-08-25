@@ -79,19 +79,27 @@ class AssessmentTask extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(AssessmentTaskImage::class)->with('resource')->orderBy('position');
+        return $this->hasMany(AssessmentTaskImage::class)->with(['resource', 'labels'])->orderBy('position');
     }
 
     public function maximumPoints(): ?int
     {
-        $manualPoints = $this->expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
+        $expectations = $this->relationLoaded('expectations') ? $this->expectations : $this->expectations()->get();
+        $manualPoints = $expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
 
-        if (! in_array($this->task_type, ['checkbox', 'image_matching'], true)) {
+        if (! in_array($this->task_type, ['checkbox', 'image_matching', 'image_labeling'], true)) {
             return $manualPoints ?: $this->max_points;
         }
 
         if ($this->task_type === 'image_matching') {
             return $this->images()->count() * $this->pointsPerCorrectAnswer() + $manualPoints;
+        }
+
+        if ($this->task_type === 'image_labeling') {
+            $images = $this->relationLoaded('images') ? $this->images : $this->images()->withCount('labels')->get();
+            $labelCount = $images->sum(fn (AssessmentTaskImage $image): int => $image->relationLoaded('labels') ? $image->labels->count() : (int) ($image->labels_count ?? 0));
+
+            return $labelCount * $this->pointsPerCorrectAnswer() + $manualPoints;
         }
 
         $options = collect($this->content['options'] ?? []);
@@ -122,6 +130,13 @@ class AssessmentTask extends Model
         $width = $this->content['image_width_cm'] ?? 3.0;
 
         return min(4.0, max(1.5, is_numeric($width) ? (float) $width : 3.0));
+    }
+
+    public function imageLabelWidthCm(): float
+    {
+        $width = $this->content['image_label_width_cm'] ?? 6.0;
+
+        return min(8.0, max(4.0, is_numeric($width) ? (float) $width : 6.0));
     }
 
     public function checkboxScoringMode(): string
