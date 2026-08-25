@@ -9,9 +9,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::table('curriculum_topic_competencies')->whereNull('education_plan_competency_id')->exists()) {
-            throw new RuntimeException('Curriculum-Kompetenzreferenzen ohne EducationPlan-Kompetenz können nicht migriert werden.');
-        }
+        // The old importer persisted unresolved curriculum competencies. The
+        // corrected JSON package is the authoritative source for this data;
+        // discard the stale curriculum aggregate before enforcing direct
+        // EducationPlan references. Curriculum-independent planning data uses
+        // nullOnDelete foreign keys and remains intact.
+        DB::table('curricula')->delete();
 
         Schema::rename('curriculum_topic_competencies', 'curriculum_topic_education_plan_references');
 
