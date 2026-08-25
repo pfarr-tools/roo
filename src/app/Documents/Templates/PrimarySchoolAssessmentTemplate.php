@@ -169,11 +169,13 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addImageLabelingSolutions($section, $content);
             $this->addImageLabelingTask($section, $content, $markerId);
             $this->addImageCredits($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'subtask_table') {
+            $this->addSubtaskTable($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -307,6 +309,49 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         foreach (array_values($content['options'] ?? []) as $option) {
             $text = is_array($option) ? ($option['text'] ?? '') : (string) $option;
             $section->addText('☐ '.$text, ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 80]);
+        }
+        $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addSubtaskTable(Section $section, array $content): void
+    {
+        $subtasks = collect($content['subtasks'] ?? [])->filter(fn ($subtask): bool => is_array($subtask))->values();
+        if ($subtasks->isEmpty()) {
+            return;
+        }
+
+        if (! empty($content['show_solutions'])) {
+            $solutions = $subtasks->pluck('solution')->map(fn ($solution): string => trim((string) $solution))->filter()->values();
+            if ($solutions->isNotEmpty()) {
+                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+            }
+        }
+
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+            'borderSize' => 4,
+            'borderColor' => '000000',
+            'cellMargin' => 80,
+        ]);
+
+        foreach ($subtasks as $subtask) {
+            $row = $table->addRow();
+            $row->addCell(self::CONTENT_WIDTH_MM * 56.6929 * 0.30, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top'])
+                ->addText((string) ($subtask['label'] ?? ''), ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            $answerCell = $row->addCell(self::CONTENT_WIDTH_MM * 56.6929 * 0.70, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']);
+            $lines = max(1, (int) ($subtask['lines'] ?? 3));
+            $answerTable = $answerCell->addTable(['width' => self::CONTENT_WIDTH_MM * 56.6929 * 0.70, 'layout' => 'fixed', 'borderSize' => 0, 'cellMargin' => 0]);
+            for ($line = 0; $line < $lines; $line++) {
+                $answerTable->addRow(360)->addCell(null, [
+                    'borderSize' => 0,
+                    'borderBottomSize' => ! empty($content['lineated']) ? 4 : 0,
+                    'borderBottomColor' => '000000',
+                    'borderBottomStyle' => 'single',
+                ])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            }
         }
         $section->addTextBreak(1);
     }

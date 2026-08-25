@@ -46,6 +46,14 @@ const newOption = () => ({
     text: "",
     correct: false,
 });
+const newSubtask = () => ({
+    key: `subtask-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    label: "",
+    solution: "",
+    lines: 3,
+    points: 1,
+    expectations: [],
+});
 const emptyContent = () => ({
     prompt: "",
     lines: 5,
@@ -61,6 +69,7 @@ const emptyContent = () => ({
     show_solutions: false,
     columns: [""],
     rows: [{ label: "", answer: "" }],
+    subtasks: [newSubtask()],
     questions: [{ label: "", lines: 3 }],
     words: "",
 });
@@ -87,6 +96,14 @@ function resetForm() {
     content.options = (content.options ?? []).map((option, index) => ({
         id: option.id ?? `option-${index + 1}`,
         ...option,
+    }));
+    content.subtasks = (content.subtasks ?? []).map((subtask, index) => ({
+        ...newSubtask(),
+        ...subtask,
+        key: subtask.key ?? `subtask-${index + 1}`,
+        expectations: (props.task?.expectations ?? [])
+            .filter((expectation) => expectation.subtask_key === (subtask.key ?? `subtask-${index + 1}`))
+            .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
     }));
     form.defaults({
         title: props.task?.title ?? "",
@@ -172,6 +189,12 @@ function addOption() {
 }
 function addRow() {
     form.content.rows.push({ label: "", answer: "" });
+}
+function addSubtask() {
+    form.content.subtasks.push(newSubtask());
+}
+function addSubtaskExpectation(subtask) {
+    subtask.expectations.push(emptyExpectation());
 }
 function addImage() {
     form.images.push({
@@ -327,9 +350,22 @@ function save() {
     saveError.value = "";
     const payload = form.data();
     const content = { ...payload.content };
+    if (form.task_type === "subtask_table") {
+        content.subtasks = content.subtasks.map((subtask) => {
+            const { expectations, ...data } = subtask;
+            return data;
+        });
+        payload.expectations = form.content.subtasks.flatMap((subtask) =>
+            String(subtask.solution || "").trim()
+                ? []
+                : (subtask.expectations || [])
+                      .filter((expectation) => String(expectation.text || "").trim() !== "")
+                      .map((expectation) => ({ ...expectation, subtask_key: subtask.key })),
+        );
+    }
     if (!usesOptions(form.task_type)) delete content.options;
     if (form.task_type !== "image_matching") delete content.image_width_cm;
-    if (form.task_type !== "image_labeling") {
+    if (!['image_labeling', 'subtask_table'].includes(form.task_type)) {
         delete content.image_label_width_cm;
         delete content.image_label_layout;
         delete content.show_solutions;
@@ -341,6 +377,12 @@ function save() {
     if (!usesTable(form.task_type)) {
         delete content.columns;
         delete content.rows;
+    }
+    if (form.task_type === "subtask_table") {
+        delete content.columns;
+        delete content.rows;
+    } else {
+        delete content.subtasks;
     }
     if (!usesImages(form.task_type)) payload.images = [];
     else
@@ -357,7 +399,7 @@ function save() {
     if (form.task_type !== "reading_text") delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
     if (
-        !["free_text", "free_text_images", "reading_text"].includes(
+        !["free_text", "free_text_images", "reading_text", "subtask_table"].includes(
             form.task_type,
         )
     ) {
@@ -687,7 +729,36 @@ function save() {
                                     {{ de.assessmentTaskAddOption }}
                                 </button>
                             </div>
-                            <div v-if="usesTable(form.task_type)" class="mt-4">
+                            <div v-if="form.task_type === 'subtask_table'" class="mt-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.show_solutions" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label>
+                                    </div>
+                                </div>
+                                <div v-for="(subtask, index) in form.content.subtasks" :key="subtask.key" class="border rounded p-3 mb-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-4"><label class="form-label">{{ de.assessmentTaskSubtask }}</label><input v-model="subtask.label" class="form-control" required /></div>
+                                        <div class="col-md-4"><label class="form-label">{{ de.assessmentTaskSubtaskSolution }}</label><input v-model="subtask.solution" class="form-control" /></div>
+                                        <div class="col-md-2"><label class="form-label">{{ de.assessmentTaskSubtaskLines }}</label><input v-model.number="subtask.lines" type="number" min="0" class="form-control" required /></div>
+                                        <div class="col-md-1" v-if="String(subtask.solution || '').trim()"><label class="form-label">{{ de.assessmentTaskSubtaskPoints }}</label><input v-model.number="subtask.points" type="number" min="1" class="form-control" required /></div>
+                                        <div class="col-md-1"><button type="button" class="btn btn-outline-danger" @click="removeAt(form.content.subtasks, index)">×</button></div>
+                                    </div>
+                                    <div v-if="!String(subtask.solution || '').trim()" class="mt-3 ps-3 border-start">
+                                        <h4 class="h6">{{ de.assessmentTaskSubtaskExpectations }}</h4>
+                                        <div v-for="(expectation, expectationIndex) in subtask.expectations" :key="expectationIndex" class="row g-2 mb-2">
+                                            <div class="col"><input v-model="expectation.text" class="form-control" :placeholder="de.assessmentTaskSubtaskExpectation" required /></div>
+                                            <div class="col-auto"><input v-model.number="expectation.points" type="number" min="1" class="form-control" :placeholder="de.assessmentTaskSubtaskPoints" required /></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeAt(subtask.expectations, expectationIndex)">×</button></div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="addSubtaskExpectation(subtask)">{{ de.assessmentTaskSubtaskAddExpectation }}</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="addSubtask">{{ de.assessmentTaskAddSubtask }}</button>
+                            </div>
+                            <div v-else-if="usesTable(form.task_type)" class="mt-4">
                                 <h3 class="h6">
                                     {{ de.assessmentTaskColumns }}
                                 </h3>

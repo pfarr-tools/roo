@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -117,6 +118,13 @@ class LessonWorkspaceController extends Controller
             'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'],
             'content.lineated' => ['sometimes', 'boolean'],
             'content.reading_text' => ['nullable', 'string', 'max:50000'],
+            'content.show_solutions' => ['sometimes', 'boolean'],
+            'content.subtasks' => ['nullable', 'array'],
+            'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'],
+            'content.subtasks.*.label' => ['required_with:content.subtasks', 'string', 'max:2000'],
+            'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'],
+            'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'],
+            'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'content.options' => ['nullable', 'array'],
             'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'],
             'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])],
@@ -144,6 +152,7 @@ class LessonWorkspaceController extends Controller
             'levels' => ['sometimes', 'array'],
             'levels.*' => ['in:G,M,E'],
         ]);
+        $expectations = $this->subtaskExpectations($data['task_type'], data_get($data, 'content.subtasks', []), $expectations);
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
@@ -179,7 +188,8 @@ class LessonWorkspaceController extends Controller
         abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
         $expectations = $this->validatedExpectations($request);
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => ['required_with:content.subtasks', 'string', 'max:2000'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['string', 'max:255'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.label' => ['required_with:content.rows', 'string', 'max:2000'], 'content.rows.*.answer' => ['nullable', 'string', 'max:2000'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $expectations = $this->subtaskExpectations($data['task_type'], data_get($data, 'content.subtasks', []), $expectations);
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'];
@@ -208,10 +218,35 @@ class LessonWorkspaceController extends Controller
     {
         return $request->validate([
             'expectations' => ['nullable', 'array'],
+            'expectations.*.subtask_key' => ['nullable', 'string', 'max:100'],
             'expectations.*.text' => ['required_with:expectations', 'string', 'max:5000'],
             'expectations.*.points' => ['required_with:expectations', 'integer', 'min:1', 'max:10000'],
             'expectations.*.repetitions' => ['required_with:expectations', 'integer', 'min:1', 'max:10000'],
         ])['expectations'] ?? [];
+    }
+
+    private function subtaskExpectations(string $taskType, array $subtasks, array $expectations): array
+    {
+        if ($taskType !== 'subtask_table') {
+            return $expectations;
+        }
+
+        $manual = collect($expectations)->groupBy(fn (array $expectation): string => (string) ($expectation['subtask_key'] ?? ''));
+
+        return collect($subtasks)->flatMap(function (array $subtask) use ($manual): array {
+            $key = (string) $subtask['key'];
+            $solution = trim((string) ($subtask['solution'] ?? ''));
+            if ($solution !== '') {
+                return [['subtask_key' => $key, 'text' => 'Lösung: '.$solution, 'points' => (int) ($subtask['points'] ?? 1), 'repetitions' => 1]];
+            }
+
+            $manualExpectations = $manual->get($key, collect());
+            if ($manualExpectations->isEmpty()) {
+                throw ValidationException::withMessages(['expectations' => 'Für jede Teilaufgabe ohne Lösung muss mindestens eine Erwartung angegeben werden.']);
+            }
+
+            return $manualExpectations->all();
+        })->values()->all();
     }
 
     private function syncTaskImages(AssessmentTask $task, array $images, int $organizationId): void
@@ -266,6 +301,7 @@ class LessonWorkspaceController extends Controller
             'lines' => $label['lines'] ?? 1,
         ])->all());
     }
+
 
     private function orderedTaskImages(Request $request, array $images): array
     {

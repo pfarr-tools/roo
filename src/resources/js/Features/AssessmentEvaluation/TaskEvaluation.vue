@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import CheckboxTaskEvaluation from "./CheckboxTaskEvaluation.vue";
-import ImageMatchingTaskEvaluation from "./ImageMatchingTaskEvaluation.vue";
+import ExpectationEvaluationRow from "./ExpectationEvaluationRow.vue";
 import de from "../../i18n/de";
 
 const props = defineProps({
@@ -28,19 +28,60 @@ const maximumPoints = computed(() =>
     ),
 );
 
-const occurrences = computed(() =>
-    props.task.expectations.flatMap((expectation) =>
+const occurrences = computed(() => {
+    if (["image_labeling", "image_matching"].includes(props.task.task_type)) {
+        const points = props.task.content?.points_per_correct_answer ?? 0;
+
+        const options =
+            props.task.task_type === "image_labeling"
+                ? props.task.label_options ?? []
+                : props.task.images ?? [];
+
+        return [
+            ...options.map((option) => ({
+                expectation_id: option.id,
+                option_id: option.id,
+                subtask_key: null,
+                occurrence: 1,
+                text:
+                    props.task.task_type === "image_labeling"
+                        ? `Korrekt beschriftet: ${option.text}`
+                        : `Du hast ${option.answer} dem korrekten Bild zugeordnet.`,
+                points,
+                thumbnail:
+                    props.task.task_type === "image_matching"
+                        ? option.image_url
+                        : null,
+                thumbnail_alt: option.label,
+            })),
+            ...(props.task.expectations ?? []).flatMap((expectation) =>
+                Array.from(
+                    { length: Math.max(1, Number(expectation.repetitions ?? 1)) },
+                    (_, index) => ({
+                        expectation_id: expectation.id,
+                        subtask_key: expectation.subtask_key ?? null,
+                        occurrence: index + 1,
+                        text: expectation.text,
+                        points: expectation.points,
+                    }),
+                ),
+            ),
+        ];
+    }
+
+    return props.task.expectations.flatMap((expectation) =>
         Array.from(
             { length: Math.max(1, Number(expectation.repetitions ?? 1)) },
             (_, index) => ({
                 expectation_id: expectation.id,
+                subtask_key: expectation.subtask_key ?? null,
                 occurrence: index + 1,
                 text: expectation.text,
                 points: expectation.points,
             }),
         ),
-    ),
-);
+    );
+});
 
 function shuffled(fragments) {
     const result = [...fragments];
@@ -96,7 +137,12 @@ function buildReviewCase(fragment) {
 
             return {
                 ...occurrence,
-                awarded_points: existing?.awarded_points ?? 0,
+                awarded_points:
+                    occurrence.option_id !== undefined
+                        ? existingOptions.get(occurrence.option_id)
+                            ? Number(occurrence.points)
+                            : 0
+                        : Number(existing?.awarded_points ?? 0),
                 note: existing?.note ?? null,
                 full_points_selected:
                     existing !== undefined &&
@@ -115,11 +161,11 @@ function buildReviewCase(fragment) {
 function assignedPoints(reviewCase) {
     const automaticPoints =
         reviewCase.options.filter((option) =>
-            ["image_matching", "image_labeling"].includes(props.task.task_type)
-                ? option.selected
-                : props.task.checkbox_scoring_mode === "correct_states"
-                  ? option.selected === option.correct
-                  : option.selected && option.correct,
+            props.task.task_type === "checkbox"
+                ? props.task.checkbox_scoring_mode === "correct_states"
+                    ? option.selected === option.correct
+                    : option.selected && option.correct
+                : false,
         ).length * Number(props.task.content?.points_per_correct_answer ?? 0);
     const manualPoints = reviewCase.items.reduce(
         (sum, item) => sum + Number(item.awarded_points ?? 0),
@@ -141,12 +187,19 @@ function specializedCheckbox(reviewCase) {
     return props.task.task_type === "checkbox";
 }
 
-function specializedImageMatching() {
-    return props.task.task_type === "image_matching";
-}
+function subtaskHeading(reviewCase, index) {
+    if (props.task.task_type !== "subtask_table") {
+        return null;
+    }
 
-function specializedImageLabeling() {
-    return props.task.task_type === "image_labeling";
+    const item = reviewCase.items[index];
+    if (index > 0 && reviewCase.items[index - 1].subtask_key === item.subtask_key) {
+        return null;
+    }
+
+    return (props.task.content?.subtasks ?? []).find(
+        (subtask) => subtask.key === item.subtask_key,
+    )?.label ?? null;
 }
 
 function updateOptions(reviewCase, options) {
@@ -165,6 +218,31 @@ function reviewUrl(fragment) {
 function toggleFullPoints(reviewCase, item) {
     item.full_points_selected = !item.full_points_selected;
     item.awarded_points = item.full_points_selected ? item.points : 0;
+    syncImageLabelOption(reviewCase, item);
+    markDirty(reviewCase);
+}
+
+function updateAwardedPoints(reviewCase, item, value) {
+    item.awarded_points = value;
+    normalizeAwardedPoints(reviewCase, item);
+    syncImageLabelOption(reviewCase, item);
+}
+
+function syncImageLabelOption(reviewCase, item) {
+    if (!["image_labeling", "image_matching"].includes(props.task.task_type)) {
+        return;
+    }
+
+    const option = reviewCase.options.find(
+        (candidate) => candidate.id === item.option_id,
+    );
+    if (option) {
+        option.selected = Number(item.awarded_points) > 0;
+    }
+}
+
+function updateNote(reviewCase, item, value) {
+    item.note = value;
     markDirty(reviewCase);
 }
 
@@ -192,18 +270,21 @@ function save(reviewCase) {
         reviewUrl(reviewCase.fragment),
         {
             options:
-                specializedCheckbox(reviewCase) || specializedImageMatching() || specializedImageLabeling()
+                specializedCheckbox(reviewCase) ||
+                ["image_matching", "image_labeling"].includes(props.task.task_type)
                     ? reviewCase.options.map((option) => ({
                           id: option.id,
                           selected: option.selected,
                       }))
                     : undefined,
-            items: reviewCase.items.map((item) => ({
-                expectation_id: item.expectation_id,
-                occurrence: item.occurrence,
-                awarded_points: item.awarded_points,
-                note: item.note || null,
-            })),
+            items: reviewCase.items
+                .filter((item) => item.option_id === undefined)
+                .map((item) => ({
+                    expectation_id: item.expectation_id,
+                    occurrence: item.occurrence,
+                    awarded_points: item.awarded_points,
+                    note: item.note || null,
+                })),
             extra_points: reviewCase.extra_points,
             extra_note: reviewCase.extra_note || null,
         },
@@ -248,7 +329,9 @@ watch(() => props.openKey, resetCases, { immediate: true });
                     <div
                         class="d-flex justify-content-between align-items-start gap-2 mb-3"
                     >
-                        <h3 class="h5 mb-0">{{ task.title }}</h3>
+                        <h3 class="h5 mb-0">
+                            {{ task.title }} ({{ formatPoints(maximumPoints) }} VP)
+                        </h3>
                         <div class="text-end">
                             <div
                                 :data-testid="`points-summary-${reviewCase.fragment.id}`"
@@ -272,125 +355,18 @@ watch(() => props.openKey, resetCases, { immediate: true });
                         :processing="reviewCase.processing"
                         @update:selection="updateOptions(reviewCase, $event)"
                     />
-                    <ImageMatchingTaskEvaluation
-                        v-if="specializedImageMatching()"
-                        :options="reviewCase.options"
-                        :processing="reviewCase.processing"
-                        @update:selection="updateOptions(reviewCase, $event)"
-                    />
-                    <ImageMatchingTaskEvaluation
-                        v-if="specializedImageLabeling()"
-                        :options="reviewCase.options"
-                        :processing="reviewCase.processing"
-                        :labeling="true"
-                        @update:selection="updateOptions(reviewCase, $event)"
-                    />
-
                     <div v-if="reviewCase.items.length" class="vstack gap-2">
-                        <div
-                            v-for="item in reviewCase.items"
-                            :key="`${item.expectation_id}:${item.occurrence}`"
-                            class="border rounded p-2"
-                            data-testid="expectation-row"
-                        >
-                            <div class="row g-2 align-items-start">
-                                <div class="col-12 col-lg-4">
-                                    <div class="fw-semibold">
-                                        {{ item.text }}
-                                    </div>
-                                    <div class="small text-muted">
-                                        {{ de.assessmentEvaluationOccurrence }}
-                                        {{ item.occurrence }} ·
-                                        {{
-                                            de.assessmentEvaluationMaximumPoints
-                                        }}
-                                        {{ item.points }}
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <button
-                                        :data-testid="`full-points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        class="btn btn-sm px-2"
-                                        :class="
-                                            item.full_points_selected
-                                                ? 'btn-outline-success'
-                                                : 'btn-outline-danger'
-                                        "
-                                        type="button"
-                                        :title="
-                                            item.full_points_selected
-                                                ? de.assessmentEvaluationZeroPoints
-                                                : de.assessmentEvaluationFullPoints
-                                        "
-                                        :aria-label="
-                                            item.full_points_selected
-                                                ? de.assessmentEvaluationZeroPoints
-                                                : de.assessmentEvaluationFullPoints
-                                        "
-                                        :disabled="reviewCase.processing"
-                                        @click="
-                                            toggleFullPoints(reviewCase, item)
-                                        "
-                                    >
-                                        <i
-                                            :class="
-                                                item.full_points_selected
-                                                    ? 'bi bi-check-lg'
-                                                    : 'bi bi-x-lg'
-                                            "
-                                            aria-hidden="true"
-                                        ></i>
-                                    </button>
-                                </div>
-                                <div class="col-12 col-sm-3 col-lg-2">
-                                    <label
-                                        class="visually-hidden"
-                                        :for="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        >{{
-                                            de.assessmentEvaluationAwardedPoints
-                                        }}</label
-                                    >
-                                    <input
-                                        :id="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        :data-testid="`points-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        v-model="item.awarded_points"
-                                        class="form-control form-control-sm"
-                                        type="number"
-                                        min="0"
-                                        :max="item.points"
-                                        step="0.01"
-                                        :disabled="reviewCase.processing"
-                                        @input="
-                                            normalizeAwardedPoints(
-                                                reviewCase,
-                                                item,
-                                            )
-                                        "
-                                    />
-                                </div>
-                                <div class="col-12 col-lg">
-                                    <label
-                                        class="visually-hidden"
-                                        :for="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        >{{
-                                            de.assessmentEvaluationExplanationOptional
-                                        }}</label
-                                    >
-                                    <input
-                                        :id="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        :data-testid="`note-${reviewCase.fragment.id}-${item.expectation_id}-${item.occurrence}`"
-                                        v-model="item.note"
-                                        class="form-control form-control-sm"
-                                        type="text"
-                                        :placeholder="
-                                            de.assessmentEvaluationExplanationOptional
-                                        "
-                                        :disabled="reviewCase.processing"
-                                        @input="markDirty(reviewCase)"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <template v-for="(item, index) in reviewCase.items" :key="`${item.expectation_id}:${item.occurrence}`">
+                            <h4 v-if="subtaskHeading(reviewCase, index)" class="h6 mb-2" data-testid="subtask-heading">{{ subtaskHeading(reviewCase, index) }}</h4>
+                            <ExpectationEvaluationRow
+                                :item="item"
+                                :fragment-id="reviewCase.fragment.id"
+                                :processing="reviewCase.processing"
+                                @toggle-full-points="toggleFullPoints(reviewCase, item)"
+                                @update:points="updateAwardedPoints(reviewCase, item, $event)"
+                                @update:note="updateNote(reviewCase, item, $event)"
+                            />
+                        </template>
                     </div>
                     <p v-else class="text-muted">
                         {{ de.assessmentEvaluationNoExpectations }}
@@ -401,9 +377,10 @@ watch(() => props.openKey, resetCases, { immediate: true });
                         data-testid="extra-points-row"
                     >
                         <div class="row g-2 align-items-start">
-                            <div class="col-12 col-sm-auto fw-semibold pt-1">
+                            <div class="col-12 col-lg-4 fw-semibold pt-1">
                                 {{ de.assessmentEvaluationExtraPoints }}
                             </div>
+                            <div class="col-auto" aria-hidden="true"></div>
                             <div class="col-12 col-sm-3 col-lg-2">
                                 <label
                                     class="visually-hidden"
@@ -463,7 +440,8 @@ watch(() => props.openKey, resetCases, { immediate: true });
                     class="card-footer bg-transparent d-flex justify-content-end"
                 >
                     <button
-                        class="btn btn-primary"
+                        class="btn"
+                        :class="reviewCase.saved ? 'btn-success' : 'btn-warning'"
                         type="submit"
                         :disabled="reviewCase.processing"
                     >

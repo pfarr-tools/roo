@@ -31,7 +31,7 @@ class PhpOfficeDocumentRenderer
             $contents = (string) ob_get_contents();
 
             return $format === DocumentOutputFormat::ODT
-                ? $this->addOdtPageFrame($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document)
+                ? $this->addOdtPageFrame($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document)
                 : $contents;
         } finally {
             ob_end_clean();
@@ -51,7 +51,7 @@ class PhpOfficeDocumentRenderer
         try {
             IOFactory::createWriter($phpWord, $format->writerName())->save($temporaryPath);
             $contents = (string) file_get_contents($temporaryPath);
-            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document) : $contents);
+            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document) : $contents);
         } finally {
             unlink($temporaryPath);
         }
@@ -97,6 +97,7 @@ class PhpOfficeDocumentRenderer
             }
             $xpath = new \DOMXPath($dom);
             $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+            $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
             $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
             $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
             foreach ($xpath->query('//style:style[@style:name="fr1"]/style:graphic-properties') as $graphicProperties) {
@@ -296,6 +297,71 @@ class PhpOfficeDocumentRenderer
                 $paragraph->setAttribute('text:style-name', $canvasStyle);
             }
 
+            $archive->addFromString('content.xml', $dom->saveXML());
+            $archive->close();
+
+            return (string) file_get_contents($temporaryPath);
+        } finally {
+            unlink($temporaryPath);
+        }
+    }
+
+    private function patchOdtSubtaskTables(string $contents, Document $document): string
+    {
+        if (! $document instanceof AssessmentDocument || collect($document->tasks)->where('task_type', 'subtask_table')->isEmpty()) {
+            return $contents;
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-subtask-');
+        if ($temporaryPath === false) {
+            return $contents;
+        }
+
+        try {
+            file_put_contents($temporaryPath, $contents);
+            $archive = new \ZipArchive;
+            if ($archive->open($temporaryPath) !== true) {
+                return $contents;
+            }
+            $xml = $archive->getFromName('content.xml');
+            if (! is_string($xml)) {
+                $archive->close();
+
+                return $contents;
+            }
+            $dom = new \DOMDocument;
+            $dom->preserveWhiteSpace = true;
+            $dom->loadXML($xml);
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+            foreach ($xpath->query('//table:table') as $table) {
+                $rows = $this->directChildren($table, 'table-row');
+                $cells = $rows === [] ? [] : $this->directChildren($rows[0], 'table-cell');
+                if (count($cells) !== 2 || count($rows) < 1) {
+                    continue;
+                }
+                foreach ($rows as $row) {
+                    $rowCells = $this->directChildren($row, 'table-cell');
+                    if (count($rowCells) !== 2) {
+                        continue;
+                    }
+                    $rowCells[0]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:style-name', 'assessmentSubtaskLabelCell');
+                    $rowCells[1]->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'table:style-name', 'assessmentSubtaskAnswerCell');
+                }
+            }
+            $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+            if ($automaticStyles !== null) {
+                foreach (['assessmentSubtaskLabelCell', 'assessmentSubtaskAnswerCell'] as $styleName) {
+                    $style = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'style:style');
+                    $style->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'style:name', $styleName);
+                    $style->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'style:family', 'table-cell');
+                    $properties = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'style:table-cell-properties');
+                    $properties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:border', '0.05cm solid #000000');
+                    $properties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:padding', '0.15cm');
+                    $style->appendChild($properties);
+                    $automaticStyles->appendChild($style);
+                }
+            }
             $archive->addFromString('content.xml', $dom->saveXML());
             $archive->close();
 

@@ -208,7 +208,7 @@ describe('assessment evaluation components', () => {
         taskSelect.value = '21'
         taskSelect.dispatchEvent(new Event('change'))
         await nextTick()
-        expect(root.querySelector('h3').textContent).toBe('Schöpfung beschreiben')
+        expect(root.querySelector('h3').textContent.trim()).toBe('Schöpfung beschreiben (0 VP)')
 
         sections[0].click()
         await nextTick()
@@ -219,7 +219,7 @@ describe('assessment evaluation components', () => {
         taskSelect.value = '22'
         taskSelect.dispatchEvent(new Event('change'))
         await nextTick()
-        expect(root.querySelector('h3').textContent).toBe('Verantwortung erklären')
+        expect(root.querySelector('h3').textContent.trim()).toBe('Verantwortung erklären (0 VP)')
 
         unmount()
     })
@@ -261,8 +261,13 @@ describe('assessment evaluation components', () => {
         expect(root.querySelector('article').classList.contains('col-xxl-6')).toBe(false)
         expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
         expect(root.querySelector('[data-testid="expectation-row"] .row').classList.contains('align-items-start')).toBe(true)
+        expect(root.querySelector('[data-testid="expectation-row"]').textContent).toContain('Nennt Beispiele. (2 VP)')
         expect(root.querySelector('[data-testid="extra-points-row"] .row').classList.contains('align-items-start')).toBe(true)
+        expect(root.querySelector('[data-testid="extra-points-row"] .col-12.col-lg-4')).not.toBeNull()
+        expect(root.querySelector('[data-testid="extra-points-row"] .col-auto')).not.toBeNull()
+        expect(root.querySelector('[data-testid="extra-points-row"] .col-12.col-sm-3.col-lg-2')).not.toBeNull()
         expect(root.querySelector('[data-testid="expectation-row"]').classList.contains('p-3')).toBe(false)
+        expect(root.querySelector('button[type="submit"]').classList.contains('btn-warning')).toBe(true)
         const fullPointsButton = root.querySelector('[data-testid="full-points-41-31-1"]')
         expect(fullPointsButton.textContent.trim()).toBe('')
         expect(fullPointsButton.getAttribute('aria-label')).toBe('Volle Punktzahl')
@@ -270,6 +275,8 @@ describe('assessment evaluation components', () => {
         expect(fullPointsButton.querySelector('.bi-x-lg')).not.toBeNull()
         expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('min')).toBe('0')
         expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('max')).toBe('2')
+        expect(root.querySelector('[data-testid="points-41-31-1"]').getAttribute('step')).toBe('1')
+        expect(root.querySelector('[data-testid="points-41-31-1"]').value).toBe('0')
         fullPointsButton.click()
         await nextTick()
         expect(fullPointsButton.classList.contains('btn-outline-success')).toBe(true)
@@ -307,6 +314,123 @@ describe('assessment evaluation components', () => {
                 extra_note: null,
             },
             expect.objectContaining({ preserveScroll: true, preserveState: true }),
+        )
+        testState.routerPut.mock.calls[0][2].onSuccess()
+        await nextTick()
+        expect(root.querySelector('button[type="submit"]').classList.contains('btn-success')).toBe(true)
+        note.value = 'erneut geändert'
+        note.dispatchEvent(new Event('input'))
+        await nextTick()
+        expect(root.querySelector('button[type="submit"]').classList.contains('btn-warning')).toBe(true)
+        unmount()
+    })
+
+    it('uses the standard free-text evaluation UI for subtask tables', async () => {
+        const task = {
+            id: 22,
+            title: 'Tabelle',
+            task_type: 'subtask_table',
+            max_points: 3,
+            content: { subtasks: [
+                { key: 'a', label: 'Nenne ein Beispiel.', solution: 'Ein Beispiel', points: 1 },
+                { key: 'b', label: 'Begründe.', solution: '', points: null },
+            ] },
+            expectations: [
+                { id: 32, subtask_key: 'a', text: 'Lösung: Ein Beispiel', points: 1, repetitions: 1 },
+                { id: 33, subtask_key: 'b', text: 'Begründung nennt das Merkmal.', points: 2, repetitions: 1 },
+            ],
+        }
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task,
+            fragments: [{ id: 42, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.querySelectorAll('[data-testid="subtask-solution-checkbox"]')).toHaveLength(0)
+        expect(root.querySelectorAll('[data-testid="subtask-expectation-checkbox"]')).toHaveLength(0)
+        expect(root.querySelector('[data-testid="expectation-row"]').textContent).toContain('Lösung: Ein Beispiel')
+        expect(root.querySelector('h3').textContent).toContain('Tabelle (3 VP)')
+        expect(root.querySelector('[data-testid="expectation-row"]').classList.contains('border')).toBe(false)
+        expect(root.querySelector('[data-testid="expectation-row"]').textContent).not.toContain('Ausprägung')
+        expect(root.querySelectorAll('input[type="number"]')).toHaveLength(3)
+        expect(root.querySelectorAll('[data-testid="subtask-heading"]')).toHaveLength(2)
+        expect(root.querySelectorAll('[data-testid="subtask-heading"]')[0].textContent).toContain('Nenne ein Beispiel.')
+        expect(root.querySelectorAll('[data-testid="subtask-heading"]')[1].textContent).toContain('Begründe.')
+        unmount()
+    })
+
+    it('uses and saves expectation rows for image labeling tasks', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 23,
+                title: 'Pflanze beschriften',
+                task_type: 'image_labeling',
+                max_points: 2,
+                content: { points_per_correct_answer: 2 },
+                label_options: [{ id: 'label-1', text: 'Wurzel' }],
+                expectations: [{ id: 34, text: 'Zusätzliche Beobachtung', points: 1, repetitions: 1 }],
+            },
+            fragments: [{ id: 43, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')[0].textContent).toContain('Korrekt beschriftet: Wurzel (2 VP)')
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')[1].textContent).toContain('Zusätzliche Beobachtung (1 VP)')
+        expect(root.querySelector('[data-testid="image-matching-task-evaluation"]')).toBeNull()
+        expect(root.querySelectorAll('input[type="checkbox"]')).toHaveLength(0)
+        expect(root.querySelector('[data-testid="points-summary-43"]').textContent).toContain('0 / 2 Punkte')
+        root.querySelector('[data-testid="full-points-43-label-1-1"]').click()
+        await nextTick()
+        expect(root.querySelector('[data-testid="points-summary-43"]').textContent).toContain('2 / 2 Punkte')
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+        expect(testState.routerPut).toHaveBeenCalledWith(
+            '/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/booklets/8/tasks/23/review',
+            expect.objectContaining({
+                items: [{ expectation_id: 34, occurrence: 1, awarded_points: 0, note: null }],
+                options: [{ id: 'label-1', selected: true }],
+            }),
+            expect.anything(),
+        )
+        unmount()
+    })
+
+    it('uses temporary expectation rows with thumbnails for image matching tasks', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 24,
+                title: 'Bilder zuordnen',
+                task_type: 'image_matching',
+                max_points: 2,
+                content: { points_per_correct_answer: 2 },
+                images: [{ id: 'pair-1', label: 'Apfel', answer: 'Obst', image_url: '/apple.png' }],
+                expectations: [],
+            },
+            fragments: [{ id: 44, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(1)
+        expect(root.querySelector('[data-testid="expectation-row"]').textContent).toContain('Du hast Obst dem korrekten Bild zugeordnet. (2 VP)')
+        expect(root.querySelector('[data-testid="expectation-thumbnail"]').getAttribute('src')).toBe('/apple.png')
+        expect(root.querySelector('[data-testid="image-matching-task-evaluation"]')).toBeNull()
+        root.querySelector('[data-testid="full-points-44-pair-1-1"]').click()
+        await nextTick()
+        expect(root.querySelector('[data-testid="points-summary-44"]').textContent).toContain('2 / 2 Punkte')
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+        expect(testState.routerPut).toHaveBeenCalledWith(
+            '/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/booklets/8/tasks/24/review',
+            expect.objectContaining({ items: [], options: [{ id: 'pair-1', selected: true }] }),
+            expect.anything(),
         )
         unmount()
     })

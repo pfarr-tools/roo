@@ -182,3 +182,40 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
     expect($lesson->fresh()->assessmentTasks)->toHaveCount(1);
 });
+
+it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschriften', function () {
+    $organization = Organization::create(['name' => 'Teilaufgaben Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Teilaufgabenschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann zuordnen']);
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Teilaufgaben',
+        'task_type' => 'subtask_table',
+        'content' => [
+            'prompt' => 'Bearbeite die Teilaufgaben.',
+            'show_solutions' => true,
+            'lineated' => true,
+            'subtasks' => [
+                ['key' => 'a', 'label' => 'Nenne ein Beispiel.', 'solution' => 'Ein Beispiel', 'lines' => 2, 'points' => 1],
+                ['key' => 'b', 'label' => 'Begründe.', 'solution' => '', 'lines' => 4],
+            ],
+        ],
+        'expectations' => [['subtask_key' => 'b', 'text' => 'Begründung nennt das Merkmal.', 'points' => 2, 'repetitions' => 1]],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->content['subtasks'])->toHaveCount(2)
+        ->and($task->content['show_solutions'])->toBeTrue()
+        ->and($task->expectations)->toHaveCount(2)
+        ->and($task->expectations->first()->subtask_key)->toBe('a')
+        ->and($task->expectations->first()->text)->toBe('Lösung: Ein Beispiel')
+        ->and($task->expectations->last()->subtask_key)->toBe('b')
+        ->and($task->maximumPoints())->toBe(3);
+});

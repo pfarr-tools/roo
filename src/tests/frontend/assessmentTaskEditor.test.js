@@ -90,6 +90,28 @@ it("shows checkbox points and keeps expectations manual", async () => {
     unmount();
 });
 
+it("submits Lösungsanzeige and Lineatur for subtask tables", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Tabelle mit Teilaufgaben"))
+        .click();
+    await nextTick();
+
+    const checkboxes = root.querySelectorAll('input[type="checkbox"]');
+    checkboxes[0].click();
+    checkboxes[1].click();
+    await nextTick();
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.show_solutions).toBe(true);
+    expect(transformedPayload.content.lineated).toBe(true);
+    unmount();
+});
+
 it("prefills the education plan and competency for a new task", async () => {
     const { root, unmount } = mount({
         educationPlans: [{ id: 7, title: "Bildungsplan" }],

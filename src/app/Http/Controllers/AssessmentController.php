@@ -209,6 +209,7 @@ class AssessmentController extends Controller
                 'max_points' => $task->maximumPoints(),
                 'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
                 'content' => [
+                    'subtasks' => data_get($task->content, 'subtasks', []),
                     'options' => data_get($task->content, 'options', []),
                     'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
@@ -220,6 +221,7 @@ class AssessmentController extends Controller
                 'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
                 'expectations' => $task->expectations->map(fn ($expectation): array => [
                     'id' => $expectation->id,
+                    'subtask_key' => $expectation->subtask_key,
                     'text' => $expectation->text,
                     'points' => $expectation->points,
                     'repetitions' => $expectation->repetitions,

@@ -211,6 +211,41 @@ it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalt
         ->and($contentXml)->toContain('fo:border="0.06pt solid #000000"');
 });
 
+it('rendert eine Tabelle mit Teilaufgaben mit optionalen Lösungen und Lineatur', function () {
+    $document = new AssessmentDocument('LSE Teilaufgaben', [[
+        'title' => 'Teilaufgaben',
+        'task_type' => 'subtask_table',
+        'max_points' => 3,
+        'content' => [
+            'prompt' => 'Bearbeite die Teilaufgaben.',
+            'show_solutions' => true,
+            'lineated' => true,
+            'subtasks' => [
+                ['key' => 'a', 'label' => 'Nenne ein Beispiel.', 'solution' => 'Ein Beispiel', 'lines' => 2, 'points' => 1],
+                ['key' => 'b', 'label' => 'Begründe.', 'solution' => '', 'lines' => 3, 'points' => null],
+            ],
+        ],
+    ]], '4');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-subtask-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $stylesXml = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($contentXml)->toContain('Ein Beispiel')
+        ->and($contentXml)->toContain('Nenne ein Beispiel.')
+        ->and($contentXml)->toContain('Begründe.')
+        ->and($contentXml)->toContain('table:style-name="assessmentSubtaskLabelCell"')
+        ->and($contentXml)->toContain('table:style-name="assessmentSubtaskAnswerCell"')
+        ->and($contentXml)->toContain('assessmentSubtaskLabelCell')
+        ->and($contentXml)->toContain('assessmentSubtaskAnswerCell');
+});
+
 it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildbeschriftung', [[

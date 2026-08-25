@@ -223,6 +223,31 @@ it('exposes checkbox definitions and saved selections in evaluation props', func
             ->where('taskFragments.0.review.options.0.selected', true));
 });
 
+it('exposes subtask definitions for checkbox evaluation', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    AssessmentTask::withoutEvents(fn () => $fixture['task']->update([
+        'task_type' => 'subtask_table',
+        'content' => ['subtasks' => [
+            ['key' => 'a', 'label' => 'Nenne ein Beispiel.', 'solution' => 'Ein Beispiel', 'lines' => 2, 'points' => 1],
+            ['key' => 'b', 'label' => 'Begründe.', 'solution' => '', 'lines' => 3],
+        ]],
+    ]));
+    $fixture['task']->expectations()->delete();
+    $fixture['task']->expectations()->createMany([
+        ['subtask_key' => 'a', 'text' => 'Lösung: Ein Beispiel', 'points' => 1, 'repetitions' => 1],
+        ['subtask_key' => 'b', 'text' => 'Begründung nennt das Merkmal.', 'points' => 2, 'repetitions' => 1],
+    ]);
+
+    $this->actingAs($fixture['user'])
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page
+            ->where('tasks.0.task_type', 'subtask_table')
+            ->where('tasks.0.content.subtasks.0.key', 'a')
+            ->where('tasks.0.content.subtasks.1.key', 'b')
+            ->where('tasks.0.expectations.0.subtask_key', 'a')
+            ->where('tasks.0.expectations.1.subtask_key', 'b'));
+});
+
 it('rejects assessment booklets and fragments outside the requested group', function () {
     Storage::fake('documents');
     $fixture = assessmentEvaluationWorkflowFixture();
