@@ -154,6 +154,35 @@ it("shows image matching points and the shared image width slider", async () => 
     unmount();
 });
 
+it("submits image answer table rows with the selected image and width", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount({
+        imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],
+    });
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Tabelle mit Bildern und Lösungsfeldern"))
+        .click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-image-width")).not.toBeNull();
+    expect(root.textContent).not.toContain("Spaltenüberschrift");
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bibliothek"))
+        .click();
+    await nextTick();
+    root.querySelector(".list-group button").click();
+    await nextTick();
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.image_width_cm).toBe(3);
+    expect(transformedPayload.content.subtasks[0].image_identifier).toBe(transformedPayload.images[0].identifier);
+    expect(transformedPayload.images[0].resource_id).toBe(7);
+    unmount();
+});
+
 it("creates and removes image-label reference points", async () => {
     const { root, unmount } = mount({
         imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],

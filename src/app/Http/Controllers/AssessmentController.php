@@ -213,19 +213,28 @@ class AssessmentController extends Controller
                     'options' => data_get($task->content, 'options', []),
                     'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
-                    'image_width_cm' => $task->task_type === 'image_matching' ? $task->imageWidthCm() : null,
-                    'images' => $task->images->map(fn ($image): array => ['path' => Storage::disk('local')->path($image->resource->storage_path), 'label' => $image->label, 'answer' => $image->answer])->values()->all(),
+                    'image_width_cm' => in_array($task->task_type, ['image_matching', 'image_answer_table'], true) ? $task->imageWidthCm() : null,
+                    'images' => $task->images->map(fn ($image): array => ['identifier' => $image->identifier, 'path' => Storage::disk('local')->path($image->resource->storage_path), 'label' => $image->label, 'answer' => $image->answer])->values()->all(),
                 ],
                 'images' => $task->images->map(fn ($image): array => ['id' => $image->identifier, 'label' => $image->label, 'answer' => $image->answer, 'image_url' => route('resources.library.files.preview', $image->resource)])->values(),
                 'label_options' => $task->images->flatMap->labels->map(fn ($label): array => ['id' => (string) $label->id, 'text' => $label->solution])->values(),
                 'evaluation_mode' => data_get($task->content, 'evaluation_mode'),
-                'expectations' => $task->expectations->map(fn ($expectation): array => [
+                'expectations' => $task->expectations->map(function ($expectation) use ($task): array {
+                    $subtask = collect(data_get($task->content, 'subtasks', []))->firstWhere('key', $expectation->subtask_key);
+                    $image = $task->task_type === 'image_answer_table'
+                        ? $task->images->firstWhere('identifier', data_get($subtask, 'image_identifier'))
+                        : null;
+
+                    return [
                     'id' => $expectation->id,
                     'subtask_key' => $expectation->subtask_key,
                     'text' => $expectation->text,
                     'points' => $expectation->points,
                     'repetitions' => $expectation->repetitions,
-                ])->values(),
+                    'thumbnail' => $image?->resource === null ? null : route('resources.library.files.preview', $image->resource),
+                    'thumbnail_alt' => $image?->resource?->original_name,
+                    ];
+                })->values(),
             ])->values(),
             'booklets' => $booklets->map(fn (AssessmentBooklet $booklet): array => [
                 'id' => $booklet->id,
@@ -631,10 +640,11 @@ class AssessmentController extends Controller
     {
         $content = is_array($task->content) ? $task->content : [];
 
-        if ($task->task_type === 'image_matching') {
+        if (in_array($task->task_type, ['image_matching', 'image_answer_table'], true)) {
             $content['images'] = $task->images
                 ->filter(fn ($image): bool => $image->resource !== null)
                 ->map(fn ($image): array => [
+                    'identifier' => $image->identifier,
                     'path' => Storage::disk('local')->path($image->resource->storage_path),
                     'answer' => $image->answer,
                     'copyright' => $image->resource->copyrights,

@@ -49,6 +49,7 @@ const newOption = () => ({
 const newSubtask = () => ({
     key: `subtask-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     label: "",
+    image_identifier: "",
     solution: "",
     lines: 3,
     points: 1,
@@ -197,7 +198,7 @@ function addSubtaskExpectation(subtask) {
     subtask.expectations.push(emptyExpectation());
 }
 function addImage() {
-    form.images.push({
+    const image = {
         identifier:
             "pair-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
         resource_id: "",
@@ -205,10 +206,25 @@ function addImage() {
         preview_url: "",
         label: "",
         answer: "",
-    });
+    };
+    form.images.push(image);
+    if (form.task_type === "image_answer_table") {
+        const placeholder = form.content.subtasks.find(
+            (subtask) => !subtask.image_identifier && !subtask.label && !subtask.solution,
+        );
+        if (placeholder) placeholder.image_identifier = image.identifier;
+        else form.content.subtasks.push({ ...newSubtask(), image_identifier: image.identifier });
+    }
 }
 function removeImage(index) {
+    const image = form.images[index];
     form.images.splice(index, 1);
+    if (form.task_type === "image_answer_table" && image?.identifier) {
+        const subtaskIndex = form.content.subtasks.findIndex(
+            (subtask) => subtask.image_identifier === image.identifier,
+        );
+        if (subtaskIndex >= 0) form.content.subtasks.splice(subtaskIndex, 1);
+    }
 }
 function moveImage(index, offset) {
     const target = index + offset;
@@ -254,7 +270,16 @@ function addLibraryImage(libraryImage) {
         answer: "",
     };
     if (form.task_type === "image_labeling") form.images = [image];
-    else form.images.push(image);
+    else {
+        form.images.push(image);
+        if (form.task_type === "image_answer_table") {
+            const placeholder = form.content.subtasks.find(
+                (subtask) => !subtask.image_identifier && !subtask.label && !subtask.solution,
+            );
+            if (placeholder) placeholder.image_identifier = image.identifier;
+            else form.content.subtasks.push({ ...newSubtask(), image_identifier: image.identifier });
+        }
+    }
     imageLibraryOpen.value = false;
 }
 function addImageLabel(event) {
@@ -350,7 +375,7 @@ function save() {
     saveError.value = "";
     const payload = form.data();
     const content = { ...payload.content };
-    if (form.task_type === "subtask_table") {
+    if (["subtask_table", "image_answer_table"].includes(form.task_type)) {
         content.subtasks = content.subtasks.map((subtask) => {
             const { expectations, ...data } = subtask;
             return data;
@@ -364,8 +389,8 @@ function save() {
         );
     }
     if (!usesOptions(form.task_type)) delete content.options;
-    if (form.task_type !== "image_matching") delete content.image_width_cm;
-    if (!['image_labeling', 'subtask_table'].includes(form.task_type)) {
+    if (!["image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
+    if (!['image_labeling', 'subtask_table', 'image_answer_table'].includes(form.task_type)) {
         delete content.image_label_width_cm;
         delete content.image_label_layout;
         delete content.show_solutions;
@@ -378,7 +403,7 @@ function save() {
         delete content.columns;
         delete content.rows;
     }
-    if (form.task_type === "subtask_table") {
+    if (["subtask_table", "image_answer_table"].includes(form.task_type)) {
         delete content.columns;
         delete content.rows;
     } else {
@@ -399,7 +424,7 @@ function save() {
     if (form.task_type !== "reading_text") delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
     if (
-        !["free_text", "free_text_images", "reading_text", "subtask_table"].includes(
+        !["free_text", "free_text_images", "reading_text", "subtask_table", "image_answer_table"].includes(
             form.task_type,
         )
     ) {
@@ -608,7 +633,7 @@ function save() {
                             <div
                                 v-if="
                                     usesOptions(form.task_type) ||
-                                    ['image_matching', 'image_labeling'].includes(form.task_type)
+                                    ['image_matching', 'image_labeling', 'image_answer_table'].includes(form.task_type)
                                 "
                                 class="mt-4"
                             >
@@ -758,7 +783,7 @@ function save() {
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="addSubtask">{{ de.assessmentTaskAddSubtask }}</button>
                             </div>
-                            <div v-else-if="usesTable(form.task_type)" class="mt-4">
+                            <div v-else-if="usesTable(form.task_type) && form.task_type !== 'image_answer_table'" class="mt-4">
                                 <h3 class="h6">
                                     {{ de.assessmentTaskColumns }}
                                 </h3>
@@ -844,7 +869,7 @@ function save() {
                                     {{ de.assessmentTaskImages }}
                                 </h3>
                                 <div
-                                    v-if="form.task_type === 'image_matching'"
+                                    v-if="['image_matching', 'image_answer_table'].includes(form.task_type)"
                                     class="mb-3"
                                 >
                                     <label
@@ -868,6 +893,55 @@ function save() {
                                         max="4"
                                         step="0.1"
                                     />
+                                </div>
+                                <div v-if="form.task_type === 'image_answer_table'" class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.show_solutions" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label>
+                                    </div>
+                                </div>
+                                <div
+                                    v-for="(subtask, index) in form.content.subtasks"
+                                    v-if="form.task_type === 'image_answer_table'"
+                                    :key="subtask.key || index"
+                                    class="border rounded p-2 mb-2"
+                                >
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-auto">
+                                            <img
+                                                :src="form.images.find((image) => image.identifier === subtask.image_identifier)?.preview_url"
+                                                :alt="form.images.find((image) => image.identifier === subtask.image_identifier)?.name || de.assessmentTaskImages"
+                                                class="rounded object-fit-contain"
+                                                style="width: 6rem; height: 4rem"
+                                            />
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label mb-1">{{ de.assessmentTaskSubtaskSolution }}</label>
+                                            <input v-model="subtask.solution" class="form-control" :placeholder="de.assessmentTaskSubtaskSolution" />
+                                        </div>
+                                        <div class="col-auto" style="max-width: 7rem">
+                                            <label class="form-label mb-1">{{ de.assessmentTaskSubtaskLines }}</label>
+                                            <input v-model.number="subtask.lines" type="number" min="0" class="form-control" required />
+                                        </div>
+                                        <div v-if="String(subtask.solution || '').trim()" class="col-auto" style="max-width: 7rem">
+                                            <label class="form-label mb-1">{{ de.assessmentTaskSubtaskPoints }}</label>
+                                            <input v-model.number="subtask.points" type="number" min="1" class="form-control" required />
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" class="btn btn-outline-danger" @click="removeImage(form.images.findIndex((image) => image.identifier === subtask.image_identifier))">×</button>
+                                        </div>
+                                    </div>
+                                    <div v-if="!String(subtask.solution || '').trim()" class="mt-3 ps-3 border-start">
+                                        <h4 class="h6">{{ de.assessmentTaskSubtaskExpectations }}</h4>
+                                        <div v-for="(expectation, expectationIndex) in subtask.expectations" :key="expectationIndex" class="row g-2 mb-2">
+                                            <div class="col"><input v-model="expectation.text" class="form-control" :placeholder="de.assessmentTaskSubtaskExpectation" required /></div>
+                                            <div class="col-auto"><input v-model.number="expectation.points" type="number" min="1" class="form-control" :placeholder="de.assessmentTaskSubtaskPoints" required /></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeAt(subtask.expectations, expectationIndex)">×</button></div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="addSubtaskExpectation(subtask)">{{ de.assessmentTaskSubtaskAddExpectation }}</button>
+                                    </div>
                                 </div>
                                 <div v-if="form.task_type === 'image_labeling'" class="mb-3">
                                     <div v-if="form.images[0]?.preview_url" class="image-labeling-stage mx-auto" @click="addImageLabel">

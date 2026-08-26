@@ -308,7 +308,7 @@ class PhpOfficeDocumentRenderer
 
     private function patchOdtSubtaskTables(string $contents, Document $document): string
     {
-        if (! $document instanceof AssessmentDocument || collect($document->tasks)->where('task_type', 'subtask_table')->isEmpty()) {
+        if (! $document instanceof AssessmentDocument || collect($document->tasks)->whereIn('task_type', ['subtask_table', 'image_answer_table'])->isEmpty()) {
             return $contents;
         }
 

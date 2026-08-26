@@ -219,3 +219,43 @@ it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschrifte
         ->and($task->expectations->last()->subtask_key)->toBe('b')
         ->and($task->maximumPoints())->toBe(3);
 });
+
+it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', function () {
+    $organization = Organization::create(['name' => 'Bildtabellen Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bildtabellenschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann darstellen']);
+    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Baum.png', 'storage_path' => 'library/baum.png', 'mime_type' => 'image/png', 'size' => 10]);
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Bildtabelle',
+        'task_type' => 'image_answer_table',
+        'content' => [
+            'prompt' => 'Bearbeite die Bildtabelle.',
+            'image_width_cm' => 2.5,
+            'show_solutions' => true,
+            'lineated' => true,
+            'subtasks' => [
+                ['key' => 'a', 'image_identifier' => 'pair-a', 'solution' => 'Baum', 'lines' => 2, 'points' => 1],
+                ['key' => 'b', 'image_identifier' => 'pair-b', 'solution' => '', 'lines' => 3],
+            ],
+        ],
+        'images' => [['identifier' => 'pair-a', 'resource_id' => $image->id]],
+        'expectations' => [['subtask_key' => 'b', 'text' => 'Merkmal genannt.', 'points' => 2, 'repetitions' => 1]],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->task_type)->toBe('image_answer_table')
+        ->and($task->content['image_width_cm'])->toBe(2.5)
+        ->and($task->content['subtasks'][0]['image_identifier'])->toBe('pair-a')
+        ->and($task->expectations)->toHaveCount(2)
+        ->and($task->expectations->first()->text)->toBe('Lösung: Baum')
+        ->and($task->maximumPoints())->toBe(3)
+        ->and($task->images)->toHaveCount(1);
+});

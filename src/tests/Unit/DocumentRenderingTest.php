@@ -246,6 +246,39 @@ it('rendert eine Tabelle mit Teilaufgaben mit optionalen Lösungen und Lineatur'
         ->and($contentXml)->toContain('assessmentSubtaskAnswerCell');
 });
 
+it('rendert eine Tabelle mit Bildern und Lösungsfeldern mit gewählter Bildspaltenbreite', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $document = new AssessmentDocument('LSE Bildtabelle', [[
+        'title' => 'Bildtabelle',
+        'task_type' => 'image_answer_table',
+        'max_points' => 3,
+        'content' => [
+            'prompt' => 'Bearbeite die Bildtabelle.',
+            'image_width_cm' => 2.5,
+            'show_solutions' => true,
+            'lineated' => true,
+            'images' => [['identifier' => 'pair-a', 'path' => $image, 'copyright' => 'Ada Beispiel']],
+            'subtasks' => [
+                ['image_identifier' => 'pair-a', 'solution' => 'Baum', 'lines' => 2, 'points' => 1],
+            ],
+        ],
+    ]], '4');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-image-table-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($contentXml)->toContain('Baum')
+        ->and($contentXml)->toContain('assessmentSubtaskLabelCell')
+        ->and($contentXml)->toContain('assessmentSubtaskAnswerCell')
+        ->and($contentXml)->toContain('2.50cm');
+});
+
 it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildbeschriftung', [[

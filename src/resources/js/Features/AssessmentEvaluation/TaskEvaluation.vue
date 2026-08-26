@@ -63,6 +63,8 @@ const occurrences = computed(() => {
                         occurrence: index + 1,
                         text: expectation.text,
                         points: expectation.points,
+                        thumbnail: expectation.thumbnail,
+                        thumbnail_alt: expectation.thumbnail_alt,
                     }),
                 ),
             ),
@@ -78,6 +80,8 @@ const occurrences = computed(() => {
                 occurrence: index + 1,
                 text: expectation.text,
                 points: expectation.points,
+                thumbnail: expectation.thumbnail,
+                thumbnail_alt: expectation.thumbnail_alt,
             }),
         ),
     );
@@ -188,7 +192,7 @@ function specializedCheckbox(reviewCase) {
 }
 
 function subtaskHeading(reviewCase, index) {
-    if (props.task.task_type !== "subtask_table") {
+    if (!["subtask_table", "image_answer_table"].includes(props.task.task_type)) {
         return null;
     }
 

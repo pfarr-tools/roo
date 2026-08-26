@@ -171,11 +171,14 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addImageCredits($section, $content);
         } elseif (($task['task_type'] ?? '') === 'subtask_table') {
             $this->addSubtaskTable($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'image_answer_table') {
+            $this->addImageAnswerTable($section, $content);
+            $this->addImageCredits($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -351,6 +354,52 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                     'borderBottomColor' => '000000',
                     'borderBottomStyle' => 'single',
                 ])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            }
+        }
+        $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addImageAnswerTable(Section $section, array $content): void
+    {
+        $subtasks = collect($content['subtasks'] ?? [])->filter(fn ($subtask): bool => is_array($subtask))->values();
+        $images = collect($content['images'] ?? [])->filter(fn ($image): bool => is_array($image) && ! empty($image['path']) && is_file($image['path']))->keyBy(fn (array $image): string => (string) ($image['identifier'] ?? ''));
+        if ($subtasks->isEmpty() || $images->isEmpty()) {
+            return;
+        }
+
+        if (! empty($content['show_solutions'])) {
+            $solutions = $subtasks->pluck('solution')->map(fn ($solution): string => trim((string) $solution))->filter()->values();
+            if ($solutions->isNotEmpty()) {
+                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+            }
+        }
+
+        $widthCm = min(4.0, max(1.5, (float) ($content['image_width_cm'] ?? 3.0)));
+        $imageWidthTwips = (int) round($widthCm * 1440 / 2.54);
+        $tableWidth = self::CONTENT_WIDTH_MM * 56.6929;
+        $answerWidthTwips = max(1, (int) round($tableWidth - $imageWidthTwips));
+        $table = $section->addTable(['width' => $tableWidth, 'layout' => 'fixed', 'borderSize' => 4, 'borderColor' => '000000', 'cellMargin' => 80]);
+
+        foreach ($subtasks as $subtask) {
+            $image = $images->get((string) ($subtask['image_identifier'] ?? ''));
+            $row = $table->addRow();
+            $imageCell = $row->addCell($imageWidthTwips, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']);
+            if (is_array($image)) {
+                $widthPx = (int) round($widthCm * 37.7952756);
+                $style = ['width' => $widthPx, 'alignment' => 'center'];
+                $dimensions = @getimagesize($image['path']);
+                if (is_array($dimensions) && ($dimensions[0] ?? 0) > 0 && ($dimensions[1] ?? 0) > 0) {
+                    $style['height'] = (int) round($widthPx * $dimensions[1] / $dimensions[0]);
+                }
+                $imageCell->addImage($image['path'], $style);
+            }
+            $answerCell = $row->addCell($answerWidthTwips, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']);
+            $lines = max(1, (int) ($subtask['lines'] ?? 3));
+            $answerTable = $answerCell->addTable(['width' => $answerWidthTwips, 'layout' => 'fixed', 'borderSize' => 0, 'cellMargin' => 0]);
+            for ($line = 0; $line < $lines; $line++) {
+                $answerTable->addRow(360)->addCell(null, ['borderSize' => 0, 'borderBottomSize' => ! empty($content['lineated']) ? 4 : 0, 'borderBottomColor' => '000000', 'borderBottomStyle' => 'single'])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
             }
         }
         $section->addTextBreak(1);
