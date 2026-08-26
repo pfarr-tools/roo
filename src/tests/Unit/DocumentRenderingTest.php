@@ -279,6 +279,42 @@ it('rendert eine Tabelle mit Bildern und Lösungsfeldern mit gewählter Bildspal
         ->and($contentXml)->toContain('2.50cm');
 });
 
+it('rendert eine Überschriften-Tabelle mit Kopfzeile, Zeilenkopf und Lineatur', function () {
+    $document = new AssessmentDocument('LSE Überschriftentabelle', [[
+        'title' => 'Überschriftentabelle',
+        'task_type' => 'heading_table',
+        'max_points' => 2,
+        'content' => [
+            'prompt' => 'Fülle die Tabelle aus.',
+            'show_solutions' => true,
+            'lineated' => true,
+            'columns' => [
+                ['heading' => 'Kategorie', 'solution' => ''],
+                ['heading' => '', 'solution' => 'Antwort'],
+            ],
+            'rows' => [
+                ['key' => 'r1', 'lines' => 2, 'header' => ['heading' => 'A', 'solution' => ''], 'cells' => [['heading' => '', 'solution' => 'Merkmal'], ['heading' => '', 'solution' => 'Antwort']]],
+                ['key' => 'r2', 'lines' => 3, 'header' => ['heading' => 'B', 'solution' => ''], 'cells' => [['heading' => '', 'solution' => ''], ['heading' => '', 'solution' => '']]],
+            ],
+        ],
+    ]], '4');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-heading-table-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($contentXml)->toContain('Kategorie')
+        ->and($contentXml)->toContain('Merkmal')
+        ->and($contentXml)->toContain('Antwort')
+        ->and($contentXml)->toContain('table:table-column')
+        ->and($contentXml)->toContain('fo:border-bottom');
+});
+
 it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildbeschriftung', [[

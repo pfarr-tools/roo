@@ -183,6 +183,22 @@ it("submits image answer table rows with the selected image and width", async ()
     unmount();
 });
 
+it("shows heading table options without generic row labels", async () => {
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Tabelle mit Überschriften"))
+        .click();
+    await nextTick();
+
+    expect(root.textContent).toContain("Antworten anzeigen");
+    expect(root.textContent).toContain("Lineatur");
+    expect(root.textContent).not.toContain("Zeile / Teilaufgabe");
+    expect(root.querySelectorAll("input[placeholder='Spaltenüberschrift']")).toHaveLength(0);
+    unmount();
+});
+
 it("creates and removes image-label reference points", async () => {
     const { root, unmount } = mount({
         imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],

@@ -259,3 +259,48 @@ it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', func
         ->and($task->maximumPoints())->toBe(3)
         ->and($task->images)->toHaveCount(1);
 });
+
+it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', function () {
+    $organization = Organization::create(['name' => 'Überschriftentabellen Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Überschriftenschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann ordnen']);
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Überschriftentabelle',
+        'task_type' => 'heading_table',
+        'content' => [
+            'prompt' => 'Fülle die Tabelle aus.',
+            'show_solutions' => true,
+            'lineated' => true,
+            'columns' => [
+                ['key' => 'c1', 'heading' => 'Kategorie', 'solution' => '', 'expectations' => []],
+                ['key' => 'c2', 'heading' => '', 'solution' => 'Antwort', 'expectations' => []],
+            ],
+            'rows' => [
+                ['key' => 'r1', 'lines' => 2, 'header' => ['key' => 'r1h', 'heading' => 'A', 'solution' => '', 'expectations' => []], 'cells' => [
+                    ['key' => 'r1c1', 'heading' => '', 'solution' => '', 'expectations' => [['text' => 'Merkmal genannt.', 'points' => 1, 'repetitions' => 1]]],
+                    ['key' => 'r1c2', 'heading' => '', 'solution' => '', 'expectations' => []],
+                ]],
+                ['key' => 'r2', 'lines' => 3, 'header' => ['key' => 'r2h', 'heading' => 'B', 'solution' => '', 'expectations' => []], 'cells' => [
+                    ['key' => 'r2c1', 'heading' => '', 'solution' => '', 'expectations' => []],
+                    ['key' => 'r2c2', 'heading' => '', 'solution' => '', 'expectations' => []],
+                ]],
+            ],
+        ],
+        'expectations' => [['subtask_key' => 'r1c1', 'text' => 'Merkmal genannt.', 'points' => 1, 'repetitions' => 1]],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->content['columns'][1]['heading'])->toBeNull()
+        ->and($task->content['rows'][0]['lines'])->toBe(2)
+        ->and($task->expectations)->toHaveCount(2)
+        ->and($task->expectations->last()->subtask_key)->toBe('r1c1')
+        ->and($task->maximumPoints())->toBe(2);
+});

@@ -29,7 +29,7 @@ final class AssessmentDocument extends Document
         $counts = [];
 
         foreach ($this->tasks as $task) {
-            if (in_array($task['task_type'] ?? '', ['checkbox', 'image_labeling'], true)) {
+            if (in_array($task['task_type'] ?? '', ['checkbox', 'image_labeling', 'heading_table'], true)) {
                 continue;
             }
 

@@ -63,6 +63,8 @@ class PhpOfficeDocumentRenderer
             return $contents;
         }
 
+        $hasImageMatching = collect($document->tasks)->where('task_type', 'image_matching')->isNotEmpty();
+
         $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-merge-');
         if ($temporaryPath === false) {
             return $contents;
@@ -100,10 +102,10 @@ class PhpOfficeDocumentRenderer
             $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
             $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
             $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
-            foreach ($xpath->query('//style:style[@style:name="fr1"]/style:graphic-properties') as $graphicProperties) {
+            foreach ($hasImageMatching ? $xpath->query('//style:style[@style:name="fr1"]/style:graphic-properties') : [] as $graphicProperties) {
                 $graphicProperties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:border', '0.06pt solid #000000');
             }
-            foreach ($xpath->query('//table:table') as $table) {
+            foreach ($hasImageMatching ? $xpath->query('//table:table') : [] as $table) {
                 $rows = $this->directChildren($table, 'table-row');
                 $columns = $this->directChildren($table, 'table-column');
                 if (count($columns) !== 3 || count($rows) < 2) {

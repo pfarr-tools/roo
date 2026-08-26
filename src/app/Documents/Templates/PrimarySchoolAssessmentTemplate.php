@@ -174,11 +174,13 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         } elseif (($task['task_type'] ?? '') === 'image_answer_table') {
             $this->addImageAnswerTable($section, $content);
             $this->addImageCredits($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'heading_table') {
+            $this->addHeadingTable($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -403,6 +405,73 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             }
         }
         $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addHeadingTable(Section $section, array $content): void
+    {
+        $columns = collect($content['columns'] ?? [])->filter(fn ($cell): bool => is_array($cell))->values();
+        $rows = collect($content['rows'] ?? [])->filter(fn ($row): bool => is_array($row))->values();
+        if ($columns->isEmpty() || $rows->isEmpty()) {
+            return;
+        }
+
+        if (! empty($content['show_solutions'])) {
+            $solutions = $columns
+                ->merge($rows->flatMap(fn (array $row): array => array_merge(count($rows) > 1 ? [$row['header'] ?? []] : [], $row['cells'] ?? [])))
+                ->pluck('solution')
+                ->map(fn ($solution): string => trim((string) $solution))
+                ->filter()
+                ->values();
+            if ($solutions->isNotEmpty()) {
+                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+            }
+        }
+
+        $hasRowHeaders = $rows->count() > 1;
+        $columnCount = $columns->count() + ($hasRowHeaders ? 1 : 0);
+        $tableWidth = self::CONTENT_WIDTH_MM * 56.6929;
+        $cellWidth = $tableWidth / $columnCount;
+        $table = $section->addTable(['width' => $tableWidth, 'layout' => 'fixed', 'borderSize' => 4, 'borderColor' => '000000', 'cellMargin' => 80]);
+        $headerRow = $table->addRow();
+        if ($hasRowHeaders) {
+            $this->addHeadingTableCell($headerRow->addCell($cellWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']), ['heading' => ''], 1, true, true);
+        }
+        foreach ($columns as $column) {
+            $this->addHeadingTableCell($headerRow->addCell($cellWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']), $column, 1, true, true);
+        }
+
+        foreach ($rows as $row) {
+            $tableRow = $table->addRow();
+            if ($hasRowHeaders) {
+                $this->addHeadingTableCell($tableRow->addCell($cellWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']), $row['header'] ?? [], 1, false, true);
+            }
+            foreach (array_values($row['cells'] ?? []) as $cell) {
+                $this->addHeadingTableCell($tableRow->addCell($cellWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']), $cell, max(1, (int) ($row['lines'] ?? 3)), false, ! empty($content['lineated']));
+            }
+        }
+        $section->addTextBreak(1);
+    }
+
+    private function addHeadingTableCell(Cell $cell, array $definition, int $lines, bool $header, bool $lineated): void
+    {
+        $heading = trim((string) ($definition['heading'] ?? ''));
+        if ($heading !== '') {
+            $cell->addText($heading, ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+
+            return;
+        }
+
+        $answerTable = $cell->addTable(['layout' => 'fixed', 'borderSize' => 0, 'cellMargin' => 0]);
+        for ($line = 0; $line < ($header ? 1 : $lines); $line++) {
+            $answerTable->addRow(360)->addCell(null, [
+                'borderSize' => 0,
+                'borderBottomSize' => $header || $lineated ? 4 : 0,
+                'borderBottomColor' => '000000',
+                'borderBottomStyle' => 'single',
+            ])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+        }
     }
 
     /** @param array<string, mixed> $content */

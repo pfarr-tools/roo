@@ -55,6 +55,19 @@ const newSubtask = () => ({
     points: 1,
     expectations: [],
 });
+const newHeadingCell = () => ({
+    key: "cell-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+    heading: "",
+    solution: "",
+    points: 1,
+    expectations: [],
+});
+const newHeadingRow = (columnCount = 1) => ({
+    key: "row-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+    lines: 3,
+    header: newHeadingCell(),
+    cells: Array.from({ length: columnCount }, () => newHeadingCell()),
+});
 const emptyContent = () => ({
     prompt: "",
     lines: 5,
@@ -106,6 +119,7 @@ function resetForm() {
             .filter((expectation) => expectation.subtask_key === (subtask.key ?? `subtask-${index + 1}`))
             .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
     }));
+    if (props.task?.task_type === "heading_table") normalizeHeadingTableContent(content, props.task?.expectations ?? []);
     form.defaults({
         title: props.task?.title ?? "",
         task_type: props.task?.task_type ?? "free_text",
@@ -183,7 +197,67 @@ const usesQuestions = (value) =>
     ["labeled_fields", "reading_text", "sorting"].includes(value);
 function selectType(value) {
     form.task_type = value;
+    if (value === "heading_table") normalizeHeadingTableContent(form.content, []);
     editorTab.value = "content";
+}
+function normalizeHeadingTableContent(content, expectations = []) {
+    content.columns = (content.columns?.length ? content.columns : [newHeadingCell()]).map((cell, index) => ({
+        ...newHeadingCell(),
+        ...(typeof cell === "string" ? { heading: cell } : cell),
+        key: cell?.key ?? "column-" + (index + 1),
+        expectations: expectations
+            .filter((expectation) => expectation.subtask_key === (cell?.key ?? "column-" + (index + 1)))
+            .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
+    }));
+    const columnCount = content.columns.length;
+    content.rows = (content.rows?.length ? content.rows : [newHeadingRow(columnCount)]).map((row, rowIndex) => ({
+        ...newHeadingRow(columnCount),
+        ...row,
+        key: row.key ?? "row-" + (rowIndex + 1),
+        header: {
+            ...newHeadingCell(),
+            ...(row.header ?? {}),
+            key: row.header?.key ?? "row-" + (rowIndex + 1) + "-header",
+            expectations: expectations
+                .filter((expectation) => expectation.subtask_key === (row.header?.key ?? "row-" + (rowIndex + 1) + "-header"))
+                .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
+        },
+        cells: Array.from({ length: columnCount }, (_, index) => {
+            const cell = row.cells?.[index] ?? {};
+            const key = cell.key ?? (row.key ?? "row-" + (rowIndex + 1)) + "-cell-" + (index + 1);
+            return {
+                ...newHeadingCell(),
+                ...cell,
+                key,
+                expectations: expectations
+                    .filter((expectation) => expectation.subtask_key === key)
+                    .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
+            };
+        }),
+    }));
+}
+function headingTableCells() {
+    const cells = [...form.content.columns];
+    if (form.content.rows.length > 1) {
+        form.content.rows.forEach((row) => cells.push(row.header));
+    }
+    form.content.rows.forEach((row) => cells.push(...row.cells));
+    return cells;
+}
+function addHeadingColumn() {
+    form.content.columns.push(newHeadingCell());
+    form.content.rows.forEach((row) => row.cells.push(newHeadingCell()));
+}
+function removeHeadingColumn(index) {
+    if (form.content.columns.length <= 1) return;
+    form.content.columns.splice(index, 1);
+    form.content.rows.forEach((row) => row.cells.splice(index, 1));
+}
+function addHeadingRow() {
+    form.content.rows.push(newHeadingRow(form.content.columns.length));
+}
+function addHeadingExpectation(cell) {
+    cell.expectations.push(emptyExpectation());
 }
 function addOption() {
     form.content.options.push(newOption());
@@ -388,9 +462,25 @@ function save() {
                       .map((expectation) => ({ ...expectation, subtask_key: subtask.key })),
         );
     }
+    if (form.task_type === "heading_table") {
+        const cells = headingTableCells();
+        payload.expectations = cells.flatMap((cell) =>
+            String(cell.solution || "").trim()
+                ? []
+                : (cell.expectations || [])
+                      .filter((expectation) => String(expectation.text || "").trim() !== "")
+                      .map((expectation) => ({ ...expectation, subtask_key: cell.key })),
+        );
+        content.columns = content.columns.map(({ expectations, ...cell }) => cell);
+        content.rows = content.rows.map((row) => ({
+            ...row,
+            header: row.header ? (({ expectations, ...cell }) => cell)(row.header) : row.header,
+            cells: row.cells.map(({ expectations, ...cell }) => cell),
+        }));
+    }
     if (!usesOptions(form.task_type)) delete content.options;
     if (!["image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
-    if (!['image_labeling', 'subtask_table', 'image_answer_table'].includes(form.task_type)) {
+    if (!['image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'].includes(form.task_type)) {
         delete content.image_label_width_cm;
         delete content.image_label_layout;
         delete content.show_solutions;
@@ -424,7 +514,7 @@ function save() {
     if (form.task_type !== "reading_text") delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
     if (
-        !["free_text", "free_text_images", "reading_text", "subtask_table", "image_answer_table"].includes(
+        !["free_text", "free_text_images", "reading_text", "subtask_table", "image_answer_table", "heading_table"].includes(
             form.task_type,
         )
     ) {
@@ -782,6 +872,74 @@ function save() {
                                     </div>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="addSubtask">{{ de.assessmentTaskAddSubtask }}</button>
+                            </div>
+                            <div v-else-if="form.task_type === 'heading_table'" class="mt-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.show_solutions" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskShowAnswers }}</span></label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-check"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label>
+                                    </div>
+                                </div>
+                                <h3 class="h6">{{ de.assessmentTaskHeading }}</h3>
+                                <div v-for="(cell, index) in form.content.columns" :key="cell.key" class="border rounded p-2 mb-2">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-4"><label class="form-label">{{ de.assessmentTaskHeading }} {{ index + 1 }}</label><input v-model="cell.heading" class="form-control" /></div>
+                                        <div v-if="!String(cell.heading || '').trim()" class="col-md-4"><label class="form-label">{{ de.assessmentTaskSubtaskSolution }}</label><input v-model="cell.solution" class="form-control" /></div>
+                                        <div v-if="!String(cell.heading || '').trim() && String(cell.solution || '').trim()" class="col-md-2"><label class="form-label">{{ de.assessmentTaskSubtaskPoints }}</label><input v-model.number="cell.points" type="number" min="1" class="form-control" /></div>
+                                        <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeHeadingColumn(index)">×</button></div>
+                                    </div>
+                                    <div v-if="!String(cell.heading || '').trim() && !String(cell.solution || '').trim()" class="mt-2 ps-3 border-start">
+                                        <div v-for="(expectation, expectationIndex) in cell.expectations" :key="expectationIndex" class="row g-2 mb-2">
+                                            <div class="col"><input v-model="expectation.text" class="form-control" :placeholder="de.assessmentTaskSubtaskExpectation" /></div>
+                                            <div class="col-auto"><input v-model.number="expectation.points" type="number" min="1" class="form-control" :placeholder="de.assessmentTaskSubtaskPoints" /></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeAt(cell.expectations, expectationIndex)">×</button></div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingExpectation(cell)">{{ de.assessmentTaskSubtaskAddExpectation }}</button>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingColumn">{{ de.assessmentTaskAddColumn }}</button>
+                                </div>
+                                <h3 class="h6">{{ de.assessmentTaskHeadingTableRows }}</h3>
+                                <div v-for="(row, rowIndex) in form.content.rows" :key="row.key" class="border rounded p-3 mb-3">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-3"><label class="form-label">{{ de.assessmentTaskSubtaskLines }}</label><input v-model.number="row.lines" type="number" min="1" class="form-control" /></div>
+                                        <div class="col-md-9 d-flex align-items-end"><button type="button" class="btn btn-outline-danger" @click="removeAt(form.content.rows, rowIndex)">{{ de.assessmentTaskRemoveHeadingRow }}</button></div>
+                                    </div>
+                                    <div v-if="form.content.rows.length > 1" class="border rounded p-2 mb-2">
+                                        <label class="form-label">{{ de.assessmentTaskRowHeading }}</label>
+                                        <input v-model="row.header.heading" class="form-control" />
+                                        <div v-if="!String(row.header.heading || '').trim()" class="mt-2">
+                                            <input v-model="row.header.solution" class="form-control" :placeholder="de.assessmentTaskSubtaskSolution" />
+                                            <div v-if="!String(row.header.solution || '').trim()" class="mt-2 ps-3 border-start">
+                                                <div v-for="(expectation, expectationIndex) in row.header.expectations" :key="expectationIndex" class="row g-2 mb-2">
+                                                    <div class="col"><input v-model="expectation.text" class="form-control" :placeholder="de.assessmentTaskSubtaskExpectation" /></div>
+                                                    <div class="col-auto"><input v-model.number="expectation.points" type="number" min="1" class="form-control" :placeholder="de.assessmentTaskSubtaskPoints" /></div>
+                                                    <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeAt(row.header.expectations, expectationIndex)">×</button></div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingExpectation(row.header)">{{ de.assessmentTaskSubtaskAddExpectation }}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-for="(cell, cellIndex) in row.cells" :key="cell.key" class="border rounded p-2 mb-2">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-4"><label class="form-label">{{ de.assessmentTaskCell }} {{ cellIndex + 1 }}</label><input v-model="cell.heading" class="form-control" /></div>
+                                            <div v-if="!String(cell.heading || '').trim()" class="col-md-4"><label class="form-label">{{ de.assessmentTaskSubtaskSolution }}</label><input v-model="cell.solution" class="form-control" /></div>
+                                            <div v-if="!String(cell.heading || '').trim() && String(cell.solution || '').trim()" class="col-md-2"><label class="form-label">{{ de.assessmentTaskSubtaskPoints }}</label><input v-model.number="cell.points" type="number" min="1" class="form-control" /></div>
+                                        </div>
+                                        <div v-if="!String(cell.heading || '').trim() && !String(cell.solution || '').trim()" class="mt-2 ps-3 border-start">
+                                            <div v-for="(expectation, expectationIndex) in cell.expectations" :key="expectationIndex" class="row g-2 mb-2">
+                                                <div class="col"><input v-model="expectation.text" class="form-control" :placeholder="de.assessmentTaskSubtaskExpectation" /></div>
+                                                <div class="col-auto"><input v-model.number="expectation.points" type="number" min="1" class="form-control" :placeholder="de.assessmentTaskSubtaskPoints" /></div>
+                                                <div class="col-auto"><button type="button" class="btn btn-outline-danger" @click="removeAt(cell.expectations, expectationIndex)">×</button></div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingExpectation(cell)">{{ de.assessmentTaskSubtaskAddExpectation }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingRow">{{ de.assessmentTaskAddHeadingRow }}</button>
                             </div>
                             <div v-else-if="usesTable(form.task_type) && form.task_type !== 'image_answer_table'" class="mt-4">
                                 <h3 class="h6">
