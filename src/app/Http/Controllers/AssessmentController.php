@@ -211,7 +211,10 @@ class AssessmentController extends Controller
                 'content' => [
                     'subtasks' => data_get($task->content, 'subtasks', []),
                     'options' => data_get($task->content, 'options', []),
+                    'categories' => data_get($task->content, 'categories', []),
+                    'rows' => data_get($task->content, 'rows', []),
                     'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
+                    'matching_scoring_mode' => $task->task_type === 'matching_table' ? data_get($task->content, 'matching_scoring_mode', 'per_category') : null,
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
                     'image_width_cm' => in_array($task->task_type, ['image_matching', 'image_answer_table'], true) ? $task->imageWidthCm() : null,
                     'images' => $task->images->map(fn ($image): array => ['identifier' => $image->identifier, 'path' => Storage::disk('local')->path($image->resource->storage_path), 'label' => $image->label, 'answer' => $image->answer])->values()->all(),

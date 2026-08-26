@@ -154,6 +154,52 @@ it("shows image matching points and the shared image width slider", async () => 
     unmount();
 });
 
+it("initializes a matching table with categories and text rows", async () => {
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Zuordnungstabelle"))
+        .click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-matching-scoring-mode")).not.toBeNull();
+    expect(root.querySelectorAll('[data-matching-category]').length).toBe(1);
+    expect(root.querySelectorAll('[data-matching-row]').length).toBe(1);
+    expect(root.querySelectorAll('[data-matching-row] input[type="checkbox"]').length).toBe(1);
+    unmount();
+});
+
+it("submits matching table categories, rows, points, and scoring mode", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Zuordnungstabelle"))
+        .click();
+    await nextTick();
+
+    root.querySelector('[data-matching-category] input').value = "Kategorie";
+    root.querySelector('[data-matching-category] input').dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector('[data-matching-row] input[type="text"]').value = "Aussage";
+    root.querySelector('[data-matching-row] input[type="text"]').dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector('[data-matching-row] input[type="checkbox"]').click();
+    root.querySelector("#assessment-task-points-per-correct-answer").value = "2";
+    root.querySelector("#assessment-task-points-per-correct-answer").dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector("#assessment-task-matching-scoring-mode").value = "complete_row";
+    root.querySelector("#assessment-task-matching-scoring-mode").dispatchEvent(new Event("change", { bubbles: true }));
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.points_per_correct_answer).toBe(2);
+    expect(transformedPayload.content.matching_scoring_mode).toBe("complete_row");
+    expect(transformedPayload.content.categories[0].text).toBe("Kategorie");
+    expect(transformedPayload.content.rows[0].category_ids).toEqual([transformedPayload.content.categories[0].id]);
+    expect(transformedPayload.content.columns).toBeUndefined();
+    unmount();
+});
+
 it("submits image answer table rows with the selected image and width", async () => {
     transformedPayload = undefined;
     const { root, unmount } = mount({

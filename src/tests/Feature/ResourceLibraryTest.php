@@ -304,3 +304,53 @@ it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', functi
         ->and($task->expectations->last()->subtask_key)->toBe('r1c1')
         ->and($task->maximumPoints())->toBe(2);
 });
+
+it('speichert Zuordnungstabellen und berechnet beide Bewertungsmodi', function () {
+    $organization = Organization::create(['name' => 'Zuordnungstabellen Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Zuordnungsschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann zuordnen']);
+
+    $payload = [
+        'title' => 'Kategorien zuordnen',
+        'task_type' => 'matching_table',
+        'content' => [
+            'prompt' => 'Ordne die Texte zu.',
+            'points_per_correct_answer' => 2,
+            'matching_scoring_mode' => 'per_category',
+            'categories' => [
+                ['id' => 'c1', 'text' => 'Ja'],
+                ['id' => 'c2', 'text' => 'Nein'],
+            ],
+            'rows' => [
+                ['id' => 'r1', 'text' => 'Text eins', 'category_ids' => ['c1', 'c2']],
+                ['id' => 'r2', 'text' => 'Text zwei', 'category_ids' => ['c1']],
+            ],
+        ],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ];
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', $payload);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->content['categories'])->toHaveCount(2)
+        ->and($task->content['rows'][0]['category_ids'])->toBe(['c1', 'c2'])
+        ->and($task->maximumPoints())->toBe(6);
+
+    $payload['title'] = 'Kategorien als vollständige Zeilen';
+    $payload['content']['matching_scoring_mode'] = 'complete_row';
+    $payload['content']['categories'] = [['id' => 'c1', 'text' => 'Ja']];
+    $payload['content']['rows'][0]['category_ids'] = ['c1'];
+    $payload['content']['rows'][1]['category_ids'] = ['c1'];
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', $payload);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $completeRowTask = AssessmentTask::latest('id')->firstOrFail();
+    expect($completeRowTask->content['rows'][0]['category_ids'])->toBe(['c1'])
+        ->and($completeRowTask->maximumPoints())->toBe(4);
+});

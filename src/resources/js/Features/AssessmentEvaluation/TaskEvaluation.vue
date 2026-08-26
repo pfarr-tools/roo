@@ -28,14 +28,37 @@ const maximumPoints = computed(() =>
     ),
 );
 
+function matchingOptions() {
+    const categories = props.task.content?.categories ?? [];
+    const rows = props.task.content?.rows ?? [];
+    if (props.task.content?.matching_scoring_mode === "complete_row") {
+        return rows.map((row) => ({ id: row.id, text: row.text, correct: true }));
+    }
+
+    return rows.flatMap((row) => (row.category_ids ?? []).map((categoryId) => ({
+        id: `${row.id}:${categoryId}`,
+        text: row.text,
+        category: categories.find((category) => category.id === categoryId)?.text ?? categoryId,
+        correct: true,
+    })));
+}
+
+function categoryListText(categories) {
+    if (categories.length < 2) return categories[0] ?? "";
+    if (categories.length === 2) return `${categories[0]} und ${categories[1]}`;
+    return `${categories.slice(0, -1).join(", ")} und ${categories.at(-1)}`;
+}
+
 const occurrences = computed(() => {
-    if (["image_labeling", "image_matching"].includes(props.task.task_type)) {
+    if (["image_labeling", "image_matching", "matching_table"].includes(props.task.task_type)) {
         const points = props.task.content?.points_per_correct_answer ?? 0;
 
         const options =
             props.task.task_type === "image_labeling"
                 ? props.task.label_options ?? []
-                : props.task.images ?? [];
+                : props.task.task_type === "image_matching"
+                  ? props.task.images ?? []
+                  : matchingOptions();
 
         return [
             ...options.map((option) => ({
@@ -46,7 +69,11 @@ const occurrences = computed(() => {
                 text:
                     props.task.task_type === "image_labeling"
                         ? `Korrekt beschriftet: ${option.text}`
-                        : `Du hast ${option.answer} dem korrekten Bild zugeordnet.`,
+                        : props.task.task_type === "image_matching"
+                          ? `Du hast ${option.answer} dem korrekten Bild zugeordnet.`
+                          : props.task.content?.matching_scoring_mode === "complete_row"
+                            ? `Du hast ${option.text} korrekt den Kategorien ${categoryListText((props.task.content?.categories ?? []).filter((category) => (props.task.content?.rows ?? []).find((row) => row.id === option.id)?.category_ids?.includes(category.id)).map((category) => category.text))} zugeordnet.`
+                            : `Du hast ${option.text} korrekt zur Kategorie ${option.category} zugeordnet.`,
                 points,
                 thumbnail:
                     props.task.task_type === "image_matching"
@@ -120,7 +147,9 @@ function buildReviewCase(fragment) {
             ? (props.task.images ?? [])
             : props.task.task_type === "image_labeling"
               ? (props.task.label_options ?? [])
-            : (props.task.content?.options ?? []);
+              : props.task.task_type === "matching_table"
+                ? matchingOptions()
+                : (props.task.content?.options ?? []);
     const options = definitions.map((option, index) => ({
         id: option.id ?? `option-${index + 1}`,
         text: option.text,
@@ -233,7 +262,7 @@ function updateAwardedPoints(reviewCase, item, value) {
 }
 
 function syncImageLabelOption(reviewCase, item) {
-    if (!["image_labeling", "image_matching"].includes(props.task.task_type)) {
+    if (!["image_labeling", "image_matching", "matching_table"].includes(props.task.task_type)) {
         return;
     }
 
@@ -275,7 +304,7 @@ function save(reviewCase) {
         {
             options:
                 specializedCheckbox(reviewCase) ||
-                ["image_matching", "image_labeling"].includes(props.task.task_type)
+                ["image_matching", "image_labeling", "matching_table"].includes(props.task.task_type)
                     ? reviewCase.options.map((option) => ({
                           id: option.id,
                           selected: option.selected,

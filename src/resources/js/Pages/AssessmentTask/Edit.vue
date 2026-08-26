@@ -46,6 +46,15 @@ const newOption = () => ({
     text: "",
     correct: false,
 });
+const newMatchingCategory = () => ({
+    id: `category-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: "",
+});
+const newMatchingRow = () => ({
+    id: `matching-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: "",
+    category_ids: [],
+});
 const newSubtask = () => ({
     key: `subtask-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     label: "",
@@ -120,6 +129,7 @@ function resetForm() {
             .map((expectation) => ({ text: expectation.text ?? "", points: expectation.points ?? 1, repetitions: expectation.repetitions ?? 1 })),
     }));
     if (props.task?.task_type === "heading_table") normalizeHeadingTableContent(content, props.task?.expectations ?? []);
+    if (props.task?.task_type === "matching_table") normalizeMatchingTableContent(content);
     form.defaults({
         title: props.task?.title ?? "",
         task_type: props.task?.task_type ?? "free_text",
@@ -177,7 +187,7 @@ function resetForm() {
 watch(() => props.task?.id, resetForm, { immediate: true });
 
 const typeLabel = (value) => de.assessmentTaskTypeLabels[value] || value;
-const usesOptions = (value) => ["checkbox", "matching_table"].includes(value);
+const usesOptions = (value) => value === "checkbox";
 const usesTable = (value) =>
     [
         "fill_table",
@@ -198,7 +208,38 @@ const usesQuestions = (value) =>
 function selectType(value) {
     form.task_type = value;
     if (value === "heading_table") normalizeHeadingTableContent(form.content, []);
+    if (value === "matching_table") normalizeMatchingTableContent(form.content);
     editorTab.value = "content";
+}
+function normalizeMatchingTableContent(content) {
+    content.categories = (content.categories?.length ? content.categories : [newMatchingCategory()]).map((category, index) => ({
+        ...newMatchingCategory(),
+        ...category,
+        id: category?.id ?? `category-${index + 1}`,
+    }));
+    const categoryIds = new Set(content.categories.map((category) => category.id));
+    content.rows = (content.rows?.length ? content.rows : [newMatchingRow()]).map((row, index) => ({
+        ...newMatchingRow(),
+        ...row,
+        id: row?.id ?? `matching-row-${index + 1}`,
+        category_ids: (row?.category_ids ?? []).filter((id) => categoryIds.has(id)),
+    }));
+    content.points_per_correct_answer = Number(content.points_per_correct_answer ?? 1);
+    content.matching_scoring_mode = content.matching_scoring_mode === "complete_row" ? "complete_row" : "per_category";
+}
+function addMatchingCategory() {
+    const category = newMatchingCategory();
+    form.content.categories.push(category);
+}
+function removeMatchingCategory(index) {
+    if (form.content.categories.length <= 1) return;
+    const [category] = form.content.categories.splice(index, 1);
+    form.content.rows.forEach((row) => {
+        row.category_ids = row.category_ids.filter((id) => id !== category.id);
+    });
+}
+function addMatchingRow() {
+    form.content.rows.push(newMatchingRow());
 }
 function normalizeHeadingTableContent(content, expectations = []) {
     content.columns = (content.columns?.length ? content.columns : [newHeadingCell()]).map((cell, index) => ({
@@ -485,7 +526,7 @@ function save() {
         delete content.image_label_layout;
         delete content.show_solutions;
     }
-    if (!["checkbox", "image_matching", "image_labeling"].includes(form.task_type)) {
+    if (!["checkbox", "image_matching", "image_labeling", "matching_table"].includes(form.task_type)) {
         delete content.points_per_correct_answer;
         delete content.checkbox_scoring_mode;
     }
@@ -499,6 +540,7 @@ function save() {
     } else {
         delete content.subtasks;
     }
+    if (form.task_type === "matching_table") delete content.columns;
     if (!usesImages(form.task_type)) payload.images = [];
     else
         payload.images = payload.images
@@ -723,6 +765,7 @@ function save() {
                             <div
                                 v-if="
                                     usesOptions(form.task_type) ||
+                                    form.task_type === 'matching_table' ||
                                     ['image_matching', 'image_labeling', 'image_answer_table'].includes(form.task_type)
                                 "
                                 class="mt-4"
@@ -735,7 +778,7 @@ function save() {
                                 </h3>
                                 <div
                                     v-if="
-                                        ['checkbox', 'image_matching', 'image_labeling'].includes(
+                                        ['checkbox', 'image_matching', 'image_labeling', 'matching_table'].includes(
                                             form.task_type,
                                         )
                                     "
@@ -759,22 +802,21 @@ function save() {
                                         step="1"
                                         required
                                     /><template
-                                        v-if="form.task_type === 'checkbox'"
+                                        v-if="form.task_type === 'checkbox' || form.task_type === 'matching_table'"
                                         ><label
                                             class="form-label mt-3"
                                             for="assessment-task-checkbox-scoring-mode"
                                             >{{
-                                                de.assessmentTaskCheckboxScoringMode
+                                                form.task_type === 'matching_table'
+                                                    ? de.assessmentTaskMatchingScoringMode
+                                                    : de.assessmentTaskCheckboxScoringMode
                                             }}</label
                                         ><select
-                                            id="assessment-task-checkbox-scoring-mode"
-                                            v-model="
-                                                form.content
-                                                    .checkbox_scoring_mode
-                                            "
+                                            :id="form.task_type === 'matching_table' ? 'assessment-task-matching-scoring-mode' : 'assessment-task-checkbox-scoring-mode'"
+                                            v-model="form.content[form.task_type === 'matching_table' ? 'matching_scoring_mode' : 'checkbox_scoring_mode']"
                                             class="form-select"
                                         >
-                                            <option value="correct_states">
+                                            <template v-if="form.task_type === 'checkbox'"><option value="correct_states">
                                                 {{
                                                     de.assessmentTaskCheckboxScoringCorrectStates
                                                 }}
@@ -783,7 +825,8 @@ function save() {
                                                 {{
                                                     de.assessmentTaskCheckboxScoringCorrectSelections
                                                 }}
-                                            </option>
+                                            </option></template>
+                                            <template v-else><option value="per_category">{{ de.assessmentTaskMatchingScoringPerCategory }}</option><option value="complete_row">{{ de.assessmentTaskMatchingScoringCompleteRow }}</option></template>
                                         </select></template
                                     >
                                 </div>
@@ -844,7 +887,29 @@ function save() {
                                     {{ de.assessmentTaskAddOption }}
                                 </button>
                             </div>
-                            <div v-if="form.task_type === 'subtask_table'" class="mt-4">
+                            <div v-if="form.task_type === 'matching_table'" class="mt-4">
+                                <h3 class="h6">{{ de.assessmentTaskMatchingCategories }}</h3>
+                                <div v-for="(category, index) in form.content.categories" :key="category.id" data-matching-category class="input-group mb-2">
+                                    <input v-model="category.text" class="form-control" :placeholder="de.assessmentTaskMatchingCategory" required />
+                                    <button type="button" class="btn btn-outline-danger" @click="removeMatchingCategory(index)">×</button>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" @click="addMatchingCategory">{{ de.assessmentTaskAddCategory }}</button>
+                                <h3 class="h6">{{ de.assessmentTaskMatchingTexts }}</h3>
+                                <div v-for="(row, rowIndex) in form.content.rows" :key="row.id" data-matching-row class="border rounded p-2 mb-2">
+                                    <div class="input-group mb-2">
+                                        <input v-model="row.text" type="text" class="form-control" :placeholder="de.assessmentTaskMatchingText" required />
+                                        <button type="button" class="btn btn-outline-danger" @click="removeAt(form.content.rows, rowIndex)">×</button>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <label v-for="category in form.content.categories" :key="category.id" class="form-check">
+                                            <input v-model="row.category_ids" class="form-check-input" type="checkbox" :value="category.id" />
+                                            <span class="form-check-label">{{ category.text || de.assessmentTaskMatchingCategory }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="addMatchingRow">{{ de.assessmentTaskAddMatchingText }}</button>
+                            </div>
+                            <div v-else-if="form.task_type === 'subtask_table'" class="mt-4">
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-6">
                                         <label class="form-check"><input v-model="form.content.show_solutions" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label>
@@ -941,7 +1006,7 @@ function save() {
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="addHeadingRow">{{ de.assessmentTaskAddHeadingRow }}</button>
                             </div>
-                            <div v-else-if="usesTable(form.task_type) && form.task_type !== 'image_answer_table'" class="mt-4">
+                            <div v-else-if="usesTable(form.task_type) && !['image_answer_table', 'matching_table'].includes(form.task_type)" class="mt-4">
                                 <h3 class="h6">
                                     {{ de.assessmentTaskColumns }}
                                 </h3>

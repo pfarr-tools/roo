@@ -192,6 +192,35 @@ it('stores image matching selections and synchronizes their points', function ()
     expect(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('2.00');
 });
 
+it('stores matching table selections and synchronizes category points', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Zuordnungstabelle',
+        'task_type' => 'matching_table',
+        'content' => [
+            'points_per_correct_answer' => 2,
+            'matching_scoring_mode' => 'per_category',
+            'categories' => [['id' => 'c1', 'text' => 'Wahr'], ['id' => 'c2', 'text' => 'Falsch']],
+            'rows' => [['id' => 'r1', 'text' => 'Aussage', 'category_ids' => ['c1', 'c2']]],
+        ],
+    ]));
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $task, [
+        'options' => [
+            ['id' => 'r1:c1', 'selected' => true],
+            ['id' => 'r1:c2', 'selected' => false],
+        ],
+        'items' => [],
+        'extra_points' => 0,
+    ]);
+
+    expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['r1:c1' => true, 'r1:c2' => false])
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('2.00');
+});
+
 it('exposes checkbox definitions and saved selections in evaluation props', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     AssessmentTask::withoutEvents(fn () => $fixture['task']->update([

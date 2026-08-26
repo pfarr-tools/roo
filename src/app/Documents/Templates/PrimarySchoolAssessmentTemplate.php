@@ -176,11 +176,13 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addImageCredits($section, $content);
         } elseif (($task['task_type'] ?? '') === 'heading_table') {
             $this->addHeadingTable($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'matching_table') {
+            $this->addMatchingTable($section, $content);
         } elseif (! empty($content['reading_text'])) {
             $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -452,6 +454,35 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             }
         }
         $section->addTextBreak(1);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addMatchingTable(Section $section, array $content): void
+    {
+        $categories = collect($content['categories'] ?? [])->filter(fn ($category): bool => is_array($category))->values();
+        $rows = collect($content['rows'] ?? [])->filter(fn ($row): bool => is_array($row))->values();
+        if ($categories->isEmpty() || $rows->isEmpty()) {
+            return;
+        }
+
+        $tableWidth = self::CONTENT_WIDTH_MM * 56.6929;
+        $categoryWidth = min(1050, max(650, (int) round($tableWidth / max(4, $categories->count() + 1))));
+        $textWidth = max(1, (int) round($tableWidth - $categoryWidth * $categories->count()));
+        $table = $section->addTable(['width' => $tableWidth, 'layout' => 'fixed', 'borderSize' => 4, 'borderColor' => '000000', 'cellMargin' => 80]);
+
+        $header = $table->addRow();
+        $header->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+        foreach ($categories as $category) {
+            $header->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'center'])->addText((string) ($category['text'] ?? ''), ['name' => self::ATKINSON, 'size' => 14], ['align' => 'center']);
+        }
+
+        foreach ($rows as $row) {
+            $tableRow = $table->addRow();
+            $tableRow->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top'])->addText((string) ($row['text'] ?? ''), ['name' => self::ATKINSON, 'size' => 14]);
+            foreach ($categories as $category) {
+                $tableRow->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+            }
+        }
     }
 
     private function addHeadingTableCell(Cell $cell, array $definition, int $lines, bool $header, bool $lineated): void

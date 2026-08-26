@@ -315,6 +315,38 @@ it('rendert eine Überschriften-Tabelle mit Kopfzeile, Zeilenkopf und Lineatur',
         ->and($contentXml)->toContain('fo:border-bottom');
 });
 
+it('rendert eine Zuordnungstabelle mit breiter Textspalte und Kategorien', function () {
+    $document = new AssessmentDocument('LSE Zuordnungstabelle', [[
+        'title' => 'Zuordnung',
+        'task_type' => 'matching_table',
+        'max_points' => 2,
+        'content' => [
+            'prompt' => 'Ordne die Aussagen zu.',
+            'categories' => [
+                ['id' => 'c1', 'text' => 'Wahr'],
+                ['id' => 'c2', 'text' => 'Falsch'],
+            ],
+            'rows' => [
+                ['id' => 'r1', 'text' => 'Die Aussage.', 'category_ids' => ['c1']],
+            ],
+        ],
+    ]], '4');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-matching-table-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($contentXml)->toContain('Wahr')
+        ->and($contentXml)->toContain('Falsch')
+        ->and($contentXml)->toContain('Die Aussage.')
+        ->and(substr_count($contentXml, 'table:table-column'))->toBeGreaterThanOrEqual(3);
+});
+
 it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildbeschriftung', [[

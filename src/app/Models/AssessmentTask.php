@@ -87,6 +87,16 @@ class AssessmentTask extends Model
         $expectations = $this->relationLoaded('expectations') ? $this->expectations : $this->expectations()->get();
         $manualPoints = $expectations->sum(fn ($expectation): int => (int) $expectation->points * (int) ($expectation->repetitions ?: 1));
 
+        if ($this->task_type === 'matching_table') {
+            $points = $this->pointsPerCorrectAnswer();
+            $rows = collect($this->content['rows'] ?? []);
+            $relations = $rows->sum(fn (array $row): int => count($row['category_ids'] ?? []));
+
+            return (int) (($this->content['matching_scoring_mode'] ?? 'per_category') === 'complete_row'
+                ? $rows->count() * $points
+                : $relations * $points);
+        }
+
         if (! in_array($this->task_type, ['checkbox', 'image_matching', 'image_labeling'], true)) {
             return $manualPoints ?: $this->max_points;
         }

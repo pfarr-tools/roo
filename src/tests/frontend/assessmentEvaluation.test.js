@@ -435,6 +435,59 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('uses one temporary expectation per correct category in matching tables', () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 25,
+                title: 'Aussagen zuordnen',
+                task_type: 'matching_table',
+                max_points: 4,
+                content: {
+                    points_per_correct_answer: 2,
+                    matching_scoring_mode: 'per_category',
+                    categories: [{ id: 'c1', text: 'Wahr' }, { id: 'c2', text: 'Falsch' }],
+                    rows: [{ id: 'r1', text: 'Die Aussage.', category_ids: ['c1', 'c2'] }],
+                },
+                expectations: [],
+            },
+            fragments: [{ id: 45, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.textContent).toContain('Du hast Die Aussage. korrekt zur Kategorie Wahr zugeordnet. (2 VP)')
+        expect(root.textContent).toContain('Du hast Die Aussage. korrekt zur Kategorie Falsch zugeordnet. (2 VP)')
+        unmount()
+    })
+
+    it('combines matching table categories into one complete-row expectation', () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 26,
+                title: 'Aussagen zuordnen',
+                task_type: 'matching_table',
+                max_points: 2,
+                content: {
+                    points_per_correct_answer: 2,
+                    matching_scoring_mode: 'complete_row',
+                    categories: [{ id: 'c1', text: 'Wahr' }, { id: 'c2', text: 'Falsch' }, { id: 'c3', text: 'Unsicher' }],
+                    rows: [{ id: 'r1', text: 'Die Aussage.', category_ids: ['c1', 'c2', 'c3'] }],
+                },
+                expectations: [],
+            },
+            fragments: [{ id: 46, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(1)
+        expect(root.textContent).toContain('Du hast Die Aussage. korrekt den Kategorien Wahr, Falsch und Unsicher zugeordnet. (2 VP)')
+        unmount()
+    })
+
     it('shows live assigned and maximum points for checkbox evaluation', async () => {
         const { root, unmount } = mount(TaskEvaluation, {
             group,
