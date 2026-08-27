@@ -362,6 +362,31 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('renders one generic expectation row per cloze blank', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 28,
+                title: 'Lückentext',
+                task_type: 'cloze',
+                max_points: 5,
+                content: { prompt: 'Die [Kirche] steht neben dem [Rathaus].' },
+                expectations: [
+                    { id: 41, text: 'Du hast korrekt ausgefüllt: Kirche', points: 2, repetitions: 1 },
+                    { id: 42, text: 'Du hast korrekt ausgefüllt: Rathaus', points: 3, repetitions: 1 },
+                ],
+            },
+            fragments: [{ id: 49, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        expect(root.querySelectorAll('[data-testid="expectation-row"]')).toHaveLength(2)
+        expect(root.textContent).toContain('Du hast korrekt ausgefüllt: Kirche (2 VP)')
+        expect(root.textContent).toContain('Du hast korrekt ausgefüllt: Rathaus (3 VP)')
+        unmount()
+    })
+
     it('evaluates sorting sentences from entered positions and saves the sequence', async () => {
         const { root, unmount } = mount(TaskEvaluation, {
             group,

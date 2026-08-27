@@ -15,6 +15,7 @@ enum AssessmentTaskType: string
     case HEADING_TABLE = 'heading_table';
     case SENTENCE_BUILDER = 'sentence_builder';
     case SORTING = 'sorting';
+    case CLOZE = 'cloze';
 
     public static function values(): array
     {

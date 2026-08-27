@@ -80,6 +80,7 @@ it("keeps Textaufgabe first and sorts the remaining task types", async () => {
         "Ankreuzaufgabe",
         "Bild beschriften",
         "Gestaltungsaufgabe",
+        "Lückentext",
         "Satz aus vorgegebenen Worten",
         "Sätze sortieren",
         "Tabelle ausfüllen",
@@ -137,6 +138,39 @@ it("configures a drawing task with a height or one optional image", async () => 
     expect(root.querySelector("#assessment-task-drawing-height")).toBeNull();
     expect(root.querySelector('[data-testid="drawing-options"]').textContent).toContain("Umrandung");
     expect(Array.from(root.querySelectorAll("button")).filter((button) => button.textContent.includes("Bibliothek"))).toHaveLength(0);
+    unmount();
+});
+
+it("derives cloze blanks and submits their integer points", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Lückentext"))
+        .click();
+    await nextTick();
+
+    const prompt = root.querySelector("#assessment-task-prompt");
+    prompt.value = "Die [Kirche] steht neben dem [Rathaus].";
+    prompt.dispatchEvent(new Event("input", { bubbles: true }));
+    await nextTick();
+
+    expect(root.querySelectorAll("[data-cloze-blank]")).toHaveLength(2);
+    expect(root.textContent).toContain("Kirche");
+    expect(root.textContent).toContain("Rathaus");
+    expect(root.querySelector("#assessment-task-cloze-points-0")).not.toBeNull();
+
+    root.querySelector("#assessment-task-cloze-points-0").value = "2";
+    root.querySelector("#assessment-task-cloze-points-0").dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.split_blank_words).toBe(false);
+    expect(transformedPayload.content.blanks).toEqual([
+        { id: "blank-1", solution: "Kirche", points: 2 },
+        { id: "blank-2", solution: "Rathaus", points: 1 },
+    ]);
     unmount();
 });
 

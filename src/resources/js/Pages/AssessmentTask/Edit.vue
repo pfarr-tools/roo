@@ -88,6 +88,11 @@ const newSortingQuestion = () => ({
     id: `sentence-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     label: "",
 });
+const newClozeBlank = (index, solution = "", points = 1) => ({
+    id: `blank-${index + 1}`,
+    solution,
+    points: Number(points) || 1,
+});
 const emptyContent = () => ({
     prompt: "",
     lines: 5,
@@ -111,6 +116,8 @@ const emptyContent = () => ({
     points_per_sentence: 1,
     height_cm: 8,
     bordered: true,
+    split_blank_words: false,
+    blanks: [],
 });
 const form = useForm({
     title: "",
@@ -154,6 +161,11 @@ function resetForm() {
         }));
         content.points_per_sentence = Number(content.points_per_sentence ?? 1);
     }
+    if (props.task?.task_type === "cloze") normalizeClozeContent(content);
+    const clozeBlankIds = new Set((content.blanks ?? []).map((blank) => blank.id));
+    const savedExpectations = (props.task?.expectations ?? []).filter(
+        (expectation) => props.task?.task_type !== "cloze" || !clozeBlankIds.has(expectation.subtask_key),
+    );
     form.defaults({
         title: props.task?.title ?? "",
         task_type: props.task?.task_type ?? "free_text",
@@ -174,8 +186,8 @@ function resetForm() {
             solution: label.solution ?? "",
             lines: label.lines ?? 1,
         })),
-        expectations: props.task?.expectations?.length
-            ? props.task.expectations.map((expectation) => ({
+        expectations: savedExpectations.length
+            ? savedExpectations.map((expectation) => ({
                   text: expectation.text ?? "",
                   points: expectation.points ?? 1,
                   repetitions: expectation.repetitions ?? 1,
@@ -241,7 +253,23 @@ function selectType(value) {
         }));
         form.content.points_per_sentence = Number(form.content.points_per_sentence ?? 1);
     }
+    if (value === "cloze") normalizeClozeContent(form.content);
     editorTab.value = "content";
+}
+function normalizeClozeContent(content) {
+    const previous = new Map((content.blanks ?? []).map((blank) => [blank.id, blank]));
+    const blanks = [];
+    const expression = /\[([^\[\]]+)\]/gu;
+    let match;
+    while ((match = expression.exec(String(content.prompt ?? ""))) !== null) {
+        const id = `blank-${blanks.length + 1}`;
+        const old = previous.get(id);
+        blanks.push(newClozeBlank(blanks.length, match[1].trim(), old?.points ?? 1));
+    }
+    content.blanks = blanks;
+}
+function syncClozeBlanks() {
+    normalizeClozeContent(form.content);
 }
 function normalizeMatchingTableContent(content) {
     content.categories = (content.categories?.length ? content.categories : [newMatchingCategory()]).map((category, index) => ({
@@ -460,18 +488,25 @@ function addExpectation() {
     form.expectations.push(emptyExpectation());
 }
 function totalPoints() {
-    return form.expectations.reduce(
+    const manualPoints = form.expectations.reduce(
         (total, expectation) =>
             total +
             (Number(expectation.points) || 0) *
                 (Number(expectation.repetitions) || 0),
         0,
     );
+    if (form.task_type !== "cloze") return manualPoints;
+
+    return manualPoints + (form.content.blanks ?? []).reduce(
+        (total, blank) => total + (Number(blank.points) || 0),
+        0,
+    );
 }
 function expectationCount() {
-    return form.expectations.filter(
+    const manualCount = form.expectations.filter(
         (expectation) => String(expectation.text || "").trim() !== "",
     ).length;
+    return manualCount + (form.task_type === "cloze" ? (form.content.blanks ?? []).length : 0);
 }
 function setSelectedCompetency(competency) {
     const presentation = competency.competency_presentation || {};
@@ -560,7 +595,7 @@ function save() {
         }));
     }
     if (!["free_text", "image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
-    if (!['image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'].includes(form.task_type)) {
+    if (!['image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'cloze'].includes(form.task_type)) {
         delete content.image_label_width_cm;
         delete content.image_label_layout;
         delete content.show_solutions;
@@ -604,8 +639,12 @@ function save() {
         delete content.height_cm;
         delete content.bordered;
     }
+    if (form.task_type !== "cloze") {
+        delete content.blanks;
+        delete content.split_blank_words;
+    }
     if (
-        !["free_text", "sentence_builder", "subtask_table", "image_answer_table", "heading_table"].includes(
+        !["free_text", "sentence_builder", "subtask_table", "image_answer_table", "heading_table", "cloze"].includes(
             form.task_type,
         )
     ) {
@@ -768,8 +807,21 @@ function save() {
                                 v-model="form.content.prompt"
                                 class="form-control"
                                 rows="4"
+                                @input="form.task_type === 'cloze' && syncClozeBlanks()"
                                 required
                             ></textarea>
+                            <div v-if="form.task_type === 'cloze'" class="mt-3" data-testid="cloze-options">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4"><label class="form-check"><input v-model="form.content.show_solutions" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label></div>
+                                    <div class="col-md-4"><label class="form-check"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label></div>
+                                    <div class="col-md-4"><label class="form-check"><input v-model="form.content.split_blank_words" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskClozeSplitWords }}</span></label></div>
+                                </div>
+                                <h3 class="h6">{{ de.assessmentTaskCloze }}</h3>
+                                <div v-for="(blank, index) in form.content.blanks" :key="blank.id" class="row g-2 align-items-center mb-2" data-cloze-blank>
+                                    <div class="col"><span class="form-control-plaintext">{{ blank.solution }}</span></div>
+                                    <div class="col-auto"><label class="visually-hidden" :for="`assessment-task-cloze-points-${index}`">{{ de.assessmentTaskPoints }}</label><input :id="`assessment-task-cloze-points-${index}`" v-model.number="blank.points" type="number" min="1" max="10000" step="1" class="form-control" :placeholder="de.assessmentTaskPoints" required /></div>
+                                </div>
+                            </div>
                             <div v-if="form.task_type === 'free_text'" class="mt-3" style="order: 2">
                                 <label class="form-label" for="assessment-task-optional-reading-text">{{ de.assessmentTaskOptionalReadingText }}</label>
                                 <textarea id="assessment-task-optional-reading-text" v-model="form.content.optional_reading_text" class="form-control" rows="8"></textarea>

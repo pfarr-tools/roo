@@ -322,6 +322,46 @@ it('speichert eine Gestaltungsaufgabe mit manuellen Erwartungen', function () {
         ->and($task->maximumPoints())->toBe(2);
 });
 
+it('speichert Lückentexte mit automatisch synchronisierten Erwartungen', function () {
+    $organization = Organization::create(['name' => 'Lückentext Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Lückentextschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann ergänzen']);
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Lückentext',
+        'task_type' => 'cloze',
+        'content' => [
+            'prompt' => 'Die [Kirche] steht neben dem [Rathaus].',
+            'show_solutions' => true,
+            'lineated' => true,
+            'split_blank_words' => false,
+            'blanks' => [
+                ['id' => 'blank-1', 'solution' => 'Kirche', 'points' => 2],
+                ['id' => 'blank-2', 'solution' => 'Rathaus', 'points' => 3],
+            ],
+        ],
+        'expectations' => [],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->task_type)->toBe('cloze')
+        ->and($task->content['blanks'])->toBe([
+            ['id' => 'blank-1', 'solution' => 'Kirche', 'points' => 2],
+            ['id' => 'blank-2', 'solution' => 'Rathaus', 'points' => 3],
+        ])
+        ->and($task->expectations)->toHaveCount(2)
+        ->and($task->expectations[0]->text)->toBe('Du hast korrekt ausgefüllt: Kirche')
+        ->and((int) $task->expectations[1]->points)->toBe(3)
+        ->and($task->maximumPoints())->toBe(5);
+});
+
 it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', function () {
     $organization = Organization::create(['name' => 'Überschriftentabellen Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);

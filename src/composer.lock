@@ -3592,12 +3592,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/pfarr-tools/roo-ruling.git",
-                "reference": "a20638b03af2df8f5b472a873a5374bebdc1aa3e"
+                "reference": "a69c5e465ebf817f78ae5ca3ad926118febe12fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pfarr-tools/roo-ruling/zipball/a20638b03af2df8f5b472a873a5374bebdc1aa3e",
-                "reference": "a20638b03af2df8f5b472a873a5374bebdc1aa3e",
+                "url": "https://api.github.com/repos/pfarr-tools/roo-ruling/zipball/a69c5e465ebf817f78ae5ca3ad926118febe12fa",
+                "reference": "a69c5e465ebf817f78ae5ca3ad926118febe12fa",
                 "shasum": ""
             },
             "require": {
@@ -3623,7 +3623,7 @@
                 "issues": "https://github.com/pfarr-tools/roo-ruling/issues",
                 "source": "https://github.com/pfarr-tools/roo-ruling/tree/main"
             },
-            "time": "2026-08-25T13:05:05+00:00"
+            "time": "2026-08-27T16:25:54+00:00"
         },
         {
             "name": "php-http/discovery",

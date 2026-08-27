@@ -207,6 +207,76 @@ it('rendert Freitextbilder in maximal drei Spalten und den optionalen Lesetext d
         ->and($styles)->toContain('14pt');
 });
 
+it('rendert Lückentexte mit estimator-basierten Unterstrichen', function () {
+    $document = new AssessmentDocument('Lückentext', [[
+        'title' => 'Fülle den Text aus',
+        'task_type' => 'cloze',
+        'max_points' => 3,
+        'content' => [
+            'prompt' => 'Die [Kirche] steht neben dem [Rathaus].',
+            'show_solutions' => true,
+            'lineated' => false,
+            'split_blank_words' => false,
+            'blanks' => [
+                ['id' => 'blank-1', 'solution' => 'Kirche', 'points' => 1],
+                ['id' => 'blank-2', 'solution' => 'Rathaus', 'points' => 2],
+            ],
+        ],
+    ]], '2', []);
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-cloze-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = (string) $archive->getFromName('content.xml');
+    $styles = (string) $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Fülle den Text aus')
+        ->and($content)->toContain('Lösungsvorschläge')
+        ->and($content)->toContain('Kirche')
+        ->and($content)->toContain('Rathaus')
+        ->and($styles)->toContain('fo:border="0.05cm solid #000000"')
+        ->and($styles)->toContain('fo:padding="0.2cm"')
+        ->and($content)->toContain('Die')
+        ->and($content)->toContain('steht neben dem')
+        ->and($content)->not->toContain('[Kirche]')
+        ->and($content)->not->toContain('[Rathaus]')
+        ->and($content)->toContain('_');
+});
+
+it('bettet bei lineierten Lücken ein PNG je Lücke mit der Ruling-Bandhöhe ein', function () {
+    $document = new AssessmentDocument('Lineierter Lückentext', [[
+        'title' => 'Ergänze den Satz',
+        'task_type' => 'cloze',
+        'max_points' => 1,
+        'content' => [
+            'prompt' => 'Gott ist [Liebe].',
+            'lineated' => true,
+            'blanks' => [['id' => 'blank-1', 'solution' => 'Liebe', 'points' => 1]],
+        ],
+    ]], '2', []);
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-cloze-ruling-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = (string) $archive->getFromName('content.xml');
+    $pictureNames = array_values(array_filter($archive->numFiles ? range(0, $archive->numFiles - 1) : [], fn (int $index): bool => str_ends_with($archive->getNameIndex($index), '.png') && ! str_contains($archive->getNameIndex($index), 'assessment-task')));
+    $pictureData = $pictureNames === [] ? '' : (string) $archive->getFromName($archive->getNameIndex($pictureNames[0]));
+    $pictureSize = $pictureData === '' ? false : getimagesizefromstring($pictureData);
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Pictures/section_image1.png')
+        ->and($pictureNames)->not->toBeEmpty()
+        ->and($pictureSize[1] ?? 0)->toBeGreaterThanOrEqual(118)
+        ->and($content)->toContain('fo:line-height="1.20cm"');
+});
+
 it('rendert die Freitext-Bewertungsskala nach dem optionalen Lesetext', function () {
     $render = function (string $scale): string {
         $document = new AssessmentDocument('LSE Bewertungsskala', [[
@@ -367,6 +437,7 @@ it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalt
     $archive = new ZipArchive;
     $archive->open($path);
     $contentXml = $archive->getFromName('content.xml');
+    $stylesXml = $archive->getFromName('content.xml');
     $stylesXml = $archive->getFromName('styles.xml');
     $archive->close();
     unlink($path);
@@ -446,6 +517,7 @@ it('rendert eine Tabelle mit Bildern und Lösungsfeldern mit gewählter Bildspal
     $archive = new ZipArchive;
     $archive->open($path);
     $contentXml = $archive->getFromName('content.xml');
+    $stylesXml = $archive->getFromName('styles.xml');
     $archive->close();
     unlink($path);
 
@@ -587,6 +659,7 @@ it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $archive = new ZipArchive;
     $archive->open($path);
     $contentXml = $archive->getFromName('content.xml');
+    $stylesXml = $archive->getFromName('styles.xml');
     $archive->close();
     unlink($path);
 
@@ -606,7 +679,11 @@ it('rendert Bildbeschriftung mit Lösungstexten', function () {
     $image = $imageFrame?->getElementsByTagNameNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'image')->item(0);
 
     expect($contentXml)->toContain('Lösungstexte')
-        ->and($contentXml)->toContain('Stamm · Zweig · Ast')
+        ->and($contentXml)->toContain('Stamm')
+        ->and($contentXml)->toContain('Zweig')
+        ->and($contentXml)->toContain('Ast')
+        ->and($stylesXml)->toContain('fo:border="0.05cm solid #000000"')
+        ->and($stylesXml)->toContain('fo:padding="0.2cm"')
         ->and($contentXml)->toContain('ROO_IMAGE_LABELING_label-1')
         ->and($contentXml)->toContain('assessmentImageLabelingCanvas_label_1')
         ->and($contentXml)->toContain('assessmentImageLabelingLine0')

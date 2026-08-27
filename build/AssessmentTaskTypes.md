@@ -16,4 +16,5 @@ Die folgenden Typen von Prüfungsaufgaben werden von Roo unterstützt
 - Vorgegebene Worte zu einem Satz zusammensetzen.
 - Sätze sortieren durch nummerieren. Optional jeweils noch ein Textfeld dazu.
 - Lesetext mit einer oderer mehreren Freitextfragen mit oder ohne Lineatur
+- Lückentext mit automatisch bewertbaren Lücken in eckigen Klammern, optionaler Lösungsliste, Lineatur und Einzelwort-Lücken
 

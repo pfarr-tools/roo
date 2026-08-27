@@ -5,12 +5,16 @@ namespace App\Documents\Templates;
 use App\Documents\AssessmentDocument;
 use App\Documents\Document;
 use App\Documents\DocumentTemplate;
+use App\Services\Assessment\ClozeTextParser;
 use InvalidArgumentException;
+use PfarrTools\RooRuling\HandwritingSpaceEstimator;
+use PfarrTools\RooRuling\Image\PngRulingRenderer;
 use PfarrTools\RooRuling\PhpWord\RulingRenderer;
 use PfarrTools\RooRuling\RulingDefinition;
 use PfarrTools\RooRuling\RulingPreset;
-use PhpOffice\PhpWord\Element\Header;
+use PhpOffice\PhpWord\Element\AbstractContainer;
 use PhpOffice\PhpWord\Element\Cell;
+use PhpOffice\PhpWord\Element\Header;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\PhpWord;
@@ -42,6 +46,10 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             'name' => self::COMIC,
             'size' => 24,
             'bold' => true,
+        ]);
+        $word->addFontStyle('assessmentSolution', [
+            'name' => self::ATKINSON,
+            'size' => 14,
         ]);
         $word->addParagraphStyle('imageMatchingSolution', [
             'alignment' => 'center',
@@ -156,7 +164,9 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $markerId = (string) ($task['task_id'] ?? $number);
         $section->addText('ROO_TASK_START_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $points = (int) ($task['max_points'] ?? 0);
-        $instruction = (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
+        $instruction = ($task['task_type'] ?? '') === 'cloze'
+            ? (string) ($task['title'] ?? '')
+            : (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
         $section->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => self::COMIC, 'size' => 14], ['spaceBefore' => 180, 'spaceAfter' => 120]);
 
         $content = is_array($task['content'] ?? null) ? $task['content'] : [];
@@ -190,9 +200,11 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addSortingTask($section, $content);
         } elseif (($task['task_type'] ?? '') === 'sentence_builder') {
             $this->addSentenceBuilderTask($section, $content, $gradeLevel);
+        } elseif (($task['task_type'] ?? '') === 'cloze') {
+            $this->addClozeTask($section, $content, $gradeLevel);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'drawing', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting', 'sentence_builder'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'drawing', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting', 'sentence_builder', 'cloze'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -335,6 +347,77 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     }
 
     /** @param array<string, mixed> $content */
+    private function addClozeTask(Section $section, array $content, string $gradeLevel): void
+    {
+        $parsed = app(ClozeTextParser::class)->parse((string) ($content['prompt'] ?? ''), is_array($content['blanks'] ?? null) ? $content['blanks'] : []);
+        if (! empty($content['show_solutions'])) {
+            $solutions = collect($parsed['blanks'])->pluck('solution')->filter()->values();
+            if ($solutions->isNotEmpty()) {
+                $this->addSolutionSuggestions($section, $solutions->all());
+            }
+        }
+
+        $estimator = new HandwritingSpaceEstimator;
+        $ruling = $this->rulingForGrade($gradeLevel)->definition();
+        $grade = $this->gradeNumber($gradeLevel);
+        $lineHeight = ! empty($content['lineated'])
+            ? max(1, (($ruling->bandHeightMm() + 2) * 72 / 25.4) / 14)
+            : 1;
+        $run = $section->addTextRun(['lineHeight' => $lineHeight, 'spaceBefore' => 0, 'spaceAfter' => 120]);
+        foreach ($parsed['fragments'] as $fragment) {
+            if ($fragment['type'] === 'text') {
+                $run->addText((string) $fragment['text'], ['name' => self::ATKINSON, 'size' => 14]);
+
+                continue;
+            }
+
+            $solution = (string) ($fragment['solution'] ?? '');
+            $words = ! empty($content['split_blank_words']) ? ($fragment['words'] ?? [$solution]) : [$solution];
+            foreach (array_values($words) as $wordIndex => $word) {
+                $word = trim((string) $word);
+                $widthMm = $estimator->estimateWidthMm($word, $grade);
+                if (! empty($content['lineated'])) {
+                    $png = (new PngRulingRenderer)->render($ruling, $widthMm);
+                    $run->addImage($png, [
+                        'width' => max(1, (int) round($widthMm * 3.77952756)),
+                        'height' => max(1, (int) round($ruling->bandHeightMm() * 3.77952756)),
+                    ]);
+                } else {
+                    $run->addText(str_repeat('_', max(3, (int) ceil($widthMm / 3))), ['name' => self::ATKINSON, 'size' => 14]);
+                }
+                if ($wordIndex < count($words) - 1) {
+                    $run->addText(' ', ['name' => self::ATKINSON, 'size' => 14]);
+                }
+            }
+        }
+    }
+
+    private function gradeNumber(string $gradeLevel): int
+    {
+        preg_match('/\d+/', $gradeLevel, $match);
+
+        return max(1, (int) ($match[0] ?? 4));
+    }
+
+    /** @param list<string> $solutions */
+    private function addSolutionSuggestions(AbstractContainer $container, array $solutions, string $heading = 'Lösungsvorschläge'): void
+    {
+        $solutions = collect($solutions)->map(fn (string $solution): string => trim($solution))->filter()->values();
+        if ($solutions->isEmpty()) {
+            return;
+        }
+
+        $container->addText($heading, ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+        $run = $container->addTextRun(['spaceBefore' => 0, 'spaceAfter' => 120]);
+        foreach ($solutions as $index => $solution) {
+            if ($index > 0) {
+                $run->addText(' · ', ['name' => self::ATKINSON, 'size' => 14]);
+            }
+            $run->addText($solution, 'assessmentSolution');
+        }
+    }
+
+    /** @param array<string, mixed> $content */
     private function addFreeTextRating(Section $section, array $content): void
     {
         $scale = $content['rating_scale'] ?? null;
@@ -412,8 +495,14 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                 'vMerge' => $rowIndex === 0 ? CellStyle::VMERGE_RESTART : CellStyle::VMERGE_CONTINUE,
             ]);
             if ($rowIndex === 0) {
-                foreach ($solutions as $solution) {
-                    $middle->addText($solution, ['name' => self::ATKINSON, 'size' => 14], 'imageMatchingSolution');
+                if ($solutions !== []) {
+                    $run = $middle->addTextRun('imageMatchingSolution');
+                    foreach ($solutions as $index => $solution) {
+                        if ($index > 0) {
+                            $run->addText(' · ', ['name' => self::ATKINSON, 'size' => 14]);
+                        }
+                        $run->addText($solution, 'assessmentSolution');
+                    }
                 }
             }
             $this->addImageMatchingCell($row->addCell($imageWidthTwips, ['borderSize' => 0]), $images->get($rowIndex * 2 + 1), $widthPx, $imageWidthTwips);
@@ -453,8 +542,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             return;
         }
 
-        $section->addText('Lösungstexte', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
-        $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14, 'bold' => false], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+        $this->addSolutionSuggestions($section, $solutions->all(), 'Lösungstexte');
     }
 
     /** @param array<string, mixed> $content */
@@ -521,8 +609,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         if (! empty($content['show_solutions'])) {
             $solutions = $subtasks->pluck('solution')->map(fn ($solution): string => trim((string) $solution))->filter()->values();
             if ($solutions->isNotEmpty()) {
-                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
-                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+                $this->addSolutionSuggestions($section, $solutions->all());
             }
         }
 
@@ -565,8 +652,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         if (! empty($content['show_solutions'])) {
             $solutions = $subtasks->pluck('solution')->map(fn ($solution): string => trim((string) $solution))->filter()->values();
             if ($solutions->isNotEmpty()) {
-                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
-                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+                $this->addSolutionSuggestions($section, $solutions->all());
             }
         }
 
@@ -616,8 +702,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                 ->filter()
                 ->values();
             if ($solutions->isNotEmpty()) {
-                $section->addText('Lösungsvorschläge', ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
-                $section->addText(implode(' · ', $solutions->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+                $this->addSolutionSuggestions($section, $solutions->all());
             }
         }
 

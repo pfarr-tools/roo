@@ -2,19 +2,23 @@
 
 namespace App\Services;
 
+use App\Documents\AssessmentDocument;
 use App\Documents\Document;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplateRegistry;
-use App\Documents\AssessmentDocument;
 use Com\Tecnick\Barcode\Barcode;
-use PhpOffice\PhpWord\IOFactory;
+use PfarrTools\RooRuling\PhpWord\DrawingRulingRenderer;
 use PfarrTools\RooRuling\RulingDefinition;
 use PfarrTools\RooRuling\RulingPreset;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 
 class PhpOfficeDocumentRenderer
 {
     private const IMAGE_LABELING_FLOW_CLEARANCE_CM = 0.5;
+
     private const IMAGE_LABELING_FRAME_LEFT_CM = 0.0;
+
     private const IMAGE_LABELING_FRAME_RIGHT_CM = 17.1;
 
     public function __construct(private readonly DocumentTemplateRegistry $templates) {}
@@ -31,7 +35,7 @@ class PhpOfficeDocumentRenderer
             $contents = (string) ob_get_contents();
 
             return $format === DocumentOutputFormat::ODT
-                ? $this->addOdtPageFrame($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document)
+                ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document)
                 : $contents;
         } finally {
             ob_end_clean();
@@ -51,7 +55,7 @@ class PhpOfficeDocumentRenderer
         try {
             IOFactory::createWriter($phpWord, $format->writerName())->save($temporaryPath);
             $contents = (string) file_get_contents($temporaryPath);
-            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document) : $contents);
+            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document) : $contents);
         } finally {
             unlink($temporaryPath);
         }
@@ -373,6 +377,114 @@ class PhpOfficeDocumentRenderer
         }
     }
 
+    private function patchOdtClozeLineHeights(string $contents, Document $document): string
+    {
+        if (! $document instanceof AssessmentDocument || collect($document->tasks)->where('task_type', 'cloze')->isEmpty()) {
+            return $contents;
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-cloze-height-');
+        if ($temporaryPath === false) {
+            return $contents;
+        }
+
+        try {
+            file_put_contents($temporaryPath, $contents);
+            $archive = new \ZipArchive;
+            if ($archive->open($temporaryPath) !== true) {
+                return $contents;
+            }
+            $xml = $archive->getFromName('content.xml');
+            if (! is_string($xml)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $dom = new \DOMDocument;
+            $dom->preserveWhiteSpace = true;
+            if (! $dom->loadXML($xml)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+            $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+            $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+            $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+
+            $lineHeightCm = number_format(($this->rulingForGrade($document->gradeLevel)->definition()->bandHeightMm() + 2) / 10, 2, '.', '');
+            foreach ($xpath->query('//office:automatic-styles/style:style[@style:family="paragraph"]') as $style) {
+                $styleName = $style->getAttributeNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'name');
+                $properties = $xpath->query('./style:paragraph-properties', $style)->item(0);
+                if ($properties === null || $xpath->query('//text:p[@text:style-name="'.$styleName.'"]//draw:frame[draw:image]', $dom)->length === 0) {
+                    continue;
+                }
+                $properties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:line-height', $lineHeightCm.'cm');
+            }
+
+            $archive->addFromString('content.xml', $dom->saveXML());
+            $archive->close();
+
+            return (string) file_get_contents($temporaryPath);
+        } finally {
+            unlink($temporaryPath);
+        }
+    }
+
+    private function patchOdtSolutionStyles(string $contents, Document $document): string
+    {
+        if (! $document instanceof AssessmentDocument) {
+            return $contents;
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-solution-style-');
+        if ($temporaryPath === false) {
+            return $contents;
+        }
+
+        try {
+            file_put_contents($temporaryPath, $contents);
+            $archive = new \ZipArchive;
+            if ($archive->open($temporaryPath) !== true) {
+                return $contents;
+            }
+
+            $xml = $archive->getFromName('styles.xml');
+            if (! is_string($xml)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $dom = new \DOMDocument;
+            $dom->preserveWhiteSpace = true;
+            if (! $dom->loadXML($xml)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+            $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+            $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+            foreach ($xpath->query('//office:styles/style:style[@style:family="text" and @style:name="assessmentSolution"]/style:text-properties | //office:automatic-styles/style:style[@style:family="text" and @style:name="assessmentSolution"]/style:text-properties') as $properties) {
+                $properties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:border', '0.05cm solid #000000');
+                $properties->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo:padding', '0.2cm');
+            }
+
+            $archive->addFromString('styles.xml', $dom->saveXML());
+            $archive->close();
+
+            return (string) file_get_contents($temporaryPath);
+        } finally {
+            unlink($temporaryPath);
+        }
+    }
+
     private function appendImageLabelingStyles(\DOMDocument $dom, \DOMElement $styles): void
     {
         $styleUri = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
@@ -481,9 +593,9 @@ class PhpOfficeDocumentRenderer
         }
 
         try {
-            $phpWord = new \PhpOffice\PhpWord\PhpWord;
+            $phpWord = new PhpWord;
             $section = $phpWord->addSection();
-            (new \PfarrTools\RooRuling\PhpWord\DrawingRulingRenderer)->render(
+            (new DrawingRulingRenderer)->render(
                 section: $section,
                 ruling: $ruling,
                 leftMm: 0,
@@ -491,7 +603,7 @@ class PhpOfficeDocumentRenderer
                 widthMm: $width * 10,
                 count: $count,
             );
-            \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'ODText')->save($temporaryPath);
+            IOFactory::createWriter($phpWord, 'ODText')->save($temporaryPath);
 
             $archive = new \ZipArchive;
             if ($archive->open($temporaryPath) !== true) {
