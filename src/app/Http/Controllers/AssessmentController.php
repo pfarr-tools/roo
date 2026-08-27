@@ -55,22 +55,29 @@ class AssessmentController extends Controller
         return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, $assessment, request('return_tab', 'assessments'), request('return_to', 'group')));
     }
 
-    public function download(TeachingGroup $teachingGroup, Assessment $assessment, PhpOfficeDocumentRenderer $renderer): Response
+    public function download(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, PhpOfficeDocumentRenderer $renderer): Response
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
 
         $assessment->load(['tasks.expectations', 'tasks.levels', 'tasks.images.resource']);
         $teachingGroup->loadMissing(['school', 'schoolYear']);
+        $options = $request->validate([
+            'level' => ['nullable', 'in:G,M,E'],
+            'format' => ['nullable', 'in:odt,docx'],
+            'template' => ['nullable', 'in:primary-school-lower-secondary'],
+        ]);
         $differentiated = $assessment->is_differentiated;
+        $level = $differentiated ? ($options['level'] ?? 'M') : null;
+        $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
         $title = $assessment->title;
         if ($differentiated) {
-            $title .= ' (M)';
+            $title .= " ({$level})";
         }
 
         $document = new AssessmentDocument(
             title: $title,
-            tasks: $assessment->tasks->filter(fn (AssessmentTask $task): bool => $task->levels->isEmpty() || $task->levels->contains('level', 'M'))->map(fn (AssessmentTask $task): array => [
+            tasks: $assessment->tasks->filter(fn (AssessmentTask $task): bool => $level === null || $task->levels->isEmpty() || $task->levels->contains('level', $level))->map(fn (AssessmentTask $task): array => [
                 'task_id' => (string) $task->getKey(),
                 'title' => $task->title,
                 'task_type' => $task->task_type,
@@ -82,22 +89,25 @@ class AssessmentController extends Controller
             metadata: [
                 'author' => auth()->user()?->name,
                 'assessment_id' => (string) $assessment->getKey(),
-                'level' => $differentiated ? 'M' : null,
+                'level' => $level,
                 'roo_version' => config('app.version', '0.1.0'),
                 'year' => now()->year,
                 'school' => $teachingGroup->school?->name,
                 'school_year' => $teachingGroup->schoolYear?->name,
                 'group' => $teachingGroup->name,
-                'footer_title' => $assessment->title.($differentiated ? ' (M)' : ''),
+                'footer_title' => $assessment->title.($differentiated ? " ({$level})" : ''),
                 'date' => $assessment->assessed_on?->format('d.m.Y'),
             ],
         );
-        $contents = $renderer->render($document, DocumentOutputFormat::ODT);
+        $contents = $renderer->render($document, $format);
         $filename = $this->downloadFilename($assessment->title);
+        $mimeType = $format === DocumentOutputFormat::DOCX
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/vnd.oasis.opendocument.text';
 
         return response($contents, 200, [
-            'Content-Type' => 'application/vnd.oasis.opendocument.text',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'.odt"',
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="'.$filename.'.'.$format->value.'"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
             'Pragma' => 'no-cache',
         ]);

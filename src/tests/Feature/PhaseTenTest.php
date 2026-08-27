@@ -136,6 +136,43 @@ it('lädt eine Lernstandserhebung als ODT herunter', function () {
         ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.odt"');
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store');
+
+    $docxResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download?level=M&format=docx&template=primary-school-lower-secondary")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.docx"');
+
+    expect($docxResponse->getContent())->not->toBeEmpty();
+});
+
+it('lädt bei einer differenzierten Lernstandserhebung nur das gewählte Niveau', function () {
+    $organization = Organization::create(['name' => 'Niveau Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Niveau Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann unterscheiden']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", [
+        'title' => 'LSE Niveaus',
+        'tasks' => [
+            ['title' => 'G-Aufgabe', 'max_points' => 4, 'level' => 'G', 'competency_id' => $competency->id],
+            ['title' => 'E-Aufgabe', 'max_points' => 8, 'level' => 'E', 'competency_id' => $competency->id],
+        ],
+    ])->assertRedirect();
+    $assessment = Assessment::firstOrFail();
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download?level=G")->assertOk();
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-level-download-');
+    file_put_contents($path, $response->getContent());
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('G-Aufgabe')->not->toContain('E-Aufgabe');
 });
 
 it('übernimmt Freitextbilder in den produktiven ODT-Download', function () {
