@@ -66,13 +66,38 @@ function mount(props = {}) {
     };
 }
 
+it("keeps Textaufgabe first and sorts the remaining task types", async () => {
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+
+    const typePanel = root.querySelector(".assessment-task-content");
+    const typeButtons = [...typePanel.querySelectorAll("button")];
+
+    expect(typeButtons[0].textContent).toContain("Textaufgabe");
+    expect(typePanel.querySelector('[data-testid="assessment-task-type-separator"]')).not.toBeNull();
+    expect(typeButtons.slice(1).map((button) => button.textContent.trim())).toEqual([
+        "Ankreuzaufgabe",
+        "Bild beschriften",
+        "Gestaltungsaufgabe",
+        "Satz aus vorgegebenen Worten",
+        "Sätze sortieren",
+        "Tabelle ausfüllen",
+        "Tabelle mit Bildern und Lösungsfeldern",
+        "Tabelle mit Teilaufgaben",
+        "Zuordnung zu Bildern",
+        "Zuordnungstabelle",
+    ]);
+    unmount();
+});
+
 it("shows checkbox points and keeps expectations manual", async () => {
     const { root, unmount } = mount({ method: "put" });
     root.querySelectorAll('[role="tab"]')[1].click();
     await nextTick();
     Array.from(root.querySelectorAll("button"))
         .find((button) =>
-            button.textContent.includes("Richtige Sätze ankreuzen"),
+            button.textContent.includes("Ankreuzaufgabe"),
         )
         .click();
     await nextTick();
@@ -87,6 +112,31 @@ it("shows checkbox points and keeps expectations manual", async () => {
         root.querySelector("#assessment-task-checkbox-scoring-mode").value,
     ).toBe("correct_states");
     expect(root.textContent).not.toContain("Automatische Erwartungen");
+    unmount();
+});
+
+it("configures a drawing task with a height or one optional image", async () => {
+    const { root, unmount } = mount({
+        imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],
+    });
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Gestaltungsaufgabe"))
+        .click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-drawing-height")).not.toBeNull();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bibliothek"))
+        .click();
+    await nextTick();
+    root.querySelector(".list-group button").click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-drawing-height")).toBeNull();
+    expect(root.querySelector('[data-testid="drawing-options"]').textContent).toContain("Umrandung");
+    expect(Array.from(root.querySelectorAll("button")).filter((button) => button.textContent.includes("Bibliothek"))).toHaveLength(0);
     unmount();
 });
 
@@ -304,12 +354,12 @@ it("submits image answer table rows with the selected image and width", async ()
     unmount();
 });
 
-it("shows heading table options without generic row labels", async () => {
+it("shows fill-table options without generic row labels", async () => {
     const { root, unmount } = mount();
     root.querySelectorAll('[role="tab"]')[1].click();
     await nextTick();
     Array.from(root.querySelectorAll("button"))
-        .find((button) => button.textContent.includes("Tabelle mit Überschriften"))
+        .find((button) => button.textContent.includes("Tabelle ausfüllen"))
         .click();
     await nextTick();
 

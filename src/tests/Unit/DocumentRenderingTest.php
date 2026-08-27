@@ -56,7 +56,7 @@ it('weist auf nicht registrierte Templates hin', function () {
 
 it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function () {
     $document = new AssessmentDocument('LSE Lesen', [
-        ['title' => 'Richtige Sätze ankreuzen', 'task_type' => 'checkbox', 'max_points' => 2, 'solution' => 'Nur der erste Satz.', 'content' => ['prompt' => 'Kreuze die richtigen Sätze an.', 'options' => [['text' => 'Das ist richtig.'], ['text' => 'Das ist falsch.']]]],
+        ['title' => 'Ankreuzaufgabe', 'task_type' => 'checkbox', 'max_points' => 2, 'solution' => 'Nur der erste Satz.', 'content' => ['prompt' => 'Kreuze die richtigen Sätze an.', 'options' => [['text' => 'Das ist richtig.'], ['text' => 'Das ist falsch.']]]],
         ['title' => 'Schreibe einen Satz.', 'task_type' => 'free_text', 'max_points' => 3, 'content' => ['prompt' => 'Schreibe einen Satz.', 'lines' => 3, 'lineated' => true]],
     ], '2', [
         'author' => 'Christoph Muster',
@@ -489,6 +489,42 @@ it('rendert eine Überschriften-Tabelle mit Kopfzeile, Zeilenkopf und Lineatur',
         ->and($contentXml)->toContain('Antwort')
         ->and($contentXml)->toContain('table:table-column')
         ->and($contentXml)->toContain('fo:border-bottom');
+});
+
+it('rendert Gestaltungsaufgaben als Rahmen oder vollbreites Bild', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $document = new AssessmentDocument('LSE Gestaltung', [
+        [
+            'title' => 'Rahmen',
+            'task_type' => 'drawing',
+            'max_points' => 2,
+            'content' => ['prompt' => 'Male ein Bild.', 'height_cm' => 5, 'bordered' => true],
+        ],
+        [
+            'title' => 'Bildvorlage',
+            'task_type' => 'drawing',
+            'max_points' => 2,
+            'content' => [
+                'prompt' => 'Gestalte das Bild.',
+                'bordered' => false,
+                'images' => [['path' => $image, 'copyright' => 'Roo']],
+            ],
+        ],
+    ], '4');
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-drawing-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $contentXml = $archive->getFromName('content.xml');
+    $pictures = $archive->getFromName('Pictures/roo-icon.png');
+    $archive->close();
+    unlink($path);
+
+    expect($contentXml)->toContain('style:row-height')
+        ->and($contentXml)->toContain('draw:image')
+        ->and($pictures)->not->toBeFalse();
 });
 
 it('rendert eine Zuordnungstabelle mit breiter Textspalte und Kategorien', function () {

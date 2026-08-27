@@ -25,9 +25,16 @@ const props = defineProps({
     libraryMode: { type: Boolean, default: false },
 });
 
-const taskTypes = Object.entries(de.assessmentTaskTypeLabels).map(
+const taskTypeEntries = Object.entries(de.assessmentTaskTypeLabels).map(
     ([value, label]) => ({ value, label }),
 );
+const taskTypes = [
+    taskTypeEntries.find((item) => item.value === "free_text"),
+    { separator: true },
+    ...taskTypeEntries
+        .filter((item) => item.value !== "free_text")
+        .sort((left, right) => left.label.localeCompare(right.label, "de")),
+].filter(Boolean);
 const editorTab = ref("details");
 const competencyPickerOpen = ref(false);
 const imageUploadOpen = ref(false);
@@ -102,6 +109,8 @@ const emptyContent = () => ({
     questions: [{ label: "", lines: 3 }],
     words: "",
     points_per_sentence: 1,
+    height_cm: 8,
+    bordered: true,
 });
 const form = useForm({
     title: "",
@@ -206,7 +215,6 @@ const typeLabel = (value) => de.assessmentTaskTypeLabels[value] || value;
 const usesOptions = (value) => value === "checkbox";
 const usesTable = (value) =>
     [
-        "fill_table",
         "matching_table",
         "subtask_table",
         "image_answer_table",
@@ -215,12 +223,13 @@ const usesTable = (value) =>
 const usesImages = (value) =>
     [
         "free_text",
+        "drawing",
         "image_matching",
         "image_labeling",
         "image_answer_table",
     ].includes(value);
 const usesQuestions = (value) =>
-    ["labeled_fields", "sorting"].includes(value);
+    value === "sorting";
 function selectType(value) {
     form.task_type = value;
     if (value === "heading_table") normalizeHeadingTableContent(form.content, []);
@@ -336,6 +345,7 @@ function addSubtaskExpectation(subtask) {
     subtask.expectations.push(emptyExpectation());
 }
 function addImage() {
+    if (form.task_type === "drawing" && form.images.length >= 1) return;
     const image = {
         identifier:
             "pair-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
@@ -407,7 +417,7 @@ function addLibraryImage(libraryImage) {
         preview_url: libraryImage.preview_url,
         answer: "",
     };
-    if (form.task_type === "image_labeling") form.images = [image];
+    if (["image_labeling", "drawing"].includes(form.task_type)) form.images = [image];
     else {
         form.images.push(image);
         if (form.task_type === "image_answer_table") {
@@ -590,6 +600,10 @@ function save() {
     delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
     if (form.task_type !== "sorting") delete content.points_per_sentence;
+    if (form.task_type !== "drawing") {
+        delete content.height_cm;
+        delete content.bordered;
+    }
     if (
         !["free_text", "sentence_builder", "subtask_table", "image_answer_table", "heading_table"].includes(
             form.task_type,
@@ -714,11 +728,13 @@ function save() {
                             </p>
                             <div class="row g-2">
                                 <div
-                                    v-for="item in taskTypes"
-                                    :key="item.value"
-                                    class="col-12"
-                                >
+                                v-for="item in taskTypes"
+                                :key="item.value"
+                                class="col-12"
+                            >
+                                    <hr v-if="item.separator" class="my-2" data-testid="assessment-task-type-separator" />
                                     <button
+                                        v-else
                                         type="button"
                                         class="btn w-100 text-start h-100 p-2"
                                         :class="
@@ -806,6 +822,7 @@ function save() {
                                     usesOptions(form.task_type) ||
                                     form.task_type === 'matching_table' ||
                                     ['image_matching', 'image_labeling', 'image_answer_table'].includes(form.task_type)
+                                    || form.task_type === 'drawing'
                                 "
                                 class="mt-4"
                             >
@@ -886,6 +903,16 @@ function save() {
                                         <label class="form-check mb-2"><input v-model="form.content.show_solutions" class="form-check-input" type="checkbox" /><span class="form-check-label">{{ de.assessmentTaskShowSolutions }}</span></label>
                                     </div>
                                 </div>
+                            <div v-if="form.task_type === 'drawing'" class="mt-3" data-testid="drawing-options">
+                                <div v-if="form.images.length === 0">
+                                    <label class="form-label" for="assessment-task-drawing-height">{{ de.assessmentTaskDrawingHeight }}</label>
+                                    <input id="assessment-task-drawing-height" v-model.number="form.content.height_cm" class="form-control" type="number" min="1" max="50" step="0.1" required />
+                                </div>
+                                <label v-else class="form-check">
+                                    <input v-model="form.content.bordered" class="form-check-input" type="checkbox" />
+                                    <span class="form-check-label">{{ de.assessmentTaskDrawingBorder }}</span>
+                                </label>
+                            </div>
                                 <div
                                     v-if="form.task_type === 'checkbox'"
                                     v-for="(option, index) in form.content
@@ -1221,7 +1248,7 @@ function save() {
                                 </div>
                                 <div
                                     v-for="(image, index) in form.images"
-                                    v-if="['free_text', 'image_matching'].includes(form.task_type)"
+                                    v-if="['free_text', 'image_matching', 'drawing'].includes(form.task_type)"
                                     :key="image.identifier || index"
                                     class="border rounded p-2 mb-2"
                                     draggable="true"
@@ -1305,6 +1332,7 @@ function save() {
                                 </div>
                                 <div class="d-flex gap-2">
                                     <button
+                                        v-if="form.task_type !== 'drawing' || form.images.length === 0"
                                         type="button"
                                         class="btn btn-sm btn-outline-secondary"
                                         @click="openImageUpload"
@@ -1316,6 +1344,7 @@ function save() {
                                         >{{ de.assessmentTaskUploadImage }}
                                     </button>
                                     <button
+                                        v-if="form.task_type !== 'drawing' || form.images.length === 0"
                                         type="button"
                                         class="btn btn-sm btn-outline-secondary"
                                         @click="openImageLibrary"

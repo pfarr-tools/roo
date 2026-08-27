@@ -295,6 +295,33 @@ it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', func
         ->and($task->images)->toHaveCount(1);
 });
 
+it('speichert eine Gestaltungsaufgabe mit manuellen Erwartungen', function () {
+    $organization = Organization::create(['name' => 'Gestaltungsaufgaben Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Gestaltungsschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann gestalten']);
+
+    $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Gestaltungsaufgabe',
+        'task_type' => 'drawing',
+        'content' => ['prompt' => 'Male ein Bild.', 'height_cm' => 7.5, 'bordered' => true],
+        'expectations' => [['text' => 'Das Bild enthält ein religiöses Symbol.', 'points' => 2, 'repetitions' => 1]],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $task = AssessmentTask::firstOrFail();
+    expect($task->task_type)->toBe('drawing')
+        ->and($task->content['height_cm'])->toBe(7.5)
+        ->and($task->content['bordered'])->toBeTrue()
+        ->and($task->expectations)->toHaveCount(1)
+        ->and($task->maximumPoints())->toBe(2);
+});
+
 it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', function () {
     $organization = Organization::create(['name' => 'Überschriftentabellen Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);

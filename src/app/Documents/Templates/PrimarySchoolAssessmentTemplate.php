@@ -162,6 +162,9 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $content = is_array($task['content'] ?? null) ? $task['content'] : [];
         if (($task['task_type'] ?? '') === 'checkbox') {
             $this->addCheckboxTask($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'drawing') {
+            $this->addDrawingTask($section, $content);
+            $this->addImageCredits($section, $content);
         } elseif (($task['task_type'] ?? '') === 'free_text') {
             $this->addFreeTextImages($section, $content);
             $this->addImageCredits($section, $content);
@@ -189,7 +192,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addSentenceBuilderTask($section, $content, $gradeLevel);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting', 'sentence_builder'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'drawing', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting', 'sentence_builder'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -233,6 +236,39 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                 $cell->addImage($image['path'], $style);
             }
         }
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addDrawingTask(Section $section, array $content): void
+    {
+        $image = collect($content['images'] ?? [])
+            ->first(fn ($image): bool => is_array($image) && ! empty($image['path']) && is_file($image['path']));
+        $bordered = $image !== null ? ! empty($content['bordered']) : true;
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+            'borderSize' => $bordered ? 4 : 0,
+            'borderColor' => '000000',
+        ]);
+        $heightTwips = (int) round(max(1.0, (float) ($content['height_cm'] ?? 8.0)) * 1440 / 2.54);
+        $row = $table->addRow($heightTwips, ['exactHeight' => true]);
+        $cell = $row->addCell(self::CONTENT_WIDTH_MM * 56.6929, [
+            'borderSize' => $bordered ? 4 : 0,
+            'borderColor' => '000000',
+            'valign' => 'center',
+        ]);
+        if ($image !== null) {
+            $widthPx = (int) round(self::CONTENT_WIDTH_MM * 3.77952756);
+            $style = ['width' => $widthPx, 'alignment' => 'center'];
+            $dimensions = @getimagesize($image['path']);
+            if (is_array($dimensions) && ($dimensions[0] ?? 0) > 0 && ($dimensions[1] ?? 0) > 0) {
+                $style['height'] = (int) round($widthPx * $dimensions[1] / $dimensions[0]);
+            }
+            $cell->addImage($image['path'], $style);
+        } else {
+            $cell->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+        }
+        $section->addTextBreak(1);
     }
 
     /** @param array<string, mixed> $content */

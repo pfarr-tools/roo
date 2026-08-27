@@ -5,7 +5,7 @@ namespace App\Enums;
 enum AssessmentTaskType: string
 {
     case FREE_TEXT = 'free_text';
-    case FILL_TABLE = 'fill_table';
+    case DRAWING = 'drawing';
     case CHECKBOX = 'checkbox';
     case MATCHING_TABLE = 'matching_table';
     case IMAGE_MATCHING = 'image_matching';
@@ -14,7 +14,6 @@ enum AssessmentTaskType: string
     case IMAGE_ANSWER_TABLE = 'image_answer_table';
     case HEADING_TABLE = 'heading_table';
     case SENTENCE_BUILDER = 'sentence_builder';
-    case LABELED_FIELDS = 'labeled_fields';
     case SORTING = 'sorting';
 
     public static function values(): array
