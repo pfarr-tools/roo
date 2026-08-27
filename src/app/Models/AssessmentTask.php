@@ -102,6 +102,10 @@ class AssessmentTask extends Model
                 * (float) ($this->content['points_per_sentence'] ?? 1));
         }
 
+        if ($this->task_type === 'sentence_builder') {
+            return $this->max_points;
+        }
+
         if (! in_array($this->task_type, ['checkbox', 'image_matching', 'image_labeling'], true)) {
             return $manualPoints ?: $this->max_points;
         }

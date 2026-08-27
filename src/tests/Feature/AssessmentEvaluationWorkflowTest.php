@@ -273,6 +273,29 @@ it('stores sorting sequences and synchronizes their pairwise score', function ()
         ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('9.00');
 });
 
+it('stores sentence-builder answers and synchronizes their pairwise score', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Satz aus Worten',
+        'task_type' => 'sentence_builder',
+        'solution' => 'Die Katze schläft.',
+        'max_points' => 6,
+        'content' => ['words' => 'Die, Katze, schläft'],
+    ]));
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $task, [
+        'student_sentence' => 'Schläft die Katze?',
+        'items' => [],
+        'extra_points' => 0,
+    ]);
+
+    expect($task->reviews()->sole()->student_sentence)->toBe('Schläft die Katze?')
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('2.00');
+});
+
 it('exposes checkbox definitions and saved selections in evaluation props', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     AssessmentTask::withoutEvents(fn () => $fixture['task']->update([

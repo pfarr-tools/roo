@@ -18,6 +18,7 @@ use App\Models\TeachingUnit;
 use App\Models\TeachingUnitCompetency;
 use App\Services\CompetencyResolver;
 use App\Services\AssessmentEvaluation\SortingTaskOrder;
+use App\Services\AssessmentEvaluation\SentenceBuilderWordOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -354,6 +355,10 @@ class ResourceLibraryController extends Controller
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.lineated' => ['sometimes', 'boolean'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
         $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
         $data['content'] = array_replace_recursive($data['content'] ?? [], $sortingContent);
+        if ($data['task_type'] === 'sentence_builder') {
+            $data['content']['words'] = (string) ($data['solution'] ?? '');
+            $data['content'] = app(SentenceBuilderWordOrder::class)->apply($data['content']);
+        }
         if ($data['task_type'] === 'sorting') {
             $data['content'] = app(SortingTaskOrder::class)->apply($data['content']);
         }
@@ -364,7 +369,7 @@ class ResourceLibraryController extends Controller
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
         $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
-        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
+        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $data['task_type'] === 'sentence_builder' ? ($data['max_points'] ?? null) : ($expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null), 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
@@ -424,6 +429,10 @@ class ResourceLibraryController extends Controller
         $validated = $request->validate($rules);
         $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
         $validated['content'] = array_replace_recursive($validated['content'] ?? [], $sortingContent);
+        if ($validated['task_type'] === 'sentence_builder') {
+            $validated['content']['words'] = (string) ($validated['solution'] ?? '');
+            $validated['content'] = app(SentenceBuilderWordOrder::class)->apply($validated['content'], $item->content ?? []);
+        }
         if ($validated['task_type'] === 'sorting') {
             $validated['content'] = app(SortingTaskOrder::class)->apply($validated['content'], $item->content ?? []);
         }

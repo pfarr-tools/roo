@@ -185,9 +185,11 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addMatchingTable($section, $content);
         } elseif (($task['task_type'] ?? '') === 'sorting') {
             $this->addSortingTask($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'sentence_builder') {
+            $this->addSentenceBuilderTask($section, $content, $gradeLevel);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting', 'sentence_builder'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -277,6 +279,23 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $row->addCell($numberWidth, ['borderSize' => 4, 'borderColor' => '000000'])
                 ->addText('', ['name' => self::ATKINSON, 'size' => 14]);
         }
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addSentenceBuilderTask(Section $section, array $content, string $gradeLevel): void
+    {
+        $words = collect($content['shuffled_words'] ?? [])
+            ->filter(fn ($word): bool => trim((string) $word) !== '')
+            ->values();
+        if ($words->isEmpty()) {
+            preg_match_all('/[\p{L}\p{N}]+(?:[\x{2019}\'-][\p{L}\p{N}]+)*/u', (string) ($content['words'] ?? ''), $matches);
+            $words = collect($matches[0] ?? [])->values();
+        }
+        if ($words->isNotEmpty()) {
+            $section->addText(implode(' · ', $words->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+        }
+
+        $this->addWritingLines($section, $content, $gradeLevel);
     }
 
     /** @param array<string, mixed> $content */

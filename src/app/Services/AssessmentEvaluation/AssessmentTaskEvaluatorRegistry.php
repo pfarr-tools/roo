@@ -12,9 +12,10 @@ final class AssessmentTaskEvaluatorRegistry
         private readonly ImageLabelingTaskEvaluator $imageLabeling,
         private readonly MatchingTableTaskEvaluator $matchingTable,
         private readonly SortingTaskEvaluator $sorting,
+        private readonly SentenceBuilderTaskEvaluator $sentenceBuilder,
     ) {}
 
-    public function for(AssessmentTask $task): CheckboxTaskEvaluator|ImageMatchingTaskEvaluator|ImageLabelingTaskEvaluator|MatchingTableTaskEvaluator|SortingTaskEvaluator|null
+    public function for(AssessmentTask $task): CheckboxTaskEvaluator|ImageMatchingTaskEvaluator|ImageLabelingTaskEvaluator|MatchingTableTaskEvaluator|SortingTaskEvaluator|SentenceBuilderTaskEvaluator|null
     {
         if ($this->checkbox->supports($task)) {
             return $this->checkbox;
@@ -30,6 +31,10 @@ final class AssessmentTaskEvaluatorRegistry
 
         if ($this->sorting->supports($task)) {
             return $this->sorting;
+        }
+
+        if ($this->sentenceBuilder->supports($task)) {
+            return $this->sentenceBuilder;
         }
 
         return $this->imageMatching->supports($task) ? $this->imageMatching : null;

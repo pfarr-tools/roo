@@ -19,6 +19,7 @@ use App\Models\TeachingGroup;
 use App\Services\AssessmentEvaluation\AssignAssessmentBooklet;
 use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
 use App\Services\AssessmentEvaluation\SaveAssessmentTaskReview;
+use App\Services\AssessmentEvaluation\SentenceBuilderWordOrder;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
 use App\Services\AssessmentScan\AssessmentScanPageProcessor;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
@@ -161,6 +162,7 @@ class AssessmentController extends Controller
                             'extra_points' => $review->extra_points,
                             'extra_note' => $review->extra_note,
                             'sorting_sequence' => $review->sorting_sequence,
+                            'student_sentence' => $review->student_sentence,
                             'items' => $review->items->map(fn ($item): array => [
                                 'expectation_id' => $item->assessment_task_expectation_id,
                                 'occurrence' => $item->occurrence,
@@ -217,6 +219,9 @@ class AssessmentController extends Controller
                     'questions' => data_get($task->content, 'questions', []),
                     'sorting_order' => data_get($task->content, 'sorting_order', []),
                     'points_per_sentence' => data_get($task->content, 'points_per_sentence'),
+                    'words' => data_get($task->content, 'words', ''),
+                    'shuffled_words' => data_get($task->content, 'shuffled_words', []),
+                    'solution' => $task->solution,
                     'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'matching_scoring_mode' => $task->task_type === 'matching_table' ? data_get($task->content, 'matching_scoring_mode', 'per_category') : null,
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,
@@ -646,6 +651,12 @@ class AssessmentController extends Controller
     private function downloadTaskContent(AssessmentTask $task): array
     {
         $content = is_array($task->content) ? $task->content : [];
+
+        if ($task->task_type === 'sentence_builder' && empty($content['shuffled_words'])) {
+            $content['words'] = (string) ($task->solution ?? $content['words'] ?? '');
+            $content = app(SentenceBuilderWordOrder::class)->apply($content, $content);
+            $task->updateQuietly(['content' => $content]);
+        }
 
         if (in_array($task->task_type, ['free_text', 'image_matching', 'image_answer_table'], true)) {
             $content['images'] = $task->images

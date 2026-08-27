@@ -408,6 +408,32 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('rounds calculated sentence-builder points in the evaluation summary', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 27,
+                title: 'Satz bauen',
+                task_type: 'sentence_builder',
+                max_points: 5,
+                content: { words: 'A B C D' },
+                solution: 'A B C D',
+                expectations: [],
+            },
+            fragments: [{
+                id: 48,
+                booklet_id: 8,
+                image_url: '/private/task.png',
+                review: { student_sentence: 'A B D C', items: [], options: [] },
+            }],
+            openKey: 1,
+        })
+
+        expect(root.querySelector('[data-testid="points-summary-48"]').textContent).toContain('4 / 5 Punkte')
+        unmount()
+    })
+
     it('uses and saves expectation rows for image labeling tasks', async () => {
         const { root, unmount } = mount(TaskEvaluation, {
             group,

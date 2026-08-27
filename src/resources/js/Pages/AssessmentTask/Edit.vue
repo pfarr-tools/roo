@@ -111,6 +111,7 @@ const form = useForm({
     image_labels: [],
     expectations: [emptyExpectation()],
     solution: "",
+    max_points: "",
     education_plan_id: "",
     education_plan_competency_id: "",
     levels: [],
@@ -172,6 +173,7 @@ function resetForm() {
               }))
             : [emptyExpectation()],
         solution: props.task?.solution ?? "",
+        max_points: props.task?.max_points ?? "",
         education_plan_id:
             props.task?.education_plan_id ?? props.initialEducationPlanId ?? "",
         education_plan_competency_id:
@@ -589,7 +591,7 @@ function save() {
     if (form.task_type !== "sentence_builder") delete content.words;
     if (form.task_type !== "sorting") delete content.points_per_sentence;
     if (
-        !["free_text", "subtask_table", "image_answer_table", "heading_table"].includes(
+        !["free_text", "sentence_builder", "subtask_table", "image_answer_table", "heading_table"].includes(
             form.task_type,
         )
     ) {
@@ -1343,15 +1345,15 @@ function save() {
                                 v-if="form.task_type === 'sentence_builder'"
                                 class="mt-4"
                             >
-                                <label class="form-label">{{
-                                    de.assessmentTaskWords
-                                }}</label
-                                ><input
-                                    v-model="form.content.words"
-                                    class="form-control"
-                                    placeholder="Wort 1, Wort 2, Wort 3"
-                                    required
-                                />
+                                <label class="form-label mt-3" for="assessment-task-sentence">{{ de.assessmentTaskSentence }}</label>
+                                <input id="assessment-task-sentence" v-model="form.solution" class="form-control" required />
+                                <label class="form-label mt-3" for="assessment-task-max-points">{{ de.assessmentTaskMaxPoints }}</label>
+                                <input id="assessment-task-max-points" v-model.number="form.max_points" class="form-control" type="number" min="0" step="1" required />
+                                <label class="form-label mt-3" for="assessment-task-sentence-lines">{{ de.assessmentTaskLines }}</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <input id="assessment-task-sentence-lines" v-model.number="form.content.lines" type="number" min="0" class="form-control" style="max-width: 12rem" />
+                                    <label class="form-check mb-0"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label>
+                                </div>
                             </div>
                             <div
                                 v-if="form.task_type === 'sorting'"

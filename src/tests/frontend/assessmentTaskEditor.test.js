@@ -424,6 +424,23 @@ it("configures sorting sentences without per-sentence point fields", async () =>
     unmount();
 });
 
+it("uses the sentence itself instead of a separate word-list field", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Satz aus vorgegebenen Worten"))
+        .click();
+    await nextTick();
+
+    expect(root.textContent).not.toContain("Vorgegebene Worte");
+    expect(root.querySelector("#assessment-task-sentence")).not.toBeNull();
+    expect(root.querySelector("#assessment-task-max-points")).not.toBeNull();
+    expect(root.querySelector("#assessment-task-sentence-lines")).not.toBeNull();
+    unmount();
+});
+
 it("keeps the editor open and shows a validation error when saving fails", async () => {
     submitError = true;
     const { root, unmount } = mount({ method: "put" });

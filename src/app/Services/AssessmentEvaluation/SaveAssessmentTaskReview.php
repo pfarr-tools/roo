@@ -40,7 +40,7 @@ final class SaveAssessmentTaskReview
         try {
             if ($task->task_type === 'sorting') {
                 $evaluator?->validate($task, $data['sorting_sequence'] ?? []);
-            } else {
+            } elseif ($task->task_type !== 'sentence_builder') {
                 $evaluator?->validate($task, $data['options'] ?? []);
             }
         } catch (InvalidArgumentException $exception) {
@@ -72,6 +72,7 @@ final class SaveAssessmentTaskReview
                 'extra_points' => $data['extra_points'] ?? 0,
                 'extra_note' => $data['extra_note'] ?? null,
                 'sorting_sequence' => $task->task_type === 'sorting' ? ($data['sorting_sequence'] ?? []) : null,
+                'student_sentence' => $task->task_type === 'sentence_builder' ? ($data['student_sentence'] ?? null) : null,
             ]);
 
             $review->items->each(function ($item) use ($providedOccurrences): void {

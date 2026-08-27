@@ -31,12 +31,14 @@ final class SyncStudentAssessmentResult
         $points = $review->items->sum(fn ($item): float => (float) $item->awarded_points) + (float) $review->extra_points;
         $evaluator = $this->evaluators->for($task);
         if ($evaluator !== null) {
-            $points += $task->task_type === 'sorting'
-                ? $evaluator->score($task, $review->sorting_sequence ?? [])
-                : $evaluator->score($task, $review->options->map(fn ($option): array => [
+            $points += match ($task->task_type) {
+                'sorting' => $evaluator->score($task, $review->sorting_sequence ?? []),
+                'sentence_builder' => $evaluator->score($task, $review->student_sentence ?? ''),
+                default => $evaluator->score($task, $review->options->map(fn ($option): array => [
                     'id' => $option->option_id,
                     'selected' => $option->selected,
-                ])->all());
+                ])->all()),
+            };
         }
 
         StudentAssessmentResult::query()->updateOrCreate(

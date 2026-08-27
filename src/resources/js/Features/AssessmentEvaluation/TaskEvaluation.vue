@@ -40,6 +40,28 @@ const sortingScoringQuestions = computed(() =>
         })),
 );
 
+const sentenceBuilderWordSource = computed(
+    () => props.task.content?.words || props.task.content?.solution || props.task.solution || "",
+);
+
+const sentenceBuilderSolution = computed(
+    () => props.task.content?.solution || props.task.solution || "",
+);
+
+const sentenceBuilderWords = computed(
+    () =>
+        sentenceBuilderWordSource.value
+            .match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)
+            ?.map((word) => word.toLocaleLowerCase("de-DE")) ?? [],
+);
+
+const sentenceBuilderDisplayWords = computed(() =>
+    (props.task.content?.shuffled_words?.length
+        ? props.task.content.shuffled_words
+        : sentenceBuilderWordSource.value.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu) ?? []
+    ).map((word) => String(word).trim()).filter(Boolean),
+);
+
 const maximumPoints = computed(() =>
     Number(
         props.task.max_points ??
@@ -209,6 +231,7 @@ function buildReviewCase(fragment) {
             };
         }),
         sorting_sequence: { ...(fragment.review?.sorting_sequence ?? {}) },
+        student_sentence: fragment.review?.student_sentence ?? "",
         extra_points: fragment.review?.extra_points ?? 0,
         extra_note: fragment.review?.extra_note ?? null,
         errors: {},
@@ -218,6 +241,9 @@ function buildReviewCase(fragment) {
 }
 
 function assignedPoints(reviewCase) {
+    if (props.task.task_type === "sentence_builder") {
+        return sentenceBuilderResult(reviewCase)?.points ?? 0;
+    }
     if (props.task.task_type === "sorting") {
         return (sortingResult(reviewCase)?.points ?? 0) + Number(reviewCase.extra_points ?? 0);
     }
@@ -238,6 +264,38 @@ function assignedPoints(reviewCase) {
     return (
         automaticPoints + manualPoints + Number(reviewCase.extra_points ?? 0)
     );
+}
+
+function sentenceBuilderTokens(text) {
+    return (text.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu) ?? []).map((word) => word.toLocaleLowerCase("de-DE"));
+}
+
+function sentenceBuilderResult(reviewCase) {
+    const expected = sentenceBuilderTokens(sentenceBuilderSolution.value);
+    const totalPairs = expected.length * (expected.length - 1) / 2;
+    if (totalPairs === 0) return { correctPairs: 0, totalPairs, percentage: 0, points: 0 };
+    const available = expected.map((word, index) => ({ word, index }));
+    const studentOrder = {};
+    sentenceBuilderTokens(reviewCase.student_sentence ?? "")
+        .filter((word) => sentenceBuilderWords.value.includes(word))
+        .forEach((word, position) => {
+            const match = available.findIndex((entry) => entry.word === word);
+            if (match === -1) return;
+            studentOrder[available[match].index] = position + 1;
+            available.splice(match, 1);
+        });
+    let correctPairs = 0;
+    for (let left = 0; left < expected.length; left += 1) {
+        for (let right = left + 1; right < expected.length; right += 1) {
+            if (studentOrder[left] !== undefined && studentOrder[right] !== undefined && studentOrder[left] < studentOrder[right]) correctPairs += 1;
+        }
+    }
+    return {
+        correctPairs,
+        totalPairs,
+        percentage: correctPairs / totalPairs * 100,
+        points: Number(props.task.max_points ?? 0) * correctPairs / totalPairs,
+    };
 }
 
 function sortingResult(reviewCase) {
@@ -357,6 +415,7 @@ function save(reviewCase) {
         reviewUrl(reviewCase.fragment),
         {
             sorting_sequence: props.task.task_type === "sorting" ? reviewCase.sorting_sequence : undefined,
+            student_sentence: props.task.task_type === "sentence_builder" ? reviewCase.student_sentence : undefined,
             options:
                 specializedCheckbox(reviewCase) ||
                 ["image_matching", "image_labeling", "matching_table"].includes(props.task.task_type)
@@ -428,7 +487,7 @@ watch(() => props.openKey, resetCases, { immediate: true });
                                 {{
                                     formatPoints(
                                         assignedPoints(reviewCase),
-                                        task.task_type === "sorting",
+                                        true,
                                     )
                                 }}
                                 /
@@ -465,7 +524,15 @@ watch(() => props.openKey, resetCases, { immediate: true });
                             {{ sortingResult(reviewCase).correctPairs }} / {{ sortingResult(reviewCase).totalPairs }} {{ de.assessmentEvaluationSortingRelationships }} · {{ formatPoints(sortingResult(reviewCase).percentage) }} %
                         </div>
                     </div>
-                    <div v-if="reviewCase.items.length && task.task_type !== 'sorting'" class="vstack gap-2">
+                    <div v-if="task.task_type === 'sentence_builder'" class="mb-3" data-testid="sentence-builder-evaluation">
+                        <div class="mb-2">{{ sentenceBuilderDisplayWords.join(" · ") }}</div>
+                        <label class="visually-hidden" :for="`sentence-builder-answer-${reviewCase.fragment.id}`">{{ task.title }}</label>
+                        <textarea :id="`sentence-builder-answer-${reviewCase.fragment.id}`" v-model="reviewCase.student_sentence" class="form-control" rows="3" :disabled="reviewCase.processing" @input="markDirty(reviewCase)" />
+                        <div v-if="sentenceBuilderResult(reviewCase)" :data-testid="`sentence-builder-result-${reviewCase.fragment.id}`" class="small fw-semibold mt-2">
+                            {{ sentenceBuilderResult(reviewCase).correctPairs }} / {{ sentenceBuilderResult(reviewCase).totalPairs }} {{ de.assessmentEvaluationSortingRelationships }} · {{ formatPoints(sentenceBuilderResult(reviewCase).percentage) }} %
+                        </div>
+                    </div>
+                    <div v-if="reviewCase.items.length && !['sorting', 'sentence_builder'].includes(task.task_type)" class="vstack gap-2">
                         <template v-for="(item, index) in reviewCase.items" :key="`${item.expectation_id}:${item.occurrence}`">
                             <h4 v-if="subtaskHeading(reviewCase, index)" class="h6 mb-2" data-testid="subtask-heading">{{ subtaskHeading(reviewCase, index) }}</h4>
                             <ExpectationEvaluationRow
@@ -478,7 +545,7 @@ watch(() => props.openKey, resetCases, { immediate: true });
                             />
                         </template>
                     </div>
-                    <p v-else-if="task.task_type !== 'sorting'" class="text-muted">
+                    <p v-else-if="!['sorting', 'sentence_builder'].includes(task.task_type)" class="text-muted">
                         {{ de.assessmentEvaluationNoExpectations }}
                     </p>
 

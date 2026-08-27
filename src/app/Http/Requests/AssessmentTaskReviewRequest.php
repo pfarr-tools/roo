@@ -24,6 +24,7 @@ class AssessmentTaskReviewRequest extends FormRequest
             'options.*.selected' => ['required', 'boolean'],
             'sorting_sequence' => ['sometimes', 'array'],
             'sorting_sequence.*' => ['nullable', 'integer'],
+            'student_sentence' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'extra_points' => ['present', 'nullable', 'integer'],
             'extra_note' => ['nullable', 'string', 'max:2000'],
         ];

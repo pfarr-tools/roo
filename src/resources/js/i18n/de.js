@@ -602,6 +602,8 @@ export default {
     uploading: "Wird hochgeladen …",
     assessmentTaskAnswer: "Lösung / Antwort",
     assessmentTaskWords: "Vorgegebene Worte",
+    assessmentTaskSentence: "Satz",
+    assessmentTaskMaxPoints: "Maximale Punktzahl",
     assessmentTaskQuestions: "Teilfragen",
     assessmentTaskSentences: "Sätze",
     assessmentTaskAddSentence: "Satz hinzufügen",

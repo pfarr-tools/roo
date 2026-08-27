@@ -314,6 +314,34 @@ it('rendert Sätze sortieren als zufällig gemischte zweispaltige Tabelle', func
         ->and($content)->toContain('1.75cm');
 });
 
+it('rendert vorgegebene Worte in der gespeicherten Reihenfolge vor der Lineatur', function () {
+    $document = new AssessmentDocument('LSE Satzbau', [[
+        'title' => 'Bilde einen Satz.',
+        'task_type' => 'sentence_builder',
+        'max_points' => 3,
+        'solution' => 'Die Katze schläft.',
+        'content' => [
+            'prompt' => 'Bilde einen Satz aus den Worten.',
+            'words' => 'Die Katze schläft.',
+            'shuffled_words' => ['schläft', 'Die', 'Katze'],
+            'lines' => 2,
+            'lineated' => true,
+        ],
+    ]], '2', []);
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-sentence-builder-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('schläft · Die · Katze')
+        ->and(substr_count((string) $content, '<table:table-row'))->toBeGreaterThan(1);
+});
+
 it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalte', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildzuordnung', [
