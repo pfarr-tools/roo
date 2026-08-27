@@ -81,7 +81,6 @@ const emptyContent = () => ({
     prompt: "",
     lines: 5,
     lineated: false,
-    reading_text: "",
     options: [newOption()],
     points_per_correct_answer: 1,
     checkbox_scoring_mode: "correct_states",
@@ -90,6 +89,7 @@ const emptyContent = () => ({
     image_label_layout: "center",
     points_per_correct_answer: 1,
     show_solutions: false,
+    optional_reading_text: "",
     columns: [""],
     rows: [{ label: "", answer: "" }],
     subtasks: [newSubtask()],
@@ -198,13 +198,13 @@ const usesTable = (value) =>
     ].includes(value);
 const usesImages = (value) =>
     [
-        "free_text_images",
+        "free_text",
         "image_matching",
         "image_labeling",
         "image_answer_table",
     ].includes(value);
 const usesQuestions = (value) =>
-    ["labeled_fields", "reading_text", "sorting"].includes(value);
+    ["labeled_fields", "sorting"].includes(value);
 function selectType(value) {
     form.task_type = value;
     if (value === "heading_table") normalizeHeadingTableContent(form.content, []);
@@ -520,7 +520,7 @@ function save() {
         }));
     }
     if (!usesOptions(form.task_type)) delete content.options;
-    if (!["image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
+    if (!["free_text", "image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
     if (!['image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'].includes(form.task_type)) {
         delete content.image_label_width_cm;
         delete content.image_label_layout;
@@ -553,10 +553,11 @@ function save() {
         delete payload.image_labels;
     }
     if (!usesQuestions(form.task_type)) delete content.questions;
-    if (form.task_type !== "reading_text") delete content.reading_text;
+    if (form.task_type !== "free_text") delete content.optional_reading_text;
+    delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
     if (
-        !["free_text", "free_text_images", "reading_text", "subtask_table", "image_answer_table", "heading_table"].includes(
+        !["free_text", "subtask_table", "image_answer_table", "heading_table"].includes(
             form.task_type,
         )
     ) {
@@ -719,24 +720,14 @@ function save() {
                                 rows="4"
                                 required
                             ></textarea>
-                            <div
-                                v-if="form.task_type === 'reading_text'"
-                                class="mt-3"
-                            >
-                                <label class="form-label">Lesetext</label
-                                ><textarea
-                                    v-model="form.content.reading_text"
-                                    class="form-control"
-                                    rows="10"
-                                    required
-                                ></textarea>
+                            <div v-if="form.task_type === 'free_text'" class="mt-3">
+                                <label class="form-label" for="assessment-task-optional-reading-text">{{ de.assessmentTaskOptionalReadingText }}</label>
+                                <textarea id="assessment-task-optional-reading-text" v-model="form.content.optional_reading_text" class="form-control" rows="8"></textarea>
                             </div>
                             <div
                                 v-if="
                                     [
                                         'free_text',
-                                        'free_text_images',
-                                        'reading_text',
                                     ].includes(form.task_type)
                                 "
                                 class="mt-3"
@@ -1092,7 +1083,7 @@ function save() {
                                     {{ de.assessmentTaskImages }}
                                 </h3>
                                 <div
-                                    v-if="['image_matching', 'image_answer_table'].includes(form.task_type)"
+                                    v-if="['free_text', 'image_matching', 'image_answer_table'].includes(form.task_type)"
                                     class="mb-3"
                                 >
                                     <label
@@ -1182,7 +1173,7 @@ function save() {
                                 </div>
                                 <div
                                     v-for="(image, index) in form.images"
-                                    v-if="form.task_type === 'image_matching'"
+                                    v-if="['free_text', 'image_matching'].includes(form.task_type)"
                                     :key="image.identifier || index"
                                     class="border rounded p-2 mb-2"
                                     draggable="true"
@@ -1229,7 +1220,7 @@ function save() {
                                                 "
                                             />
                                         </div>
-                                        <div class="col">
+                                        <div v-if="form.task_type === 'image_matching'" class="col">
                                             <label
                                                 class="visually-hidden"
                                                 :for="
@@ -1246,9 +1237,7 @@ function save() {
                                                 "
                                                 v-model="image.answer"
                                                 class="form-control"
-                                                :placeholder="
-                                                    de.assessmentTaskAnswer
-                                                "
+                                                :placeholder="de.assessmentTaskAnswer"
                                             />
                                         </div>
                                         <div class="col-auto">

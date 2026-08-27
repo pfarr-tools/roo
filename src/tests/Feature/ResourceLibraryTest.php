@@ -111,7 +111,7 @@ it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Bildaufgabe',
-        'task_type' => 'free_text_images',
+        'task_type' => 'free_text',
         'content' => ['prompt' => 'Ordne zu'],
         'images' => [['url' => 'https://example.test/bild.png', 'label' => '', 'answer' => '']],
         'expectations' => [],
@@ -160,13 +160,15 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
     $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
 
-    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text_images', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true, 'image_width_cm' => 3.5, 'optional_reading_text' => 'Lies diesen Text.'], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
     $task = AssessmentTask::firstOrFail();
     expect($task->teaching_unit_competency_id)->toBe($competency->id)
-        ->and($task->task_type)->toBe('free_text_images')
+        ->and($task->task_type)->toBe('free_text')
         ->and($task->content['lines'])->toBe(5)
         ->and($task->content['lineated'])->toBeTrue()
+        ->and($task->content['image_width_cm'])->toBe(3.5)
+        ->and($task->content['optional_reading_text'])->toBe('Lies diesen Text.')
         ->and($task->max_points)->toBe(3)
         ->and($task->expectations)->toHaveCount(1)
         ->and($task->expectations->first()->repetitions)->toBe(3)

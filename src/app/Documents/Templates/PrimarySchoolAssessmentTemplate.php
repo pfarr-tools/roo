@@ -162,6 +162,10 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $content = is_array($task['content'] ?? null) ? $task['content'] : [];
         if (($task['task_type'] ?? '') === 'checkbox') {
             $this->addCheckboxTask($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'free_text') {
+            $this->addFreeTextImages($section, $content);
+            $this->addOptionalReadingText($section, $content);
+            $this->addImageCredits($section, $content);
         } elseif (($task['task_type'] ?? '') === 'image_matching') {
             $this->addImageMatchingTask($section, $content);
             $this->addImageCredits($section, $content);
@@ -178,14 +182,63 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addHeadingTable($section, $content);
         } elseif (($task['task_type'] ?? '') === 'matching_table') {
             $this->addMatchingTable($section, $content);
-        } elseif (! empty($content['reading_text'])) {
-            $section->addText((string) $content['reading_text'], ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 120]);
         }
 
         if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addFreeTextImages(Section $section, array $content): void
+    {
+        $images = collect($content['images'] ?? [])
+            ->filter(fn ($image): bool => is_array($image) && ! empty($image['path']) && is_file($image['path']))
+            ->values();
+
+        if ($images->isEmpty()) {
+            return;
+        }
+
+        $widthCm = min(4.0, max(1.5, (float) ($content['image_width_cm'] ?? 3.0)));
+        $widthPx = (int) round($widthCm * 37.7952756);
+        $columnCount = min(3, $images->count());
+        $cellWidthTwips = (int) floor(self::CONTENT_WIDTH_MM * 56.6929 / $columnCount);
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+        ]);
+
+        foreach ($images->values()->chunk(3) as $imageRow) {
+            $imageRow = $imageRow->values();
+            $row = $table->addRow();
+            foreach (range(0, $columnCount - 1) as $index) {
+                $cell = $row->addCell($cellWidthTwips, ['borderSize' => 0, 'valign' => 'top']);
+                $image = $imageRow->get($index);
+                if (! is_array($image)) {
+                    continue;
+                }
+
+                $style = ['width' => $widthPx, 'alignment' => 'center'];
+                $dimensions = @getimagesize($image['path']);
+                if (is_array($dimensions) && $dimensions[0] > 0) {
+                    $style['height'] = (int) round($widthPx * $dimensions[1] / $dimensions[0]);
+                }
+                $cell->addImage($image['path'], $style);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addOptionalReadingText(Section $section, array $content): void
+    {
+        $text = trim((string) ($content['optional_reading_text'] ?? ''));
+        if ($text === '') {
+            return;
+        }
+
+        $section->addText($text, ['name' => self::ATKINSON, 'size' => 14, 'bold' => false], ['spaceBefore' => 120, 'spaceAfter' => 120]);
     }
 
     /** @param array<string, mixed> $content */

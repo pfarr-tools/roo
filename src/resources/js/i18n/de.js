@@ -560,6 +560,7 @@ export default {
     assessmentTaskUploadImage: "Bild direkt hochladen",
     assessmentTaskAddImage: "Bild hinzufügen",
     assessmentTaskImageWidth: "Bildbreite",
+    assessmentTaskOptionalReadingText: "Optionaler Lesetext",
     assessmentTaskImageLabelLayout: "Anordnung",
     assessmentTaskImageLabelLayoutCenter: "Bild mittig, Lösungen beidseitig",
     assessmentTaskImageLabelLayoutLeft: "Bild links, Lösungen rechts",
@@ -601,7 +602,6 @@ export default {
     assessmentTaskTypeLabels: {
         free_text: "Freitext mit oder ohne Lineatur",
         fill_table: "Teilausgefüllte Tabelle ergänzen",
-        free_text_images: "Freitext mit Bildern",
         checkbox: "Richtige Sätze ankreuzen",
         matching_table: "Zuordnungstabelle",
         image_matching: "Zuordnung zu Bildern",
@@ -612,7 +612,6 @@ export default {
         sentence_builder: "Satz aus vorgegebenen Worten",
         labeled_fields: "Textaufgabe mit beschrifteten Feldern",
         sorting: "Sätze sortieren",
-        reading_text: "Lesetext mit Freitextfragen",
     },
     removeAssessmentTaskConfirm:
         "Soll die Prüfungsaufgabe aus dieser Stunde entfernt werden? Die Aufgabe bleibt in der Bibliothek erhalten.",

@@ -117,7 +117,7 @@ class LessonWorkspaceController extends Controller
             'content.prompt' => ['nullable', 'string', 'max:10000'],
             'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'],
             'content.lineated' => ['sometimes', 'boolean'],
-            'content.reading_text' => ['nullable', 'string', 'max:50000'],
+            'content.optional_reading_text' => ['nullable', 'string', 'max:50000'],
             'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'],
             'content.subtasks' => ['nullable', 'array'],
             'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'],
@@ -153,6 +153,7 @@ class LessonWorkspaceController extends Controller
             'levels.*' => ['in:G,M,E'],
         ]);
         $expectations = $this->subtaskExpectations($data['task_type'], data_get($data, 'content', []), $expectations);
+        $data['content']['optional_reading_text'] = $request->validate(['content.optional_reading_text' => ['nullable', 'string', 'max:50000']])['content']['optional_reading_text'] ?? null;
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
@@ -193,7 +194,7 @@ class LessonWorkspaceController extends Controller
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'];
-        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated')];
+        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated'), 'optional_reading_text' => $request->input('content.optional_reading_text')];
         $attributes = ['title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');

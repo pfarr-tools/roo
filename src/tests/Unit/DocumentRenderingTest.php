@@ -166,6 +166,72 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and($content)->toContain('style:master-page-name="FirstPage"');
 });
 
+it('rendert Freitextbilder in maximal drei Spalten und den optionalen Lesetext danach', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $document = new AssessmentDocument('LSE Freitextbilder', [
+        [
+            'title' => 'Beschreibe das Bild',
+            'task_type' => 'free_text',
+            'max_points' => 2,
+            'content' => [
+                'prompt' => 'Beschreibe das Bild.',
+                'image_width_cm' => 3,
+                'optional_reading_text' => 'Dieser Lesetext folgt auf die Bilder.',
+                'images' => [
+                    ['path' => $image],
+                    ['path' => $image],
+                    ['path' => $image],
+                    ['path' => $image],
+                ],
+                'lines' => 2,
+            ],
+        ],
+    ], '2', []);
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-free-text-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $styles = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Dieser Lesetext folgt auf die Bilder.')
+        ->and(substr_count((string) $content, '<table:table-column'))->toBeGreaterThanOrEqual(4)
+        ->and(substr_count((string) $content, 'Pictures/section_image1.png'))->toBe(4)
+        ->and($styles)->toContain('14pt');
+});
+
+it('passt die Bildspalten bei einer einzigen Bildzeile an', function () {
+    $image = base_path('resources/images/branding/roo-icon.png');
+    $columnCount = function (int $imageCount) use ($image): int {
+        $document = new AssessmentDocument('LSE Freitextbilder', [[
+            'title' => 'Beschreibe das Bild',
+            'task_type' => 'free_text',
+            'content' => [
+                'prompt' => 'Beschreibe das Bild.',
+                'images' => array_fill(0, $imageCount, ['path' => $image]),
+                'lines' => 1,
+            ],
+        ]], '2', []);
+        $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+        $path = tempnam(sys_get_temp_dir(), 'roo-test-free-text-');
+        file_put_contents($path, $contents);
+        $archive = new ZipArchive;
+        $archive->open($path);
+        $content = $archive->getFromName('content.xml');
+        $archive->close();
+        unlink($path);
+
+        return substr_count((string) $content, '<table:table-column');
+    };
+
+    expect($columnCount(1))->toBe(2)
+        ->and($columnCount(2))->toBe(3);
+});
+
 it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalte', function () {
     $image = base_path('resources/images/branding/roo-icon.png');
     $document = new AssessmentDocument('LSE Bildzuordnung', [

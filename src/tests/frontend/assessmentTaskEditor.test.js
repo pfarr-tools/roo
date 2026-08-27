@@ -154,6 +154,45 @@ it("shows image matching points and the shared image width slider", async () => 
     unmount();
 });
 
+it("offers images and an optional reading text for free text tasks", async () => {
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+
+    expect(root.textContent).not.toContain("Freitext mit Bildern");
+    expect(root.textContent).not.toContain("Lesetext mit Freitextfragen");
+
+    expect(root.querySelector("#assessment-task-image-width")).not.toBeNull();
+    expect(root.querySelector("#assessment-task-optional-reading-text")).not.toBeNull();
+    expect(root.textContent).toContain("Bilder aus der Bibliothek");
+    unmount();
+});
+
+it("submits free text images and optional reading text", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount({
+        imageLibrary: [{ id: 7, name: "Baum.png", preview_url: "/baum.png" }],
+    });
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+
+    root.querySelector("#assessment-task-optional-reading-text").value = "Lies den Text.";
+    root.querySelector("#assessment-task-optional-reading-text").dispatchEvent(new Event("input", { bubbles: true }));
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Bibliothek"))
+        .click();
+    await nextTick();
+    root.querySelector(".list-group button").click();
+    await nextTick();
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.optional_reading_text).toBe("Lies den Text.");
+    expect(transformedPayload.content.image_width_cm).toBe(3);
+    expect(transformedPayload.images[0].resource_id).toBe(7);
+    unmount();
+});
+
 it("initializes a matching table with categories and text rows", async () => {
     const { root, unmount } = mount();
     root.querySelectorAll('[role="tab"]')[1].click();

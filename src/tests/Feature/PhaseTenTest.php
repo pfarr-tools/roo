@@ -2,11 +2,13 @@
 
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
+use App\Models\AssessmentTaskImage;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
 use App\Models\Organization;
+use App\Models\ResourceReference;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
@@ -15,6 +17,7 @@ use App\Models\TeachingGroup;
 use App\Models\TeachingGroupGradeLevel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -109,4 +112,32 @@ it('lädt eine Lernstandserhebung als ODT herunter', function () {
         ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.odt"');
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store');
+});
+
+it('übernimmt Freitextbilder in den produktiven ODT-Download', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Freitextbild Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Freitextbild Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
+    $group->gradeLevels()->create(['grade_level' => '2']);
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Freitext', 'assessed_on' => '2026-10-01']);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $organization->id, 'title' => 'Beschreibe das Bild', 'task_type' => 'free_text', 'content' => ['prompt' => 'Beschreibe das Bild.', 'lines' => 2, 'image_width_cm' => 3, 'optional_reading_text' => 'Lies den Begleittext.']]));
+    $assessment->tasks()->attach($task);
+    Storage::disk('local')->put('free-text.png', file_get_contents(base_path('resources/images/branding/roo-icon.png')));
+    $resource = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Freitext.png', 'storage_path' => 'free-text.png', 'mime_type' => 'image/png', 'size' => 10]);
+    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => $resource->id, 'identifier' => 'free-text-image', 'position' => 0]);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download")->assertOk();
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-download-');
+    file_put_contents($path, $response->getContent());
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Pictures/section_image1.png')
+        ->and($content)->toContain('Lies den Begleittext.');
 });

@@ -643,7 +643,7 @@ class AssessmentController extends Controller
     {
         $content = is_array($task->content) ? $task->content : [];
 
-        if (in_array($task->task_type, ['image_matching', 'image_answer_table'], true)) {
+        if (in_array($task->task_type, ['free_text', 'image_matching', 'image_answer_table'], true)) {
             $content['images'] = $task->images
                 ->filter(fn ($image): bool => $image->resource !== null)
                 ->map(fn ($image): array => [
