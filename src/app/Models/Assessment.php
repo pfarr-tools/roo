@@ -36,7 +36,7 @@ class Assessment extends Model
 
     public function tasks(): BelongsToMany
     {
-        return $this->belongsToMany(AssessmentTask::class, 'assessment_task_assessment')->withPivot('position')->orderBy('assessment_task_assessment.position')->withTimestamps();
+        return $this->belongsToMany(AssessmentTask::class, 'assessment_task_assessment')->withPivot('position', 'weight')->orderBy('assessment_task_assessment.position')->withTimestamps();
     }
 
     public function booklets(): HasMany

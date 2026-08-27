@@ -86,12 +86,14 @@ it('rejects non-pdf uploads and assessments from another group', function () {
         ->assertNotFound();
 });
 
-it('offers the assessment scan action in the existing assessment editor', function () {
+it('does not offer export or scan actions in the existing assessment editor', function () {
     $template = file_get_contents(resource_path('js/Pages/Assessments/Form.vue'));
     $modal = file_get_contents(resource_path('js/Features/AssessmentEvaluation/AssessmentScanUploadModal.vue'));
 
-    expect($template)->toContain('assessmentScanTitle')
-        ->and($template)->toContain('lernstandserhebungen/${assessment.id}/auswertung')
+    expect($template)->not->toContain('downloadAssessmentOdt')
+        ->and($template)->not->toContain('assessmentScanTitle')
+        ->and($template)->not->toContain('lernstandserhebungen/${assessment.id}/download')
+        ->and($template)->not->toContain('lernstandserhebungen/${assessment.id}/auswertung')
         ->and($template)->not->toContain('createScanClient')
         ->and($modal)->toContain('assessmentScanProcessing')
         ->and($modal)->toContain('assessmentScanProcessingHint')

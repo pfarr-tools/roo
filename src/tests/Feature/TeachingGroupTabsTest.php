@@ -42,3 +42,21 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/neu")
         ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm'));
 });
+
+it('löscht eine Lernstandserhebung nur innerhalb ihrer Unterrichtsgruppe', function () {
+    $organization = Organization::create(['name' => 'Delete Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Delete Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Löschgruppe']);
+    $otherGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Andere Gruppe']);
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE löschen']);
+    $otherAssessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $otherGroup->id, 'title' => 'Andere LSE']);
+
+    $this->actingAs($user)->delete("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$otherAssessment->id}")->assertNotFound();
+    expect($otherAssessment->fresh())->not->toBeNull();
+
+    $this->actingAs($user)->delete("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}")
+        ->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=assessments");
+    expect($assessment->fresh())->toBeNull();
+});

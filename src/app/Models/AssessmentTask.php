@@ -34,7 +34,7 @@ class AssessmentTask extends Model
 
     public function assessments(): BelongsToMany
     {
-        return $this->belongsToMany(Assessment::class, 'assessment_task_assessment')->withPivot('position')->withTimestamps();
+        return $this->belongsToMany(Assessment::class, 'assessment_task_assessment')->withPivot('position', 'weight')->withTimestamps();
     }
 
     public function competency(): BelongsTo

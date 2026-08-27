@@ -67,6 +67,30 @@ it('verwendet eine Bibliotheksaufgabe in mehreren Erhebungen und verlangt mehrer
     expect($task->fresh()->assessments)->toHaveCount(2)->and($task->fresh()->levels->pluck('level')->all())->toBe(['G', 'M']);
 });
 
+it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', function () {
+    $organization = Organization::create(['name' => 'Gewichtungsorganisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Gewichtungsschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Gewichtungsgruppe']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann anwenden']);
+    $first = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
+    $second = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gewichtung']);
+
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", [
+        'title' => 'LSE Gewichtung',
+        'tasks' => [
+            ['task_id' => $second->id, 'weight' => 100],
+            ['task_id' => $first->id, 'weight' => 0],
+        ],
+    ])->assertRedirect();
+
+    expect($assessment->fresh()->tasks->pluck('id')->all())->toBe([$second->id, $first->id])
+        ->and($assessment->fresh()->tasks->pluck('pivot.weight')->all())->toBe([100, 0]);
+});
+
 it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne Aufgabe', function () {
     $organization = Organization::create(['name' => 'Kompetenzgruppenorganisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);

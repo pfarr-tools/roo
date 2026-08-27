@@ -476,6 +476,16 @@ class AssessmentController extends Controller
         return $this->redirectAfterSave($teachingGroup, $data)->with('success', 'Lernstandserhebung wurde gespeichert.');
     }
 
+    public function destroy(TeachingGroup $teachingGroup, Assessment $assessment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $assessment->delete();
+
+        return to_route('teaching-groups.show', ['teachingGroup' => $teachingGroup, 'tab' => 'assessments'])
+            ->with('success', 'Lernstandserhebung wurde gelöscht.');
+    }
+
     public function updateResult(Request $request, TeachingGroup $teachingGroup, AssessmentTask $assessmentTask)
     {
         $this->authorize('update', $teachingGroup);
@@ -599,14 +609,19 @@ class AssessmentController extends Controller
             ->orderBy('title')
             ->get();
 
-        $selectedTaskIds = $assessment?->tasks()->pluck('assessment_tasks.id')->all() ?? [];
+        $selectedTasks = $assessment?->tasks()->get() ?? collect();
+        $selectedTaskIds = $selectedTasks->pluck('id')->all();
+        $selectedTaskData = $selectedTasks->mapWithKeys(fn (AssessmentTask $selectedTask): array => [$selectedTask->id => [
+            'position' => (int) $selectedTask->pivot->position,
+            'weight' => (int) ($selectedTask->pivot->weight ?? 50),
+        ]]);
         $windowTaskIds = $tasks->pluck('id')->all();
 
         if ($assessment) {
             $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency.variants', 'educationPlanCompetency.area', 'educationPlanCompetency.variants'])->get())->unique('id')->sortBy('title')->values();
         }
 
-        return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $windowTaskIds): array {
+        return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $selectedTaskData, $windowTaskIds): array {
             $educationPlanCompetency = $task->educationPlanCompetency ?? $task->competency?->educationPlanCompetency;
             $competencyId = $task->teaching_unit_competency_id ?? $educationPlanCompetency?->id;
 
@@ -625,6 +640,8 @@ class AssessmentController extends Controller
                 'competency' => $this->resolvedCompetencyText($educationPlanCompetency ?? $task->competency),
                 'edit_url' => route('resources.library.assessment-tasks.edit', $task->id),
                 'checked' => in_array($task->id, $selectedTaskIds, true),
+                'position' => $selectedTaskData->get($task->id)['position'] ?? null,
+                'weight' => $selectedTaskData->get($task->id)['weight'] ?? 50,
                 'source' => in_array($task->id, $windowTaskIds, true) ? 'hours' : 'manual',
                 'date' => $task->lessons->flatMap->scheduledLessons->map(fn ($scheduledLesson) => $scheduledLesson->slot?->date?->toDateString())->filter()->sort()->first(),
             ];
@@ -692,7 +709,7 @@ class AssessmentController extends Controller
 
     private function validatedAssessment(Request $request): array
     {
-        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'return_tab' => ['nullable', 'in:assessments'], 'return_to' => ['nullable', 'in:group,year-plan'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E']]);
+        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'return_tab' => ['nullable', 'in:assessments'], 'return_to' => ['nullable', 'in:group,year-plan'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E'], 'tasks.*.weight' => ['nullable', 'integer', 'between:0,100']]);
     }
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void
@@ -719,7 +736,7 @@ class AssessmentController extends Controller
                 $model->levels()->delete();
                 $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());
             }
-            $attach[$model->id] = ['position' => $position + 1];
+            $attach[$model->id] = ['position' => $position + 1, 'weight' => $task['weight'] ?? 50];
         }
         $assessment->tasks()->sync($attach);
     }

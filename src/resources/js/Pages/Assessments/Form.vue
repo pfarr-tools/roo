@@ -13,7 +13,14 @@ const props = defineProps({
     returnTab: { type: String, default: "assessments" },
     returnTo: { type: String, default: "group" },
 });
-const taskList = ref(props.assessmentTasks.map((task) => ({ ...task })));
+const taskList = ref(
+    [...props.assessmentTasks]
+        .sort((left, right) => {
+            if (left.checked !== right.checked) return left.checked ? -1 : 1;
+            return (left.position ?? Number.MAX_SAFE_INTEGER) - (right.position ?? Number.MAX_SAFE_INTEGER);
+        })
+        .map((task) => ({ ...task, weight: Number(task.weight ?? 50) })),
+);
 const form = useForm({
     title: props.assessment?.title ?? "",
     report_period_id: props.assessment?.report_period_id ?? "",
@@ -25,7 +32,7 @@ const form = useForm({
 function syncTasks() {
     form.tasks = taskList.value
         .filter((task) => task.checked)
-        .map((task) => ({ task_id: task.id }));
+        .map((task) => ({ task_id: task.id, weight: task.weight }));
 }
 function toggleTask(task) {
     task.checked = !task.checked;
@@ -80,6 +87,7 @@ function addFromLibrary(item) {
             edit_url: `/bibliothek/pruefungsaufgaben/${item.id}/bearbeiten`,
             checked: true,
             source: "manual",
+            weight: 50,
         });
     syncTasks();
     libraryOpen.value = false;
@@ -98,6 +106,29 @@ function editTaskUrl(task) {
     return `${task.edit_url}?return_to=${encodeURIComponent(returnUrl)}`
 }
 const assessmentDate = computed(() => props.slot?.date || props.assessment?.assessed_on)
+const draggedTaskId = ref(null);
+function startDragging(task) {
+    if (!task.checked) return;
+    draggedTaskId.value = task.id;
+}
+function dropTask(target) {
+    if (draggedTaskId.value === null || draggedTaskId.value === target.id) return;
+    const sourceIndex = taskList.value.findIndex((task) => task.id === draggedTaskId.value);
+    const targetIndex = taskList.value.findIndex((task) => task.id === target.id);
+    if (sourceIndex < 0 || targetIndex < 0 || !taskList.value[sourceIndex].checked || !target.checked) return;
+    const [draggedTask] = taskList.value.splice(sourceIndex, 1);
+    taskList.value.splice(taskList.value.findIndex((task) => task.id === target.id), 0, draggedTask);
+    draggedTaskId.value = null;
+    syncTasks();
+}
+function moveTask(task, direction) {
+    const selectedIndexes = taskList.value.map((item, index) => item.checked ? index : null).filter((index) => index !== null);
+    const currentPosition = selectedIndexes.indexOf(taskList.value.indexOf(task));
+    const targetIndex = selectedIndexes[currentPosition + direction];
+    if (targetIndex === undefined) return;
+    [taskList.value[targetIndex], taskList.value[selectedIndexes[currentPosition]]] = [taskList.value[selectedIndexes[currentPosition]], taskList.value[targetIndex]];
+    syncTasks();
+}
 function save() {
     const url = props.assessment
         ? `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}`
@@ -132,12 +163,7 @@ const taskGroups = computed(() => {
     return [...groups.values()].map((group) => ({
         ...group,
         hasWarning: group.tasks.length === 0,
-        tasks: group.tasks.sort(
-            (left, right) =>
-                (left.date || "9999-12-31").localeCompare(
-                    right.date || "9999-12-31",
-                ) || left.title.localeCompare(right.title, "de"),
-        ),
+        tasks: group.tasks,
     }));
 });
 function taskHasLevel(task, level) {
@@ -212,17 +238,7 @@ syncTasks();
                 :disabled="form.processing"
             >
                 Speichern
-            </button><a
-                v-if="assessment"
-                :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/download`"
-                class="btn btn-sm btn-outline-secondary ms-2"
-                :title="de.downloadAssessmentOdt"
-                >{{ de.downloadAssessmentOdt }}</a
-            ><a
-                v-if="assessment"
-                class="btn btn-sm btn-outline-primary ms-2"
-                :href="`/unterrichtsgruppen/${group.id}/lernstandserhebungen/${assessment.id}/auswertung`"
-            >{{ de.assessmentScanTitle }}</a></template
+            </button></template
         >
         <div class="container-full px-3 py-4">
             <h1 class="h2 mb-1">
@@ -305,21 +321,24 @@ syncTasks();
                                         <col v-if="isDifferentiated" class="assessment-task-level-column">
                                         <col v-if="isDifferentiated" class="assessment-task-level-column">
                                         <col v-if="isDifferentiated" class="assessment-task-level-column">
+                                        <col class="assessment-task-weight-column">
                                         <col class="assessment-task-actions-column">
                                     </colgroup>
-                                    <thead v-if="isDifferentiated">
+                                    <thead>
                                         <tr>
                                             <th></th>
-                                            <th class="text-center">G</th>
-                                            <th class="text-center">M</th>
-                                            <th class="text-center">E</th>
+                                            <th v-if="isDifferentiated" class="text-center">G</th>
+                                            <th v-if="isDifferentiated" class="text-center">M</th>
+                                            <th v-if="isDifferentiated" class="text-center">E</th>
+                                            <th class="text-center">{{ de.assessmentTaskWeight }}</th>
                                             <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="task in group.tasks" :key="task.id">
+                                        <tr v-for="task in group.tasks" :key="task.id" @dragover.prevent @drop.prevent="dropTask(task)">
                                             <td>
                                                 <div class="d-flex align-items-start gap-2">
+                                                    <button v-if="task.checked" class="btn btn-sm btn-outline-secondary assessment-task-drag-handle" type="button" draggable="true" :title="de.dragAssessmentTask" :aria-label="de.dragAssessmentTask" @dragstart.stop="startDragging(task)"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>
                                                     <input :id="`assessment-task-${task.id}`" class="form-check-input mt-1" type="checkbox" :checked="task.checked" @change="toggleTask(task)">
                                                     <label :for="`assessment-task-${task.id}`" class="mb-0">
                                                         <strong>{{ task.title }}</strong>
@@ -330,7 +349,13 @@ syncTasks();
                                             <td v-if="isDifferentiated" class="text-center"><i v-if="taskHasLevel(task, 'G')" class="bi bi-check-lg" aria-label="G"></i></td>
                                             <td v-if="isDifferentiated" class="text-center"><i v-if="taskHasLevel(task, 'M')" class="bi bi-check-lg" aria-label="M"></i></td>
                                             <td v-if="isDifferentiated" class="text-center"><i v-if="taskHasLevel(task, 'E')" class="bi bi-check-lg" aria-label="E"></i></td>
+                                            <td class="text-center">
+                                                <label class="visually-hidden" :for="`assessment-task-weight-${task.id}`">{{ de.assessmentTaskWeight }}: {{ task.title }}</label>
+                                                <input :id="`assessment-task-weight-${task.id}`" v-model.number="task.weight" class="form-range" type="range" min="0" max="100" step="1" :disabled="!task.checked" :aria-label="`${de.assessmentTaskWeight}: ${task.title}`">
+                                            </td>
                                             <td class="text-end text-nowrap">
+                                                <button v-if="task.checked" class="btn btn-sm btn-outline-secondary" type="button" :title="de.moveAssessmentTaskUp" :aria-label="de.moveAssessmentTaskUp" @click="moveTask(task, -1)"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                                                <button v-if="task.checked" class="btn btn-sm btn-outline-secondary ms-1" type="button" :title="de.moveAssessmentTaskDown" :aria-label="de.moveAssessmentTaskDown" @click="moveTask(task, 1)"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
                                                 <a class="btn btn-sm btn-outline-secondary" :href="editTaskUrl(task)" :title="de.edit" :aria-label="de.editAssessmentTask"><i class="bi bi-pencil" aria-hidden="true"></i></a>
                                                 <button v-if="task.source === 'manual'" class="btn btn-sm btn-outline-danger ms-1" type="button" :title="de.remove" :aria-label="de.removeAssessmentTask" @click="removeTask(task)"><i class="bi bi-trash" aria-hidden="true"></i></button>
                                             </td>
