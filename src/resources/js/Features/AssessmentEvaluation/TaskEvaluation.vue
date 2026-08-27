@@ -15,6 +15,31 @@ const props = defineProps({
 
 const reviewCases = ref([]);
 
+const sortingQuestions = computed(() =>
+    (props.task.content?.sorting_order ?? [])
+        .map((id) => (props.task.content?.questions ?? []).find((question) => String(question.id) === String(id)))
+        .filter(Boolean)
+        .concat(
+            (props.task.content?.questions ?? []).filter(
+                (question) => !(props.task.content?.sorting_order ?? []).includes(question.id),
+            ),
+        )
+        .filter((question) => String(question.label ?? '').trim() !== '')
+        .map((question, index) => ({
+            id: question.id ?? `sentence-${index + 1}`,
+            label: question.label,
+        })),
+);
+
+const sortingScoringQuestions = computed(() =>
+    (props.task.content?.questions ?? [])
+        .filter((question) => String(question.label ?? '').trim() !== '')
+        .map((question, index) => ({
+            id: question.id ?? `sentence-${index + 1}`,
+            label: question.label,
+        })),
+);
+
 const maximumPoints = computed(() =>
     Number(
         props.task.max_points ??
@@ -183,6 +208,7 @@ function buildReviewCase(fragment) {
                         Number(occurrence.points),
             };
         }),
+        sorting_sequence: { ...(fragment.review?.sorting_sequence ?? {}) },
         extra_points: fragment.review?.extra_points ?? 0,
         extra_note: fragment.review?.extra_note ?? null,
         errors: {},
@@ -192,6 +218,10 @@ function buildReviewCase(fragment) {
 }
 
 function assignedPoints(reviewCase) {
+    if (props.task.task_type === "sorting") {
+        return (sortingResult(reviewCase)?.points ?? 0) + Number(reviewCase.extra_points ?? 0);
+    }
+
     const automaticPoints =
         reviewCase.options.filter((option) =>
             props.task.task_type === "checkbox"
@@ -210,10 +240,34 @@ function assignedPoints(reviewCase) {
     );
 }
 
-function formatPoints(points) {
-    return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(
-        points,
-    );
+function sortingResult(reviewCase) {
+    const positions = sortingScoringQuestions.value.map((question) => Number(reviewCase.sorting_sequence?.[question.id]));
+    const count = positions.length;
+    const totalPairs = count * (count - 1) / 2;
+    if (totalPairs === 0) return { correctPairs: 0, totalPairs, percentage: 0, points: 0 };
+
+    let correctPairs = 0;
+    sortingScoringQuestions.value.forEach((left, leftIndex) => {
+        sortingScoringQuestions.value.slice(leftIndex + 1).forEach((right) => {
+            const leftPosition = Number(reviewCase.sorting_sequence?.[left.id]);
+            const rightPosition = Number(reviewCase.sorting_sequence?.[right.id]);
+            const validPosition = (position) => Number.isInteger(position) && position >= 1 && position <= count;
+            if (validPosition(leftPosition) && validPosition(rightPosition) && leftPosition !== rightPosition && leftPosition < rightPosition) correctPairs += 1;
+        });
+    });
+
+    return {
+        correctPairs,
+        totalPairs,
+        percentage: correctPairs / totalPairs * 100,
+        points: Number(props.task.max_points ?? 0) * correctPairs / totalPairs,
+    };
+}
+
+function formatPoints(points, roundToInteger = false) {
+    return new Intl.NumberFormat("de-DE", {
+        maximumFractionDigits: roundToInteger ? 0 : 2,
+    }).format(roundToInteger ? Math.round(Number(points)) : points);
 }
 
 function specializedCheckbox(reviewCase) {
@@ -302,6 +356,7 @@ function save(reviewCase) {
     router.put(
         reviewUrl(reviewCase.fragment),
         {
+            sorting_sequence: props.task.task_type === "sorting" ? reviewCase.sorting_sequence : undefined,
             options:
                 specializedCheckbox(reviewCase) ||
                 ["image_matching", "image_labeling", "matching_table"].includes(props.task.task_type)
@@ -370,7 +425,13 @@ watch(() => props.openKey, resetCases, { immediate: true });
                                 :data-testid="`points-summary-${reviewCase.fragment.id}`"
                                 class="h4 mb-1"
                             >
-                                {{ formatPoints(assignedPoints(reviewCase)) }} /
+                                {{
+                                    formatPoints(
+                                        assignedPoints(reviewCase),
+                                        task.task_type === "sorting",
+                                    )
+                                }}
+                                /
                                 {{ formatPoints(maximumPoints) }}
                                 {{ de.assessmentEvaluationPoints }}
                             </div>
@@ -388,7 +449,23 @@ watch(() => props.openKey, resetCases, { immediate: true });
                         :processing="reviewCase.processing"
                         @update:selection="updateOptions(reviewCase, $event)"
                     />
-                    <div v-if="reviewCase.items.length" class="vstack gap-2">
+                    <div v-if="task.task_type === 'sorting'" class="mb-3" data-testid="sorting-evaluation-table">
+                        <table class="table table-bordered align-middle mb-2">
+                            <tbody>
+                                <tr v-for="question in sortingQuestions" :key="question.id">
+                                    <td>{{ question.label }}</td>
+                                    <td class="text-center" style="width: 7rem">
+                                        <label class="visually-hidden" :for="`sorting-position-${reviewCase.fragment.id}-${question.id}`">{{ question.label }}</label>
+                                        <input :id="`sorting-position-${reviewCase.fragment.id}-${question.id}`" :data-testid="`sorting-position-${reviewCase.fragment.id}-${question.id}`" v-model="reviewCase.sorting_sequence[question.id]" class="form-control form-control-sm text-center" type="number" min="1" :max="sortingQuestions.length" :disabled="reviewCase.processing" @input="markDirty(reviewCase)" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div v-if="sortingResult(reviewCase)" :data-testid="`sorting-result-${reviewCase.fragment.id}`" class="small fw-semibold">
+                            {{ sortingResult(reviewCase).correctPairs }} / {{ sortingResult(reviewCase).totalPairs }} {{ de.assessmentEvaluationSortingRelationships }} · {{ formatPoints(sortingResult(reviewCase).percentage) }} %
+                        </div>
+                    </div>
+                    <div v-if="reviewCase.items.length && task.task_type !== 'sorting'" class="vstack gap-2">
                         <template v-for="(item, index) in reviewCase.items" :key="`${item.expectation_id}:${item.occurrence}`">
                             <h4 v-if="subtaskHeading(reviewCase, index)" class="h6 mb-2" data-testid="subtask-heading">{{ subtaskHeading(reviewCase, index) }}</h4>
                             <ExpectationEvaluationRow
@@ -401,7 +478,7 @@ watch(() => props.openKey, resetCases, { immediate: true });
                             />
                         </template>
                     </div>
-                    <p v-else class="text-muted">
+                    <p v-else-if="task.task_type !== 'sorting'" class="text-muted">
                         {{ de.assessmentEvaluationNoExpectations }}
                     </p>
 

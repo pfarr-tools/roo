@@ -178,7 +178,7 @@ it('rendert Freitextbilder in maximal drei Spalten und den optionalen Lesetext d
                 'image_width_cm' => 3,
                 'optional_reading_text' => 'Dieser Lesetext folgt auf die Bilder.',
                 'images' => [
-                    ['path' => $image],
+                    ['path' => $image, 'copyright' => 'Ada Beispiel'],
                     ['path' => $image],
                     ['path' => $image],
                     ['path' => $image],
@@ -198,10 +198,55 @@ it('rendert Freitextbilder in maximal drei Spalten und den optionalen Lesetext d
     $archive->close();
     unlink($path);
 
-    expect($content)->toContain('Dieser Lesetext folgt auf die Bilder.')
+    expect($content)->toContain('Bild: Ada Beispiel')
+        ->and(strpos($content, 'Bild: Ada Beispiel'))->toBeGreaterThan(strrpos($content, 'Pictures/section_image1.png'))
+        ->and(strpos($content, 'Dieser Lesetext folgt auf die Bilder.'))->toBeGreaterThan(strpos($content, 'Bild: Ada Beispiel'))
+        ->and($content)->toContain('Dieser Lesetext folgt auf die Bilder.')
         ->and(substr_count((string) $content, '<table:table-column'))->toBeGreaterThanOrEqual(4)
         ->and(substr_count((string) $content, 'Pictures/section_image1.png'))->toBe(4)
         ->and($styles)->toContain('14pt');
+});
+
+it('rendert die Freitext-Bewertungsskala nach dem optionalen Lesetext', function () {
+    $render = function (string $scale): string {
+        $document = new AssessmentDocument('LSE Bewertungsskala', [[
+            'title' => 'Wie findest du die Aufgabe?',
+            'task_type' => 'free_text',
+            'content' => [
+                'prompt' => 'Wie findest du die Aufgabe?',
+                'optional_reading_text' => 'Lies zuerst diesen Text.',
+                'rating_scale' => $scale,
+                'rating_scale_label' => 'Wie sicher bist du?',
+                'lines' => 0,
+            ],
+        ]], '2', []);
+        $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+        $path = tempnam(sys_get_temp_dir(), 'roo-test-free-text-rating-');
+        file_put_contents($path, $contents);
+        $archive = new ZipArchive;
+        $archive->open($path);
+        $content = $archive->getFromName('content.xml');
+        $archive->close();
+        unlink($path);
+
+        return (string) $content;
+    };
+
+    $stars = $render('stars');
+    $likert = $render('likert');
+
+    expect(substr_count($stars, '☆'))->toBe(5)
+        ->and($stars)->toContain('Wie sicher bist du?')
+        ->and(strpos($stars, '☆'))->toBeGreaterThan(strpos($stars, 'Lies zuerst diesen Text.'))
+        ->and(substr_count($likert, '<table:table-column'))->toBeGreaterThanOrEqual(6)
+        ->and(substr_count($likert, '<table:table-row'))->toBeGreaterThanOrEqual(3)
+        ->and(substr_count($likert, '□'))->toBe(5)
+        ->and($likert)->toContain('Stimme voll zu')
+        ->and($likert)->toContain('Stimme eher zu')
+        ->and($likert)->toContain('Unentschieden')
+        ->and($likert)->toContain('Stimme eher nicht zu')
+        ->and($likert)->toContain('Stimme überhaupt nicht zu')
+        ->and(strpos($likert, '□'))->toBeGreaterThan(strpos($likert, 'Lies zuerst diesen Text.'));
 });
 
 it('passt die Bildspalten bei einer einzigen Bildzeile an', function () {
@@ -230,6 +275,43 @@ it('passt die Bildspalten bei einer einzigen Bildzeile an', function () {
 
     expect($columnCount(1))->toBe(2)
         ->and($columnCount(2))->toBe(3);
+});
+
+it('rendert Sätze sortieren als zufällig gemischte zweispaltige Tabelle', function () {
+    $document = new AssessmentDocument('LSE Sätze sortieren', [[
+        'title' => 'Bringe die Sätze in die richtige Reihenfolge.',
+        'task_type' => 'sorting',
+        'max_points' => 8,
+        'content' => [
+            'prompt' => 'Bringe die Sätze in die richtige Reihenfolge.',
+            'points_per_sentence' => 2,
+            'questions' => [
+                ['id' => 'a', 'label' => 'Satz A'],
+                ['id' => 'b', 'label' => 'Satz B'],
+                ['id' => 'c', 'label' => 'Satz C'],
+                ['id' => 'd', 'label' => 'Satz D'],
+            ],
+        ],
+    ]], '2', []);
+
+    $contents = app(PhpOfficeDocumentRenderer::class)->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-sorting-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $styles = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect(substr_count((string) $content, '<table:table-column'))->toBe(2)
+        ->and(substr_count((string) $content, '<table:table-row'))->toBe(4)
+        ->and($content)->toContain('Satz A')
+        ->and($content)->toContain('Satz B')
+        ->and($content)->toContain('Satz C')
+        ->and($content)->toContain('Satz D')
+        ->and($content)->toContain('15.75cm')
+        ->and($content)->toContain('1.75cm');
 });
 
 it('rendert Bildzuordnung als dreispaltige Tabelle mit verbundener Lösungsspalte', function () {

@@ -11,9 +11,10 @@ final class AssessmentTaskEvaluatorRegistry
         private readonly ImageMatchingTaskEvaluator $imageMatching,
         private readonly ImageLabelingTaskEvaluator $imageLabeling,
         private readonly MatchingTableTaskEvaluator $matchingTable,
+        private readonly SortingTaskEvaluator $sorting,
     ) {}
 
-    public function for(AssessmentTask $task): CheckboxTaskEvaluator|ImageMatchingTaskEvaluator|ImageLabelingTaskEvaluator|MatchingTableTaskEvaluator|null
+    public function for(AssessmentTask $task): CheckboxTaskEvaluator|ImageMatchingTaskEvaluator|ImageLabelingTaskEvaluator|MatchingTableTaskEvaluator|SortingTaskEvaluator|null
     {
         if ($this->checkbox->supports($task)) {
             return $this->checkbox;
@@ -25,6 +26,10 @@ final class AssessmentTaskEvaluatorRegistry
 
         if ($this->matchingTable->supports($task)) {
             return $this->matchingTable;
+        }
+
+        if ($this->sorting->supports($task)) {
+            return $this->sorting;
         }
 
         return $this->imageMatching->supports($task) ? $this->imageMatching : null;

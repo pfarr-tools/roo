@@ -164,7 +164,20 @@ it("offers images and an optional reading text for free text tasks", async () =>
 
     expect(root.querySelector("#assessment-task-image-width")).not.toBeNull();
     expect(root.querySelector("#assessment-task-optional-reading-text")).not.toBeNull();
+    expect(root.querySelector("#assessment-task-rating-scale-label")).toBeNull();
     expect(root.textContent).toContain("Bilder aus der Bibliothek");
+    unmount();
+});
+
+it("orders free text images before reading text and the remaining options", async () => {
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-images").style.order).toBe("1");
+    expect(root.querySelector("#assessment-task-optional-reading-text").parentElement.style.order).toBe("2");
+    expect(root.querySelector("#assessment-task-rating-scale").parentElement.style.order).toBe("3");
+    expect(root.querySelector("#assessment-task-lines").style.order).toBe("4");
     unmount();
 });
 
@@ -190,6 +203,29 @@ it("submits free text images and optional reading text", async () => {
     expect(transformedPayload.content.optional_reading_text).toBe("Lies den Text.");
     expect(transformedPayload.content.image_width_cm).toBe(3);
     expect(transformedPayload.images[0].resource_id).toBe(7);
+    unmount();
+});
+
+it("submits the selected free text rating scale", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+
+    const scale = root.querySelector("#assessment-task-rating-scale");
+    expect(scale).not.toBeNull();
+    scale.value = "likert";
+    scale.dispatchEvent(new Event("change", { bubbles: true }));
+    await nextTick();
+    const label = root.querySelector("#assessment-task-rating-scale-label");
+    expect(label).not.toBeNull();
+    label.value = "Wie sicher bist du?";
+    label.dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.content.rating_scale).toBe("likert");
+    expect(transformedPayload.content.rating_scale_label).toBe("Wie sicher bist du?");
     unmount();
 });
 
@@ -356,6 +392,35 @@ it("does not submit the empty options placeholder for image matching", async () 
     await nextTick();
 
     expect(transformedPayload.content.options).toBeUndefined();
+    unmount();
+});
+
+it("configures sorting sentences without per-sentence point fields", async () => {
+    transformedPayload = undefined;
+    const { root, unmount } = mount();
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Sätze sortieren"))
+        .click();
+    await nextTick();
+
+    expect(root.textContent).toContain("Sätze");
+    expect(root.textContent).not.toContain("Teilfragen");
+    expect(root.querySelector("#assessment-task-points-per-sentence")).not.toBeNull();
+    expect(root.querySelectorAll("[data-sorting-sentence] input[type=number]").length).toBe(0);
+
+    root.querySelector("#assessment-task-points-per-sentence").value = "2";
+    root.querySelector("#assessment-task-points-per-sentence").dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector("[data-sorting-sentence] input").value = "Erster Satz";
+    root.querySelector("[data-sorting-sentence] input").dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await nextTick();
+
+    expect(transformedPayload.task_type).toBe("sorting");
+    expect(transformedPayload.content.points_per_sentence).toBe(2);
+    expect(transformedPayload.content.questions[0].label).toBe("Erster Satz");
+    expect(transformedPayload.content.questions[0].id).toBeTruthy();
     unmount();
 });
 

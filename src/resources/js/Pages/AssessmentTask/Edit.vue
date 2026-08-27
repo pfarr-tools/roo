@@ -77,6 +77,10 @@ const newHeadingRow = (columnCount = 1) => ({
     header: newHeadingCell(),
     cells: Array.from({ length: columnCount }, () => newHeadingCell()),
 });
+const newSortingQuestion = () => ({
+    id: `sentence-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    label: "",
+});
 const emptyContent = () => ({
     prompt: "",
     lines: 5,
@@ -90,11 +94,14 @@ const emptyContent = () => ({
     points_per_correct_answer: 1,
     show_solutions: false,
     optional_reading_text: "",
+    rating_scale: "",
+    rating_scale_label: "",
     columns: [""],
     rows: [{ label: "", answer: "" }],
     subtasks: [newSubtask()],
     questions: [{ label: "", lines: 3 }],
     words: "",
+    points_per_sentence: 1,
 });
 const form = useForm({
     title: "",
@@ -130,6 +137,13 @@ function resetForm() {
     }));
     if (props.task?.task_type === "heading_table") normalizeHeadingTableContent(content, props.task?.expectations ?? []);
     if (props.task?.task_type === "matching_table") normalizeMatchingTableContent(content);
+    if (props.task?.task_type === "sorting") {
+        content.questions = (content.questions ?? []).map((question, index) => ({
+            id: question.id ?? `sentence-${index + 1}`,
+            label: question.label ?? "",
+        }));
+        content.points_per_sentence = Number(content.points_per_sentence ?? 1);
+    }
     form.defaults({
         title: props.task?.title ?? "",
         task_type: props.task?.task_type ?? "free_text",
@@ -209,6 +223,13 @@ function selectType(value) {
     form.task_type = value;
     if (value === "heading_table") normalizeHeadingTableContent(form.content, []);
     if (value === "matching_table") normalizeMatchingTableContent(form.content);
+    if (value === "sorting") {
+        form.content.questions = (form.content.questions ?? []).map((question, index) => ({
+            id: question.id ?? `sentence-${index + 1}`,
+            label: question.label ?? "",
+        }));
+        form.content.points_per_sentence = Number(form.content.points_per_sentence ?? 1);
+    }
     editorTab.value = "content";
 }
 function normalizeMatchingTableContent(content) {
@@ -421,7 +442,7 @@ const filteredImageLibrary = computed(() => {
     );
 });
 function addQuestion() {
-    form.content.questions.push({ label: "", lines: 3 });
+    form.content.questions.push(form.task_type === "sorting" ? newSortingQuestion() : { label: "", lines: 3 });
 }
 function addExpectation() {
     form.expectations.push(emptyExpectation());
@@ -520,6 +541,12 @@ function save() {
         }));
     }
     if (!usesOptions(form.task_type)) delete content.options;
+    if (form.task_type === "sorting") {
+        content.questions = content.questions.map((question, index) => ({
+            id: question.id ?? `sentence-${index + 1}`,
+            label: question.label,
+        }));
+    }
     if (!["free_text", "image_matching", "image_answer_table"].includes(form.task_type)) delete content.image_width_cm;
     if (!['image_labeling', 'subtask_table', 'image_answer_table', 'heading_table'].includes(form.task_type)) {
         delete content.image_label_width_cm;
@@ -554,8 +581,13 @@ function save() {
     }
     if (!usesQuestions(form.task_type)) delete content.questions;
     if (form.task_type !== "free_text") delete content.optional_reading_text;
+    if (form.task_type !== "free_text") delete content.rating_scale;
+    if (form.task_type !== "free_text") delete content.rating_scale_label;
+    if (!['stars', 'likert'].includes(content.rating_scale)) delete content.rating_scale;
+    if (!String(content.rating_scale || '').trim()) delete content.rating_scale_label;
     delete content.reading_text;
     if (form.task_type !== "sentence_builder") delete content.words;
+    if (form.task_type !== "sorting") delete content.points_per_sentence;
     if (
         !["free_text", "subtask_table", "image_answer_table", "heading_table"].includes(
             form.task_type,
@@ -673,7 +705,7 @@ function save() {
                     role="tabpanel"
                 >
                     <div class="col-3">
-                        <article class="card card-body h-100">
+                        <article class="card card-body h-100" :class="{ 'assessment-task-content': form.task_type === 'free_text' }">
                             <h2 class="h5">{{ de.assessmentTaskType }}</h2>
                             <p class="text-muted small">
                                 {{ de.assessmentTaskTypeHint }}
@@ -720,9 +752,21 @@ function save() {
                                 rows="4"
                                 required
                             ></textarea>
-                            <div v-if="form.task_type === 'free_text'" class="mt-3">
+                            <div v-if="form.task_type === 'free_text'" class="mt-3" style="order: 2">
                                 <label class="form-label" for="assessment-task-optional-reading-text">{{ de.assessmentTaskOptionalReadingText }}</label>
                                 <textarea id="assessment-task-optional-reading-text" v-model="form.content.optional_reading_text" class="form-control" rows="8"></textarea>
+                            </div>
+                            <div v-if="form.task_type === 'free_text'" class="mt-3" style="order: 3">
+                                <template v-if="form.content.rating_scale">
+                                    <label class="form-label" for="assessment-task-rating-scale-label">{{ de.assessmentTaskRatingLabel }}</label>
+                                    <input id="assessment-task-rating-scale-label" v-model="form.content.rating_scale_label" class="form-control mb-2" />
+                                </template>
+                                <label class="form-label" for="assessment-task-rating-scale">{{ de.assessmentTaskRating }}</label>
+                                <select id="assessment-task-rating-scale" v-model="form.content.rating_scale" class="form-select">
+                                    <option value="">{{ de.assessmentTaskRatingNone }}</option>
+                                    <option value="stars">{{ de.assessmentTaskRatingStars }}</option>
+                                    <option value="likert">{{ de.assessmentTaskRatingLikert }}</option>
+                                </select>
                             </div>
                             <div
                                 v-if="
@@ -731,6 +775,8 @@ function save() {
                                     ].includes(form.task_type)
                                 "
                                 class="mt-3"
+                                id="assessment-task-lines"
+                                style="order: 4"
                             >
                                 <label class="form-label">{{
                                     de.assessmentTaskLines
@@ -1078,7 +1124,7 @@ function save() {
                                     {{ de.assessmentTaskAddRow }}
                                 </button>
                             </div>
-                            <div v-if="usesImages(form.task_type)" class="mt-4">
+                            <div v-if="usesImages(form.task_type)" id="assessment-task-images" class="mt-4" :style="form.task_type === 'free_text' ? { order: 1 } : undefined">
                                 <h3 class="h6">
                                     {{ de.assessmentTaskImages }}
                                 </h3>
@@ -1308,17 +1354,25 @@ function save() {
                                 />
                             </div>
                             <div
+                                v-if="form.task_type === 'sorting'"
+                                class="mt-3"
+                            >
+                                <label class="form-label" for="assessment-task-points-per-sentence">{{ de.assessmentTaskPointsPerSentence }}</label>
+                                <input id="assessment-task-points-per-sentence" v-model.number="form.content.points_per_sentence" class="form-control" type="number" min="0" step="1" required />
+                            </div>
+                            <div
                                 v-if="usesQuestions(form.task_type)"
                                 class="mt-4"
                             >
                                 <h3 class="h6">
-                                    {{ de.assessmentTaskQuestions }}
+                                    {{ form.task_type === 'sorting' ? de.assessmentTaskSentences : de.assessmentTaskQuestions }}
                                 </h3>
                                 <div
                                     v-for="(question, index) in form.content
                                         .questions"
                                     :key="index"
                                     class="input-group mb-2"
+                                    :data-sorting-sentence="form.task_type === 'sorting' ? index : undefined"
                                 >
                                     <input
                                         v-model="question.label"
@@ -1328,6 +1382,7 @@ function save() {
                                         "
                                         required
                                     /><input
+                                        v-if="form.task_type !== 'sorting'"
                                         v-model="question.lines"
                                         class="form-control"
                                         type="number"
@@ -1351,7 +1406,7 @@ function save() {
                                     class="btn btn-sm btn-outline-secondary"
                                     @click="addQuestion"
                                 >
-                                    {{ de.assessmentTaskAddQuestion }}
+                                    {{ form.task_type === 'sorting' ? de.assessmentTaskAddSentence : de.assessmentTaskAddQuestion }}
                                 </button>
                             </div>
                         </article>
@@ -1599,6 +1654,11 @@ function save() {
 </template>
 
 <style scoped>
+.assessment-task-content {
+    display: flex;
+    flex-direction: column;
+}
+
 .image-labeling-stage {
     position: relative;
     width: min(100%, 52rem);

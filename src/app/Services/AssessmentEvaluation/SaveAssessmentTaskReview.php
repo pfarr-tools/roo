@@ -38,7 +38,11 @@ final class SaveAssessmentTaskReview
 
         $evaluator = $this->evaluators->for($task);
         try {
-            $evaluator?->validate($task, $data['options'] ?? []);
+            if ($task->task_type === 'sorting') {
+                $evaluator?->validate($task, $data['sorting_sequence'] ?? []);
+            } else {
+                $evaluator?->validate($task, $data['options'] ?? []);
+            }
         } catch (InvalidArgumentException $exception) {
             throw ValidationException::withMessages(['options' => $exception->getMessage()]);
         }
@@ -67,6 +71,7 @@ final class SaveAssessmentTaskReview
             $review->update([
                 'extra_points' => $data['extra_points'] ?? 0,
                 'extra_note' => $data['extra_note'] ?? null,
+                'sorting_sequence' => $task->task_type === 'sorting' ? ($data['sorting_sequence'] ?? []) : null,
             ]);
 
             $review->items->each(function ($item) use ($providedOccurrences): void {

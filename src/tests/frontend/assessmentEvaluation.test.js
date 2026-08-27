@@ -362,6 +362,52 @@ describe('assessment evaluation components', () => {
         unmount()
     })
 
+    it('evaluates sorting sentences from entered positions and saves the sequence', async () => {
+        const { root, unmount } = mount(TaskEvaluation, {
+            group,
+            assessment,
+            task: {
+                id: 25,
+                title: 'Sätze sortieren',
+                task_type: 'sorting',
+                max_points: 10,
+                content: {
+                    points_per_sentence: 2,
+                    questions: [
+                        { id: 'a', label: 'A' },
+                        { id: 'b', label: 'B' },
+                        { id: 'c', label: 'C' },
+                        { id: 'd', label: 'D' },
+                        { id: 'e', label: 'E' },
+                    ],
+                },
+                expectations: [],
+            },
+            fragments: [{ id: 47, booklet_id: 8, image_url: '/private/task.png', review: null }],
+            openKey: 1,
+        })
+
+        const positions = { a: 1, b: 2, c: 4, d: 3, e: 5 }
+        for (const [id, value] of Object.entries(positions)) {
+            const input = root.querySelector(`[data-testid="sorting-position-47-${id}"]`)
+            input.value = String(value)
+            input.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+        await nextTick()
+
+        expect(root.querySelector('[data-testid="sorting-result-47"]').textContent).toContain('90 %')
+        expect(root.querySelector('[data-testid="points-summary-47"]').textContent).toContain('9 / 10 Punkte')
+
+        root.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+        await nextTick()
+        expect(testState.routerPut).toHaveBeenCalledWith(
+            '/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/booklets/8/tasks/25/review',
+            expect.objectContaining({ sorting_sequence: positions }),
+            expect.any(Object),
+        )
+        unmount()
+    })
+
     it('uses and saves expectation rows for image labeling tasks', async () => {
         const { root, unmount } = mount(TaskEvaluation, {
             group,

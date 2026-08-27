@@ -129,6 +129,28 @@ it('renders the evaluation workspace with group students, booklet progress, and 
             ->where('taskFragments.0.assessment_task_id', $fixture['task']->id));
 });
 
+it('passes the persisted sorting order to the evaluation workspace', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Sätze sortieren',
+        'task_type' => 'sorting',
+        'content' => [
+            'questions' => [
+                ['id' => 'a', 'label' => 'A'],
+                ['id' => 'b', 'label' => 'B'],
+                ['id' => 'c', 'label' => 'C'],
+            ],
+            'sorting_order' => ['b', 'c', 'a'],
+        ],
+    ]));
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+
+    $this->actingAs($fixture['user'])
+        ->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page->where('tasks.1.content.sorting_order', ['b', 'c', 'a']));
+});
+
 it('stores checkbox selections and synchronizes option and manual points', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
@@ -219,6 +241,36 @@ it('stores matching table selections and synchronizes category points', function
 
     expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['r1:c1' => true, 'r1:c2' => false])
         ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('2.00');
+});
+
+it('stores sorting sequences and synchronizes their pairwise score', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
+        'organization_id' => $fixture['organization']->id,
+        'title' => 'Sätze sortieren',
+        'task_type' => 'sorting',
+        'content' => [
+            'points_per_sentence' => 2,
+            'questions' => [
+                ['id' => 'a', 'label' => 'A'],
+                ['id' => 'b', 'label' => 'B'],
+                ['id' => 'c', 'label' => 'C'],
+                ['id' => 'd', 'label' => 'D'],
+                ['id' => 'e', 'label' => 'E'],
+            ],
+        ],
+    ]));
+    $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $task, [
+        'sorting_sequence' => ['a' => 1, 'b' => 2, 'c' => 4, 'd' => 3, 'e' => 5],
+        'items' => [],
+        'extra_points' => 0,
+    ]);
+
+    expect($task->reviews()->sole()->sorting_sequence)->toBe(['a' => 1, 'b' => 2, 'c' => 4, 'd' => 3, 'e' => 5])
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('9.00');
 });
 
 it('exposes checkbox definitions and saved selections in evaluation props', function () {

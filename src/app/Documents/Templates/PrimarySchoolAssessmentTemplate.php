@@ -164,8 +164,9 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addCheckboxTask($section, $content);
         } elseif (($task['task_type'] ?? '') === 'free_text') {
             $this->addFreeTextImages($section, $content);
-            $this->addOptionalReadingText($section, $content);
             $this->addImageCredits($section, $content);
+            $this->addOptionalReadingText($section, $content);
+            $this->addFreeTextRating($section, $content);
         } elseif (($task['task_type'] ?? '') === 'image_matching') {
             $this->addImageMatchingTask($section, $content);
             $this->addImageCredits($section, $content);
@@ -182,9 +183,11 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $this->addHeadingTable($section, $content);
         } elseif (($task['task_type'] ?? '') === 'matching_table') {
             $this->addMatchingTable($section, $content);
+        } elseif (($task['task_type'] ?? '') === 'sorting') {
+            $this->addSortingTask($section, $content);
         }
 
-        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table'], true)) {
+        if (! in_array($task['task_type'] ?? '', ['checkbox', 'image_matching', 'image_labeling', 'subtask_table', 'image_answer_table', 'heading_table', 'matching_table', 'sorting'], true)) {
             $this->addWritingLines($section, $content, $gradeLevel);
         }
         $section->addText('ROO_TASK_END_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 40]);
@@ -239,6 +242,85 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         }
 
         $section->addText($text, ['name' => self::ATKINSON, 'size' => 14, 'bold' => false], ['spaceBefore' => 120, 'spaceAfter' => 120]);
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addSortingTask(Section $section, array $content): void
+    {
+        $questionsById = collect($content['questions'] ?? [])
+            ->filter(fn ($question): bool => is_array($question) && trim((string) ($question['label'] ?? '')) !== '')
+            ->keyBy(fn (array $question, int $index): string => (string) ($question['id'] ?? 'sentence-'.($index + 1)));
+        $sortingOrder = collect($content['sorting_order'] ?? [])
+            ->map(fn ($id): string => (string) $id)
+            ->filter(fn (string $id): bool => $questionsById->has($id));
+        $questions = $sortingOrder
+            ->map(fn (string $id) => $questionsById->get($id))
+            ->concat($questionsById->except($sortingOrder->all())->values())
+            ->values();
+        if ($questions->isEmpty()) {
+            return;
+        }
+
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+            'alignment' => 'center',
+            'borderSize' => 4,
+            'borderColor' => '000000',
+        ]);
+        $sentenceWidth = (int) round(self::CONTENT_WIDTH_MM * 56.6929 * 0.9);
+        $numberWidth = (int) round(self::CONTENT_WIDTH_MM * 56.6929 * 0.1);
+        foreach ($questions as $question) {
+            $row = $table->addRow(720);
+            $row->addCell($sentenceWidth, ['borderSize' => 4, 'borderColor' => '000000'])
+                ->addText((string) $question['label'], ['name' => self::ATKINSON, 'size' => 14]);
+            $row->addCell($numberWidth, ['borderSize' => 4, 'borderColor' => '000000'])
+                ->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+        }
+    }
+
+    /** @param array<string, mixed> $content */
+    private function addFreeTextRating(Section $section, array $content): void
+    {
+        $scale = $content['rating_scale'] ?? null;
+        $label = trim((string) ($content['rating_scale_label'] ?? ''));
+        if ($scale === 'stars') {
+            $symbols = '☆ ☆ ☆ ☆ ☆';
+        } elseif ($scale !== 'likert') {
+            return;
+        }
+
+        if ($scale === 'stars') {
+            $run = $section->addTextRun(['alignment' => 'left', 'spaceBefore' => 120, 'spaceAfter' => 120]);
+            if ($label !== '') {
+                $run->addText($label.' ', ['name' => self::COMIC, 'size' => 14, 'bold' => true]);
+            }
+            $run->addText($symbols, ['name' => self::ATKINSON, 'size' => 14]);
+
+            return;
+        }
+
+        if ($label !== '') {
+            $section->addText($label, ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 120, 'spaceAfter' => 0]);
+        }
+
+        $table = $section->addTable([
+            'width' => self::CONTENT_WIDTH_MM * 56.6929,
+            'layout' => 'fixed',
+            'alignment' => 'center',
+            'borderSize' => 0,
+            'cellMargin' => 0,
+        ]);
+        $cellWidth = (int) floor(self::CONTENT_WIDTH_MM * 56.6929 / 5);
+        $checkboxes = $table->addRow();
+        foreach (range(0, 4) as $index) {
+            $checkboxes->addCell($cellWidth, ['borderSize' => 0])->addText('□', ['name' => self::ATKINSON, 'size' => 14], ['alignment' => 'center']);
+        }
+        $labels = ['Stimme voll zu', 'Stimme eher zu', 'Unentschieden', 'Stimme eher nicht zu', 'Stimme überhaupt nicht zu'];
+        $labelRow = $table->addRow();
+        foreach ($labels as $likertLabel) {
+            $labelRow->addCell($cellWidth, ['borderSize' => 0])->addText($likertLabel, ['name' => self::ATKINSON, 'size' => 10, 'bold' => false], ['alignment' => 'center']);
+        }
     }
 
     /** @param array<string, mixed> $content */

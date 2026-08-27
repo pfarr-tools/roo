@@ -19,6 +19,7 @@ use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
 use App\Models\SongVersion;
 use App\Services\CompetencyResolver;
+use App\Services\AssessmentEvaluation\SortingTaskOrder;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use App\Services\WscDocInspector;
@@ -152,8 +153,15 @@ class LessonWorkspaceController extends Controller
             'levels' => ['sometimes', 'array'],
             'levels.*' => ['in:G,M,E'],
         ]);
+        $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
+        $data['content'] = array_replace_recursive($data['content'] ?? [], $sortingContent);
+        if ($data['task_type'] === 'sorting') {
+            $data['content'] = app(SortingTaskOrder::class)->apply($data['content']);
+        }
         $expectations = $this->subtaskExpectations($data['task_type'], data_get($data, 'content', []), $expectations);
         $data['content']['optional_reading_text'] = $request->validate(['content.optional_reading_text' => ['nullable', 'string', 'max:50000']])['content']['optional_reading_text'] ?? null;
+        $data['content']['rating_scale'] = $request->validate(['content.rating_scale' => ['nullable', Rule::in(['stars', 'likert'])]])['content']['rating_scale'] ?? null;
+        $data['content']['rating_scale_label'] = $request->validate(['content.rating_scale_label' => ['nullable', 'string', 'max:255']])['content']['rating_scale_label'] ?? null;
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
@@ -190,11 +198,18 @@ class LessonWorkspaceController extends Controller
         $expectations = $this->validatedExpectations($request);
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
+        $data['content'] = array_replace_recursive($data['content'] ?? [], $sortingContent);
+        if ($data['task_type'] === 'sorting') {
+            $data['content'] = app(SortingTaskOrder::class)->apply($data['content'], $assessmentTask->content ?? []);
+        }
         $expectations = $this->subtaskExpectations($data['task_type'], data_get($data, 'content', []), $expectations);
+        $data['content']['rating_scale'] = $request->validate(['content.rating_scale' => ['nullable', Rule::in(['stars', 'likert'])]])['content']['rating_scale'] ?? null;
+        $data['content']['rating_scale_label'] = $request->validate(['content.rating_scale_label' => ['nullable', 'string', 'max:255']])['content']['rating_scale_label'] ?? null;
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'];
-        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated'), 'optional_reading_text' => $request->input('content.optional_reading_text')];
+        $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated'), 'optional_reading_text' => $request->input('content.optional_reading_text'), 'rating_scale' => $request->input('content.rating_scale'), 'rating_scale_label' => $request->input('content.rating_scale_label')];
         $attributes = ['title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null, 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');

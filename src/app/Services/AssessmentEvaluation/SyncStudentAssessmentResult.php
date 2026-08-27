@@ -31,10 +31,12 @@ final class SyncStudentAssessmentResult
         $points = $review->items->sum(fn ($item): float => (float) $item->awarded_points) + (float) $review->extra_points;
         $evaluator = $this->evaluators->for($task);
         if ($evaluator !== null) {
-            $points += $evaluator->score($task, $review->options->map(fn ($option): array => [
-                'id' => $option->option_id,
-                'selected' => $option->selected,
-            ])->all());
+            $points += $task->task_type === 'sorting'
+                ? $evaluator->score($task, $review->sorting_sequence ?? [])
+                : $evaluator->score($task, $review->options->map(fn ($option): array => [
+                    'id' => $option->option_id,
+                    'selected' => $option->selected,
+                ])->all());
         }
 
         StudentAssessmentResult::query()->updateOrCreate(

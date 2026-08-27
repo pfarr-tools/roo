@@ -97,6 +97,11 @@ class AssessmentTask extends Model
                 : $relations * $points);
         }
 
+        if ($this->task_type === 'sorting') {
+            return (int) (collect($this->content['questions'] ?? [])->filter(fn ($question): bool => is_array($question) && trim((string) ($question['label'] ?? '')) !== '')->count()
+                * (float) ($this->content['points_per_sentence'] ?? 1));
+        }
+
         if (! in_array($this->task_type, ['checkbox', 'image_matching', 'image_labeling'], true)) {
             return $manualPoints ?: $this->max_points;
         }

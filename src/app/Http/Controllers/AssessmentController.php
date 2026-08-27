@@ -160,6 +160,7 @@ class AssessmentController extends Controller
                             'id' => $review->id,
                             'extra_points' => $review->extra_points,
                             'extra_note' => $review->extra_note,
+                            'sorting_sequence' => $review->sorting_sequence,
                             'items' => $review->items->map(fn ($item): array => [
                                 'expectation_id' => $item->assessment_task_expectation_id,
                                 'occurrence' => $item->occurrence,
@@ -213,6 +214,9 @@ class AssessmentController extends Controller
                     'options' => data_get($task->content, 'options', []),
                     'categories' => data_get($task->content, 'categories', []),
                     'rows' => data_get($task->content, 'rows', []),
+                    'questions' => data_get($task->content, 'questions', []),
+                    'sorting_order' => data_get($task->content, 'sorting_order', []),
+                    'points_per_sentence' => data_get($task->content, 'points_per_sentence'),
                     'points_per_correct_answer' => in_array($task->task_type, ['checkbox', 'image_matching', 'image_labeling'], true) ? $task->pointsPerCorrectAnswer() : data_get($task->content, 'points_per_correct_answer'),
                     'matching_scoring_mode' => $task->task_type === 'matching_table' ? data_get($task->content, 'matching_scoring_mode', 'per_category') : null,
                     'checkbox_scoring_mode' => $task->task_type === 'checkbox' ? $task->checkboxScoringMode() : null,

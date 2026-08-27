@@ -119,6 +119,37 @@ it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
     ])->assertSessionHasErrors('images.0.resource_id');
 });
 
+it('speichert Sätze sortieren mit stabilen Satz-IDs und Punkten pro Satz', function () {
+    $organization = Organization::create(['name' => 'Sortier Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Sortierschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann ordnen']);
+
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
+        'title' => 'Sätze ordnen',
+        'task_type' => 'sorting',
+        'content' => [
+            'prompt' => 'Bringe die Sätze in die richtige Reihenfolge.',
+            'points_per_sentence' => 2,
+            'questions' => [
+                ['id' => 'sentence-a', 'label' => 'A'],
+                ['id' => 'sentence-b', 'label' => 'B'],
+            ],
+        ],
+        'expectations' => [],
+        'competency_id' => $competency->id,
+        'levels' => [],
+    ])->assertRedirect();
+
+    $task = AssessmentTask::firstOrFail();
+    expect($task->content['points_per_sentence'])->toBe(2)
+        ->and($task->content['questions'][0]['id'])->toBe('sentence-a')
+        ->and($task->max_points)->toBe(4);
+});
+
 it('speichert Referenzpunkte für Bildbeschriftungen', function () {
     $organization = Organization::create(['name' => 'Beschriftungs Organisation']);
     $user = User::factory()->create(['organization_id' => $organization->id]);
@@ -160,7 +191,7 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
     $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
 
-    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true, 'image_width_cm' => 3.5, 'optional_reading_text' => 'Lies diesen Text.'], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
+    $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true, 'image_width_cm' => 3.5, 'optional_reading_text' => 'Lies diesen Text.', 'rating_scale' => 'stars', 'rating_scale_label' => 'Wie sicher bist du?'], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
     $task = AssessmentTask::firstOrFail();
     expect($task->teaching_unit_competency_id)->toBe($competency->id)
@@ -169,6 +200,8 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
         ->and($task->content['lineated'])->toBeTrue()
         ->and($task->content['image_width_cm'])->toBe(3.5)
         ->and($task->content['optional_reading_text'])->toBe('Lies diesen Text.')
+        ->and($task->content['rating_scale'])->toBe('stars')
+        ->and($task->content['rating_scale_label'])->toBe('Wie sicher bist du?')
         ->and($task->max_points)->toBe(3)
         ->and($task->expectations)->toHaveCount(1)
         ->and($task->expectations->first()->repetitions)->toBe(3)
