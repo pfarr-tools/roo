@@ -9,10 +9,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 
-#[Fillable(['organization_id', 'school_id', 'first_name', 'last_name', 'class_name', 'notes'])]
+#[Fillable(['organization_id', 'school_id', 'first_name', 'last_name', 'class_name', 'notes', 'receives_grades', 'pronoun_set'])]
 class Student extends Model
 {
     use Searchable;
+
+    protected function casts(): array
+    {
+        return ['receives_grades' => 'boolean'];
+    }
 
     public function toSearchableArray(): array
     {

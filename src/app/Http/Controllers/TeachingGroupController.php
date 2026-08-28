@@ -9,6 +9,7 @@ use App\Http\Requests\StoreTeachingGroupRequest;
 use App\Http\Requests\StoreTimetableSlotRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Requests\UpdateTeachingGroupCurriculaRequest;
+use App\Http\Requests\UpdateTeachingGroupGradingSettingsRequest;
 use App\Http\Requests\UpdateTeachingGroupPeriodsRequest;
 use App\Http\Requests\UpdateTeachingGroupRitualsRequest;
 use App\Models\Curriculum;
@@ -21,6 +22,7 @@ use App\Models\SchoolYear;
 use App\Models\SongVersion;
 use App\Models\Student;
 use App\Models\TeachingGroup;
+use App\Students\PronounSets\PronounSets;
 use App\Services\CompetencyResolver;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
@@ -48,7 +50,7 @@ class TeachingGroupController extends Controller
     public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'students:id,school_id,first_name,last_name,class_name,notes', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
         $organizationId = auth()->user()->organization_id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
         $planCompetencies = CurriculumTopicEducationPlanReference::query()
@@ -138,6 +140,7 @@ class TeachingGroupController extends Controller
 
         return Inertia::render('TeachingGroups/Show', [
             'group' => $teachingGroup,
+            'pronounSets' => PronounSets::toArray(),
             'songbookVersions' => $songbookVersions,
             'students' => Student::where('organization_id', $organizationId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
             'curricula' => Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->orderBy('title')->get(['id', 'title']),
@@ -219,6 +222,33 @@ class TeachingGroupController extends Controller
         return back()->with('success', 'Regelmäßige Unterrichtsstunden wurden gespeichert.');
     }
 
+    public function updateGradingSettings(UpdateTeachingGroupGradingSettingsRequest $request, TeachingGroup $teachingGroup): RedirectResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validated();
+        $components = collect($data['components'] ?? []);
+        $labels = ['observations' => 'Beobachtungen im Unterricht', 'written_assessments' => 'Schriftliche Leistungen'];
+
+        DB::transaction(function () use ($data, $components, $labels, $teachingGroup): void {
+            $teachingGroup->update([
+                'grading_model' => $data['grading_model'],
+                'numeric_grades_enabled' => $data['grading_model'] === 'grades_only' || (bool) ($data['numeric_grades_enabled'] ?? false),
+            ]);
+            if ($data['grading_model'] === 'observation_scales' || ($data['grading_model'] === 'competency_texts_and_grades' && ! $teachingGroup->numeric_grades_enabled)) {
+                return;
+            }
+            $teachingGroup->gradeComponents()->delete();
+            $teachingGroup->gradeComponents()->createMany($components->values()->map(fn (array $component, int $position): array => [
+                'type' => $component['type'],
+                'label' => $labels[$component['type']] ?? trim($component['label']),
+                'percentage' => $component['percentage'],
+                'position' => $position + 1,
+            ])->all());
+        });
+
+        return to_route('teaching-groups.show', ['teachingGroup' => $teachingGroup, 'tab' => 'evaluations'])->with('success', 'Bewertungseinstellungen wurden gespeichert.');
+    }
+
     public function store(StoreTeachingGroupRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -228,6 +258,10 @@ class TeachingGroupController extends Controller
         $group = DB::transaction(function () use ($data, $request): TeachingGroup {
             $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
             $group->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
+            $group->gradeComponents()->createMany([
+                ['type' => 'observations', 'label' => 'Beobachtungen im Unterricht', 'percentage' => 50, 'position' => 1],
+                ['type' => 'written_assessments', 'label' => 'Schriftliche Leistungen', 'percentage' => 50, 'position' => 2],
+            ]);
 
             return $group;
         });

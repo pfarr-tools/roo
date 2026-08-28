@@ -9,9 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes'])]
+#[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes', 'grading_model', 'numeric_grades_enabled'])]
 class TeachingGroup extends Model
 {
+    protected function casts(): array
+    {
+        return ['numeric_grades_enabled' => 'boolean'];
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -85,5 +90,10 @@ class TeachingGroup extends Model
     public function reportPeriods(): HasMany
     {
         return $this->hasMany(ReportPeriod::class);
+    }
+
+    public function gradeComponents(): HasMany
+    {
+        return $this->hasMany(TeachingGroupGradeComponent::class)->orderBy('position');
     }
 }

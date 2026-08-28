@@ -51,6 +51,81 @@ it('creates an empty teaching group with multiple grade levels', function () {
     $this->assertDatabaseHas('teaching_group_grade_levels', ['grade_level' => '3']);
 });
 
+it('stores whether a student receives grades and their pronoun set when creating', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Notengruppe']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/schuelerinnen", [
+        'school_id' => $school->id,
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+        'receives_grades' => true,
+        'pronoun_set' => 'sie',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('students', [
+        'first_name' => 'Mia',
+        'receives_grades' => true,
+        'pronoun_set' => 'sie',
+    ]);
+});
+
+it('defaults new students to no grades and the er pronoun set', function () {
+    $user = phaseFourUser();
+    [$school] = phaseFourSchoolYear($user);
+
+    $student = Student::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+    ]);
+
+    expect($student->fresh()->receives_grades)->toBeFalse()
+        ->and($student->fresh()->pronoun_set)->toBe('er');
+});
+
+it('updates a students grading flag and pronoun set', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Updategruppe']);
+    $student = Student::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+    ]);
+    $group->students()->attach($student->id);
+
+    $this->actingAs($user)->put("/schuelerinnen/{$student->id}", [
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+        'receives_grades' => true,
+        'pronoun_set' => 'sie',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('students', ['id' => $student->id, 'receives_grades' => true, 'pronoun_set' => 'sie']);
+});
+
+it('rejects unsupported student pronoun sets', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Validierungsgruppe']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/schuelerinnen", [
+        'school_id' => $school->id,
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+        'pronoun_set' => 'divers',
+    ])->assertSessionHasErrors('pronoun_set');
+});
+
 it('shows the organization-wide searchable and filterable student list', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);

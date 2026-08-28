@@ -181,6 +181,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/bearbeiten', [EvaluationController::class, 'edit'])->name('evaluations.edit');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungseinstellungen', [TeachingGroupController::class, 'updateGradingSettings'])->name('teaching-groups.grading-settings.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'songbookTitlePage'])->name('teaching-groups.songbook.title-page');
     Route::get('/unterrichtsgruppen/{teachingGroup}/liederbuch/songs', [TeachingGroupController::class, 'searchSongbookSongs'])->name('teaching-groups.songbook.songs.search');
