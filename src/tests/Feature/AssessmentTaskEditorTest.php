@@ -13,6 +13,7 @@ use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -35,6 +36,24 @@ it('öffnet die Prüfungsaufgabe als eigene Seite und schützt fremde Aufgaben',
     $this->actingAs($user)->get("/unterricht/{$slot->id}/pruefungsaufgaben/{$task->id}/bearbeiten")
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('task.title', 'Erkläre'));
     $this->actingAs($otherUser)->get("/unterricht/{$slot->id}/pruefungsaufgaben/{$task->id}/bearbeiten")->assertForbidden();
+});
+
+it('erlaubt Erwartungslisten nur mit Prozesskompetenzen', function () {
+    $organization = Organization::create(['name' => 'Erwartungslisten Organisation']);
+    $plan = EducationPlan::create(['organization_id' => null, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
+    $processArea = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Prozess', 'position' => 1]);
+    $contentArea = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 2]);
+    $process = EducationPlanCompetency::create(['education_plan_competence_area_id' => $processArea->id, 'external_identifier' => '2.1.1', 'text' => 'Wahrnehmen', 'position' => 1, 'is_active' => true]);
+    $content = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.1.1', 'text' => 'Deuten', 'position' => 1, 'is_active' => true]);
+
+    expect(fn () => AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $content->id, 'task_type' => 'expectation_list', 'title' => 'Ungültig']))
+        ->toThrow(ValidationException::class);
+
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $process->id, 'task_type' => 'expectation_list', 'title' => 'Ordnereinsicht']);
+    $task->expectations()->create(['text' => 'Der Ordner ist vollständig.', 'points' => 1, 'repetitions' => 1, 'position' => 1]);
+
+    expect($task->maximumPoints())->toBe(1);
 });
 
 it('liefert Kompetenz und Bildungsplan für eine neue Prüfungsaufgabe vor', function () {

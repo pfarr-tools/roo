@@ -29,6 +29,15 @@ class AssessmentTask extends Model
             if ($task->education_plan_competency_id && ! $task->education_plan_id) {
                 throw ValidationException::withMessages(['education_plan_id' => 'Eine Prüfungsaufgabe benötigt einen Bildungsplan.']);
             }
+            if ($task->task_type === 'expectation_list') {
+                if (! $task->education_plan_competency_id) {
+                    throw ValidationException::withMessages(['education_plan_competency_id' => 'Eine Erwartungsliste benötigt eine Prozesskompetenz.']);
+                }
+                $task->loadMissing('educationPlanCompetency.area');
+                if ($task->educationPlanCompetency?->area?->kind !== 'process') {
+                    throw ValidationException::withMessages(['education_plan_competency_id' => 'Eine Erwartungsliste muss einer Prozesskompetenz zugeordnet werden.']);
+                }
+            }
         });
     }
 

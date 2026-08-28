@@ -78,7 +78,7 @@ class AssessmentController extends Controller
 
         $document = new AssessmentDocument(
             title: $title,
-            tasks: $assessment->tasks->filter(fn (AssessmentTask $task): bool => $level === null || $task->levels->isEmpty() || $task->levels->contains('level', $level))->map(fn (AssessmentTask $task): array => [
+            tasks: $assessment->tasks->reject(fn (AssessmentTask $task): bool => $task->task_type === 'expectation_list')->filter(fn (AssessmentTask $task): bool => $level === null || $task->levels->isEmpty() || $task->levels->contains('level', $level))->map(fn (AssessmentTask $task): array => [
                 'task_id' => (string) $task->getKey(),
                 'title' => $task->title,
                 'task_type' => $task->task_type,

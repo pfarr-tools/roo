@@ -16,6 +16,7 @@ enum AssessmentTaskType: string
     case SENTENCE_BUILDER = 'sentence_builder';
     case SORTING = 'sorting';
     case CLOZE = 'cloze';
+    case EXPECTATION_LIST = 'expectation_list';
 
     public static function values(): array
     {

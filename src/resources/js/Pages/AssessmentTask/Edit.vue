@@ -1660,7 +1660,7 @@ function save() {
             "
             :competency-text="competencyText"
             :endpoint="pickerEndpoint()"
-            :exclude-process-competencies="true"
+            :exclude-process-competencies="form.task_type !== 'expectation_list'"
             :single="true"
             @apply="applyCompetency"
         />

@@ -637,6 +637,7 @@ export default {
         drawing: "Gestaltungsaufgabe",
         checkbox: "Ankreuzaufgabe",
         cloze: "Lückentext",
+        expectation_list: "Erwartungsliste",
         matching_table: "Zuordnungstabelle",
         image_matching: "Zuordnung zu Bildern",
         image_labeling: "Bild beschriften",
