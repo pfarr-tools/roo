@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -248,13 +249,13 @@ class AssessmentController extends Controller
                         : null;
 
                     return [
-                    'id' => $expectation->id,
-                    'subtask_key' => $expectation->subtask_key,
-                    'text' => $expectation->text,
-                    'points' => $expectation->points,
-                    'repetitions' => $expectation->repetitions,
-                    'thumbnail' => $image?->resource === null ? null : route('resources.library.files.preview', $image->resource),
-                    'thumbnail_alt' => $image?->resource?->original_name,
+                        'id' => $expectation->id,
+                        'subtask_key' => $expectation->subtask_key,
+                        'text' => $expectation->text,
+                        'points' => $expectation->points,
+                        'repetitions' => $expectation->repetitions,
+                        'thumbnail' => $image?->resource === null ? null : route('resources.library.files.preview', $image->resource),
+                        'thumbnail_alt' => $image?->resource?->original_name,
                     ];
                 })->values(),
             ])->values(),
@@ -459,9 +460,9 @@ class AssessmentController extends Controller
     public function store(Request $request, TeachingGroup $teachingGroup)
     {
         $this->authorize('update', $teachingGroup);
-        $data = $this->validatedAssessment($request);
+        $data = $this->validatedAssessment($request, $teachingGroup);
         DB::transaction(function () use ($data, $teachingGroup): void {
-            $assessment = $teachingGroup->assessments()->create(['organization_id' => $teachingGroup->organization_id, 'report_period_id' => $data['report_period_id'] ?? null, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
+            $assessment = $teachingGroup->assessments()->create(['organization_id' => $teachingGroup->organization_id, 'report_period_id' => $data['report_period_id'] ?? null, 'grade_component_id' => $data['grade_component_id'] ?? null, 'grade_component_label' => $data['grade_component_label'] ?? null, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
             if (array_key_exists('tasks', $data)) {
                 $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
             }
@@ -474,9 +475,9 @@ class AssessmentController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
-        $data = $this->validatedAssessment($request);
+        $data = $this->validatedAssessment($request, $teachingGroup);
         DB::transaction(function () use ($data, $assessment, $teachingGroup): void {
-            $assessment->update(collect($data)->only(['report_period_id', 'title', 'assessed_on', 'notes'])->all());
+            $assessment->update(collect($data)->only(['report_period_id', 'grade_component_id', 'grade_component_label', 'title', 'assessed_on', 'notes'])->all());
             if (array_key_exists('tasks', $data)) {
                 $assessment->tasks()->sync([]);
                 $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
@@ -514,7 +515,7 @@ class AssessmentController extends Controller
         $assessmentTasks = $this->assessmentTasksForWindow($teachingGroup, $assessmentDate, $assessment);
         $assessmentCompetencies = $this->assessmentCompetenciesForWindow($teachingGroup, $assessmentDate);
 
-        return ['group' => $teachingGroup, 'assessment' => $assessment, 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'assessmentCompetencies' => $assessmentCompetencies, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
+        return ['group' => $teachingGroup, 'assessment' => $assessment, 'gradeComponents' => $teachingGroup->gradeComponents->values(), 'slot' => $slot ? ['date' => $slot->date->toDateString(), 'period_number' => $slot->period_number] : null, 'assessmentTasks' => $assessmentTasks, 'assessmentCompetencies' => $assessmentCompetencies, 'returnTab' => $returnTab, 'returnTo' => in_array($returnTo, ['group', 'year-plan'], true) ? $returnTo : 'group'];
     }
 
     private function ensureAssessmentBelongsToGroup(Assessment $assessment, TeachingGroup $teachingGroup): void
@@ -717,9 +718,17 @@ class AssessmentController extends Controller
         return $content;
     }
 
-    private function validatedAssessment(Request $request): array
+    private function validatedAssessment(Request $request, TeachingGroup $teachingGroup): array
     {
-        return $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'return_tab' => ['nullable', 'in:assessments'], 'return_to' => ['nullable', 'in:group,year-plan'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E'], 'tasks.*.weight' => ['nullable', 'integer', 'between:0,100']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'report_period_id' => ['nullable', 'integer'], 'grade_component_id' => ['present', 'nullable', 'integer'], 'assessed_on' => ['nullable', 'date'], 'return_tab' => ['nullable', 'in:assessments'], 'return_to' => ['nullable', 'in:group,year-plan'], 'notes' => ['nullable', 'string'], 'tasks' => ['sometimes', 'array'], 'tasks.*.task_id' => ['nullable', 'integer'], 'tasks.*.title' => ['nullable', 'string', 'max:255'], 'tasks.*.solution' => ['nullable', 'string'], 'tasks.*.max_points' => ['nullable', 'integer', 'min:1'], 'tasks.*.competency_id' => ['nullable', 'integer'], 'tasks.*.level' => ['nullable', 'in:G,M,E'], 'tasks.*.levels' => ['sometimes', 'array'], 'tasks.*.levels.*' => ['in:G,M,E'], 'tasks.*.weight' => ['nullable', 'integer', 'between:0,100']]);
+        $component = $data['grade_component_id'] === null ? null : $teachingGroup->gradeComponents()->whereKey($data['grade_component_id'])->first();
+        if ($data['grade_component_id'] !== null && $component === null) {
+            throw ValidationException::withMessages([
+                'grade_component_id' => 'Die Kategorie gehört nicht zu dieser Unterrichtsgruppe oder ist nicht aktiv.',
+            ]);
+        }
+
+        return $data + ['grade_component_label' => $component?->label];
     }
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void

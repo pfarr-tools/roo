@@ -68,3 +68,41 @@ it('distinguishes manually created booklets from scanned booklets', function () 
 
     expect($booklet->source)->toBe('manual')->and($booklet->fragments)->toBeEmpty();
 });
+
+it('stores a group assessment category and offers active categories in the form', function () {
+    $fixture = assessmentCategoryFixture();
+
+    $this->actingAs($fixture['user'])->get("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/neu")
+        ->assertInertia(fn ($page) => $page->where('gradeComponents.0.id', $fixture['component']->id));
+
+    $this->actingAs($fixture['user'])->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen", [
+        'title' => 'Ordnereinsicht neu',
+        'grade_component_id' => $fixture['component']->id,
+    ])->assertRedirect();
+
+    expect(Assessment::where('title', 'Ordnereinsicht neu')->firstOrFail()->only(['grade_component_id', 'grade_component_label']))
+        ->toBe(['grade_component_id' => $fixture['component']->id, 'grade_component_label' => 'Ordner']);
+});
+
+it('rejects a category belonging to another group or an inactive category', function () {
+    $fixture = assessmentCategoryFixture();
+    $otherComponent = TeachingGroupGradeComponent::create([
+        'teaching_group_id' => TeachingGroup::create([
+            'organization_id' => $fixture['group']->organization_id,
+            'school_id' => $fixture['group']->school_id,
+            'school_year_id' => $fixture['group']->school_year_id,
+            'name' => 'Andere Kategoriegruppe',
+        ])->id,
+        'type' => 'custom',
+        'label' => 'Andere Kategorie',
+        'percentage' => 10,
+        'position' => 1,
+    ]);
+
+    $this->actingAs($fixture['user'])->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen", ['title' => 'Fremde Kategorie', 'grade_component_id' => $otherComponent->id])
+        ->assertSessionHasErrors('grade_component_id');
+
+    $fixture['component']->update(['is_active' => false]);
+    $this->actingAs($fixture['user'])->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen", ['title' => 'Inaktive Kategorie', 'grade_component_id' => $fixture['component']->id])
+        ->assertSessionHasErrors('grade_component_id');
+});

@@ -10,6 +10,7 @@ const props = defineProps({
     slot: { type: Object, default: null },
     assessmentTasks: { type: Array, default: () => [] },
     assessmentCompetencies: { type: Array, default: () => [] },
+    gradeComponents: { type: Array, default: () => [] },
     returnTab: { type: String, default: "assessments" },
     returnTo: { type: String, default: "group" },
 });
@@ -24,6 +25,7 @@ const taskList = ref(
 const form = useForm({
     title: props.assessment?.title ?? "",
     report_period_id: props.assessment?.report_period_id ?? "",
+    grade_component_id: props.assessment?.grade_component_id ?? "",
     return_tab: props.returnTab,
     return_to: props.returnTo,
     notes: props.assessment?.notes ?? "",
@@ -274,7 +276,22 @@ syncTasks();
                     v-model="form.title"
                     class="form-control"
                     required
-                /><label class="form-label mt-3" for="assessment-notes">{{
+                /><label class="form-label mt-3" for="assessment-grade-component">{{
+                    de.assessmentCategory
+                }}</label
+                ><select
+                    id="assessment-grade-component"
+                    v-model="form.grade_component_id"
+                    class="form-select"
+                    :class="{ 'is-invalid': form.errors.grade_component_id }"
+                >
+                    <option value="">{{ de.assessmentCategoryNone }}</option>
+                    <option v-for="component in gradeComponents" :key="component.id" :value="component.id">
+                        {{ component.label }}
+                    </option></select
+                ><div v-if="form.errors.grade_component_id" class="invalid-feedback d-block">
+                    {{ form.errors.grade_component_id }}
+                </div><label class="form-label mt-3" for="assessment-notes">{{
                     de.notes
                 }}</label
                 ><textarea

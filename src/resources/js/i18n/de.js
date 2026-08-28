@@ -401,6 +401,8 @@ export default {
         "Ordne jeder inhaltsbezogenen Kompetenz passende Aufgaben zu.",
     assessmentCompetency: "Inhaltsbezogene Kompetenz",
     assessmentTasks: "Prüfungsaufgaben",
+    assessmentCategory: "Notenbereich",
+    assessmentCategoryNone: "Keine Zuordnung",
     assessmentStatsTasks: "Aufgaben",
     assessmentStatsPoints: "Punkte",
     assessmentStatsCompetencies: "Kompetenzen",
