@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['organization_id', 'teaching_group_id', 'report_period_id', 'title', 'assessed_on', 'status', 'notes'])]
+#[Fillable(['organization_id', 'teaching_group_id', 'report_period_id', 'grade_component_id', 'grade_component_label', 'title', 'assessed_on', 'status', 'notes'])]
 class Assessment extends Model
 {
     protected $appends = ['is_differentiated'];
@@ -22,6 +22,16 @@ class Assessment extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(TeachingGroup::class, 'teaching_group_id');
+    }
+
+    public function gradeComponent(): BelongsTo
+    {
+        return $this->belongsTo(TeachingGroupGradeComponent::class)->where('is_active', true);
+    }
+
+    public function getGradeComponentLabelAttribute(): ?string
+    {
+        return $this->attributes['grade_component_label'] ?? null;
     }
 
     public function scheduleSlots(): HasMany

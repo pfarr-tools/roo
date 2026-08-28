@@ -94,6 +94,6 @@ class TeachingGroup extends Model
 
     public function gradeComponents(): HasMany
     {
-        return $this->hasMany(TeachingGroupGradeComponent::class)->orderBy('position');
+        return $this->hasMany(TeachingGroupGradeComponent::class)->where('is_active', true)->orderBy('position');
     }
 }
