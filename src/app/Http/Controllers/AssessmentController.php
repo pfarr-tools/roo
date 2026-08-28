@@ -139,6 +139,7 @@ class AssessmentController extends Controller
         $assessment->load([
             'tasks.expectations',
             'tasks.images.resource',
+            'booklets.student',
             'booklets.fragments',
             'booklets.reviews.items',
             'booklets.reviews.options',
@@ -190,6 +191,21 @@ class AssessmentController extends Controller
             })
             ->shuffle()
             ->values();
+        $taskFragments = $taskFragments->concat($booklets
+            ->where('status', 'open')
+            ->where('source', 'manual')
+            ->flatMap(fn (AssessmentBooklet $booklet): array => $assessment->tasks->map(fn (AssessmentTask $task): array => [
+                'id' => "manual-{$booklet->id}-{$task->id}",
+                'booklet_id' => $booklet->id,
+                'assessment_task_id' => $task->id,
+                'image_url' => null,
+                'student_name' => $booklet->student?->last_name.', '.$booklet->student?->first_name,
+                'page' => null,
+                'end_page' => null,
+                'start_y_cm' => null,
+                'end_y_cm' => null,
+                'review' => null,
+            ])->all()))->shuffle()->values();
         $bookletNumbers = $booklets->mapWithKeys(fn (AssessmentBooklet $booklet): array => [$booklet->id => $booklet->number]);
 
         return Inertia::render('Assessment/Assess', [
@@ -263,6 +279,7 @@ class AssessmentController extends Controller
                 'id' => $booklet->id,
                 'number' => $booklet->number,
                 'status' => $booklet->status,
+                'source' => $booklet->source,
                 'student_id' => $booklet->student_id,
                 'name_fragment_url' => $booklet->name_fragment_path === null ? null : route('assessments.booklets.name-fragment.show', [$teachingGroup, $assessment, $booklet]),
                 'fragment_count' => $booklet->fragments->count(),
@@ -291,6 +308,23 @@ class AssessmentController extends Controller
         return back()->with('success', 'Booklet-Zuordnung wurde gespeichert.');
     }
 
+    public function storeManualBooklet(Request $request, TeachingGroup $teachingGroup, Assessment $assessment)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $data = $request->validate(['student_id' => ['required', 'integer']]);
+        if (! $teachingGroup->students()->whereKey($data['student_id'])->exists()) {
+            throw ValidationException::withMessages(['student_id' => 'Die ausgewählte Schüler:in gehört nicht zu dieser Unterrichtsgruppe.']);
+        }
+
+        DB::transaction(function () use ($assessment, $data): void {
+            $number = ((int) $assessment->booklets()->lockForUpdate()->max('number')) + 1;
+            $assessment->booklets()->create(['student_id' => $data['student_id'], 'number' => $number, 'status' => 'open', 'source' => 'manual']);
+        });
+
+        return back()->with('success', 'Manuelles Exemplar wurde angelegt.');
+    }
+
     public function updateBookletStatus(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet, AssignAssessmentBooklet $assignment)
     {
         $this->authorize('update', $teachingGroup);
@@ -308,7 +342,7 @@ class AssessmentController extends Controller
         $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
         $this->ensureBookletBelongsToAssessment($booklet, $assessment);
         abort_unless($assessment->tasks()->whereKey($assessmentTask->getKey())->exists(), 404);
-        abort_unless($booklet->fragments()->where('assessment_task_id', $assessmentTask->getKey())->exists(), 404);
+        abort_unless($booklet->source === 'manual' || $booklet->fragments()->where('assessment_task_id', $assessmentTask->getKey())->exists(), 404);
         $reviews->handle($booklet, $assessmentTask, $request->validated());
 
         return back()->with('success', 'Aufgabenbewertung wurde gespeichert.');

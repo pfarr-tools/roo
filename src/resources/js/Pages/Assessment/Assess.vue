@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 import AppShell from '../../Components/Ui/AppShell.vue'
 import Tab from '../../Components/Ui/Tabs/Tab.vue'
 import TabHeader from '../../Components/Ui/Tabs/TabHeader.vue'
@@ -23,6 +24,8 @@ const props = defineProps({
 
 const activeSection = ref('booklets')
 const scanOpen = ref(false)
+const manualBookletOpen = ref(false)
+const manualBookletForm = useForm({ student_id: '' })
 const activeTaskId = ref(null)
 const taskOpenKey = ref(0)
 const openBooklets = computed(() => props.booklets.filter((booklet) => booklet.status === 'open'))
@@ -45,6 +48,15 @@ function openTask(taskId) {
 function selectTask(event) {
     openTask(Number(event.target.value))
 }
+function createManualBooklet() {
+    manualBookletForm.post(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/booklets/manuell`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            manualBookletOpen.value = false
+            manualBookletForm.reset()
+        },
+    })
+}
 </script>
 
 <template>
@@ -58,6 +70,9 @@ function selectTask(event) {
             ><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             <button class="btn btn-sm btn-primary ms-2" type="button" @click="scanOpen = true">
                 <i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.assessmentScanSubmit }}
+            </button>
+            <button class="btn btn-sm btn-outline-light ms-2" type="button" @click="manualBookletOpen = true">
+                <i class="bi bi-person-plus me-1" aria-hidden="true"></i>{{ de.assessmentManualBookletAdd }}
             </button>
         </template>
 
@@ -114,5 +129,20 @@ function selectTask(event) {
         </div>
 
         <AssessmentScanUploadModal v-if="scanOpen" :group="group" :assessment="assessment" @close="scanOpen = false" />
+        <div v-if="manualBookletOpen" class="roo-modal-backdrop" role="presentation" @click.self="manualBookletOpen = false">
+            <section class="roo-modal card border-0" role="dialog" aria-modal="true" :aria-label="de.assessmentManualBookletAdd">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ de.assessmentManualBookletAdd }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="manualBookletOpen = false"></button></div>
+                    <p class="text-muted small">{{ de.assessmentManualBookletHint }}</p>
+                    <label class="form-label" for="manual-booklet-student">{{ de.student }}</label>
+                    <select id="manual-booklet-student" v-model="manualBookletForm.student_id" class="form-select" :class="{ 'is-invalid': manualBookletForm.errors.student_id }">
+                        <option value="">{{ de.choose }}</option>
+                        <option v-for="student in students" :key="student.id" :value="student.id">{{ student.last_name }}, {{ student.first_name }}<template v-if="student.class_name"> ({{ student.class_name }})</template></option>
+                    </select>
+                    <div v-if="manualBookletForm.errors.student_id" class="invalid-feedback d-block">{{ manualBookletForm.errors.student_id }}</div>
+                    <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="manualBookletOpen = false">{{ de.cancel }}</button><button class="btn btn-primary" type="button" :disabled="manualBookletForm.processing || !manualBookletForm.student_id" @click="createManualBooklet">{{ de.create }}</button></div>
+                </div>
+            </section>
+        </div>
     </AppShell>
 </template>

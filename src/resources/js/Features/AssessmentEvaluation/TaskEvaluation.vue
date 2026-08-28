@@ -463,11 +463,13 @@ watch(() => props.openKey, resetCases, { immediate: true });
         >
             <form class="card h-100" @submit.prevent="save(reviewCase)">
                 <img
+                    v-if="reviewCase.fragment.image_url"
                     :src="reviewCase.fragment.image_url"
                     class="card-img-top"
                     :alt="de.assessmentEvaluationTaskFragment"
                 />
                 <div class="card-body">
+                    <p v-if="reviewCase.fragment.student_name" class="small text-muted mb-2">{{ reviewCase.fragment.student_name }}</p>
                     <span
                         class="visually-hidden"
                         data-testid="task-fragment-id"

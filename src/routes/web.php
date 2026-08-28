@@ -163,6 +163,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung', [AssessmentController::class, 'evaluation'])->name('assessments.evaluation');
     Route::delete('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/zuordnung', [AssessmentController::class, 'updateBookletAssignment'])->name('assessments.booklets.assignment.update');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/manuell', [AssessmentController::class, 'storeManualBooklet'])->name('assessments.booklets.manual.store');
     Route::patch('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/status', [AssessmentController::class, 'updateBookletStatus'])->name('assessments.booklets.status.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/tasks/{assessmentTask}/review', [AssessmentController::class, 'updateTaskReview'])->name('assessments.task-reviews.update');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/name-fragment', [AssessmentController::class, 'showBookletNameFragment'])->name('assessments.booklets.name-fragment.show');

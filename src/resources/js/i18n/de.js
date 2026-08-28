@@ -427,6 +427,8 @@ export default {
         "Lade ein gescanntes PDF hoch. Roo erkennt zunächst nur Exemplare und ROO-Marker.",
     assessmentScanPdf: "Gescanntes PDF",
     assessmentScanSubmit: "PDF auswerten",
+    assessmentManualBookletAdd: "Manuelles Exemplar anlegen",
+    assessmentManualBookletHint: "Lege ein Exemplar ohne Scan an und ordne es direkt einer Schüler:in zu.",
     assessmentScanProcessing: "PDF wird ausgewertet …",
     assessmentScanProcessingHint:
         "Die Seiten werden gerendert und nach ROO-DataMatrix-Codes durchsucht. Das kann je nach Umfang des PDFs etwas dauern.",

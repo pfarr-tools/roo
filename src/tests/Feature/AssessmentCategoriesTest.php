@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Assessment;
+use App\Models\AssessmentTask;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\TeachingGroupGradeComponent;
 use App\Models\User;
@@ -105,4 +107,33 @@ it('rejects a category belonging to another group or an inactive category', func
     $fixture['component']->update(['is_active' => false]);
     $this->actingAs($fixture['user'])->post("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen", ['title' => 'Inaktive Kategorie', 'grade_component_id' => $fixture['component']->id])
         ->assertSessionHasErrors('grade_component_id');
+});
+
+it('legt ein manuelles Exemplar direkt für ein Gruppenmitglied an', function () {
+    $fixture = assessmentCategoryFixture();
+    $student = Student::create(['organization_id' => $fixture['group']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $fixture['group']->students()->attach($student);
+
+    $this->actingAs($fixture['user'])->post(route('assessments.booklets.manual.store', [$fixture['group'], $fixture['assessment']]), ['student_id' => $student->id])->assertRedirect();
+
+    $booklet = $fixture['assessment']->booklets()->firstOrFail();
+    expect($booklet->source)->toBe('manual')
+        ->and($booklet->student_id)->toBe($student->id)
+        ->and($booklet->fragments)->toBeEmpty();
+});
+
+it('stellt manuelle Exemplare als bewertbare Ziele ohne Scanfragment bereit', function () {
+    $fixture = assessmentCategoryFixture();
+    $student = Student::create(['organization_id' => $fixture['group']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $fixture['group']->students()->attach($student);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['group']->organization_id, 'title' => 'Erwartung']));
+    $fixture['assessment']->tasks()->attach($task);
+    $fixture['assessment']->booklets()->create(['student_id' => $student->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
+
+    $this->actingAs($fixture['user'])->get(route('assessments.evaluation', [$fixture['group'], $fixture['assessment']]))
+        ->assertInertia(fn ($page) => $page->where('booklets.0.source', 'manual')->where('taskFragments.0.image_url', null)->where('taskFragments.0.assessment_task_id', $task->id));
+
+    $booklet = $fixture['assessment']->booklets()->firstOrFail();
+    $this->actingAs($fixture['user'])->put(route('assessments.task-reviews.update', [$fixture['group'], $fixture['assessment'], $booklet, $task]), ['items' => [], 'extra_points' => 0, 'extra_note' => null])->assertRedirect();
+    expect($booklet->reviews()->where('assessment_task_id', $task->id)->exists())->toBeTrue();
 });
