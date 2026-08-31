@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "da06ee5727a45746b293338015ab27f7",
+    "content-hash": "a5bb04969e018710019fff632dba6e46",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3934,16 +3934,16 @@
         },
         {
             "name": "phpoffice/phpword",
-            "version": "dev-new-features-and-fixes",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/potofcoffee/PHPWord.git",
-                "reference": "7a5d77f856c64a1e23d42dbcd84d4766a32cb8da"
+                "url": "https://github.com/PHPOffice/PHPWord.git",
+                "reference": "378acb34b35a8f454ab0745673b9f658e3f1268b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/potofcoffee/PHPWord/zipball/7a5d77f856c64a1e23d42dbcd84d4766a32cb8da",
-                "reference": "7a5d77f856c64a1e23d42dbcd84d4766a32cb8da",
+                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/378acb34b35a8f454ab0745673b9f658e3f1268b",
+                "reference": "378acb34b35a8f454ab0745673b9f658e3f1268b",
                 "shasum": ""
             },
             "require": {
@@ -3972,82 +3972,14 @@
                 "ext-xmlwriter": "Allows writing OOXML and ODF",
                 "ext-xsl": "Allows applying XSL style sheet to headers, to main document part, and to footers of an OOXML template"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "PhpOffice\\PhpWord\\": "src/PhpWord"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "PhpOffice\\PhpWordTests\\": "tests/PhpWordTests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "@php vendor/bin/phpunit --color=always"
-                ],
-                "test-no-coverage": [
-                    "@php vendor/bin/phpunit --color=always --no-coverage"
-                ],
-                "check": [
-                    "@php vendor/bin/php-cs-fixer fix --ansi --dry-run --diff",
-                    "@php vendor/bin/phpmd src/,tests/ text ./phpmd.xml.dist --exclude pclzip.lib.php",
-                    "@test-no-coverage",
-                    "@php vendor/bin/phpstan analyse --ansi"
-                ],
-                "fix": [
-                    "@php vendor/bin/php-cs-fixer fix --ansi"
-                ],
-                "samples": [
-                    "php samples/Sample_01_SimpleText.php",
-                    "php samples/Sample_02_TabStops.php",
-                    "php samples/Sample_03_Sections.php",
-                    "php samples/Sample_04_Textrun.php",
-                    "php samples/Sample_05_Multicolumn.php",
-                    "php samples/Sample_06_Footnote.php",
-                    "php samples/Sample_07_TemplateCloneRow.php",
-                    "php samples/Sample_08_ParagraphPagination.php",
-                    "php samples/Sample_09_Tables.php",
-                    "php samples/Sample_10_EastAsianFontStyle.php",
-                    "php samples/Sample_11_ReadWord97.php",
-                    "php samples/Sample_11_ReadWord2007.php",
-                    "php samples/Sample_12_HeaderFooter.php",
-                    "php samples/Sample_13_Images.php",
-                    "php samples/Sample_14_ListItem.php",
-                    "php samples/Sample_15_Link.php",
-                    "php samples/Sample_16_Object.php",
-                    "php samples/Sample_17_TitleTOC.php",
-                    "php samples/Sample_18_Watermark.php",
-                    "php samples/Sample_19_TextBreak.php",
-                    "php samples/Sample_20_BGColor.php",
-                    "php samples/Sample_21_TableRowRules.php",
-                    "php samples/Sample_22_CheckBox.php",
-                    "php samples/Sample_23_TemplateBlock.php",
-                    "php samples/Sample_24_ReadODText.php",
-                    "php samples/Sample_25_TextBox.php",
-                    "php samples/Sample_26_Html.php",
-                    "php samples/Sample_27_Field.php",
-                    "php samples/Sample_28_ReadRTF.php",
-                    "php samples/Sample_29_Line.php",
-                    "php samples/Sample_30_ReadHTML.php",
-                    "php samples/Sample_31_Shape.php",
-                    "php samples/Sample_32_Chart.php",
-                    "php samples/Sample_33_FormField.php",
-                    "php samples/Sample_34_SDT.php",
-                    "php samples/Sample_35_InternalLink.php",
-                    "php samples/Sample_36_RTL.php",
-                    "php samples/Sample_37_Comments.php",
-                    "php samples/Sample_38_Protection.php",
-                    "php samples/Sample_39_TrackChanges.php",
-                    "php samples/Sample_40_TemplateSetComplexValue.php",
-                    "php samples/Sample_41_TemplateSetChart.php",
-                    "php samples/Sample_42_TemplateSetCheckbox.php",
-                    "php samples/Sample_43_RTLDefault.php",
-                    "php samples/Sample_44_ExtractVariablesFromReaderWord2007.php",
-                    "php samples/Sample_45_Autoloader.php"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "LGPL-3.0-only"
             ],
@@ -4079,34 +4011,35 @@
             "description": "PHPWord - A pure PHP library for reading and writing word processing documents (OOXML, ODF, RTF, HTML, PDF)",
             "homepage": "https://phpoffice.github.io/PHPWord/",
             "keywords": [
-                "HTML",
                 "ISO IEC 29500",
-                "ODF",
                 "OOXML",
                 "Office Open XML",
                 "OpenDocument",
                 "OpenXML",
-                "PDF",
-                "PHP",
-                "PHPOffice",
-                "PHPWord",
-                "RTF",
+                "PhpOffice",
+                "PhpWord",
                 "Rich Text Format",
                 "WordprocessingML",
                 "doc",
                 "docx",
+                "html",
+                "odf",
                 "odt",
                 "office",
+                "pdf",
+                "php",
                 "reader",
+                "rtf",
                 "template",
                 "template processor",
                 "word",
                 "writer"
             ],
             "support": {
-                "source": "https://github.com/potofcoffee/PHPWord/tree/new-features-and-fixes"
+                "issues": "https://github.com/PHPOffice/PHPWord/issues",
+                "source": "https://github.com/PHPOffice/PHPWord/tree/master"
             },
-            "time": "2026-08-25T12:55:45+00:00"
+            "time": "2026-08-31T08:40:09+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -11996,7 +11929,14 @@
             "time": "2025-12-08T11:19:18+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "phpoffice/phpword",
+            "version": "9999999-dev",
+            "alias": "dev-new-features-and-fixes",
+            "alias_normalized": "dev-new-features-and-fixes"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
         "peregrinus/wscdoc": 20,
