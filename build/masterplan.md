@@ -469,7 +469,10 @@ möglich.
 
 Fortschritt: `[~]` Der erste vertikale Schnitt ist umgesetzt: Beobachtungen,
 Anwesenheit und kompetenzbezogene Nachweise können im Arbeitsraum einer
-konkreten Stunde gruppenbezogen erfasst und gespeichert werden.
+konkreten Stunde gruppenbezogen erfasst und gespeichert werden. Schulen können
+eigene Prozesskompetenzen und eine gemeinsame Beobachtungsskala verwalten; sie
+werden in Gruppen mit dem Bewertungsmodus „Beobachtungsskalen“ sofort
+verwendbar.
 
 ### Ziel
 
@@ -482,6 +485,7 @@ Während oder direkt nach jeder Stunde schnell Beobachtungen erfassen.
 - AttendanceRecord
 - ObservationScale
 - CompetenceEvidence
+- CustomProcessCompetence
 
 ### Funktionen
 
@@ -492,6 +496,7 @@ Während oder direkt nach jeder Stunde schnell Beobachtungen erfassen.
 - kurze Notiz
 - Mehrfachaktion für mehrere Schüler:innen
 - kompetenzbezogener Nachweis
+- schulische eigene Prozesskompetenzen mit `+`-Skala und `ne`
 - mobil und auf Tablet optimiert
 
 Beim Schuljahr muss der Beginn des 2. Halbjahres konfiguriert werden.
@@ -581,7 +586,9 @@ Kompetenzorientierte Lernstandserhebungen erstellen und Ergebnisse bewerten.
 
 Fortschritt: `[~]` Bewertungszeiträume und bearbeitbare Schüler:innen-
 Bewertungsentwürfe mit explizitem Entwurfs-/Bestätigungsstatus sind als
-Grundlage vorhanden. Textbausteinverwaltung und Vorschlagslogik folgen.
+Grundlage vorhanden. Schulische Beobachtungsskalen werden in laufenden
+Entwürfen live verwendet und bei der Bestätigung historisch gesichert.
+Textbausteinverwaltung und Vorschlagslogik folgen.
 
 ### Ziel
 
@@ -593,6 +600,7 @@ Aus Nachweisen einen transparenten, bearbeitbaren Bewertungsentwurf erstellen.
 - EvaluationBlock
 - TextBlockTemplate
 - StudentEvaluation
+- StudentEvaluationObservationScale
 - EvaluationDecision
 
 ### Funktionen
