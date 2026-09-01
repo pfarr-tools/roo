@@ -23,6 +23,7 @@ use App\Services\CompetencyResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -285,6 +286,52 @@ class ResourceLibraryController extends Controller
         return back()->with('success', 'Datei wurde zur Bibliothek hinzugefügt.');
     }
 
+    public function drop(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:51200'],
+            'urls' => ['nullable', 'array'],
+            'urls.*' => ['url', 'max:2000'],
+        ]);
+        abort_if(empty($data['files'] ?? []) && empty($data['urls'] ?? []), 422, 'Es wurden keine Dateien oder URLs übergeben.');
+
+        $items = DB::transaction(function () use ($request, $data) {
+            $items = collect();
+
+            foreach ($data['files'] ?? [] as $file) {
+                $path = $file->storeAs('library', Str::uuid().($file->getClientOriginalExtension() ? '.'.$file->getClientOriginalExtension() : ''), 'local');
+                $items->push(ResourceReference::create([
+                    'organization_id' => $request->user()->organization_id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'storage_path' => $path,
+                    'mime_type' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                    'checksum' => hash_file('sha256', $file->getRealPath()),
+                    'security_status' => 'pending',
+                    'source' => 'user_upload',
+                    'version' => 1,
+                ]));
+            }
+
+            foreach ($data['urls'] ?? [] as $url) {
+                $items->push(ResourceLink::create([
+                    'organization_id' => $request->user()->organization_id,
+                    'title' => $url,
+                    'url' => $url,
+                ]));
+            }
+
+            return $items;
+        });
+
+        return response()->json(['items' => $items->map(function ($item): array {
+            $item->setAttribute('kind', $item instanceof ResourceReference ? 'file' : 'resource');
+
+            return $this->present($item);
+        })->values()], 201);
+    }
+
     public function images(Request $request): JsonResponse
     {
         return response()->json(ResourceReference::query()
@@ -433,26 +480,26 @@ class ResourceLibraryController extends Controller
             'assessment-task' => ['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.lineated' => ['sometimes', 'boolean'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer'], 'levels' => ['sometimes', 'array']],
         };
         $validated = $request->validate($rules);
-        $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedDrawingContent($request, $validated['task_type']));
-        $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedClozeFields($request, $validated['task_type']));
-        $cloze = $this->normalizedCloze($validated['task_type'], $validated['content'] ?? [], $item->content ?? []);
-        $validated['content'] = array_replace($validated['content'] ?? [], $cloze['content']);
-        $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
-        $validated['content'] = array_replace_recursive($validated['content'] ?? [], $sortingContent);
-        if ($validated['task_type'] === 'sentence_builder') {
-            $validated['content']['words'] = (string) ($validated['solution'] ?? '');
-            $validated['content'] = app(SentenceBuilderWordOrder::class)->apply($validated['content'], $item->content ?? []);
-        }
-        if ($validated['task_type'] === 'sorting') {
-            $validated['content'] = app(SortingTaskOrder::class)->apply($validated['content'], $item->content ?? []);
-        }
-        $expectations = array_merge($cloze['expectations'], $expectations);
-        $expectations = $this->subtaskExpectations($validated['task_type'], data_get($validated, 'content', []), $expectations);
-        $validated['content']['optional_reading_text'] = $request->validate(['content.optional_reading_text' => ['nullable', 'string', 'max:50000']])['content']['optional_reading_text'] ?? null;
-        $validated['content']['rating_scale'] = $request->validate(['content.rating_scale' => ['nullable', Rule::in(['stars', 'likert'])]])['content']['rating_scale'] ?? null;
-        $validated['content']['rating_scale_label'] = $request->validate(['content.rating_scale_label' => ['nullable', 'string', 'max:255']])['content']['rating_scale_label'] ?? null;
-        $labeling = $this->validatedImageLabeling($request, $validated['task_type'] ?? '');
         if ($kind === 'assessment-task') {
+            $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedDrawingContent($request, $validated['task_type']));
+            $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedClozeFields($request, $validated['task_type']));
+            $cloze = $this->normalizedCloze($validated['task_type'], $validated['content'] ?? [], $item->content ?? []);
+            $validated['content'] = array_replace($validated['content'] ?? [], $cloze['content']);
+            $sortingContent = $request->validate(['content.points_per_sentence' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.questions.*.id' => ['required_with:content.questions', 'string', 'max:100']])['content'] ?? [];
+            $validated['content'] = array_replace_recursive($validated['content'] ?? [], $sortingContent);
+            if ($validated['task_type'] === 'sentence_builder') {
+                $validated['content']['words'] = (string) ($validated['solution'] ?? '');
+                $validated['content'] = app(SentenceBuilderWordOrder::class)->apply($validated['content'], $item->content ?? []);
+            }
+            if ($validated['task_type'] === 'sorting') {
+                $validated['content'] = app(SortingTaskOrder::class)->apply($validated['content'], $item->content ?? []);
+            }
+            $expectations = array_merge($cloze['expectations'], $expectations);
+            $expectations = $this->subtaskExpectations($validated['task_type'], data_get($validated, 'content', []), $expectations);
+            $validated['content']['optional_reading_text'] = $request->validate(['content.optional_reading_text' => ['nullable', 'string', 'max:50000']])['content']['optional_reading_text'] ?? null;
+            $validated['content']['rating_scale'] = $request->validate(['content.rating_scale' => ['nullable', Rule::in(['stars', 'likert'])]])['content']['rating_scale'] ?? null;
+            $validated['content']['rating_scale_label'] = $request->validate(['content.rating_scale_label' => ['nullable', 'string', 'max:255']])['content']['rating_scale_label'] ?? null;
+            $labeling = $this->validatedImageLabeling($request, $validated['task_type']);
             $validated['content'] = ($validated['content'] ?? []) + ($request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         }
         if ($kind === 'assessment-task') {

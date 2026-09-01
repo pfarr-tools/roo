@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/lieder/fassungen/{songVersion}/liedblatt/erzeugt/akkord/{instrument}', [SongController::class, 'generatedChordSheet'])->name('songs.sheets.generated-chord');
     Route::get('/lieder/fassungen/{songVersion}/liedblatt/erzeugt', [SongController::class, 'generatedSheet'])->name('songs.sheets.generated');
     Route::post('/ressourcen/bibliothek/dateien', [ResourceLibraryController::class, 'storeFile'])->name('resources.library.files.store');
+    Route::post('/ressourcen/bibliothek/drop', [ResourceLibraryController::class, 'drop'])->name('resources.library.drop');
     Route::get('/ressourcen/bibliothek/bilder', [ResourceLibraryController::class, 'images'])->name('resources.library.images');
     Route::post('/ressourcen/bibliothek/bilder', [ResourceLibraryController::class, 'storeImage'])->name('resources.library.images.store');
     Route::post('/ressourcen/bibliothek/ressourcen', [ResourceLibraryController::class, 'storeResource'])->name('resources.library.resources.store');

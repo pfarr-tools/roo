@@ -85,6 +85,57 @@ it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien',
         ->and($resource->copyrights)->toBe('FLUX.2 [flex] / Black Forest Labs / Ada Beispiel');
 });
 
+it('erstellt gedroppte Dateien und URLs als Bibliothekseinträge und gibt sie zurück', function () {
+    Storage::fake('local');
+    $organization = Organization::create(['name' => 'Drop Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+
+    $response = $this->actingAs($user)->postJson('/ressourcen/bibliothek/drop', [
+        'files' => [UploadedFile::fake()->create('Arbeitsblatt.pdf', 20, 'application/pdf')],
+        'urls' => ['https://example.test/arbeitsblatt'],
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('items.0.kind', 'file')
+        ->assertJsonPath('items.0.name', 'Arbeitsblatt.pdf')
+        ->assertJsonPath('items.1.kind', 'resource')
+        ->assertJsonPath('items.1.url', 'https://example.test/arbeitsblatt');
+    expect(ResourceReference::where('organization_id', $organization->id)->count())->toBe(1)
+        ->and(ResourceLink::where('organization_id', $organization->id)->count())->toBe(1);
+});
+
+it('isoliert gedroppte Bibliothekseinträge nach Organisation', function () {
+    $organization = Organization::create(['name' => 'Eigene Drop Organisation']);
+    $otherOrganization = Organization::create(['name' => 'Andere Drop Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+
+    $this->actingAs($user)->postJson('/ressourcen/bibliothek/drop', [
+        'urls' => ['https://example.test/eigene-ressource'],
+    ])->assertCreated();
+
+    expect(ResourceLink::where('organization_id', $organization->id)->count())->toBe(1)
+        ->and(ResourceLink::where('organization_id', $otherOrganization->id)->count())->toBe(0);
+});
+
+it('speichert eine URL-Ressource aus dem geöffneten Drop-Editor', function () {
+    $organization = Organization::create(['name' => 'Drop Editor Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $resource = ResourceLink::create([
+        'organization_id' => $organization->id,
+        'title' => 'https://example.test/alt',
+        'url' => 'https://example.test/alt',
+    ]);
+
+    $this->actingAs($user)->put('/ressourcen/bibliothek/resource/'.$resource->id, [
+        'title' => 'Neue Quelle',
+        'url' => 'https://example.test/neu',
+        'description' => 'Aus dem Drop-Editor gespeichert',
+    ])->assertRedirect();
+
+    expect($resource->fresh()->title)->toBe('Neue Quelle')
+        ->and($resource->fresh()->url)->toBe('https://example.test/neu');
+});
+
 it('macht hochgeladene Bilder zu geschützten Bibliotheksressourcen', function () {
     Storage::fake('local');
     $organization = Organization::create(['name' => 'Bildbibliothek']);

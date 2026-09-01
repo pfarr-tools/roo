@@ -5,6 +5,7 @@ import de from "../../i18n/de";
 import { router, useForm } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 import { requestConfirmation } from "../../utils/confirmation";
+import { extractLibraryDropItems } from "./libraryDrop";
 
 const props = defineProps({
     items: { type: Array, default: () => [] },
@@ -24,6 +25,9 @@ const competencyPickerOpen = ref(false);
 const selectedTaskCompetencyText = ref("");
 const selectedTaskCompetencyDifferentiated = ref(false);
 const preview = ref(null);
+const dropActive = ref(false);
+const dropProcessing = ref(false);
+const dropError = ref("");
 const fileForm = useForm({ resource: null, description: "", copyrights: "" });
 const resourceForm = useForm({ title: "", url: "", description: "" });
 const materialForm = useForm({
@@ -250,6 +254,50 @@ function previewable(item) {
         (item.kind === "material" && item.image_url)
     );
 }
+function handleDragEnter(event) {
+    if (extractLibraryDropItems(event.dataTransfer).files.length || event.dataTransfer?.types?.includes("text/uri-list") || event.dataTransfer?.types?.includes("text/plain")) {
+        dropActive.value = true;
+    }
+}
+function handleDragLeave(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+        dropActive.value = false;
+    }
+}
+async function handleDrop(event) {
+    dropActive.value = false;
+    const { files, urls } = extractLibraryDropItems(event.dataTransfer);
+    if (!files.length && !urls.length) return;
+
+    dropError.value = "";
+    dropProcessing.value = true;
+    const formData = new FormData();
+    files.forEach(file => formData.append("files[]", file));
+    urls.forEach(url => formData.append("urls[]", url));
+
+    try {
+        const response = await fetch("/ressourcen/bibliothek/drop", {
+            method: "POST",
+            body: formData,
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content ?? "",
+            },
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message ?? de.libraryDropError);
+
+        if (payload.items?.length === 1) {
+            openEdit(payload.items[0]);
+        }
+        router.reload({ preserveState: true, preserveScroll: true });
+    } catch (error) {
+        dropError.value = error.message || de.libraryDropError;
+    } finally {
+        dropProcessing.value = false;
+    }
+}
 </script>
 
 <template>
@@ -315,7 +363,19 @@ function previewable(item) {
                 </div>
             </div>
         </template>
-        <div class="container-full px-3 py-4">
+        <div
+            class="container-full px-3 py-4 roo-library-dropzone"
+            :class="{ 'roo-library-dropzone-active': dropActive }"
+            @dragenter.prevent="handleDragEnter"
+            @dragover.prevent="handleDragEnter"
+            @dragleave.prevent="handleDragLeave"
+            @drop.prevent="handleDrop"
+        >
+            <div v-if="dropActive || dropProcessing" class="roo-library-drop-overlay" role="status">
+                <i class="bi bi-cloud-arrow-up fs-1" aria-hidden="true"></i>
+                <span>{{ dropProcessing ? de.libraryDropProcessing : de.libraryDropHint }}</span>
+            </div>
+            <div v-if="dropError" class="alert alert-danger" role="alert">{{ dropError }}</div>
             <div
                 class="d-flex justify-content-between align-items-start gap-3 mb-4"
             >
@@ -945,3 +1005,31 @@ function previewable(item) {
         </div>
     </AppShell>
 </template>
+
+<style scoped>
+.roo-library-dropzone {
+    position: relative;
+    min-height: 100%;
+}
+
+.roo-library-dropzone-active {
+    outline: 2px dashed var(--bs-primary);
+    outline-offset: -0.5rem;
+    background: rgba(var(--bs-primary-rgb), 0.04);
+}
+
+.roo-library-drop-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 16rem;
+    color: var(--bs-primary);
+    background: rgba(var(--bs-body-bg-rgb), 0.9);
+    pointer-events: none;
+}
+</style>
