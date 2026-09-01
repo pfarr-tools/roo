@@ -29,4 +29,9 @@ class StudentEvaluation extends Model
     {
         return $this->hasMany(EvaluationBlock::class)->orderBy('position');
     }
+
+    public function observationScales(): HasMany
+    {
+        return $this->hasMany(StudentEvaluationObservationScale::class)->orderBy('position_snapshot');
+    }
 }
