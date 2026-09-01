@@ -25,7 +25,7 @@ class SchoolController extends Controller
     public function show(School $school): Response
     {
         $this->authorize('view', $school);
-        $school->load(['periods' => fn ($query) => $query->orderBy('period_number')]);
+        $school->load(['periods' => fn ($query) => $query->orderBy('period_number'), 'customProcessCompetences']);
 
         return Inertia::render('Schools/Show', [
             'school' => $school,

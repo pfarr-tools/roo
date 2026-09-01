@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\CurriculumController;
+use App\Http\Controllers\CustomProcessCompetenceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\EvaluationController;
@@ -211,6 +212,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/bildungsplaene/{educationPlan}/kompetenzen/{competency}/status', [EducationPlanController::class, 'updateCompetencyStatus'])->name('education-plans.competencies.status');
     Route::post('/schulen', [SchoolController::class, 'store'])->name('schools.store');
     Route::put('/schulen/{school}', [SchoolController::class, 'update'])->name('schools.update');
+    Route::put('/schulen/{school}/beobachtungsskala', [CustomProcessCompetenceController::class, 'update'])->name('schools.observation-scale.update');
     Route::put('/schulen/{school}/stundenraster', [SchoolController::class, 'updatePeriods'])->name('schools.periods.update');
     Route::delete('/schulen/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
     Route::scopeBindings()->group(function (): void {
