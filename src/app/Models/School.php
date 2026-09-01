@@ -8,9 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['organization_id', 'name', 'slug', 'short_name', 'city', 'notes'])]
+#[Fillable(['organization_id', 'name', 'slug', 'short_name', 'city', 'notes', 'observation_scale_interval_count'])]
 class School extends Model
 {
+    protected function casts(): array
+    {
+        return ['observation_scale_interval_count' => 'integer'];
+    }
+
     protected static function booted(): void
     {
         static::saving(function (School $school): void {
@@ -59,5 +64,10 @@ class School extends Model
     public function periods(): HasMany
     {
         return $this->hasMany(SchoolPeriod::class);
+    }
+
+    public function customProcessCompetences(): HasMany
+    {
+        return $this->hasMany(CustomProcessCompetence::class)->orderBy('position')->orderBy('id');
     }
 }
