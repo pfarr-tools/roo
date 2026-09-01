@@ -505,6 +505,9 @@ class LessonWorkspaceController extends Controller
             ->groupBy('kind')
             ->map(fn ($competencies) => $competencies->values())
             ->all();
+        $customProcessCompetences = $group->grading_model === 'observation_scales'
+            ? $group->school->customProcessCompetences()->where('is_active', true)->get(['id', 'text', 'position'])
+            : collect();
 
         return Inertia::render('Lessons/Show', [
             'slot' => $scheduleSlot,
@@ -525,11 +528,13 @@ class LessonWorkspaceController extends Controller
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
             'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
+            'customProcessCompetences' => $customProcessCompetences,
+            'customProcessCompetenceScaleIntervalCount' => $group->school->observation_scale_interval_count,
             'observationStudents' => $groupStudents,
             'observationTypes' => $observationTypes,
             'attendanceRecords' => $scheduledLesson->attendanceRecords()->get(['student_id', 'status', 'note']),
             'observations' => $scheduledLesson->observations()->get(['student_id', 'observation_type_id', 'note']),
-            'competenceEvidences' => $scheduledLesson->competenceEvidences()->get(['student_id', 'teaching_unit_competency_id', 'scale', 'note']),
+            'competenceEvidences' => $scheduledLesson->competenceEvidences()->get(['student_id', 'teaching_unit_competency_id', 'custom_process_competence_id', 'scale', 'custom_scale_level', 'custom_scale_status', 'note']),
         ]);
     }
 
@@ -548,14 +553,32 @@ class LessonWorkspaceController extends Controller
             'students.*.observation_type_ids' => ['sometimes', 'array'],
             'students.*.observation_type_ids.*' => ['integer'],
             'students.*.evidences' => ['sometimes', 'array'],
-            'students.*.evidences.*.competency_id' => ['required', 'integer'],
+            'students.*.evidences.*.competency_id' => ['nullable', 'integer'],
+            'students.*.evidences.*.custom_process_competence_id' => ['nullable', 'integer'],
             'students.*.evidences.*.scale' => ['nullable', 'string', 'max:32'],
+            'students.*.evidences.*.custom_scale_level' => ['nullable', 'integer'],
+            'students.*.evidences.*.custom_scale_status' => ['nullable', 'in:ne'],
             'students.*.evidences.*.note' => ['nullable', 'string', 'max:2000'],
         ]);
         $studentIds = collect($data['students'])->pluck('student_id');
         abort_unless($studentIds->unique()->count() === $studentIds->count() && $studentIds->diff($students)->isEmpty(), 422);
         $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->pluck('id');
         $competencyIds = $scheduledLesson->lesson->competencies()->pluck('teaching_unit_competencies.id');
+        $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
+        foreach ($data['students'] as $student) {
+            foreach ($student['evidences'] ?? [] as $evidence) {
+                $hasImported = filled($evidence['competency_id'] ?? null);
+                $hasCustom = filled($evidence['custom_process_competence_id'] ?? null);
+                abort_unless($hasImported xor $hasCustom, 422);
+                if ($hasCustom) {
+                    abort_unless($group->grading_model === 'observation_scales' && $customCompetences->contains('id', $evidence['custom_process_competence_id']), 422);
+                    $hasLevel = filled($evidence['custom_scale_level'] ?? null);
+                    $hasStatus = ($evidence['custom_scale_status'] ?? null) === 'ne';
+                    abort_unless($hasLevel xor $hasStatus, 422);
+                    abort_unless(! $hasLevel || ((int) $evidence['custom_scale_level'] >= 1 && (int) $evidence['custom_scale_level'] <= $group->school->observation_scale_interval_count), 422);
+                }
+            }
+        }
 
         DB::transaction(function () use ($data, $scheduledLesson, $typeIds, $competencyIds): void {
             foreach ($data['students'] as $student) {
@@ -566,8 +589,10 @@ class LessonWorkspaceController extends Controller
                 }
                 CompetenceEvidence::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student['student_id'])->delete();
                 foreach ($student['evidences'] ?? [] as $evidence) {
-                    if ($competencyIds->contains($evidence['competency_id'])) {
+                    if (filled($evidence['competency_id'] ?? null) && $competencyIds->contains($evidence['competency_id'])) {
                         CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'teaching_unit_competency_id' => $evidence['competency_id'], 'scale' => $evidence['scale'] ?? null, 'note' => $evidence['note'] ?? null]);
+                    } elseif (filled($evidence['custom_process_competence_id'] ?? null)) {
+                        CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'custom_process_competence_id' => $evidence['custom_process_competence_id'], 'custom_scale_level' => $evidence['custom_scale_level'] ?? null, 'custom_scale_status' => $evidence['custom_scale_status'] ?? null, 'note' => $evidence['note'] ?? null]);
                     }
                 }
             }

@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\AttendanceRecord;
+use App\Models\CompetenceEvidence;
+use App\Models\CustomProcessCompetence;
 use App\Models\Observation;
 use App\Models\ObservationType;
 use App\Models\Organization;
@@ -65,6 +67,44 @@ it('verhindert Beobachtungen für fremde Gruppen', function () {
         'students' => [['student_id' => $foreignStudent->id, 'attendance' => 'present']],
     ])->assertStatus(422);
     expect(AttendanceRecord::count())->toBe(0);
+});
+
+it('zeigt schulische Prozesskompetenzen und speichert eine Beobachtungsstufe', function () {
+    $fixture = observationFixture();
+    $fixture['group']->update(['grading_model' => 'observation_scales']);
+    $competence = CustomProcessCompetence::create(['school_id' => $fixture['group']->school_id, 'text' => 'Religiöse Fragen besprechen', 'position' => 1]);
+
+    $this->actingAs($fixture['user'])->get("/unterricht/{$fixture['slot']->id}")->assertInertia(fn ($page) => $page
+        ->where('customProcessCompetences.0.id', $competence->id)
+        ->where('customProcessCompetenceScaleIntervalCount', 4));
+
+    $this->actingAs($fixture['user'])->put("/unterricht/{$fixture['slot']->id}/beobachtungen", [
+        'students' => [[
+            'student_id' => $fixture['student']->id,
+            'attendance' => 'present',
+            'evidences' => [['custom_process_competence_id' => $competence->id, 'custom_scale_level' => 3]],
+        ]],
+    ])->assertRedirect();
+
+    expect(CompetenceEvidence::first()->custom_process_competence_id)->toBe($competence->id)
+        ->and(CompetenceEvidence::first()->custom_scale_level)->toBe(3);
+});
+
+it('speichert ne als separaten Status für schulische Prozesskompetenzen', function () {
+    $fixture = observationFixture();
+    $fixture['group']->update(['grading_model' => 'observation_scales']);
+    $competence = CustomProcessCompetence::create(['school_id' => $fixture['group']->school_id, 'text' => 'Wahrnehmen und beschreiben', 'position' => 1]);
+
+    $this->actingAs($fixture['user'])->put("/unterricht/{$fixture['slot']->id}/beobachtungen", [
+        'students' => [[
+            'student_id' => $fixture['student']->id,
+            'attendance' => 'present',
+            'evidences' => [['custom_process_competence_id' => $competence->id, 'custom_scale_status' => 'ne']],
+        ]],
+    ])->assertRedirect();
+
+    expect(CompetenceEvidence::first()->custom_scale_status)->toBe('ne')
+        ->and(CompetenceEvidence::first()->custom_scale_level)->toBeNull();
 });
 
 it('speichert den konfigurierbaren Beginn des zweiten Halbjahres', function () {

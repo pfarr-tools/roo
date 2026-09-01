@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['scheduled_lesson_id', 'student_id', 'teaching_unit_competency_id', 'scale', 'note'])]
+#[Fillable(['scheduled_lesson_id', 'student_id', 'teaching_unit_competency_id', 'custom_process_competence_id', 'scale', 'custom_scale_level', 'custom_scale_status', 'note'])]
 class CompetenceEvidence extends Model
 {
     protected $table = 'competence_evidences';
@@ -24,5 +24,10 @@ class CompetenceEvidence extends Model
     public function competency(): BelongsTo
     {
         return $this->belongsTo(TeachingUnitCompetency::class, 'teaching_unit_competency_id');
+    }
+
+    public function customProcessCompetence(): BelongsTo
+    {
+        return $this->belongsTo(CustomProcessCompetence::class);
     }
 }
