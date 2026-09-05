@@ -108,14 +108,14 @@ class ImportEducationPlan
                     foreach ($stageData['domains'] ?? [] as $areaPosition => $areaData) {
                         $area = $this->createArea($version, $stage, $areaData, 'content', $areaPosition);
                         $counts['areas']++;
-                        $this->createCompetencies($area, $areaData['competencies'] ?? [], $levelIds, $counts);
+                        $this->createCompetencies($version, $area, $areaData['competencies'] ?? [], $levelIds, $counts);
                     }
                 }
 
                 foreach ($payload['process_competencies'] ?? [] as $areaPosition => $areaData) {
                     $area = $this->createArea($version, null, $areaData, 'process', $areaPosition);
                     $counts['areas']++;
-                    $this->createCompetencies($area, $areaData['competencies'] ?? [], $levelIds, $counts);
+                    $this->createCompetencies($version, $area, $areaData['competencies'] ?? [], $levelIds, $counts);
                 }
 
                 foreach ($payload['guiding_principles'] ?? [] as $position => $principle) {
@@ -153,7 +153,7 @@ class ImportEducationPlan
         ]);
     }
 
-    private function createCompetencies(EducationPlanCompetenceArea $area, array $items, array $levelIds, array &$counts): void
+    private function createCompetencies(EducationPlanVersion $version, EducationPlanCompetenceArea $area, array $items, array &$levelIds, array &$counts): void
     {
         foreach ($items as $position => $data) {
             $competency = EducationPlanCompetency::create([
@@ -165,10 +165,19 @@ class ImportEducationPlan
             ]);
             $counts['competencies']++;
 
+            $nullVariantCount = collect($data['variants'] ?? [])->whereNull('level')->count();
+            $implicitLevelIds = $nullVariantCount > 1
+                ? $this->ensureImplicitLevelIds($version, $levelIds)
+                : [];
+            $nullVariantPosition = 0;
+
             foreach ($data['variants'] ?? [] as $variantPosition => $variant) {
+                $levelId = $variant['level'] === null
+                    ? ($implicitLevelIds[$nullVariantPosition++] ?? null)
+                    : ($levelIds[$variant['level']] ?? null);
                 EducationPlanCompetenceVariant::create([
                     'education_plan_competency_id' => $competency->id,
-                    'education_plan_level_id' => $variant['level'] === null ? null : ($levelIds[$variant['level']] ?? null),
+                    'education_plan_level_id' => $levelId,
                     'text' => $variant['text'],
                     'position' => $variantPosition,
                 ]);
@@ -198,6 +207,23 @@ class ImportEducationPlan
                 $counts['relations']++;
             }
         }
+    }
+
+    /** @return array{0: int, 1: int, 2: int} */
+    private function ensureImplicitLevelIds(EducationPlanVersion $version, array &$levelIds): array
+    {
+        foreach ([
+            'G' => 'Grundlegendes Niveau',
+            'M' => 'Mittleres Niveau',
+            'E' => 'Erweitertes Niveau',
+        ] as $identifier => $label) {
+            $levelIds[$identifier] ??= EducationPlanLevel::firstOrCreate(
+                ['education_plan_version_id' => $version->id, 'external_identifier' => $identifier],
+                ['label' => $label, 'position' => count($levelIds)],
+            )->id;
+        }
+
+        return [$levelIds['G'], $levelIds['M'], $levelIds['E']];
     }
 
     private function clearVersion(EducationPlanVersion $version): void

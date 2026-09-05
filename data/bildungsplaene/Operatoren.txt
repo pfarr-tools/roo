@@ -1,0 +1,99 @@
+%analysieren
+%anwenden
+%argumentieren
+%aufbereiten
+%aufgreifen
+%aufweisen
+%aufzeigen
+%ausdrücken
+%Auskunft geben
+%auslegen
+sich %auseinandersetzen
+sich %austauschen
+%begegnen
+%begründen
+%belegen
+%benennen
+%berücksichtigen
+%beschreiben
+%bestimmen
+%betrachten
+%beurteilen
+%bewerten
+%beziehen
+%charakterisieren
+%darlegen
+%darstellen
+%deuten
+%diskutieren
+%dokumentieren
+sich %einlassen
+%einordnen
+%einsetzen
+%entdecken
+%entfalten
+%einen Standpunkt einnehmen
+%entwerfen
+%entwickeln
+%Informationen erheben
+%erfassen
+%erkennen
+%erklären
+%erkunden
+%erleben
+%erläutern
+%erschließen
+%erweitern
+%erzählen
+%erörtern
+%finden
+%formulieren
+%gestalten
+%gewinnen
+%herausarbeiten
+sich %hineinversetzen
+%identifizieren
+%in Beziehung setzen
+%in Zusammenhang bringen
+%interpretieren
+%kennenlernen
+%kommentieren
+%kommunizieren
+%mitfeiern
+%mitgestalten
+%mitplanen
+%mitvollziehen
+%nacherzählen
+%nachdenken
+%orientieren
+%präsentieren
+%problematisieren
+%prüfen
+%recherchieren
+%reflektieren
+%richten
+%skizzieren
+%sprechen
+%Stellung nehmen
+%stellen
+%suchen
+%transformieren
+%umgehen
+%überprüfen
+sich %äußern
+%unterscheiden
+%untersuchen
+%vergleichen
+%verwenden
+%vertreten
+%verstehen
+%verleihen
+%wahrnehmen
+%wertschätzen
+%wiedererkennen
+%wiedergeben
+%zeigen
+%zum Ausdruck bringen
+%zuhören
+%zuordnen
+%zusammenfassen

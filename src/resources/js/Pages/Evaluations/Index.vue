@@ -21,7 +21,7 @@ function selectGroup(event) {
             <select id="evaluations-group" class="form-select form-select-sm" :value="group?.id ?? ''" :disabled="!groups.length" @change="selectGroup">
                 <option v-for="option in groups" :key="option.id" :value="option.id">{{ option.name }}</option>
             </select>
-            <a v-if="group" class="btn btn-sm btn-primary d-inline-flex align-items-center" :href="`/unterrichtsgruppen/${group.id}/bewertungen/neu`"><i class="bi bi-plus-lg d-inline me-1" aria-hidden="true"></i>Zeitraum</a>
+            <a v-if="group && group.grading_model !== 'competency_texts_and_grades'" class="btn btn-sm btn-primary d-inline-flex align-items-center" :href="`/unterrichtsgruppen/${group.id}/bewertungen/neu`"><i class="bi bi-plus-lg d-inline me-1" aria-hidden="true"></i>Zeitraum</a>
         </template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ de.groupEvaluations }}</h1>

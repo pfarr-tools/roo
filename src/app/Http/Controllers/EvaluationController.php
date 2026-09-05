@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompetenceEvidence;
+use App\Models\ReportPeriod;
+use App\Models\ReportPeriodEvaluationTemplate;
 use App\Models\StudentEvaluation;
 use App\Models\TeachingGroup;
+use App\Services\EvaluationTemplateGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -17,7 +20,7 @@ class EvaluationController extends Controller
         $groups = TeachingGroup::query()
             ->where('organization_id', $request->user()->organization_id)
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'grading_model']);
         $selectedGroup = $groups->firstWhere('id', $request->integer('group')) ?? $groups->first();
         $selectedGroup?->load('reportPeriods.evaluations.student');
 
@@ -35,16 +38,62 @@ class EvaluationController extends Controller
         return Inertia::render('Evaluations/PeriodForm', ['group' => $teachingGroup]);
     }
 
-    public function storePeriod(Request $request, TeachingGroup $teachingGroup)
+    public function storePeriod(Request $request, TeachingGroup $teachingGroup, EvaluationTemplateGenerator $templateGenerator)
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['label' => ['required', 'string', 'max:100'], 'starts_on' => ['required', 'date'], 'ends_on' => ['required', 'date', 'after_or_equal:starts_on']]);
-        DB::transaction(function () use ($data, $teachingGroup): void {
+        DB::transaction(function () use ($data, $teachingGroup, $templateGenerator): void {
             $period = $teachingGroup->reportPeriods()->create([...$data, 'organization_id' => $teachingGroup->organization_id]);
             $teachingGroup->students()->get()->each(fn ($student) => $period->evaluations()->create(['student_id' => $student->id]));
+            if ($teachingGroup->grading_model === 'competency_texts_and_grades') {
+                $period->evaluationTemplates()->createMany($templateGenerator->generate($period)->all());
+            }
         });
 
-        return to_route('teaching-groups.show', $teachingGroup)->with('success', 'Bewertungszeitraum wurde angelegt.');
+        return to_route('teaching-groups.show', [$teachingGroup, 'tab' => 'evaluations'])->with('success', 'Bewertungszeitraum wurde angelegt.');
+    }
+
+    public function editTemplate(TeachingGroup $teachingGroup, ReportPeriod $period, EvaluationTemplateGenerator $templateGenerator)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($period->teaching_group_id === $teachingGroup->id, 404);
+        if ($teachingGroup->grading_model === 'competency_texts_and_grades' && ! $period->evaluationTemplates()->exists()) {
+            $period->evaluationTemplates()->createMany($templateGenerator->generate($period)->all());
+        }
+
+        return Inertia::render('Evaluations/TemplateEdit', [
+            'group' => $teachingGroup,
+            'period' => $period->load('evaluationTemplates'),
+        ]);
+    }
+
+    public function updateTemplate(Request $request, TeachingGroup $teachingGroup, ReportPeriod $period)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($period->teaching_group_id === $teachingGroup->id, 404);
+        abort_unless($teachingGroup->grading_model === 'competency_texts_and_grades', 404);
+        $data = $request->validate(['templates' => ['required', 'array'], 'templates.*.id' => ['required', 'integer'], 'templates.*.text' => ['required', 'string', 'max:10000']]);
+        $templates = $period->evaluationTemplates()->whereKey(collect($data['templates'])->pluck('id'))->get()->keyBy('id');
+        abort_unless($templates->count() === count($data['templates']), 422);
+        foreach ($data['templates'] as $template) {
+            $templates->get($template['id'])->update(['text' => $template['text']]);
+        }
+
+        return to_route('teaching-groups.show', [$teachingGroup, 'tab' => 'evaluations'])->with('success', 'Bewertungsvorlagen wurden gespeichert.');
+    }
+
+    public function resetTemplate(TeachingGroup $teachingGroup, ReportPeriod $period, ReportPeriodEvaluationTemplate $template, EvaluationTemplateGenerator $templateGenerator)
+    {
+        $this->authorize('update', $teachingGroup);
+        abort_unless($period->teaching_group_id === $teachingGroup->id, 404);
+        abort_unless($teachingGroup->grading_model === 'competency_texts_and_grades', 404);
+        abort_unless($template->report_period_id === $period->id, 404);
+
+        $proposal = $templateGenerator->generate($period)->first(fn (array $generated): bool => $generated['level'] === $template->level);
+        abort_unless($proposal, 422);
+        $template->update(['text' => $proposal['text']]);
+
+        return to_route('evaluations.templates.edit', [$teachingGroup, $period]);
     }
 
     public function edit(TeachingGroup $teachingGroup, StudentEvaluation $evaluation)

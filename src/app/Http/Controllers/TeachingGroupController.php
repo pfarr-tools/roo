@@ -22,10 +22,11 @@ use App\Models\SchoolYear;
 use App\Models\SongVersion;
 use App\Models\Student;
 use App\Models\TeachingGroup;
-use App\Students\PronounSets\PronounSets;
 use App\Services\CompetencyResolver;
+use App\Services\EvaluationTemplateGenerator;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
+use App\Students\PronounSets\PronounSets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,10 +49,18 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver): Response
+    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver, EvaluationTemplateGenerator $templateGenerator): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student', 'reportPeriods.evaluationTemplates']);
+        if ($teachingGroup->grading_model === 'competency_texts_and_grades') {
+            foreach ($teachingGroup->reportPeriods as $period) {
+                if (! $period->evaluationTemplates->isNotEmpty()) {
+                    $period->evaluationTemplates()->createMany($templateGenerator->generate($period)->all());
+                }
+            }
+            $teachingGroup->load('reportPeriods.evaluationTemplates');
+        }
         $organizationId = auth()->user()->organization_id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
         $planCompetencies = CurriculumTopicEducationPlanReference::query()

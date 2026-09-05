@@ -202,6 +202,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/neu', [EvaluationController::class, 'createPeriod'])->name('evaluations.periods.create');
     Route::get('/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.index');
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage', [EvaluationController::class, 'editTemplate'])->name('evaluations.templates.edit');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage', [EvaluationController::class, 'updateTemplate'])->name('evaluations.templates.update');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage/{template}/zurücksetzen', [EvaluationController::class, 'resetTemplate'])->name('evaluations.templates.reset');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/bearbeiten', [EvaluationController::class, 'edit'])->name('evaluations.edit');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungseinstellungen', [TeachingGroupController::class, 'updateGradingSettings'])->name('teaching-groups.grading-settings.update');

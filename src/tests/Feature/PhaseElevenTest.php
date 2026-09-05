@@ -2,8 +2,14 @@
 
 use App\Models\CompetenceEvidence;
 use App\Models\CustomProcessCompetence;
+use App\Models\EducationPlan;
+use App\Models\EducationPlanCompetenceArea;
+use App\Models\EducationPlanCompetenceVariant;
+use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanVersion;
 use App\Models\Organization;
 use App\Models\ReportPeriod;
+use App\Models\ReportPeriodEvaluationTemplate;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
@@ -11,6 +17,7 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\StudentEvaluationObservationScale;
 use App\Models\TeachingGroup;
+use App\Models\TeachingUnitCompetency;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -23,6 +30,70 @@ it('legt einen Bewertungszeitraum an und trennt den Entwurf vom Bestätigungssta
     $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume", ['label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01'])->assertRedirect();
     expect(ReportPeriod::first()->label)->toBe('1. Halbjahr');
+});
+
+it('erzeugt und bearbeitet Vorlagen für Kompetenztexte und Noten', function () {
+    $org = Organization::create(['name' => 'Vorlagen']);
+    $user = User::factory()->create(['organization_id' => $org->id]);
+    $school = School::create(['organization_id' => $org->id, 'name' => 'Vorlagenschule']);
+    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'competency_texts_and_grades']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume", ['label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01'])->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=evaluations");
+    $period = $group->reportPeriods()->first();
+    $template = $period->evaluationTemplates()->create(['level' => 'G', 'original_text' => '[Vorname] kann etwas.', 'text' => '[Vorname] kann etwas.']);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume/{$period->id}/vorlage")->assertInertia(fn ($page) => $page->component('Evaluations/TemplateEdit')->where('period.evaluation_templates.0.id', $template->id));
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume/{$period->id}/vorlage", ['templates' => [['id' => $template->id, 'text' => 'Bearbeiteter Text.']]])->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=evaluations");
+
+    expect(ReportPeriodEvaluationTemplate::find($template->id)->text)->toBe('Bearbeiteter Text.')
+        ->and(ReportPeriodEvaluationTemplate::find($template->id)->original_text)->toBe('[Vorname] kann etwas.');
+});
+
+it('generates differentiated proposal sentences from treated content competences', function () {
+    $org = Organization::create(['name' => 'Satzvorschläge']);
+    $user = User::factory()->create(['organization_id' => $org->id]);
+    $school = School::create(['organization_id' => $org->id, 'name' => 'Satzschule']);
+    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a', 'grading_model' => 'competency_texts_and_grades']);
+    $plan = EducationPlan::create(['external_identifier' => 'BP2016BW_ALLG_SEK1_RAK', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.3.1', 'title' => 'Inhalt', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.3.1.1', 'text' => null, 'position' => 1]);
+    $secondCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.3.1.2', 'text' => null, 'position' => 2]);
+    foreach (['G', 'M', 'E'] as $position => $level) {
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $level, 'position' => $position]);
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $secondCompetency->id, 'education_plan_level_id' => null, 'text' => $level, 'position' => $position]);
+    }
+    $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
+    $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
+    $unitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $competency->id]);
+    $secondUnitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $secondCompetency->id]);
+    $lesson->competencies()->attach($unitCompetency->id);
+    $lesson->competencies()->attach($secondUnitCompetency->id);
+    $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
+    ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
+
+    $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $period = $group->reportPeriods()->first();
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume/{$period->id}/vorlage")->assertInertia(fn ($page) => $page->has('period.evaluation_templates', 3));
+
+    $templates = $period->fresh()->evaluationTemplates;
+    $text = $templates->firstWhere('level', 'G')->original_text;
+    expect($templates)->toHaveCount(3)
+        ->and($templates->pluck('level')->all())->toBe(['G', 'M', 'E'])
+        ->and($text)->toContain('[Vorname]')
+        ->and($text)->toContain('[Pronomen]')
+        ->and(strpos($text, '[Vorname]'))->toBeLessThan(strpos($text, '[Pronomen]'));
+
+    $template = $templates->firstWhere('level', 'G');
+    $template->update(['original_text' => 'Veralteter Vorschlag.', 'text' => 'Manuell geändert.']);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume/{$period->id}/vorlage/{$template->id}/zurücksetzen")
+        ->assertRedirect(route('evaluations.templates.edit', [$group, $period]));
+
+    expect($template->fresh()->text)->toBe($text)
+        ->and($template->fresh()->text)->not->toBe('Veralteter Vorschlag.');
 });
 
 it('uses live school scale definitions in drafts and snapshots them on confirmation', function () {

@@ -17,11 +17,20 @@ it('imports the structured education plan hierarchy and preserves incomplete con
     expect($result['version']->raw_payload['metadata']['conversion']['status'])->toBe('structure_only');
 });
 
-it('imports non-differentiated variants and structured relations from a complete plan', function () {
+it('maps multiple level-null variants to G/M/E in source order', function () {
     $result = app(ImportEducationPlan::class)->execute(base_path('../data/bildungsplaene/plans/BP2016BW_ALLG_SEK1_REV.json'));
 
     expect($result['version']->is_complete)->toBeTrue();
-    $this->assertDatabaseHas('education_plan_competence_variants', ['education_plan_level_id' => null]);
+    $levels = DB::table('education_plan_competence_variants')
+        ->join('education_plan_competencies', 'education_plan_competencies.id', '=', 'education_plan_competence_variants.education_plan_competency_id')
+        ->join('education_plan_levels', 'education_plan_levels.id', '=', 'education_plan_competence_variants.education_plan_level_id')
+        ->where('education_plan_competencies.external_identifier', '3.1.1.1')
+        ->where('education_plan_levels.education_plan_version_id', $result['version']->id)
+        ->orderBy('education_plan_competence_variants.position')
+        ->pluck('education_plan_levels.external_identifier')
+        ->all();
+
+    expect($levels)->toBe(['G', 'M', 'E']);
 });
 
 it('imports structured references from variants and process competencies', function () {

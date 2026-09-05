@@ -24,4 +24,9 @@ class ReportPeriod extends Model
     {
         return $this->hasMany(StudentEvaluation::class);
     }
+
+    public function evaluationTemplates(): HasMany
+    {
+        return $this->hasMany(ReportPeriodEvaluationTemplate::class)->orderByRaw("CASE level WHEN 'G' THEN 1 WHEN 'M' THEN 2 WHEN 'E' THEN 3 ELSE 4 END");
+    }
 }
