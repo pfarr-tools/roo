@@ -9,6 +9,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\FluxController;
 use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicTeachingUnitController;
 use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolYearController;
@@ -31,6 +32,13 @@ Route::get('/', function (Request $request) {
 
     return Inertia::render('Welcome');
 })->name('home');
+
+Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}', [PublicTeachingUnitController::class, 'show'])
+    ->middleware('signed')
+    ->name('public.teaching-units.show');
+Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}/materialien/{resource}', [PublicTeachingUnitController::class, 'download'])
+    ->middleware('signed')
+    ->name('public.teaching-units.resources.download');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
