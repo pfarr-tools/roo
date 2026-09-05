@@ -497,6 +497,17 @@ class LessonWorkspaceController extends Controller
             $phase->setAttribute('song_ids', $phase->songs->pluck('id')->values());
         });
         $scheduledLesson = $scheduleSlot->scheduledLesson;
+        $nextScheduledLesson = $group->scheduleSlots()
+            ->where(function ($query) use ($scheduleSlot): void {
+                $query->where('date', '>', $scheduleSlot->date)
+                    ->orWhere(fn ($query) => $query->where('date', $scheduleSlot->date)->where('period_number', '>', $scheduleSlot->period_number));
+            })
+            ->whereHas('scheduledLesson', function ($query) use ($lesson): void {
+                $query->where('lesson_id', '!=', $lesson->id)->whereNotIn('status', ['cancelled', 'postponed']);
+            })
+            ->with('scheduledLesson.lesson:id,title')
+            ->orderBy('date')->orderBy('period_number')
+            ->first();
         $groupStudents = $group->students()->orderBy('last_name')->orderBy('first_name')->get(['students.id', 'first_name', 'last_name', 'class_name']);
         $observationTypes = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
             ->where('is_active', true)->orderBy('position')->orderBy('label')->get(['id', 'label', 'symbol', 'color']);
@@ -521,6 +532,7 @@ class LessonWorkspaceController extends Controller
 
         return Inertia::render('Lessons/Show', [
             'slot' => $scheduleSlot,
+            'nextScheduledLesson' => $nextScheduledLesson ? ['id' => $nextScheduledLesson->scheduledLesson->id, 'date' => $nextScheduledLesson->date->toDateString(), 'period_number' => $nextScheduledLesson->period_number, 'lesson_title' => $nextScheduledLesson->scheduledLesson->lesson->title] : null,
             'group' => $group,
             'lesson' => $lesson,
             'unit' => $lesson->unit,

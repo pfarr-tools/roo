@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/jahresplanung/{teachingGroup}/phasen/{phase}/als-vorlage', [YearPlanController::class, 'savePhaseAsTemplate'])->name('year-plans.phases.save-template');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen', [YearPlanController::class, 'storePhase'])->name('year-plans.phases.store');
     Route::delete('/jahresplanung/{teachingGroup}/phasen/{phase}', [YearPlanController::class, 'destroyPhase'])->name('year-plans.phases.destroy');
+    Route::post('/jahresplanung/{teachingGroup}/phasen/{phase}/in-naechste-stunde-verschieben', [YearPlanController::class, 'movePhaseToNextLesson'])->name('year-plans.phases.move-to-next-lesson');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/phasen/reihenfolge', [YearPlanController::class, 'reorderPhases'])->name('year-plans.phases.reorder');
     Route::put('/jahresplanung/{teachingGroup}/geplante-stunden/{scheduledLesson}/status', [YearPlanController::class, 'updateScheduledLessonStatus'])->name('year-plans.scheduled-lessons.status');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden/reihenfolge', [YearPlanController::class, 'reorderLessons'])->name('year-plans.lessons.reorder');

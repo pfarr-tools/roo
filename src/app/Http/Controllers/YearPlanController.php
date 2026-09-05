@@ -659,6 +659,47 @@ class YearPlanController extends Controller
         return back()->with('success', 'Phase wurde entfernt.');
     }
 
+    public function movePhaseToNextLesson(Request $request, TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse|JsonResponse
+    {
+        $this->authorize('update', $teachingGroup);
+        $data = $request->validate(['schedule_slot_id' => ['required', 'integer']]);
+        $currentSlot = $teachingGroup->scheduleSlots()->whereKey($data['schedule_slot_id'])->firstOrFail();
+        abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
+        abort_unless($phase->lesson->scheduledLessons()->where('schedule_slot_id', $currentSlot->id)->exists(), 422, 'Die Phase gehört nicht zur aktuellen Stunde.');
+
+        $nextScheduledLesson = ScheduledLesson::query()
+            ->whereHas('slot', function ($query) use ($teachingGroup, $currentSlot): void {
+                $query->where('teaching_group_id', $teachingGroup->id)
+                    ->where(function ($query) use ($currentSlot): void {
+                        $query->where('date', '>', $currentSlot->date)
+                            ->orWhere(fn ($query) => $query->where('date', $currentSlot->date)->where('period_number', '>', $currentSlot->period_number));
+                    });
+            })
+            ->where('lesson_id', '!=', $phase->lesson_id)
+            ->whereNotIn('status', [ScheduledLesson::STATUS_CANCELLED, ScheduledLesson::STATUS_POSTPONED])
+            ->with('slot')
+            ->get()
+            ->sortBy(fn ($scheduledLesson) => [$scheduledLesson->slot->date->toDateString(), $scheduledLesson->slot->period_number])
+            ->first();
+        abort_unless($nextScheduledLesson, 422, 'Es gibt keine nächste geplante Stunde.');
+
+        DB::transaction(function () use ($phase, $nextScheduledLesson): void {
+            $sourceLesson = $phase->lesson;
+            $targetLesson = $nextScheduledLesson->lesson;
+            $targetLesson->phases()->orderByDesc('position')->get()->each(function (LessonPhase $targetPhase): void {
+                $targetPhase->update(['position' => $targetPhase->position + 1]);
+            });
+            $phase->update(['lesson_id' => $targetLesson->id, 'position' => 1]);
+            $sourceLesson->phases()->whereKeyNot($phase->id)->orderBy('position')->get()->each(function (LessonPhase $sourcePhase, int $position): void {
+                $sourcePhase->update(['position' => $position + 1]);
+            });
+        });
+
+        $message = 'Phase wurde an den Anfang der nächsten Stunde verschoben.';
+
+        return $request->expectsJson() ? response()->json(['message' => $message]) : back()->with('success', $message);
+    }
+
     public function reorderPhases(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);

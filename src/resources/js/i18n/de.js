@@ -702,6 +702,7 @@ export default {
     plannedDuration: "Geplante Dauer",
     markConducted: "Als durchgeführt markieren",
     lessonPhasesExecution: "Phasen im Unterricht",
+    movePhaseToNextLesson: "In nächste Stunde verschieben",
     teacherView: "Lehrkraftansicht",
     presentationView: "Präsentationsansicht",
     previousPhase: "Vorherige Phase",

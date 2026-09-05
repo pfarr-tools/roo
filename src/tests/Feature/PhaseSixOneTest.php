@@ -225,6 +225,25 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'unknown'])->assertSessionHasErrors('status');
 });
 
+it('verschiebt eine Phase an den Anfang der nächsten geplanten Stunde', function () {
+    [$user, $group] = phaseSixOneGroup();
+    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Phasen UE', 'position' => 1]);
+    $firstLesson = $unit->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
+    $secondLesson = $unit->lessons()->create(['title' => 'Nächste Stunde', 'position' => 2, 'duration' => 1]);
+    $firstPhase = $firstLesson->phases()->create(['title' => 'Zu verschieben', 'position' => 1]);
+    $firstLesson->phases()->create(['title' => 'Bleibt zurück', 'position' => 2]);
+    $secondLesson->phases()->create(['title' => 'Bisheriger Einstieg', 'position' => 1]);
+    $firstSlot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'free']);
+    $secondSlot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-15', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'free']);
+    $firstScheduledLesson = ScheduledLesson::create(['lesson_id' => $firstLesson->id, 'schedule_slot_id' => $firstSlot->id, 'status' => ScheduledLesson::STATUS_PLANNED]);
+    ScheduledLesson::create(['lesson_id' => $secondLesson->id, 'schedule_slot_id' => $secondSlot->id, 'status' => ScheduledLesson::STATUS_PLANNED]);
+
+    $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post("/jahresplanung/{$group->id}/phasen/{$firstPhase->id}/in-naechste-stunde-verschieben", ['schedule_slot_id' => $firstSlot->id])->assertOk()->assertJsonPath('message', 'Phase wurde an den Anfang der nächsten Stunde verschoben.');
+
+    expect($firstLesson->fresh()->phases->pluck('title')->all())->toBe(['Bleibt zurück'])
+        ->and($secondLesson->fresh()->phases->pluck('title')->all())->toBe(['Zu verschieben', 'Bisheriger Einstieg']);
+});
+
 it('ordnet Dateien, Ressourcen und MaterialItems einer Phase zu', function () {
     [$user, $group] = phaseSixOneGroup();
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ressourcen UE', 'position' => 1]);
