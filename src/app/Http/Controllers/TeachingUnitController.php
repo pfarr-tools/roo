@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PublicationStatus;
 use App\Http\Requests\StorePhaseTemplateRequest;
 use App\Models\EducationPlan;
 use App\Models\LessonTemplate;
@@ -12,6 +13,7 @@ use App\Models\SocialForm;
 use App\Models\TeachingUnit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -95,16 +97,16 @@ class TeachingUnitController extends Controller
         abort_unless($teachingUnit->organization_id === $request->user()->organization_id, 404);
         $group = $teachingUnit->group;
         $this->authorize('update', $group);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000'], 'material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.material_number' => ['nullable', 'string', 'max:255'], 'material_items.*.storage_location' => ['nullable', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string'], 'deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer'], 'deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'introduction_text' => ['nullable', 'string'], 'education_plan_id' => ['nullable', 'integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000'], 'resource_links.*.publication_status' => ['sometimes', Rule::in([PublicationStatus::NOT_SHARED->value, PublicationStatus::SHARED_IMMEDIATELY->value])], 'material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.material_number' => ['nullable', 'string', 'max:255'], 'material_items.*.storage_location' => ['nullable', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string'], 'deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer'], 'deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']]);
         if (isset($data['education_plan_id'])) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422);
         }
-        $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes', 'education_plan_id'])->all());
+        $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes', 'introduction_text', 'education_plan_id'])->all());
         foreach ($data['resource_links'] ?? [] as $link) {
             if (! empty($link['id'])) {
-                ResourceLink::where('organization_id', $request->user()->organization_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(['title' => $link['title'], 'url' => $link['url']]);
+                ResourceLink::where('organization_id', $request->user()->organization_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(array_filter(['title' => $link['title'], 'url' => $link['url'], 'publication_status' => $link['publication_status'] ?? null], static fn ($value): bool => $value !== null));
             } else {
-                ResourceLink::create(['organization_id' => $request->user()->organization_id, 'teaching_unit_id' => $teachingUnit->id, 'title' => $link['title'], 'url' => $link['url']]);
+                ResourceLink::create(['organization_id' => $request->user()->organization_id, 'teaching_unit_id' => $teachingUnit->id, 'title' => $link['title'], 'url' => $link['url'], 'publication_status' => $link['publication_status'] ?? PublicationStatus::NOT_SHARED]);
             }
         }
         ResourceLink::where('organization_id', $request->user()->organization_id)->where('teaching_unit_id', $teachingUnit->id)->whereIn('id', $data['deleted_resource_link_ids'] ?? [])->delete();

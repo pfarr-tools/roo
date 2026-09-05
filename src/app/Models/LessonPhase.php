@@ -27,12 +27,12 @@ class LessonPhase extends Model
 
     public function resources(): BelongsToMany
     {
-        return $this->belongsToMany(ResourceReference::class, 'lesson_phase_resources');
+        return $this->belongsToMany(ResourceReference::class, 'lesson_phase_resources')->using(LessonPhaseResource::class)->withPivot('publication_status');
     }
 
     public function resourceLinks(): BelongsToMany
     {
-        return $this->belongsToMany(ResourceLink::class, 'lesson_phase_resource_links');
+        return $this->belongsToMany(ResourceLink::class, 'lesson_phase_resource_links')->using(LessonPhaseResourceLink::class)->withPivot('publication_status');
     }
 
     public function materialItems(): BelongsToMany
