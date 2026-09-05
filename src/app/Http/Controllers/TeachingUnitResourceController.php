@@ -48,7 +48,7 @@ class TeachingUnitResourceController extends Controller
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
-        $resource->update($request->validate(['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']]));
+        $resource->update($request->validate(['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000'], 'publication_status' => ['sometimes', 'in:not_shared,shared_immediately']]));
 
         return back()->with('success', 'Beschreibung des Anhangs wurde gespeichert.');
     }

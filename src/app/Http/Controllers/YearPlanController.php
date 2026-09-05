@@ -230,10 +230,11 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'], 'competency_ids' => ['sometimes', 'array'], 'competency_ids.*' => ['integer'], 'education_plan_competency_ids' => ['sometimes', 'array'], 'education_plan_competency_ids.*' => ['integer'], 'resource_links' => ['sometimes', 'array'], 'resource_links.*.id' => ['nullable', 'integer'], 'resource_links.*.local_key' => ['nullable', 'string'], 'resource_links.*.title' => ['required', 'string', 'max:255'], 'resource_links.*.url' => ['required', 'url', 'max:2000']]);
+        $data['introduction_text'] = $request->validate(['introduction_text' => ['nullable', 'string']])['introduction_text'] ?? null;
         $data['material_items'] = $request->validate(['material_items' => ['sometimes', 'array'], 'material_items.*.id' => ['nullable', 'integer'], 'material_items.*.local_key' => ['nullable', 'string'], 'material_items.*.name' => ['required', 'string', 'max:255'], 'material_items.*.material_number' => ['nullable', 'string', 'max:255'], 'material_items.*.storage_location' => ['nullable', 'string', 'max:255'], 'material_items.*.description' => ['nullable', 'string']])['material_items'] ?? [];
         $data['deleted_resource_link_ids'] = $request->validate(['deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer']])['deleted_resource_link_ids'] ?? [];
         $data['deleted_material_item_ids'] = $request->validate(['deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']])['deleted_material_item_ids'] ?? [];
-        $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes'])->all());
+        $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes', 'introduction_text'])->all());
         foreach ($data['resource_links'] ?? [] as $link) {
             if (! empty($link['id'])) {
                 ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(['title' => $link['title'], 'url' => $link['url']]);

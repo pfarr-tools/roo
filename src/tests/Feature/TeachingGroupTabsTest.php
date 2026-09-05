@@ -6,8 +6,10 @@ use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
+use App\Models\TeachingUnit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
@@ -17,7 +19,6 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
     $school = School::create(['organization_id' => $organization->id, 'name' => 'Tab Schule']);
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Tabgruppe']);
-
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
         ->component('TeachingGroups/Show')
         ->where('group.name', 'Tabgruppe')
@@ -34,13 +35,28 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
         ->assertInertia(fn ($page) => $page->component('Assessments/Form')->where('slot.date', '2026-11-12')->where('returnTab', 'assessments'));
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/bearbeiten?return_to=year-plan")
         ->assertInertia(fn ($page) => $page->component('Assessments/Form')->where('returnTo', 'year-plan'));
-    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung', 'return_to' => 'year-plan'])
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung', 'grade_component_id' => null, 'return_to' => 'year-plan'])
         ->assertRedirect("/jahresplanung/{$group->id}");
-    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung aktualisiert', 'return_tab' => 'assessments'])
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", ['title' => 'LSE Schöpfung aktualisiert', 'grade_component_id' => null, 'return_tab' => 'assessments'])
         ->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=assessments");
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/neu")
         ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm'));
+});
+
+it('liefert geplante Einheiten mit signierten Elternseiten im Gruppeneditor', function () {
+    $organization = Organization::create(['name' => 'Unit Tab Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Unit Tab Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Unit Tab Gruppe']);
+    $unit = TeachingUnit::create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'Schöpfung', 'position' => 1]);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
+        ->component('TeachingGroups/Show')
+        ->where('teachingUnits.0.id', $unit->id)
+        ->where('teachingUnits.0.title', 'Schöpfung')
+        ->where('teachingUnits.0.public_url', URL::signedRoute('public.teaching-units.show', ['teachingUnit' => $unit])));
 });
 
 it('löscht eine Lernstandserhebung nur innerhalb ihrer Unterrichtsgruppe', function () {

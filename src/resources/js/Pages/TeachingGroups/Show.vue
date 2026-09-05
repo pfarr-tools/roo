@@ -11,14 +11,18 @@ import TabHeaders from '../../Components/Ui/Tabs/TabHeaders.vue'
 import Tabs from '../../Components/Ui/Tabs/Tabs.vue'
 import AssessmentActions from '../../Components/TeachingGroups/AssessmentActions.vue'
 
-const props = defineProps({ group: Object, students: Array, curricula: Array, schoolPeriods: Array, ritualPhaseTemplates: Array, pronounSets: { type: Array, default: () => [] }, competencies: { type: Array, default: () => [] }, denominationOptions: { type: Array, default: () => [] }, songVersions: { type: Array, default: () => [] }, songbookVersions: { type: Array, default: () => [] }, assessments: { type: Array, default: () => [] }, reportPeriods: { type: Array, default: () => [] } })
+const props = defineProps({ group: Object, students: Array, curricula: Array, schoolPeriods: Array, ritualPhaseTemplates: Array, pronounSets: { type: Array, default: () => [] }, competencies: { type: Array, default: () => [] }, teachingUnits: { type: Array, default: () => [] }, parentLetterFormat: { type: String, default: 'docx' }, denominationOptions: { type: Array, default: () => [] }, songVersions: { type: Array, default: () => [] }, songbookVersions: { type: Array, default: () => [] }, assessments: { type: Array, default: () => [] }, reportPeriods: { type: Array, default: () => [] } })
 const requestedTab = new URLSearchParams(window.location.search).get('tab')
-const activeTab = ref(['general', 'timetable', 'students', 'contents', 'competencies', 'assessments', 'evaluations'].includes(requestedTab) ? requestedTab : 'general')
+const activeTab = ref(['general', 'timetable', 'students', 'contents', 'competencies', 'units', 'assessments', 'evaluations'].includes(requestedTab) ? requestedTab : 'general')
 const selectedStudent = ref(null)
 const showStudentModal = ref(false)
 const showImportModal = ref(false)
 const showMemberModal = ref(false)
 const showCurriculumModal = ref(false)
+const parentLetterUnit = ref(null)
+const parentLetterOpen = ref(false)
+const parentLetterFormat = ref(props.parentLetterFormat)
+const parentLetterIntroduction = ref('')
 const editForm = useForm({ school_id: props.group.school_id, school_year_id: props.group.school_year_id, name: props.group.name, aktenzeichen: props.group.aktenzeichen ?? '', denomination: props.group.denomination ?? '', notes: props.group.notes ?? '', grade_levels: props.group.grade_levels.map(level => level.grade_level), periods: (props.group.school_periods ?? []).map(period => ({ school_period_id: period.id, weekday: period.pivot.weekday })), phase_template_ids: (props.group.rituals ?? []).map(ritual => ritual.phase_template_id) })
 const studentForm = useForm({ school_id: props.group.school_id, first_name: '', last_name: '', class_name: '', notes: '', receives_grades: false, pronoun_set: 'er' })
 const importForm = useForm({ school_id: props.group.school_id, students: null })
@@ -56,6 +60,34 @@ const competencyCardStyle = competency => ({ backgroundColor: competency.covered
 function formatDate(value) {
     const parts = String(value ?? '').slice(0, 10).split('-')
     return parts.length === 3 && parts.every(Boolean) ? `${parts[2]}.${parts[1]}.${parts[0]}` : value
+}
+
+function openParentLetter(unit) {
+    parentLetterUnit.value = unit
+    parentLetterIntroduction.value = unit.introduction_text ?? ''
+    parentLetterOpen.value = true
+}
+
+function downloadParentLetter() {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/unterrichtseinheiten/' + parentLetterUnit.value.id + '/elternbrief'
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
+    for (const [name, value] of [['format', parentLetterFormat.value], ['introduction_text', parentLetterIntroduction.value], ['_token', token ?? '']]) {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = name
+        input.value = value
+        form.appendChild(input)
+    }
+    document.body.appendChild(form)
+    form.submit()
+    form.remove()
+    parentLetterOpen.value = false
+}
+
+function unitDates(unit) {
+    return unit.lessons.flatMap(lesson => lesson.scheduled_dates ?? []).sort()
 }
 
 function save() {
@@ -138,6 +170,7 @@ async function remove(student) { if (await requestConfirmation({ message: `${stu
                 <TabHeader id="students" :title="de.students" :active-tab="activeTab" icon="people" :count="group.students.length" @select="activeTab = $event" />
                 <TabHeader id="contents" :title="de.groupContents" :active-tab="activeTab" icon="collection" @select="activeTab = $event" />
                 <TabHeader id="competencies" :title="de.competencies" :active-tab="activeTab" icon="journal-check" :count="competencies.length" @select="activeTab = $event" />
+                <TabHeader id="units" :title="de.teachingUnits" :active-tab="activeTab" icon="journal-text" :count="teachingUnits.length" @select="activeTab = $event" />
                 <TabHeader id="assessments" :title="de.groupAssessments" :active-tab="activeTab" icon="clipboard-data" :count="assessments.length" @select="activeTab = $event" />
                 <TabHeader id="evaluations" :title="de.groupEvaluations" :active-tab="activeTab" icon="bar-chart" :count="reportPeriods.length" @select="activeTab = $event" />
             </TabHeaders>
@@ -147,6 +180,20 @@ async function remove(student) { if (await requestConfirmation({ message: `${stu
             </Tab>
             <Tab id="competencies" :active-tab="activeTab">
                 <section class="card card-body"><h2 class="h5 mb-1">{{ de.competencies }}</h2><p class="text-muted">{{ editForm.denomination ? denominationLabel(editForm.denomination) : de.allDenominations }}</p><div v-if="!competencies.length" class="text-muted">{{ de.noCompetencies }}</div><div v-else class="row g-4"><div v-for="kind in ['process', 'content']" :key="kind" class="col-lg-6"><h3 class="h6">{{ kind === 'process' ? de.processCompetencies : de.contentCompetencies }}</h3><template v-for="group in competenciesByKind[kind]" :key="group.key"><h4 v-if="group.area" class="h6 border-bottom pb-1 mt-3 mb-1">{{ group.area.identifier }} {{ group.area.title }}</h4><div v-for="competency in group.competencies" :key="competency.id" class="border-bottom py-2 px-2 mb-1" :style="competencyCardStyle(competency)"><div class="small">{{ competencyText(competency) }} <span v-if="competency.missing_from_curriculum" class="badge text-bg-warning ms-1">{{ de.notInCurriculum }}</span></div><div v-if="competency.covered_hours" class="small text-muted">{{ competency.covered_hours }} {{ de.hours.toLowerCase() }} im Plan</div></div></template><p v-if="!competenciesByKind[kind].length" class="small text-muted">{{ de.noCompetencies }}</p></div></div></section>
+            </Tab>
+            <Tab id="units" :active-tab="activeTab">
+                <section class="card card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 mb-1">{{ de.teachingUnits }}</h2><p class="text-muted mb-0">{{ de.plannedUnits }}</p></div></div>
+                    <div v-if="!teachingUnits.length" class="text-muted">{{ de.noPlannedUnits }}</div>
+                    <div v-else class="list-group list-group-flush">
+                        <div v-for="unit in teachingUnits" :key="unit.id" class="list-group-item px-0">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                                <div><h3 class="h6 mb-1">{{ unit.title }}</h3><div v-if="unitDates(unit).length" class="small text-muted">{{ unitDates(unit).map(formatDate).join(', ') }}</div><div v-if="unit.lessons.length" class="small text-muted">{{ unit.lessons.length }} {{ de.lessons.toLowerCase() }}</div></div>
+                                <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-primary" type="button" @click="openParentLetter(unit)">{{ de.parentLetter }}</button><a class="btn btn-sm btn-outline-secondary" :href="unit.public_url" target="_blank" rel="noreferrer">{{ de.parentPage }}</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </Tab>
             <Tab id="timetable" :active-tab="activeTab">
                 <section class="card card-body"><div class="mb-3"><h2 class="h5 mb-1">{{ de.regularPeriods }}</h2><p class="text-muted mb-0">{{ de.regularPeriodsIntro }} {{ de.saveChanges }}.</p></div><div v-if="!schoolPeriods.length" class="text-muted">{{ de.noPeriods }}</div><div v-else class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>{{ de.period }}</th><th v-for="weekday in weekdays" :key="weekday.value">{{ weekday.label }}</th></tr></thead><tbody><tr v-for="number in 12" :key="number"><th>{{ number }}</th><td v-for="weekday in weekdays" :key="weekday.value"><template v-if="periodFor(number)"><button class="btn btn-sm w-100" :class="periodSelected(periodFor(number), weekday.value) ? 'btn-primary' : 'btn-outline-secondary'" type="button" @click="togglePeriod(periodFor(number), weekday.value)">{{ periodFor(number).starts_at.slice(0, 5) }}–{{ periodFor(number).ends_at.slice(0, 5) }}</button></template><span v-else class="text-muted">–</span></td></tr></tbody></table></div><div class="text-end mt-3"><button class="btn btn-primary" type="button" @click="save">{{ de.saveChanges }}</button></div></section>
@@ -179,5 +226,6 @@ async function remove(student) { if (await requestConfirmation({ message: `${stu
         <div v-if="showStudentModal" class="roo-modal-backdrop" role="presentation" @click.self="showStudentModal = false"><section class="roo-modal" role="dialog" aria-modal="true" :aria-label="de.addStudent"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ de.addStudent }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="showStudentModal = false"></button></div><form @submit.prevent="createStudent(false)"><div class="row g-2"><div class="col-6"><label class="form-label">{{ de.firstName }}</label><input v-model="studentForm.first_name" class="form-control" required></div><div class="col-6"><label class="form-label">{{ de.lastName }}</label><input v-model="studentForm.last_name" class="form-control" required></div></div><label class="form-label mt-2">{{ de.actualClass }}</label><input v-model="studentForm.class_name" class="form-control" placeholder="z. B. 2a" required><div class="row g-2 mt-1"><div class="col-md-6"><label class="form-label">{{ de.pronouns }}</label><select v-model="studentForm.pronoun_set" class="form-select"><option v-for="pronounSet in pronounSets" :key="pronounSet.key" :value="pronounSet.key">{{ pronounSet.label }}</option></select></div><div class="col-md-6 d-flex align-items-end"><div class="form-check mb-2"><input id="student-receives-grades" v-model="studentForm.receives_grades" class="form-check-input" type="checkbox"><label class="form-check-label" for="student-receives-grades">{{ de.receivesGrades }}</label></div></div></div><label class="form-label mt-2">{{ de.notes }}</label><textarea v-model="studentForm.notes" class="form-control" rows="2"></textarea><div class="form-text">{{ de.actualClassHint }}</div><div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="showStudentModal = false">{{ de.cancel }}</button><button class="btn btn-outline-primary" type="button" :disabled="studentForm.processing" @click="createStudent(true)">{{ de.saveAndNew }}</button><button class="btn btn-primary" type="submit" :disabled="studentForm.processing">{{ de.save }}</button></div></form></div></div></section></div>
         <div v-if="showImportModal" class="roo-modal-backdrop" role="presentation" @click.self="showImportModal = false"><section class="roo-modal" role="dialog" aria-modal="true" :aria-label="de.importStudents"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ de.importStudents }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="showImportModal = false"></button></div><p class="small text-muted">{{ de.importStudentsHint }}</p><form @submit.prevent="importStudents"><input class="form-control" type="file" accept=".csv,.txt,text/csv,text/plain" required @change="importForm.students = $event.target.files[0] ?? null"><div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="showImportModal = false">{{ de.cancel }}</button><button class="btn btn-primary" type="submit" :disabled="importForm.processing">{{ de.importStudents }}</button></div></form></div></div></section></div>
         <div v-if="selectedStudent" class="roo-modal-backdrop" role="presentation" @click.self="selectedStudent = null"><section class="roo-modal" role="dialog" aria-modal="true" :aria-label="de.editStudent"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ de.editStudent }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="selectedStudent = null"></button></div><form @submit.prevent="saveStudent"><div class="row g-2"><div class="col-6"><label class="form-label">{{ de.firstName }}</label><input v-model="editStudentForm.first_name" class="form-control" required></div><div class="col-6"><label class="form-label">{{ de.lastName }}</label><input v-model="editStudentForm.last_name" class="form-control" required></div></div><label class="form-label mt-2">{{ de.actualClass }}</label><input v-model="editStudentForm.class_name" class="form-control" required><div class="row g-2 mt-1"><div class="col-md-6"><label class="form-label">{{ de.pronouns }}</label><select v-model="editStudentForm.pronoun_set" class="form-select"><option v-for="pronounSet in pronounSets" :key="pronounSet.key" :value="pronounSet.key">{{ pronounSet.label }}</option></select></div><div class="col-md-6 d-flex align-items-end"><div class="form-check mb-2"><input id="edit-student-receives-grades" v-model="editStudentForm.receives_grades" class="form-check-input" type="checkbox"><label class="form-check-label" for="edit-student-receives-grades">{{ de.receivesGrades }}</label></div></div></div><label class="form-label mt-2">{{ de.notes }}</label><textarea v-model="editStudentForm.notes" class="form-control" rows="2"></textarea><div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="selectedStudent = null">{{ de.cancel }}</button><button class="btn btn-primary" type="submit" :disabled="editStudentForm.processing">{{ de.saveChanges }}</button></div></form></div></div></section></div>
+        <div v-if="parentLetterOpen" class="roo-modal-backdrop" role="presentation" @click.self="parentLetterOpen = false"><section class="roo-modal parent-letter-modal" role="dialog" aria-modal="true" :aria-label="de.parentLetter"><div class="card border-0"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 mb-1">{{ de.parentLetter }}</h2><p class="text-muted mb-0">{{ parentLetterUnit?.title }}</p></div><button class="btn-close" type="button" :aria-label="de.close" @click="parentLetterOpen = false"></button></div><label class="form-label" for="group-parent-letter-introduction">{{ de.parentLetterIntroduction }}</label><textarea id="group-parent-letter-introduction" v-model="parentLetterIntroduction" class="form-control" rows="14"></textarea><label class="form-label mt-3" for="group-parent-letter-format">{{ de.parentLetterFormat }}</label><select id="group-parent-letter-format" v-model="parentLetterFormat" class="form-select"><option value="docx">DOCX</option><option value="odt">ODT</option></select><div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="parentLetterOpen = false">{{ de.cancel }}</button><button class="btn btn-primary" type="button" @click="downloadParentLetter">OK</button></div></div></div></section></div>
     </AppShell>
 </template>

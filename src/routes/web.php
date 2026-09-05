@@ -8,6 +8,7 @@ use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\FluxController;
 use App\Http\Controllers\LessonWorkspaceController;
+use App\Http\Controllers\ParentLetterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicTeachingUnitController;
 use App\Http\Controllers\ResourceLibraryController;
@@ -108,6 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterrichtseinheiten/phasen-vorlagen/{phaseTemplate}', [TeachingUnitController::class, 'updatePhaseTemplate'])->name('teaching-units.phase-templates.update');
     Route::delete('/unterrichtseinheiten/phasen-vorlagen/{phaseTemplate}', [TeachingUnitController::class, 'destroyPhaseTemplate'])->name('teaching-units.phase-templates.destroy');
     Route::put('/unterrichtseinheiten/{teachingUnit}', [TeachingUnitController::class, 'update'])->name('teaching-units.update');
+    Route::post('/unterrichtseinheiten/{teachingUnit}/elternbrief', [ParentLetterController::class, 'download'])->name('teaching-units.parent-letter.download');
     Route::delete('/unterrichtseinheiten/{teachingUnit}', [TeachingUnitController::class, 'destroy'])->name('teaching-units.destroy');
     Route::get('/curricula/vergleichen', [CurriculumController::class, 'compare'])->name('curricula.compare');
     Route::get('/curricula/neu', [CurriculumController::class, 'create'])->name('curricula.create');

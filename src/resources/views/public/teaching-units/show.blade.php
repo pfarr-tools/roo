@@ -11,8 +11,7 @@
     </header>
 
     @if ($view->unit->introduction_text)
-        <section aria-labelledby="introduction-heading">
-            <h2 id="introduction-heading">Einführung</h2>
+        <section>
             <div class="public-unit__text">{{ $view->unit->introduction_text }}</div>
         </section>
     @endif
@@ -22,7 +21,7 @@
         @if ($view->competencies->isNotEmpty())
             <ul>
                 @foreach ($view->competencies as $competency)
-                    <li>{{ $competency->local_wording ?: $competency->educationPlanCompetency?->text ?: 'Kompetenz' }}</li>
+                    <li>{{ $competency->local_wording ?: $competency->educationPlanCompetency?->text ?: $competency->educationPlanCompetency?->variants?->sortBy('position')->first()?->text ?: $competency->curriculumEducationPlanReference?->educationPlanCompetency?->text ?: $competency->curriculumEducationPlanReference?->educationPlanCompetency?->variants?->sortBy('position')->first()?->text ?: 'Kompetenz' }}</li>
                 @endforeach
             </ul>
         @else

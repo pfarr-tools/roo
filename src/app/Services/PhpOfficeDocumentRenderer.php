@@ -6,6 +6,7 @@ use App\Documents\AssessmentDocument;
 use App\Documents\Document;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplateRegistry;
+use App\Documents\ParentLetterDocument;
 use Com\Tecnick\Barcode\Barcode;
 use PfarrTools\RooRuling\PhpWord\DrawingRulingRenderer;
 use PfarrTools\RooRuling\RulingDefinition;
@@ -35,7 +36,7 @@ class PhpOfficeDocumentRenderer
             $contents = (string) ob_get_contents();
 
             return $format === DocumentOutputFormat::ODT
-                ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document)
+                ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtParentLetterLists($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document), $document)
                 : $contents;
         } finally {
             ob_end_clean();
@@ -55,10 +56,138 @@ class PhpOfficeDocumentRenderer
         try {
             IOFactory::createWriter($phpWord, $format->writerName())->save($temporaryPath);
             $contents = (string) file_get_contents($temporaryPath);
-            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document) : $contents);
+            file_put_contents($path, $format === DocumentOutputFormat::ODT ? $this->addOdtPageFrame($this->patchOdtSolutionStyles($this->patchOdtParentLetterLists($this->patchOdtClozeLineHeights($this->patchOdtSubtaskTables($this->patchOdtImageLabeling($this->patchOdtVerticalMerges($contents, $document), $document), $document), $document), $document), $document), $document) : $contents);
         } finally {
             unlink($temporaryPath);
         }
+    }
+
+    private function patchOdtParentLetterLists(string $contents, Document $document): string
+    {
+        if (! $document instanceof ParentLetterDocument) {
+            return $contents;
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'roo-odt-parent-letter-');
+        if ($temporaryPath === false) {
+            return $contents;
+        }
+
+        try {
+            file_put_contents($temporaryPath, $contents);
+            $archive = new \ZipArchive;
+            if ($archive->open($temporaryPath) !== true) {
+                return $contents;
+            }
+
+            $content = $archive->getFromName('content.xml');
+            if (! is_string($content)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $dom = new \DOMDocument;
+            $dom->preserveWhiteSpace = true;
+            if (! $dom->loadXML($content)) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+            $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+            $textNamespace = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+            $styleNamespace = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+            $foNamespace = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+
+            $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+            if (! $automaticStyles instanceof \DOMElement) {
+                $archive->close();
+
+                return $contents;
+            }
+
+            $listStyle = $dom->createElementNS($styleNamespace, 'style:list-style');
+            $listStyle->setAttributeNS($styleNamespace, 'style:name', 'parentLetterCompetencyList');
+            $bulletStyle = $dom->createElementNS($textNamespace, 'text:list-level-style-bullet');
+            $bulletStyle->setAttributeNS($textNamespace, 'text:level', '1');
+            $bulletStyle->setAttributeNS($textNamespace, 'text:bullet-char', '•');
+            $listProperties = $dom->createElementNS($styleNamespace, 'style:list-level-properties');
+            $listProperties->setAttributeNS($textNamespace, 'text:space-before', '0.5in');
+            $listProperties->setAttributeNS($textNamespace, 'text:min-label-width', '0.25in');
+            $bulletStyle->appendChild($listProperties);
+            $listStyle->appendChild($bulletStyle);
+
+            $paragraphStyle = $dom->createElementNS($styleNamespace, 'style:style');
+            $paragraphStyle->setAttributeNS($styleNamespace, 'style:name', 'parentLetterListParagraph');
+            $paragraphStyle->setAttributeNS($styleNamespace, 'style:family', 'paragraph');
+            $paragraphStyle->setAttributeNS($styleNamespace, 'style:parent-style-name', 'Normal');
+            $paragraphProperties = $dom->createElementNS($styleNamespace, 'style:paragraph-properties');
+            $paragraphProperties->setAttributeNS($foNamespace, 'fo:margin-bottom', '0pt');
+            $paragraphStyle->appendChild($paragraphProperties);
+            $automaticStyles->appendChild($listStyle);
+            $automaticStyles->appendChild($paragraphStyle);
+
+            $bulletParagraphs = $xpath->query('//text:p[starts-with(normalize-space(string(.)), "• ")]');
+            foreach ($bulletParagraphs ?: [] as $paragraph) {
+                if (! $paragraph instanceof \DOMElement || $paragraph->parentNode instanceof \DOMElement && $paragraph->parentNode->localName === 'list-item') {
+                    continue;
+                }
+
+                $parent = $paragraph->parentNode;
+                if (! $parent instanceof \DOMNode) {
+                    continue;
+                }
+
+                $list = $dom->createElementNS($textNamespace, 'text:list');
+                $list->setAttributeNS($textNamespace, 'text:style-name', 'parentLetterCompetencyList');
+                $parent->replaceChild($list, $paragraph);
+                $current = $paragraph;
+
+                while ($current instanceof \DOMElement && str_starts_with(trim($current->textContent), '• ')) {
+                    $next = $current->nextSibling;
+                    while ($next instanceof \DOMText && trim($next->textContent) === '') {
+                        $next = $next->nextSibling;
+                    }
+
+                    $current->setAttributeNS($textNamespace, 'text:style-name', 'parentLetterListParagraph');
+                    $this->removeOdtBulletPrefix($current);
+                    $item = $dom->createElementNS($textNamespace, 'text:list-item');
+                    $item->appendChild($current);
+                    $list->appendChild($item);
+                    $current = $next;
+                }
+            }
+
+            $archive->addFromString('content.xml', $dom->saveXML());
+            $archive->close();
+
+            return (string) file_get_contents($temporaryPath);
+        } finally {
+            unlink($temporaryPath);
+        }
+    }
+
+    private function removeOdtBulletPrefix(\DOMElement $paragraph): void
+    {
+        $removePrefix = function (\DOMNode $node) use (&$removePrefix): bool {
+            foreach ($node->childNodes as $child) {
+                if ($child instanceof \DOMText) {
+                    $child->nodeValue = preg_replace('/^\s*•\s/u', '', $child->nodeValue ?? '', 1) ?? $child->nodeValue;
+
+                    return true;
+                }
+                if ($removePrefix($child)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $removePrefix($paragraph);
     }
 
     private function patchOdtVerticalMerges(string $contents, Document $document): string

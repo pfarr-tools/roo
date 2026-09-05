@@ -30,6 +30,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -137,6 +138,26 @@ class TeachingGroupController extends Controller
                 ->unique('id')
                 ->values()
             : collect();
+        $teachingUnits = $teachingGroup->teachingUnits()
+            ->with(['lessons:id,teaching_unit_id,title,position', 'lessons.scheduledLessons:id,lesson_id,schedule_slot_id,status', 'lessons.scheduledLessons.slot:id,date,period_number,starts_at,ends_at'])
+            ->orderBy('position')
+            ->orderBy('title')
+            ->get(['id', 'teaching_group_id', 'title', 'position', 'introduction_text'])
+            ->map(fn ($unit): array => [
+                'id' => $unit->id,
+                'title' => $unit->title,
+                'position' => $unit->position,
+                'introduction_text' => $unit->introduction_text,
+                'public_url' => URL::signedRoute('public.teaching-units.show', ['teachingUnit' => $unit]),
+                'lessons' => $unit->lessons->map(fn ($lesson): array => [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'position' => $lesson->position,
+                    'scheduled_dates' => $lesson->scheduledLessons->map(fn ($scheduledLesson) => $scheduledLesson->slot?->date?->format('Y-m-d'))->filter()->values()->all(),
+                ])->values()->all(),
+            ])
+            ->values();
+        $parentLetterPreference = auth()->user()->preferences()->where('key', 'documents.parent-letter.format')->value('value');
 
         return Inertia::render('TeachingGroups/Show', [
             'group' => $teachingGroup,
@@ -150,6 +171,8 @@ class TeachingGroupController extends Controller
             'assessments' => $teachingGroup->assessments->sortByDesc('assessed_on')->values(),
             'reportPeriods' => $teachingGroup->reportPeriods->sortByDesc('ends_on')->values(),
             'competencies' => $competencies,
+            'teachingUnits' => $teachingUnits,
+            'parentLetterFormat' => is_array($parentLetterPreference) ? ($parentLetterPreference['format'] ?? 'docx') : 'docx',
             'denominationOptions' => $teachingGroup->curricula->flatMap(fn ($curriculum) => $curriculum->denominations ?? [])->filter()->unique()->values(),
         ]);
     }

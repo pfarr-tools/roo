@@ -8,10 +8,12 @@ const props = defineProps({
     songs: { type: Array, default: () => [] },
     selectedResourceIds: { type: Array, default: () => [] },
     selectedResourceLinkIds: { type: Array, default: () => [] },
+    resourcePublicationStatuses: { type: Object, default: () => ({}) },
+    resourceLinkPublicationStatuses: { type: Object, default: () => ({}) },
     selectedMaterialItemIds: { type: Array, default: () => [] },
     selectedSongIds: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['update:resource-ids', 'update:resource-link-ids', 'update:material-item-ids', 'update:song-ids'])
+const emit = defineEmits(['update:resource-ids', 'update:resource-link-ids', 'update:resource-publication-statuses', 'update:resource-link-publication-statuses', 'update:material-item-ids', 'update:song-ids'])
 
 const toggle = (values, value, event) => {
     const next = [...values]
@@ -20,6 +22,7 @@ const toggle = (values, value, event) => {
     if (!event.target.checked && index !== -1) next.splice(index, 1)
     return next
 }
+const updateStatus = (statuses, event, type) => emit(`update:${type}-publication-statuses`, { ...statuses, [event.target.dataset.id]: event.target.value })
 </script>
 
 <template>
@@ -30,14 +33,14 @@ const toggle = (values, value, event) => {
             <div class="small fw-semibold mb-1">{{ de.attachments }}</div>
             <label v-for="resource in resources" :key="resource.id" class="d-flex gap-2 align-items-start small mb-2">
                 <input class="form-check-input mt-1" type="checkbox" :checked="selectedResourceIds.some(id => String(id) === String(resource.id))" @change="emit('update:resource-ids', toggle(selectedResourceIds, resource.id, $event))">
-                <span class="text-break">{{ resource.display_name || resource.original_name }}<span class="d-block text-muted">{{ resource.size ? `${Math.round(resource.size / 1024)} KB` : '' }}<span v-if="resource.page_count"> · {{ resource.page_count }} {{ resource.page_count === 1 ? de.page : de.pages }}</span></span></span>
+                <span class="text-break">{{ resource.display_name || resource.original_name }}<span class="d-block text-muted">{{ resource.size ? `${Math.round(resource.size / 1024)} KB` : '' }}<span v-if="resource.page_count"> · {{ resource.page_count }} {{ resource.page_count === 1 ? de.page : de.pages }}</span></span><select v-if="selectedResourceIds.some(id => String(id) === String(resource.id))" class="form-select form-select-sm mt-1" :data-id="resource.id" :value="resourcePublicationStatuses[resource.id] || 'not_shared'" :aria-label="de.publicationStatus" @change="updateStatus(resourcePublicationStatuses, $event, 'resource')"><option value="not_shared">{{ de.publicationNotShared }}</option><option value="shared_immediately">{{ de.publicationImmediate }}</option><option value="shared_with_lesson">{{ de.publicationWithLesson }}</option></select></span>
             </label>
         </div>
         <div v-if="resourceLinks.length" class="mb-3">
             <div class="small fw-semibold mb-1">{{ de.resources }}</div>
             <label v-for="link in resourceLinks" :key="link.id || link.local_key" class="d-flex gap-2 align-items-start small mb-2">
                 <input class="form-check-input mt-1" type="checkbox" :checked="selectedResourceLinkIds.some(id => String(id) === String(link.id || link.local_key))" @change="emit('update:resource-link-ids', toggle(selectedResourceLinkIds, link.id || link.local_key, $event))">
-                <span class="text-break"><span class="fw-semibold">{{ link.title }}</span><a class="d-block" :href="link.url" target="_blank" rel="noreferrer">{{ link.url }}</a></span>
+                <span class="text-break"><span class="fw-semibold">{{ link.title }}</span><a class="d-block" :href="link.url" target="_blank" rel="noreferrer">{{ link.url }}</a><select v-if="selectedResourceLinkIds.some(id => String(id) === String(link.id || link.local_key))" class="form-select form-select-sm mt-1" :data-id="link.id || link.local_key" :value="resourceLinkPublicationStatuses[link.id || link.local_key] || 'not_shared'" :aria-label="de.publicationStatus" @change="updateStatus(resourceLinkPublicationStatuses, $event, 'resource-link')"><option value="not_shared">{{ de.publicationNotShared }}</option><option value="shared_immediately">{{ de.publicationImmediate }}</option><option value="shared_with_lesson">{{ de.publicationWithLesson }}</option></select></span>
             </label>
         </div>
         <div v-if="materialItems.length" class="mb-3">

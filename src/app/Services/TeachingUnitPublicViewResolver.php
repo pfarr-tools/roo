@@ -17,6 +17,9 @@ final class TeachingUnitPublicViewResolver
             'creator',
             'group.school',
             'competencies.educationPlanCompetency.area',
+            'competencies.educationPlanCompetency.variants',
+            'competencies.curriculumEducationPlanReference.educationPlanCompetency.area',
+            'competencies.curriculumEducationPlanReference.educationPlanCompetency.variants',
             'lessons.scheduledLessons.slot',
             'lessons.phases.resources',
             'lessons.phases.resourceLinks',
@@ -84,10 +87,9 @@ final class TeachingUnitPublicViewResolver
             $status = $item->pivot->publication_status instanceof PublicationStatus
                 ? $item->pivot->publication_status
                 : PublicationStatus::tryFrom((string) $item->pivot->publication_status);
-            $securityApproved = $links || $item->security_status !== 'pending';
             $lessonStarted = $lessonStart !== null && $lessonStart->lessThanOrEqualTo($now);
 
-            if ($status === null || ! $securityApproved || ! $status->allowsPublicAccess($lessonStarted)) {
+            if ($status === null || ! $status->allowsPublicAccess($lessonStarted)) {
                 continue;
             }
 
