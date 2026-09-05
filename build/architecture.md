@@ -122,6 +122,12 @@ Dateiinhalte liegen im Object Storage. PostgreSQL speichert:
 
 Downloads erfolgen über autorisierte Controller bzw. kurzlebige signierte URLs.
 
+Gezielt freigegebene Unterrichtseinheiten können über signierte öffentliche
+Ansichten geteilt werden. Die Ansicht wird aus dem strukturierten
+Unterrichtsobjekt aufgebaut und berücksichtigt nur ausdrücklich veröffentlichte
+Materialien, Links und Galeriebilder; Schülerdaten und Bewertungen gehören nie
+zum öffentlichen Inhalt.
+
 ## Suche
 
 Meilisearch indexiert zunächst nur nicht-personenbezogene Bibliotheks- und

@@ -80,6 +80,19 @@ LessonOccurrence
   ├── AttendanceRecord
   ├── Observation
   └── CompetenceEvidence
+
+TeachingUnit
+  ├── publication_status
+  ├── ResourceLink / ResourceReference (with publication status)
+  └── LessonGalleryImage
+
+TeachingUnit
+  └── TeachingUnitPublication
+       ├── visible resources and links
+       └── lesson gallery images
+
+TeachingUnit
+  └── ParentLetterDocument
 ```
 
 ## Wichtige Unterscheidungen
@@ -259,6 +272,18 @@ und Unterrichtsgruppen das Curriculum fachlich benötigen.
 
 Eine Beobachtung ist ein einzelner Nachweis. Eine Bewertung ist eine
 verantwortete Zusammenfassung mehrerer Nachweise.
+
+### Veröffentlichung und Elternkommunikation
+
+Einzelne Unterrichtseinheiten können gezielt zur Veröffentlichung freigegeben
+werden. Die öffentliche Ansicht verwendet dabei eine signierte URL und zeigt
+nur ausdrücklich freigegebene Materialien, Links und Galeriebilder. Private
+Dateien und Bewertungsdaten bleiben außerhalb dieser Ansicht.
+
+Ein Elternbrief wird aus den strukturierten, sichtbaren Informationen einer
+Unterrichtseinheit erzeugt. Ein optionaler QR-Code verweist auf die signierte
+öffentliche Ansicht; Kontaktdaten und Dokumentfuß werden aus den dafür
+freigegebenen Einstellungen der Lehrkraft übernommen.
 
 ### Lied vs. Liedfassung
 

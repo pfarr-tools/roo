@@ -1,6 +1,6 @@
 # Roo – Masterplan
 
-Stand: 6. August 2026
+Stand: 5. September 2026
 
 ## Zielbild
 
@@ -64,10 +64,10 @@ erforderlichen Kompetenzen der aktuellen Gruppe.
 
 ## Phase 0 – Technische Basis
 
-Fortschritt: `[x]` Phase 0 ist umgesetzt: Bootstrap, Docker-Healthchecks,
-Laravel/Inertia/Vue/Bootstrap-Basis, deutsche Authentifizierung, Testgrundlage,
-Docker-CI, ausführbarer Queue-Nachweis, privater Storage-Roundtrip und
-erreichbarer Meilisearch-Index sind verifiziert.
+Fortschritt: `[x]` Phase 0 ist umgesetzt: Docker-Healthchecks,
+Laravel/Inertia/Vue-Basis, deutsche Authentifizierung, Testgrundlage, Docker-CI,
+ausführbarer Queue-Nachweis, privater Storage-Roundtrip und erreichbarer
+Meilisearch-Index sind verifiziert.
 
 ### Ziel
 
@@ -80,7 +80,6 @@ Laravel/Inertia-Anwendung.
 - PHP 8.4
 - Vue 3
 - Inertia.js 3
-- Bootstrap 5.3/Sass
 - PostgreSQL
 - Redis
 - Horizon
@@ -425,6 +424,11 @@ in den Anhängen nutzt weiterhin die JSON-Variante derselben Route.
 
 ## Phase 8 – Liedersammlung und Gruppenliederbuch
 
+Fortschritt: `[~]` Liedfassungen, Rechte, Liedblattbearbeitung,
+Gruppenliederbücher, Titelseiten und die Zuordnung zu Einheiten, Stunden und
+Phasen sind als Arbeitsabläufe angelegt. Die vollständigen Export- und
+Druckstandsworkflows werden weiter ausgebaut.
+
 
 ### Ziel
 
@@ -514,9 +518,9 @@ Ein Emoticon ist ein konfigurierbarer Nachweis, keine automatische Note.
 Fortschritt: `[~]` Wiederverwendbare, kompetenzbezogene Prüfungsaufgaben sind
 als Bibliothekseinträge angelegt, können Unterrichtsstunden zugeordnet und in
 mehreren gruppenbezogenen Lernstandserhebungen zusammengestellt werden.
-G/M/E-Niveaus sind mehrfach pro Aufgabe möglich. Der Scan- und
-Auswertungsworkflow ist umgesetzt; weitergehende Noten- und
-Freigabefunktionen folgen in späteren Schnitten.
+G/M/E-Niveaus sind mehrfach pro Aufgabe möglich. Scan, Booklet-Zuordnung,
+manuelle Booklets und der sichtbare Auswertungsarbeitsraum sind umgesetzt;
+weitergehende Noten- und Freigabefunktionen folgen in späteren Schnitten.
 
 Die Unterrichtsstundenansicht enthält einen eigenen Tab für inhaltsbezogene
 Kompetenzen. Aufgaben können dort neu angelegt, aus der Bibliothek (gefiltert
@@ -669,15 +673,18 @@ Produktionsreife, Datensicherheit und Zusammenarbeit.
 
 ---
 
-# Priorisierte erste Codex-Aufträge
+# Nächste priorisierte Arbeitsschritte
 
-1. Docker-Stack starten und Healthchecks stabilisieren.
-2. Laravel 13 mit Inertia 3, Vue 3 und Bootstrap initialisieren.
-3. Authentifizierung mit deutscher Oberfläche.
-4. CI und Testbefehle.
-5. ADR 0001 finalisieren.
-6. Phase 1 als erster vertikaler Schnitt: Schule anlegen und anzeigen.
-7. Danach Schuljahr und Kalendertage.
+1. Liedbuch- und Dokumentexporte als vollständig prüfbare vertikale Schnitte
+   abschließen.
+2. Bewertungsentwürfe um Textbausteine und nachvollziehbare Vorschläge
+   erweitern.
+3. Elternbriefe und die Freigabe öffentlicher Unterrichtseinheiten weiter
+   ausbauen.
+4. Arbeitsblätter, Präsentationen und weitere strukturierte Dokumente als
+   queue-fähige Exporte ergänzen.
+5. Danach Mehrbenutzerbetrieb, Datenexport, Löschkonzept und Auditing
+   vertiefen.
 
 # Nicht vorziehen
 

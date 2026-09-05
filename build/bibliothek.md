@@ -1,12 +1,14 @@
 # Bibliothek
 
-Stand: 21. August 2026
+Stand: 5. September 2026
 
 Diese Übersicht beschreibt die Eintragstypen der Seite `/bibliothek` und die
 Zuordnungslogik des `ResourceLibraryController`. Mit „in Phasen aktivieren“ ist
 hier die Zuordnung zu einer konkreten `LessonPhase` gemeint. Es gibt keinen
 zusätzlichen Aktivierungsstatus; ein zugeordnetes Element wird in der Phase
-angezeigt bzw. bei der Stundenspeicherung berücksichtigt.
+angezeigt bzw. bei der Stundenspeicherung berücksichtigt. Für öffentliche
+Unterrichtseinheiten besitzen Dateien und Webressourcen zusätzlich einen
+ausdrücklichen Veröffentlichungsstatus.
 
 ## Eintragstypen
 

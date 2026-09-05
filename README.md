@@ -5,58 +5,172 @@
 </p>
 
 Roo ist eine deutschsprachige Webanwendung für Lehrkräfte, die
-Religionsunterricht über ein komplettes Schuljahr hinweg planen, vorbereiten,
-durchführen, dokumentieren und auswerten möchten.
+Religionsunterricht über ein komplettes Schuljahr hinweg plant, vorbereitet,
+durchführt, dokumentiert und auswertet.
 
-Der Name **Roo** leitet sich von **RU** – der gängigen Abkürzung für
-Religionsunterricht – ab. Das Känguru im Logo steht sinngemäß für Roo und
-begleitet die Anwendung als freundliches Markenzeichen.
+Der Name **Roo** leitet sich von **RU**, der gängigen Abkürzung für
+Religionsunterricht, ab. Roo unterstützt einen differenzierten,
+kompetenzorientierten und konfessionell-kooperativen Religionsunterricht. Die
+jeweils geltenden Bildungspläne bilden dabei den fachlichen Bezugspunkt.
 
-Roo unterstützt Religionsunterricht, der **differenziert** und
-**kompetenzorientiert** geplant wird und **konfessionell-kooperativ** angelegt
-sein kann. Die Orientierung am jeweils geltenden Bildungsplan ist ein
-zentraler Bestandteil der Anwendung. Dazu lassen sich Curricula verwenden,
-anpassen und auf die konkrete Schule beziehungsweise Unterrichtsgruppe
-zuschneiden.
+## Was Roo ermöglicht
 
-## Ziel
+Roo verbindet die wichtigsten Arbeitsabläufe einer Lehrkraft in einem
+durchgängigen fachlichen Zusammenhang. Strukturierte Daten bleiben die Quelle
+der Wahrheit; Dateien und Exporte entstehen daraus und ersetzen die
+Fachdaten nicht.
 
-Roo soll die tägliche Arbeit rund um den Religionsunterricht an einem Ort
-verbinden: von Schule und Schuljahr über Bildungspläne, Curricula und
-Unterrichtsgruppen bis zu Jahresplanung, Unterrichtseinheiten, Stunden,
-Materialien, Liedern, Beobachtungen und Bewertungen.
+### Schulen, Schuljahre und Kalender
 
-Strukturierte Fachdaten sind dabei die Quelle der Wahrheit. Dateien wie PDF-,
-DOCX- oder Präsentationsexporte entstehen aus diesen Daten und ersetzen sie
-nicht. Wiederverwendbare Vorlagen und konkrete Verwendungen werden getrennt
-modelliert, damit historische Planungen nachvollziehbar bleiben.
+- Schulen und Schuljahre mit ihren fachlichen Stammdaten verwalten
+- Ferien, Feiertage und einzelne schulfreie oder abweichende Tage erfassen
+- importierte Kalenderdaten mit lokalen Ausnahmen und Änderungsgründen
+  überschreiben
+- Unterrichtstage und das schulweite Stundenraster für die Planung verwenden
+
+### Bildungspläne und Curricula
+
+- Bildungspläne versioniert und relational importieren
+- Kompetenzbereiche, Kompetenzen, Varianten und Verweise hierarchisch
+  durchsuchen und vergleichen
+- eigene Curricula mit Themen, Jahrgangszuordnung, Zeitbedarf und
+  Kompetenzbezügen erstellen
+- evangelische, katholische und gemeinsame Perspektiven dokumentieren
+- Curricula Schulen und konkreten Unterrichtsgruppen zuordnen
+- erforderliche Kompetenzen einer Gruppe von den Bildungsplan- und
+  Curriculumbezügen ableiten
+
+### Unterrichtsgruppen und Schüler:innen
+
+- Unterrichtsgruppen für ein konkretes Schuljahr aus mehreren Klassen bilden
+- Schüler:innen manuell verwalten oder per CSV importieren und exportieren
+- zeitliche Mitgliedschaften mit Eintritt und Austritt abbilden
+- mehrere Jahrgangsstufen und regelmäßige Stundenplantermine je Gruppe
+  hinterlegen
+- personenbezogene Daten über Mandantenscopes und Policies schützen
+
+### Jahresplanung
+
+- Unterrichtseinheiten über eine horizontale Schuljahres-Zeitachse verteilen
+- Ferien, Ausnahmen und verfügbare Unterrichtszeiten berücksichtigen
+- Einheiten per Maus oder über zugängliche Tastaturaktionen verschieben,
+  verlängern, teilen und unterbrechen
+- Unterrichtsstunden automatisch aus der Planung und dem Stundenraster
+  erzeugen
+- ursprüngliche Planung und tatsächliche Durchführung getrennt nachvollziehen
+- Revisionshistorie, Reflow und Rückgängigmachen für Planänderungen nutzen
+- Kompetenzabdeckung und weitere Planungsprüfungen sichtbar machen
+
+### Unterrichtseinheiten, Stunden und Phasen
+
+- Unterrichtseinheiten unabhängig bearbeiten und aus anderen Planungen
+  übernehmen
+- Stunden mit Datum, Status, Notizen und tatsächlicher Durchführung führen
+- Phasen mit Dauer, Sozialform, Beschreibung und Materialien strukturieren
+- wiederverwendbare Phasenvorlagen und Gruppenrituale in neue Stunden
+  übernehmen
+- Zeitbedarf prüfen und Materiallisten aus der Stunde ableiten
+- Planung, Durchführung und Beobachtung im Arbeitsraum der Stunde verbinden
+
+### Bibliothek und Materialien
+
+Die mandantengeschützte Bibliothek bündelt fachliche Dateien, Webressourcen,
+Materialbestandteile, Lieder und Prüfungsaufgaben. Einträge lassen sich
+durchsuchen, filtern, sortieren, bearbeiten, zu Einheiten, Stunden und Phasen
+zuordnen, in der Vorschau ansehen und autorisiert herunterladen.
+
+Dateien verbleiben unter stabilen internen Speicherkennungen. Sichtbare
+Download- und Exportnamen werden aus Gruppe, Jahrgang, Schuljahr, Einheit,
+Stundenposition und Dateiname gebildet, damit sie im schulischen Aktenplan
+verständlich und reproduzierbar bleiben.
+
+### Lieder und Gruppenliederbücher
+
+- zentrale Lieder mit mehreren Fassungen, Metadaten und Rechteinformationen
+  verwalten
+- vorhandene oder generierte Liedblätter mit Einheiten, Stunden und Phasen
+  verbinden
+- für jede Unterrichtsgruppe ein wachsendes Gruppenliederbuch führen
+- gruppenspezifische Liednummern vergeben und Druckstände nachvollziehen
+- Liederbücher als A5, A4-Doppelseite oder Broschüre exportieren
+- Rechte vor Text- und Notenexporten prüfen
+
+### Beobachtungen und Kompetenznachweise
+
+- Anwesenheit, Verspätungen und schnelle Beobachtungssymbole direkt in der
+  Stunde erfassen
+- eigenes Material- oder Hausaufgabenfehlen sowie kurze Notizen dokumentieren
+- mehrere Schüler:innen mit einer gemeinsamen Aktion bearbeiten
+- Beobachtungen einzelnen Kompetenzen als Nachweise zuordnen
+- schulische Prozesskompetenzen mit einer gemeinsamen `+`-Skala und dem
+  Status `ne` verwenden
+- laufende Bewertungsentwürfe mit den aktuellen Skalen arbeiten lassen und
+  bestätigte Bewertungen historisch als Snapshot sichern
+
+Beobachtungen sind Nachweise und werden nicht automatisch in eine Note
+umgewandelt. Die fachliche Entscheidung bleibt bei der Lehrkraft.
+
+### Lernstandserhebungen und Bewertung
+
+- wiederverwendbare, kompetenzbezogene Prüfungsaufgaben mit Lösungen,
+  Erwartungshorizonten und Maximalpunkten anlegen
+- Aufgaben Unterrichtsstunden und mehreren gruppenbezogenen
+  Lernstandserhebungen zuordnen
+- G/M/E-Niveaus pro Aufgabe mehrfach hinterlegen
+- Lernstandserhebungen als ODT oder DOCX ausgeben
+- gescannte PDFs seitenweise verarbeiten und Booklets über Roo-DataMatrix-
+  Marker erkennen
+- Booklets Schüler:innen zuordnen oder manuell anlegen
+- Aufgabenfragmente privat anzeigen und Ergebnisse manuell anhand des
+  Erwartungshorizonts bewerten
+- Teilpunkte, Begründungen und Zusatzpunkte nachvollziehbar speichern
+
+Roo bewertet keine Schülerhandschriften automatisch. Scanverarbeitung und
+Bewertung unterstützen die Lehrkraft, ersetzen aber nicht ihre sichtbare
+fachliche Entscheidung.
+
+### Dokumente, Veröffentlichungen und Elternkommunikation
+
+- strukturierte Unterrichtsdaten in Dokumente und Arbeitsmaterialien
+  überführen
+- Unterrichtseinheiten gezielt freigeben und über signierte öffentliche Seiten
+  teilen
+- veröffentlichte Materialien und Galeriebilder geschützt ausliefern
+- Elternbriefe mit Kontakten und sichtbarem Dokumentfuß erstellen
+- Ausgaben über stabile fachliche Beziehungen statt über Dateinamen verwalten
+
+Weitere Generatoren für differenzierte Arbeitsblätter, Präsentationen und
+providerunabhängige KI-Unterstützung sind Teil der Roadmap. KI-Funktionen
+sollen nur anonymisierte Eingaben verwenden und immer eine menschliche
+Freigabe voraussetzen.
 
 ## Entwicklungsstand
 
-Das Projekt befindet sich im Aufbau und wird als modularer Laravel-Monolith
-entwickelt. Die technische Basis ist umgesetzt. Schulen, Schuljahre,
-Kalenderdaten, Bildungspläne und erste Curriculum-Funktionen werden derzeit in
-kleinen, testbaren Arbeitsschritten ausgebaut.
+Roo befindet sich im aktiven Aufbau als modularer Monolith. Die grundlegende
+Entwicklungs- und Betriebsumgebung sowie mehrere vertikale Arbeitsabläufe sind
+vorhanden. Bereiche wie Liedbuch-Exporte, Endbewertungen, weitere
+Dokumentgeneratoren, KI-Unterstützung und Mehrbenutzerbetrieb werden weiterhin
+schrittweise ausgebaut.
 
-Die fachliche Roadmap steht im [Masterplan](build/masterplan.md). Verbindliche
-Architektur- und Arbeitsregeln finden sich in:
+Der verbindliche Fortschritt steht im [Masterplan](build/masterplan.md). Die
+technische Architektur und das Domänenmodell sind in folgenden Dokumenten
+beschrieben:
 
-- [AGENTS.md](AGENTS.md)
 - [Architektur](build/architecture.md)
 - [Domänenmodell](build/domain-model.md)
 - [Architekturentscheidungen](build/decisions/)
 - [Bibliothek: Eintragstypen und Zuordnungen](build/bibliothek.md)
+- [Assessment-Aufgabentypen](build/AssessmentTaskTypes.md)
 
 Für den produktiven Betrieb gibt es ein eigenes
 [Administrationshandbuch](docs/admin/README.md) mit Erstinstallation,
 Updates, Rollback, Backups, Datenschutz und Störungsbehebung. Das lokale
 `compose.yaml` ist ausschließlich für die Entwicklung vorgesehen.
 
-## Technischer Stack
+## Technische Grundlage
 
 - Laravel 13 und PHP 8.4
 - Vue 3 und Inertia.js 3
-- Bootstrap 5.3, Sass und Bootstrap Icons
 - PostgreSQL 17
 - Redis und Laravel Horizon
 - Laravel Scout mit Meilisearch
@@ -130,8 +244,9 @@ Produktionsbefehle kapseln die Verwendung von `compose.production.yaml`:
 Eine Produktionsinstallation baut ein unveränderliches Image, füllt leere oder
 fehlende `APP_KEY`- und `REDIS_PASSWORD`-Einträge automatisch, startet die
 persistenten Dienste und richtet die Anwendung ein. Bereits gesetzte
-Geheimnisse werden nicht überschrieben. Für den öffentlichen Zugriff wird ein TLS-Reverse-Proxy
-vor dem lokal auf `127.0.0.1:8080` gebundenen Roo-Webdienst benötigt.
+Geheimnisse werden nicht überschrieben. Für den öffentlichen Zugriff wird ein
+TLS-Reverse-Proxy vor dem lokal auf `127.0.0.1:8080` gebundenen Roo-Webdienst
+benötigt.
 
 ## Projektstruktur
 
@@ -157,7 +272,8 @@ vor dem lokal auf `127.0.0.1:8080` gebundenen Roo-Webdienst benötigt.
 Schülerdaten, Beobachtungen und Bewertungen sind besonders schützenswert.
 Roo berücksichtigt deshalb von Beginn an Mandantenscopes, Policies, private
 Dateispeicher und den Verzicht auf Schülerdaten in Logs, Suchindizes und
-KI-Anfragen.
+KI-Anfragen. Dokumente und Scanfragmente werden nur über autorisierte Routen
+oder kurzlebige signierte Zugriffe ausgeliefert.
 
 ## Mitentwicklung
 

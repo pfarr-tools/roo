@@ -1,58 +1,42 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Roo-Anwendung
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dieses Verzeichnis enthält die Laravel-Anwendung von Roo. Die fachliche
+Produktbeschreibung und die lokalen Startbefehle stehen im
+[Repository-README](../README.md).
 
-## About Laravel
+## Aufbau
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- `app/Domain/` enthält fachlich getrennte Bereiche des modularen Monolithen.
+- `app/Http/` enthält Requests, Controller und Inertia-Antworten.
+- `app/Jobs/` enthält lang laufende oder asynchrone Verarbeitung.
+- `app/Policies/` schützt den Zugriff auf mandantenbezogene Daten.
+- `database/` enthält Migrationen, Seed-Daten und Testgrundlagen.
+- `resources/js/` enthält die Vue-/Inertia-Oberfläche und die zentrale
+  Frontend-Lokalisierung.
+- `resources/views/` enthält serverseitige Ansichten, insbesondere öffentliche
+  und dokumentbezogene Ausgaben.
+- `routes/` enthält die HTTP-Routen der Anwendung.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Entwicklungsregeln
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Die Anwendung wird ausschließlich über Docker Compose und den Wrapper `./roo`
+aus dem Repository-Wurzelverzeichnis betrieben. PHP, Composer und Node.js
+müssen nicht auf dem Host installiert werden.
 
-## Learning Laravel
+Vor Änderungen sind `../AGENTS.md`, `../build/masterplan.md` und die jeweils
+betroffenen Architekturentscheidungen zu lesen. Fachliche Änderungen erhalten
+Tests; personenbezogene Daten dürfen weder in Logs noch in nicht ausdrücklich
+geschützte externe Dienste gelangen.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Verifikation
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Der sichere Standard für Backend-Tests ist:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+./roo test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Der Befehl verwendet eine isolierte Testdatenbank. Für Frontend-Tests und den
+Produktions-Build stehen die im Root-README beschriebenen Docker-Befehle zur
+Verfügung. Änderungen sollten zusätzlich mit `./roo pint` und
+`git diff --check` geprüft werden.
