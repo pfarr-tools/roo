@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompetenceEvidence;
 use App\Models\StudentEvaluation;
 use App\Models\TeachingGroup;
 use Illuminate\Http\Request;
@@ -38,12 +39,35 @@ class EvaluationController extends Controller
         $customProcessCompetences = $teachingGroup->grading_model === 'observation_scales'
             ? $teachingGroup->school->customProcessCompetences()->where('is_active', true)->get(['id', 'text', 'position'])
             : collect();
+        $averages = CompetenceEvidence::query()
+            ->selectRaw('custom_process_competence_id, AVG(custom_scale_level) AS average')
+            ->where('student_id', $evaluation->student_id)
+            ->whereNotNull('custom_process_competence_id')
+            ->whereNotNull('custom_scale_level')
+            ->whereHas('scheduledLesson.slot', function ($query) use ($teachingGroup, $evaluation): void {
+                $query->where('teaching_group_id', $teachingGroup->id)
+                    ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
+            })
+            ->groupBy('custom_process_competence_id')
+            ->get()
+            ->keyBy('custom_process_competence_id');
+        $competenceAverages = $customProcessCompetences->map(function ($competence) use ($averages, $teachingGroup): array {
+            $average = $averages->get($competence->id)?->average;
+
+            return [
+                'custom_process_competence_id' => $competence->id,
+                'average' => $average !== null ? round((float) $average, 2) : null,
+                'rounded_level' => $average !== null ? (int) round((float) $average) : null,
+                'interval_count' => $teachingGroup->school->observation_scale_interval_count,
+            ];
+        })->values();
 
         return Inertia::render('Evaluations/Edit', [
             'group' => $teachingGroup,
             'evaluation' => $evaluation,
             'customProcessCompetences' => $customProcessCompetences,
             'customProcessCompetenceScaleIntervalCount' => $teachingGroup->school->observation_scale_interval_count,
+            'competenceAverages' => $competenceAverages,
         ]);
     }
 
