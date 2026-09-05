@@ -31,7 +31,10 @@ Die vorhandenen Projekt-Assets werden zentral wiederverwendet:
 Die Assets werden für die öffentliche Blade-Seite über eine eigene öffentliche
 CSS-/Font-Einbindung bereitgestellt und im Elternbrief-Template als
 PhpWord-Schriftfamilien mit denselben Namen und Gewichten verwendet. Die
-Ausgabe darf nicht auf installierte Systemfonts angewiesen sein. Die bereits
+Webseite liefert die Fonts damit selbst aus; DOCX/ODT erhalten die korrekten
+Schriftfamilien, Gewichte und Größen für kompatible Office-/PDF-Renderer. Eine
+zusätzliche Font-Einbettung in die Office-Dateien ist nur umzusetzen, wenn sie
+vom bestehenden PhpWord-Renderer sicher unterstützt wird. Die bereits
 vorhandenen regulären/fetten Varianten werden nur dort eingebunden, wo ein
 konkretes Dokumentelement dies benötigt; die fachliche Standarddarstellung
 bleibt Comic Neue bold für Überschriften und Atkinson normal für Fließtext.
