@@ -7,6 +7,7 @@ use App\Documents\DocumentTemplate;
 use App\Documents\ParentLetterDocument;
 use InvalidArgumentException;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Style\Tab;
 
 final class ParentLetterTemplate implements DocumentTemplate
 {
@@ -35,9 +36,22 @@ final class ParentLetterTemplate implements DocumentTemplate
         $word->addParagraphStyle('parentLetterSection', ['spaceBefore' => 240, 'spaceAfter' => 80]);
         $word->addTableStyle('parentLetterSchedule', ['borderSize' => 6, 'borderColor' => 'B7B7B7', 'cellMargin' => 80]);
         $section = $word->addSection(['marginTop' => 900, 'marginRight' => 900, 'marginBottom' => 900, 'marginLeft' => 900]);
+        $footer = $section->addFooter();
+        $footerFont = ['name' => self::ATKINSON, 'size' => 8, 'color' => '808080'];
+        $footerRun = $footer->addTextRun([
+            'tabs' => [new Tab(Tab::TAB_STOP_LEFT, 0), new Tab(Tab::TAB_STOP_RIGHT, 10000)],
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+        ]);
+        $footerRun->addText('Elternbrief vom '.$document->letterDate, $footerFont);
+        $footerRun->addText("\tSeite ", $footerFont);
+        $footerRun->addField('PAGE', [], ['PreserveFormat'], null, $footerFont);
 
         $section->addText($document->title, 'parentLetterHeading', ['spaceAfter' => 120]);
         $section->addText($document->school.' · '.$document->group, 'parentLetterBody', ['spaceAfter' => 280]);
+        if ($document->place !== null && $document->letterDate !== null) {
+            $section->addText($document->place.', '.$document->letterDate, 'parentLetterBody', ['alignment' => 'right', 'spaceAfter' => 280]);
+        }
         $this->addParagraphs($section, $document->introduction, 280);
 
         $section->addText('Kompetenzen', 'parentLetterHeading', ['spaceBefore' => 240, 'spaceAfter' => 80]);
@@ -74,6 +88,12 @@ final class ParentLetterTemplate implements DocumentTemplate
         $section->addText('Herzliche Grüße,', 'parentLetterBody', ['spaceBefore' => 240, 'spaceAfter' => 0]);
         if ($document->creator !== '') {
             $section->addText($document->creator, 'parentLetterBody');
+        }
+        if ($document->contacts !== []) {
+            $section->addText('Kontaktmöglichkeiten', 'parentLetterHeading', ['spaceBefore' => 240, 'spaceAfter' => 80]);
+            foreach ($document->contacts as $contact) {
+                $section->addText($contact['label'].': '.$contact['value'], 'parentLetterBody', ['spaceAfter' => 0]);
+            }
         }
 
         return $word;

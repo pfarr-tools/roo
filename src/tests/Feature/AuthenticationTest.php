@@ -66,6 +66,7 @@ it('shows and updates the profile without exposing integration keys', function (
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Profile/Show')
+            ->where('user.public_phone', null)
             ->where('user.email', $user->email)
             ->where('integrations.openai', false)
             ->where('integrations.flux', false)
@@ -75,12 +76,14 @@ it('shows and updates the profile without exposing integration keys', function (
     $this->actingAs($user)->put('/profil', [
         'name' => 'Erika Neu',
         'email' => 'erika-neu@example.test',
+        'public_phone' => '+49 170 1234567',
         'openai_api_key' => 'openai-secret',
         'flux_api_key' => 'flux-secret',
     ])->assertRedirect('/profil');
 
     $user->refresh();
-    expect($user->openai_api_key)->toBe('openai-secret')
+    expect($user->public_phone)->toBe('+49 170 1234567')
+        ->and($user->openai_api_key)->toBe('openai-secret')
         ->and($user->flux_api_key)->toBe('flux-secret');
     $this->assertDatabaseMissing('users', ['openai_api_key' => 'openai-secret']);
 });

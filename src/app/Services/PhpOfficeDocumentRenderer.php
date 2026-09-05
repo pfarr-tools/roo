@@ -844,6 +844,7 @@ class PhpOfficeDocumentRenderer
             }
 
             $metadata = $document->metadata;
+            $isParentLetter = $document instanceof ParentLetterDocument;
             $pageMarkerPng = $this->pageMarkerPng($this->pageMarker($metadata));
             $taskMarkers = $this->taskMarkers($document);
 
@@ -870,27 +871,45 @@ class PhpOfficeDocumentRenderer
                 $styles,
                 1,
             ) ?: $styles;
-            $styles = str_replace(
-                '</office:automatic-styles>',
-                '<style:style style:name="assessmentFooterParagraph" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/></style:style><style:style style:name="assessmentFooterText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080"/></style:style><style:style style:name="assessmentRooMarkParagraph" style:family="paragraph"><style:paragraph-properties style:writing-mode="lr-tb"/></style:style><style:style style:name="assessmentRooMarkText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080" fo:font-weight="normal"/></style:style><style:style style:name="assessmentRooMarkFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="background" style:wrap="run-through" style:vertical-pos="bottom" style:vertical-rel="paragraph-content" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentRooMarkImage" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none"/></style:style><style:style style:name="assessmentPageMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="page" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentTaskMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentHeaderLine" style:family="graphic"><style:graphic-properties svg:stroke-width="0.049cm" svg:stroke-color="#000000" draw:fill-color="#000000" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentNameCell" style:family="table-cell"><style:table-cell-properties fo:padding-left="0.5cm"/></style:style></office:automatic-styles>',
-                $styles,
-            );
-            $styles = preg_replace_callback(
-                '/<style:footer>(.*?)<\/style:footer>/s',
-                static function (array $matches) use ($metadata): string {
-                    $footer = str_replace('text:style-name="Normal"', 'text:style-name="assessmentFooterParagraph"', $matches[1]);
-                    $footer = preg_replace('/<text:span(?![^>]*text:style-name)/', '<text:span text:style-name="assessmentFooterText"', $footer) ?: $footer;
-                    $version = htmlspecialchars((string) ($metadata['roo_version'] ?? config('app.version', '0.1.0')), ENT_XML1);
-                    $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="1" draw:name="assessmentRooMark" draw:style-name="assessmentRooMarkFrame" draw:text-style-name="assessmentRooMarkParagraph" svg:width="4cm" svg:height="0.6cm" draw:transform="rotate (1.5707963267949) translate (1.00008333333333cm 0.252236111111111cm)"><draw:text-box><text:p><text:span text:style-name="assessmentRooMarkText">ROO '.$version.'</text:span></text:p></draw:text-box></draw:frame><draw:frame text:anchor-type="char" draw:style-name="assessmentRooMarkImage" draw:name="assessmentRooIcon" svg:x="-1.466cm" svg:y="0.333cm" svg:width="0.31cm" svg:height="0.265cm" draw:z-index="2" draw:transform="translate (1.311cm -0.4655cm) rotate (1.5707963267949) translate (-1.311cm 0.4655cm)"><draw:image xlink:href="Pictures/roo-icon.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
-                    $lastParagraphEnd = strrpos($footer, '</text:p>');
-                    if ($lastParagraphEnd !== false) {
-                        $footer = substr_replace($footer, $frame, $lastParagraphEnd, 0);
-                    }
+            if (! $isParentLetter) {
+                $styles = str_replace(
+                    '</office:automatic-styles>',
+                    '<style:style style:name="assessmentFooterParagraph" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/></style:style><style:style style:name="assessmentFooterText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080"/></style:style><style:style style:name="assessmentRooMarkParagraph" style:family="paragraph"><style:paragraph-properties style:writing-mode="lr-tb"/></style:style><style:style style:name="assessmentRooMarkText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="6pt" fo:color="#808080" fo:font-weight="normal"/></style:style><style:style style:name="assessmentRooMarkFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="background" style:wrap="run-through" style:vertical-pos="bottom" style:vertical-rel="paragraph-content" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentRooMarkImage" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none"/></style:style><style:style style:name="assessmentPageMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="page" style:horizontal-pos="from-left" style:horizontal-rel="page"/></style:style><style:style style:name="assessmentTaskMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentHeaderLine" style:family="graphic"><style:graphic-properties svg:stroke-width="0.049cm" svg:stroke-color="#000000" draw:fill-color="#000000" style:run-through="foreground" style:wrap="run-through" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/></style:style><style:style style:name="assessmentNameCell" style:family="table-cell"><style:table-cell-properties fo:padding-left="0.5cm"/></style:style></office:automatic-styles>',
+                    $styles,
+                );
+                $styles = preg_replace_callback(
+                    '/<style:footer>(.*?)<\/style:footer>/s',
+                    static function (array $matches) use ($metadata): string {
+                        $footer = str_replace('text:style-name="Normal"', 'text:style-name="assessmentFooterParagraph"', $matches[1]);
+                        $footer = preg_replace('/<text:span(?![^>]*text:style-name)/', '<text:span text:style-name="assessmentFooterText"', $footer) ?: $footer;
+                        $version = htmlspecialchars((string) ($metadata['roo_version'] ?? config('app.version', '0.1.0')), ENT_XML1);
+                        $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="1" draw:name="assessmentRooMark" draw:style-name="assessmentRooMarkFrame" draw:text-style-name="assessmentRooMarkParagraph" svg:width="4cm" svg:height="0.6cm" draw:transform="rotate (1.5707963267949) translate (1.00008333333333cm 0.252236111111111cm)"><draw:text-box><text:p><text:span text:style-name="assessmentRooMarkText">ROO '.$version.'</text:span></text:p></draw:text-box></draw:frame><draw:frame text:anchor-type="char" draw:style-name="assessmentRooMarkImage" draw:name="assessmentRooIcon" svg:x="-1.466cm" svg:y="0.333cm" svg:width="0.31cm" svg:height="0.265cm" draw:z-index="2" draw:transform="translate (1.311cm -0.4655cm) rotate (1.5707963267949) translate (-1.311cm 0.4655cm)"><draw:image xlink:href="Pictures/roo-icon.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
+                        $lastParagraphEnd = strrpos($footer, '</text:p>');
+                        if ($lastParagraphEnd !== false) {
+                            $footer = substr_replace($footer, $frame, $lastParagraphEnd, 0);
+                        }
 
-                    return '<style:footer>'.$footer.'</style:footer>';
-                },
-                $styles,
-            ) ?: $styles;
+                        return '<style:footer>'.$footer.'</style:footer>';
+                    },
+                    $styles,
+                ) ?: $styles;
+            } else {
+                $styles = str_replace('style:master-page-name="FirstPage"', 'style:master-page-name="Standard1"', $styles);
+                $styles = str_replace(
+                    '</office:automatic-styles>',
+                    '<style:style style:name="parentLetterFooterText" style:family="text"><style:text-properties style:font-name="Atkinson Hyperlegible Next" fo:font-size="8pt" fo:color="#808080" fo:font-weight="normal"/></style:style></office:automatic-styles>',
+                    $styles,
+                );
+                $styles = preg_replace_callback(
+                    '/<style:footer>(.*?)<\/style:footer>/s',
+                    static function (array $matches): string {
+                        $footer = preg_replace('/<text:span(?![^>]*text:style-name)/', '<text:span text:style-name="parentLetterFooterText"', $matches[1]) ?: $matches[1];
+
+                        return '<style:footer>'.$footer.'</style:footer>';
+                    },
+                    $styles,
+                ) ?: $styles;
+            }
             $styles = preg_replace_callback(
                 '/<style:header>(.*?)<\/style:header>/s',
                 static function (array $matches): string {
@@ -921,12 +940,14 @@ class PhpOfficeDocumentRenderer
             ])));
             $content = $archive->getFromName('content.xml');
             if (is_string($content)) {
-                $content = preg_replace(
-                    '/(style:name="SB1"[^>]*style:master-page-name=")Standard1/',
-                    '$1FirstPage',
-                    $content,
-                    1,
-                ) ?: $content;
+                if (! $isParentLetter) {
+                    $content = preg_replace(
+                        '/(style:name="SB1"[^>]*style:master-page-name=")Standard1/',
+                        '$1FirstPage',
+                        $content,
+                        1,
+                    ) ?: $content;
+                }
                 $content = str_replace('<text:tracked-changes/>', '', $content);
                 $content = $this->addOdtTaskMarkerStyle($content);
                 $content = $this->injectTaskMarkers($content, $taskMarkers);

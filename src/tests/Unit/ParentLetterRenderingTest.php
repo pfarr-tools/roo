@@ -39,6 +39,8 @@ it('renders the parent letter in both formats with the agreed fonts and content'
         scheduledLessons: [['date' => '10.09.2026', 'time' => '08:00', 'title' => 'Wasserbilder']],
         publicUrl: 'https://example.test/oeffentlich/1?signature=abc',
         qrPng: app(QrCodeRenderer::class)->png('https://example.test/oeffentlich/1?signature=abc'),
+        place: 'Stuttgart',
+        letterDate: '10.09.2026',
     );
     $renderer = app(PhpOfficeDocumentRenderer::class);
 
@@ -48,6 +50,9 @@ it('renders the parent letter in both formats with the agreed fonts and content'
 
         $expectation = expect($contents)->toStartWith('PK')
             ->and($archiveText)->toContain('Wasser des Lebens')
+            ->and($archiveText)->toContain('Stuttgart, 10.09.2026')
+            ->and($archiveText)->toContain('Elternbrief vom 10.09.2026')
+            ->and($archiveText)->toContain('Seite')
             ->and($archiveText)->not->toContain('Einführung')
             ->and($archiveText)->toContain('Erster Absatz.')
             ->and($archiveText)->toContain('Zweiter Absatz.')
@@ -68,12 +73,21 @@ it('renders the parent letter in both formats with the agreed fonts and content'
 
         if ($format === DocumentOutputFormat::DOCX) {
             $expectation->and($archiveText)->toContain('w:sz w:val="28"')
-                ->and($archiveText)->toContain('w:sz w:val="22"');
+                ->and($archiveText)->toContain('w:sz w:val="22"')
+                ->and($archiveText)->toContain('w:jc w:val="right"')
+                ->and($archiveText)->toContain('w:sz w:val="16"')
+                ->and($archiveText)->toContain('<w:tab')
+                ->and($archiveText)->toContain('808080');
         } else {
             $expectation->and($archiveText)->toContain('fo:font-size="14pt"')
                 ->and($archiveText)->toContain('fo:font-size="11pt"')
                 ->and($archiveText)->toContain('<text:list')
-                ->and($archiveText)->toContain('parentLetterCompetencyList');
+                ->and($archiveText)->toContain('parentLetterCompetencyList')
+                ->and($archiveText)->toContain('<text:tab/>')
+                ->and($archiveText)->toContain('parentLetterFooterText')
+                ->and($archiveText)->not->toContain('style:master-page-name="FirstPage"')
+                ->and($archiveText)->toContain('fo:font-size="8pt"')
+                ->and($archiveText)->toContain('808080');
         }
     }
 });

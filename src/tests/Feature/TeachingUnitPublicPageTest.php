@@ -15,8 +15,8 @@ uses(RefreshDatabase::class);
 function publicUnitFixture(): array
 {
     $organization = Organization::create(['name' => 'Öffentliche Seite Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id, 'name' => 'Lehrkraft Beispiel']);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Öffentliche Schule']);
+    $user = User::factory()->create(['organization_id' => $organization->id, 'name' => 'Lehrkraft Beispiel', 'email' => 'lehrkraft@example.test', 'public_phone' => '+49 170 1234567']);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Öffentliche Schule', 'messenger_name' => 'Untis']);
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'title' => 'Wasser des Lebens', 'position' => 1, 'introduction_text' => 'Eine Einführung für Familien.']);
@@ -39,6 +39,9 @@ it('renders the current public unit page without authentication', function () {
         ->assertSee('4a')
         ->assertSee('Öffentliche Schule')
         ->assertSee('Lehrkraft Beispiel')
+        ->assertSee('Untis')
+        ->assertSee('lehrkraft@example.test')
+        ->assertSee('+49 170 1234567')
         ->assertSee('Eine Einführung für Familien.')
         ->assertSee('Arbeitsblatt.pdf')
         ->assertHeader('content-type', 'text/html; charset=UTF-8');
@@ -54,4 +57,18 @@ it('rejects an invalid signature and a revoked public file download', function (
 
     $fixture['phase']->resources()->updateExistingPivot($fixture['resource']->id, ['publication_status' => 'not_shared']);
     $this->get($downloadUrl)->assertNotFound();
+});
+
+it('uses the sole organization user for contacts on legacy units without a creator', function () {
+    $organization = Organization::create(['name' => 'Legacy Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id, 'email' => 'legacy@example.test', 'public_phone' => '+49 170 7654321']);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Legacy Schule', 'messenger_name' => 'Untis']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Alte Einheit', 'position' => 1]);
+
+    $this->get(URL::signedRoute('public.teaching-units.show', ['teachingUnit' => $unit]))
+        ->assertOk()
+        ->assertSee('legacy@example.test')
+        ->assertSee('+49 170 7654321');
 });

@@ -8,7 +8,7 @@ const props = defineProps({
     integrations: { type: Object, default: () => ({}) },
 })
 
-const form = useForm({ name: props.user.name, email: props.user.email, openai_api_key: '', flux_api_key: '' })
+const form = useForm({ name: props.user.name, email: props.user.email, public_phone: props.user.public_phone ?? '', openai_api_key: '', flux_api_key: '' })
 </script>
 
 <template>
@@ -23,6 +23,7 @@ const form = useForm({ name: props.user.name, email: props.user.email, openai_ap
                             <p class="text-muted">{{ de.profileDataIntro }}</p>
                             <div class="mb-3"><label class="form-label" for="profile-name">{{ de.name }}</label><input id="profile-name" v-model="form.name" class="form-control" :class="{ 'is-invalid': form.errors.name }" autocomplete="name"><div v-if="form.errors.name" class="invalid-feedback">{{ form.errors.name }}</div></div>
                             <div class="mb-3"><label class="form-label" for="profile-email">E-Mail-Adresse</label><input id="profile-email" v-model="form.email" class="form-control" :class="{ 'is-invalid': form.errors.email }" type="email" autocomplete="email"><div v-if="form.errors.email" class="invalid-feedback">{{ form.errors.email }}</div></div>
+                            <div class="mb-3"><label class="form-label" for="profile-public-phone">{{ de.publicPhone }}</label><input id="profile-public-phone" v-model="form.public_phone" class="form-control" :class="{ 'is-invalid': form.errors.public_phone }" type="tel" autocomplete="tel"><div class="form-text">{{ de.publicPhoneIntro }}</div><div v-if="form.errors.public_phone" class="invalid-feedback">{{ form.errors.public_phone }}</div></div>
                         </div>
                     </div>
                 </section>

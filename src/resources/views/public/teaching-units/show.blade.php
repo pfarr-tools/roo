@@ -69,6 +69,17 @@
             </div>
         </section>
     @endforeach
+
+    @if ($view->contacts->isNotEmpty())
+        <section aria-labelledby="contacts-heading">
+            <h2 id="contacts-heading">Kontaktmöglichkeiten</h2>
+            <ul>
+                @foreach ($view->contacts as $contact)
+                    <li>{{ $contact['label'] }}: {{ $contact['value'] }}</li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 </main>
 
 <div id="public-gallery-modal" class="public-gallery-modal" role="dialog" aria-modal="true" aria-label="Bildgalerie" hidden>

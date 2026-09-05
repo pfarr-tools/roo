@@ -65,7 +65,7 @@ class SchoolController extends Controller
     {
         $this->authorize('update', $school);
         $data = $request->validated();
-        $school->update(collect($data)->only(['name', 'short_name', 'school_type', 'city', 'notes'])->all());
+        $school->update(collect($data)->only(['name', 'short_name', 'school_type', 'city', 'messenger_name', 'notes'])->all());
 
         return to_route('schools.index')->with('success', 'Schule wurde gespeichert.');
     }

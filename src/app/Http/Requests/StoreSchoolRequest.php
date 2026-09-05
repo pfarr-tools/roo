@@ -15,7 +15,7 @@ class StoreSchoolRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'], 'short_name' => ['nullable', 'string', 'max:50'], 'city' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'],
+            'name' => ['required', 'string', 'max:255'], 'short_name' => ['nullable', 'string', 'max:50'], 'city' => ['nullable', 'string', 'max:255'], 'messenger_name' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string'],
         ];
     }
 }

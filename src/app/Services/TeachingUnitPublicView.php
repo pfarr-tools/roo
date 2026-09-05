@@ -21,6 +21,7 @@ final class TeachingUnitPublicView
         public readonly Collection $visiblePhaseResources,
         public readonly Collection $visiblePhaseLinks,
         public readonly Collection $galleries,
+        public readonly Collection $contacts,
         public readonly ?CarbonImmutable $nextVisibilityAt,
     ) {}
 }

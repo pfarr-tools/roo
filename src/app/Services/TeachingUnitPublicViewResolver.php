@@ -6,6 +6,7 @@ use App\Enums\PublicationStatus;
 use App\Models\Lesson;
 use App\Models\LessonPhase;
 use App\Models\TeachingUnit;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
@@ -26,6 +27,11 @@ final class TeachingUnitPublicViewResolver
             'lessons.phases.resources',
             'lessons.phases.resourceLinks',
         ]);
+        $creator = $unit->creator;
+        if ($creator === null) {
+            $organizationUsers = User::query()->where('organization_id', $unit->organization_id)->limit(2)->get();
+            $creator = $organizationUsers->count() === 1 ? $organizationUsers->first() : null;
+        }
 
         $scheduledLessons = $unit->lessons
             ->flatMap(fn (Lesson $lesson): Collection => $lesson->scheduledLessons
@@ -51,6 +57,11 @@ final class TeachingUnitPublicViewResolver
                     'url' => URL::signedRoute('public.teaching-units.gallery.image', ['teachingUnit' => $unit, 'galleryImage' => $image]),
                 ])->values(),
             ])->values();
+        $contacts = collect([
+            filled($unit->group->school->messenger_name) ? ['label' => 'Messenger-App', 'value' => $unit->group->school->messenger_name] : null,
+            filled($creator?->email) ? ['label' => 'E-Mail', 'value' => $creator->email] : null,
+            filled($creator?->public_phone) ? ['label' => 'Telefon', 'value' => $creator->public_phone] : null,
+        ])->filter()->values();
         $nextVisibilityAt = null;
 
         foreach ($unit->lessons as $lesson) {
@@ -67,7 +78,7 @@ final class TeachingUnitPublicViewResolver
 
         return new TeachingUnitPublicView(
             unit: $unit,
-            creator: $unit->creator,
+            creator: $creator,
             group: $unit->group,
             school: $unit->group->school,
             competencies: $unit->competencies,
@@ -75,6 +86,7 @@ final class TeachingUnitPublicViewResolver
             visiblePhaseResources: $visiblePhaseResources->values(),
             visiblePhaseLinks: $visiblePhaseLinks->values(),
             galleries: $galleries,
+            contacts: $contacts,
             nextVisibilityAt: $nextVisibilityAt,
         );
     }

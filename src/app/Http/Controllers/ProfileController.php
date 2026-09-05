@@ -19,6 +19,7 @@ class ProfileController extends Controller
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,
+                'public_phone' => $user->public_phone,
             ],
             'integrations' => [
                 'openai' => filled($user->openai_api_key),
@@ -32,12 +33,13 @@ class ProfileController extends Controller
         $validated = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($request->user()->id)],
+            'public_phone' => ['nullable', 'string', 'max:50'],
             'openai_api_key' => ['nullable', 'string', 'max:10000'],
             'flux_api_key' => ['nullable', 'string', 'max:10000'],
         ])->validate();
 
         $user = $request->user();
-        $attributes = ['name' => $validated['name'], 'email' => $validated['email']];
+        $attributes = ['name' => $validated['name'], 'email' => $validated['email'], 'public_phone' => $validated['public_phone'] ?? null];
 
         foreach (['openai_api_key', 'flux_api_key'] as $key) {
             if (filled($validated[$key] ?? null)) {

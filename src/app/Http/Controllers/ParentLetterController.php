@@ -33,10 +33,18 @@ final class ParentLetterController extends Controller
         $teachingUnit->update(['introduction_text' => $data['introduction_text'] ?? null]);
 
         $view = $resolver->resolve($teachingUnit->fresh(), CarbonImmutable::now('Europe/Berlin'));
+        $firstLesson = $view->scheduledLessons->first();
+        $letterDate = $firstLesson['starts_at'] ?? CarbonImmutable::now('Europe/Berlin');
         $publicUrl = $view->visiblePhaseResources->isNotEmpty() || $view->visiblePhaseLinks->isNotEmpty()
             ? URL::signedRoute('public.teaching-units.show', ['teachingUnit' => $teachingUnit])
             : null;
         $format = DocumentOutputFormat::from($data['format']);
+        $contactUser = $view->creator ?? $request->user();
+        $contacts = collect([
+            filled($view->school->messenger_name) ? ['label' => 'Messenger-App', 'value' => $view->school->messenger_name] : null,
+            filled($contactUser->email) ? ['label' => 'E-Mail', 'value' => $contactUser->email] : null,
+            filled($contactUser->public_phone) ? ['label' => 'Telefon', 'value' => $contactUser->public_phone] : null,
+        ])->filter()->values()->all();
         $document = new ParentLetterDocument(
             title: 'Elternbrief: '.$teachingUnit->title,
             group: $view->group->name,
@@ -52,6 +60,9 @@ final class ParentLetterController extends Controller
             ])->all(),
             publicUrl: $publicUrl,
             qrPng: $publicUrl === null ? null : $qrCodeRenderer->png($publicUrl),
+            contacts: $contacts,
+            place: $view->school->city ?: $view->school->name,
+            letterDate: $letterDate->format('d.m.Y'),
         );
         $contents = $renderer->render($document, $format);
 
@@ -59,7 +70,7 @@ final class ParentLetterController extends Controller
             'Content-Type' => $format === DocumentOutputFormat::DOCX
                 ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 : 'application/vnd.oasis.opendocument.text',
-            'Content-Disposition' => 'attachment; filename="'.$this->filename($view->group).'.'.$format->value.'"',
+            'Content-Disposition' => 'attachment; filename="'.$this->filename($view->group, $letterDate->format('Ymd')).'.'.$format->value.'"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
             'Pragma' => 'no-cache',
         ]);
@@ -83,11 +94,10 @@ final class ParentLetterController extends Controller
             ?: 'Kompetenz');
     }
 
-    private function filename(TeachingGroup $group): string
+    private function filename(TeachingGroup $group, string $date): string
     {
         $aktenzeichen = $this->filenamePart($group->aktenzeichen);
         $groupName = $this->filenamePart($group->name);
-        $date = CarbonImmutable::now('Europe/Berlin')->format('Ymd');
         $filename = collect([$aktenzeichen, $groupName, $date])->filter()->implode('_').' Elternbrief';
 
         return $this->filenamePart($filename) ?: 'Elternbrief';
