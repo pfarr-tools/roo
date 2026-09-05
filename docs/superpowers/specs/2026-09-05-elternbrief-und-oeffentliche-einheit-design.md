@@ -15,6 +15,27 @@ Die öffentliche Seite ist kein neuer Veröffentlichungsworkflow: Ihre URL ist
 dauerhaft signiert und wird nicht im Adminmenü verlinkt. Sichtbarkeit einzelner
 Materialien wird unabhängig davon pro konkreter Materialzuordnung gesteuert.
 
+## Schrift- und Assetvorgaben
+
+Die öffentliche Blade-Seite und der Elternbrief verwenden dieselbe
+Schriftdefinition:
+
+- Überschriften: `Comic Neue`, bold, `h1` mit 24 pt;
+- alle übrigen Texte: `Atkinson Hyperlegible Next`, normal, 14 pt.
+
+Die vorhandenen Projekt-Assets werden zentral wiederverwendet:
+
+- `src/resources/fonts/ComicNeue-Bold.ttf`;
+- `src/resources/fonts/AtkinsonHyperlegibleNext-Regular.otf`.
+
+Die Assets werden für die öffentliche Blade-Seite über eine eigene öffentliche
+CSS-/Font-Einbindung bereitgestellt und im Elternbrief-Template als
+PhpWord-Schriftfamilien mit denselben Namen und Gewichten verwendet. Die
+Ausgabe darf nicht auf installierte Systemfonts angewiesen sein. Die bereits
+vorhandenen regulären/fetten Varianten werden nur dort eingebunden, wo ein
+konkretes Dokumentelement dies benötigt; die fachliche Standarddarstellung
+bleibt Comic Neue bold für Überschriften und Atkinson normal für Fließtext.
+
 ## Festgelegte fachliche Regeln
 
 ### Einheit und Kontext
@@ -171,7 +192,8 @@ Brief aufgenommen.
 Die Ausgabe verwendet die bestehende abstrakte Dokument-/Template-/Renderer-
 Architektur aus ADR 0014. Ein neues Elternbrief-Template erzeugt denselben
 strukturierten Inhalt für DOCX und ODT. Die Grundschrift und grundlegenden
-Formatvorlagen orientieren sich an der bestehenden LSE-Ausgabe. Die
+Formatvorlagen orientieren sich an der bestehenden LSE-Ausgabe und setzen die
+oben genannten Fontfamilien und Größen verbindlich um. Die
 Dokumenterzeugung bleibt frei von fachlicher Datenmutation; das Speichern des
 Einführungstexts erfolgt über den Unit-Update-/Export-Workflow.
 
@@ -233,6 +255,8 @@ Materialzuordnung veröffentlichen.
 ### Artefakt-/Rendering-Prüfung
 
 - strukturelle Prüfung der DOCX- und ODT-ZIP-Inhalte;
+- Prüfung, dass CSS, DOCX und ODT die vorgegebenen Schriftfamilien und
+  Grundgrößen verwenden;
 - Prüfung der QR-Code-Einbettung und Ziel-URL;
 - sofern LibreOffice verfügbar ist: Konvertierung beider Formate in PDF und
   visuelle Prüfung der grundlegenden LSE-ähnlichen Formatierung.
