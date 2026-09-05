@@ -11,6 +11,23 @@ use Inertia\Inertia;
 
 class EvaluationController extends Controller
 {
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', TeachingGroup::class);
+        $groups = TeachingGroup::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $selectedGroup = $groups->firstWhere('id', $request->integer('group')) ?? $groups->first();
+        $selectedGroup?->load('reportPeriods.evaluations.student');
+
+        return Inertia::render('Evaluations/Index', [
+            'groups' => $groups,
+            'group' => $selectedGroup,
+            'reportPeriods' => $selectedGroup?->reportPeriods ?? collect(),
+        ]);
+    }
+
     public function createPeriod(TeachingGroup $teachingGroup)
     {
         $this->authorize('update', $teachingGroup);
@@ -36,6 +53,7 @@ class EvaluationController extends Controller
         abort_unless($evaluation->period->teaching_group_id === $teachingGroup->id, 404);
 
         $evaluation->load('student', 'period', 'observationScales');
+        $navigation = $this->evaluationNavigation($evaluation);
         $customProcessCompetences = $teachingGroup->grading_model === 'observation_scales'
             ? $teachingGroup->school->customProcessCompetences()->where('is_active', true)->get(['id', 'text', 'position'])
             : collect();
@@ -68,6 +86,8 @@ class EvaluationController extends Controller
             'customProcessCompetences' => $customProcessCompetences,
             'customProcessCompetenceScaleIntervalCount' => $teachingGroup->school->observation_scale_interval_count,
             'competenceAverages' => $competenceAverages,
+            'previousEvaluation' => $navigation['previous'],
+            'nextEvaluation' => $navigation['next'],
         ]);
     }
 
@@ -100,6 +120,25 @@ class EvaluationController extends Controller
             }
         });
 
-        return back()->with('success', 'Bewertungsentwurf wurde gespeichert.');
+        $nextEvaluation = $this->evaluationNavigation($evaluation)['next'];
+
+        if ($nextEvaluation) {
+            return to_route('evaluations.edit', [$teachingGroup, $nextEvaluation['id']])->with('success', 'Bewertungsentwurf wurde gespeichert.');
+        }
+
+        return to_route('evaluations.index', ['group' => $teachingGroup->id])->with('success', 'Bewertungsentwurf wurde gespeichert.');
+    }
+
+    private function evaluationNavigation(StudentEvaluation $evaluation): array
+    {
+        $evaluations = $evaluation->period->evaluations()->with('student')->get()->sortBy(fn ($item): string => mb_strtolower($item->student->last_name.' '.$item->student->first_name))->values();
+        $index = $evaluations->search(fn ($item): bool => $item->id === $evaluation->id);
+
+        $present = fn ($item): ?array => $item ? ['id' => $item->id, 'student_name' => $item->student->last_name.', '.$item->student->first_name] : null;
+
+        return [
+            'previous' => $present($evaluations->get($index - 1)),
+            'next' => $present($evaluations->get($index + 1)),
+        ];
     }
 }

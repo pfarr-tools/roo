@@ -104,3 +104,27 @@ it('calculates competence averages from numeric observations in the evaluation p
         ->where('competenceAverages.0.rounded_level', 3)
     );
 });
+
+it('provides sorted evaluation navigation and saves to the next student', function () {
+    $org = Organization::create(['name' => 'Bewertungsnavigation']);
+    $user = User::factory()->create(['organization_id' => $org->id]);
+    $school = School::create(['organization_id' => $org->id, 'name' => 'Navigationsschule']);
+    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
+    $firstStudent = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Zoe', 'last_name' => 'Zimmer', 'class_name' => '4a']);
+    $secondStudent = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Albrecht', 'class_name' => '4a']);
+    $group->students()->attach([$firstStudent->id, $secondStudent->id]);
+    $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
+    $firstEvaluation = $period->evaluations()->create(['student_id' => $firstStudent->id]);
+    $secondEvaluation = $period->evaluations()->create(['student_id' => $secondStudent->id]);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/{$secondEvaluation->id}/bearbeiten")->assertInertia(fn ($page) => $page
+        ->where('previousEvaluation', null)
+        ->where('nextEvaluation.id', $firstEvaluation->id)
+    );
+
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/{$secondEvaluation->id}", [
+        'status' => 'draft',
+        'observation_scales' => [],
+    ])->assertRedirect("/unterrichtsgruppen/{$group->id}/bewertungen/{$firstEvaluation->id}/bearbeiten");
+});

@@ -253,6 +253,8 @@ export default {
     preparationQuestions: "Vorbereitungsfragen (eine pro Zeile)",
     saveChanges: "Änderungen speichern",
     save: "Speichern",
+    previousStudent: "Vorherige:r",
+    nextStudent: "Nächste:r",
     editEvaluation: "Bewertung bearbeiten",
     evaluationDraft: "Bewertungsentwurf",
     internalNote: "Interne Notiz",

@@ -2,14 +2,61 @@
 import AppShell from '../../Components/Ui/AppShell.vue'
 import { useForm } from '@inertiajs/vue3'
 import de from '../../i18n/de'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { observationScaleLabels } from '../Schools/schoolObservationScale'
-const props = defineProps({ group: Object, evaluation: Object, customProcessCompetences: { type: Array, default: () => [] }, customProcessCompetenceScaleIntervalCount: { type: Number, default: 4 }, competenceAverages: { type: Array, default: () => [] } })
-const form = useForm({ draft_text: props.evaluation.draft_text ?? '', teacher_note: props.evaluation.teacher_note ?? '', status: props.evaluation.status ?? 'draft', observation_scales: (props.evaluation.observation_scales ?? []).map(scale => ({ custom_process_competence_id: scale.custom_process_competence_id, custom_scale_level: scale.custom_scale_level, custom_scale_status: scale.custom_scale_status })) })
+const props = defineProps({ group: Object, evaluation: Object, customProcessCompetences: { type: Array, default: () => [] }, customProcessCompetenceScaleIntervalCount: { type: Number, default: 4 }, competenceAverages: { type: Array, default: () => [] }, previousEvaluation: { type: Object, default: null }, nextEvaluation: { type: Object, default: null } })
+function evaluationFormData(evaluation) { return { draft_text: evaluation.draft_text ?? '', teacher_note: evaluation.teacher_note ?? '', status: evaluation.status ?? 'draft', observation_scales: (evaluation.observation_scales ?? []).map(scale => ({ custom_process_competence_id: scale.custom_process_competence_id, custom_scale_level: scale.custom_scale_level, custom_scale_status: scale.custom_scale_status })) } }
+const form = useForm(evaluationFormData(props.evaluation))
+watch(() => props.evaluation, evaluation => Object.assign(form, evaluationFormData(evaluation)))
 const scaleLabels = computed(() => observationScaleLabels(props.customProcessCompetenceScaleIntervalCount))
 function selectedScale(competence) { return form.observation_scales.find(scale => scale.custom_process_competence_id === competence.id) }
 function averageFor(competence) { return props.competenceAverages.find(average => average.custom_process_competence_id === competence.id) }
 function setScale(competence, label) { const scale = selectedScale(competence) ?? { custom_process_competence_id: competence.id, custom_scale_level: null, custom_scale_status: null }; scale.custom_scale_level = label === 'ne' ? null : scaleLabels.value.indexOf(label) + 1; scale.custom_scale_status = label === 'ne' ? 'ne' : null; if (!selectedScale(competence)) form.observation_scales.push(scale) }
 function save() { form.put(`/unterrichtsgruppen/${props.group.id}/bewertungen/${props.evaluation.id}`) }
 </script>
-<template><AppShell><template #toolbar><a :href="`/unterrichtsgruppen/${group.id}`" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a><button v-if="evaluation.status !== 'confirmed'" class="btn btn-sm btn-primary ms-2" type="submit" form="evaluation-form" :disabled="form.processing">{{ de.save }}</button></template><div class="container-full px-3 py-4"><h1 class="h2">{{ de.editEvaluation }}</h1><p class="text-muted">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }} · {{ evaluation.period.label }}</p><form id="evaluation-form" class="card card-body" @submit.prevent="save"><label class="form-label" for="draft-text">{{ de.evaluationDraft }}</label><textarea id="draft-text" v-model="form.draft_text" class="form-control" rows="12" :disabled="evaluation.status === 'confirmed'"></textarea><div v-if="customProcessCompetences.length" class="mt-4"><h2 class="h5">{{ de.schoolObservationScale }}</h2><div v-for="competence in customProcessCompetences" :key="competence.id" class="border-top py-3"><div class="mb-2">{{ competence.text }}</div><div class="d-flex flex-wrap gap-2"><button v-for="label in scaleLabels" :key="label" class="btn btn-sm" :class="selectedScale(competence)?.custom_scale_status === label || (label !== 'ne' && selectedScale(competence)?.custom_scale_level === scaleLabels.indexOf(label) + 1) ? 'btn-primary' : (averageFor(competence)?.rounded_level === scaleLabels.indexOf(label) + 1 ? 'bg-primary-subtle text-primary-emphasis border-primary' : 'btn-outline-secondary')" type="button" :disabled="evaluation.status === 'confirmed'" :aria-pressed="selectedScale(competence)?.custom_scale_status === label || (label !== 'ne' && selectedScale(competence)?.custom_scale_level === scaleLabels.indexOf(label) + 1)" @click="setScale(competence, label)">{{ label }}</button></div></div></div><label class="form-label mt-3" for="teacher-note">{{ de.internalNote }}</label><textarea id="teacher-note" v-model="form.teacher_note" class="form-control" rows="4" :disabled="evaluation.status === 'confirmed'"></textarea><div v-if="evaluation.status !== 'confirmed'" class="form-check mt-3"><input id="evaluation-confirmed" v-model="form.status" class="form-check-input" type="checkbox" true-value="confirmed" false-value="draft"><label class="form-check-label" for="evaluation-confirmed">{{ de.confirmEvaluation }}</label></div><div v-else class="alert alert-success mt-3 mb-0">{{ de.evaluationConfirmed }}</div></form></div></AppShell></template>
+<template>
+    <AppShell>
+        <template #toolbar>
+            <a :href="`/bewertungen?group=${group.id}`" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </a>
+            <button v-if="evaluation.status !== 'confirmed'" class="btn btn-sm btn-primary ms-2" type="submit" form="evaluation-form" :disabled="form.processing">
+                {{ de.save }}
+            </button>
+            <a v-if="previousEvaluation" class="btn btn-sm btn-light ms-2" :href="`/unterrichtsgruppen/${group.id}/bewertungen/${previousEvaluation.id}/bearbeiten`" :title="de.previousStudent" :aria-label="de.previousStudent">
+                ← {{ de.previousStudent }}
+            </a>
+            <a v-if="nextEvaluation" class="btn btn-sm btn-light" :href="`/unterrichtsgruppen/${group.id}/bewertungen/${nextEvaluation.id}/bearbeiten`" :title="de.nextStudent" :aria-label="de.nextStudent">
+                {{ de.nextStudent }} →
+            </a>
+        </template>
+        <div class="container-full px-3 py-4">
+            <h1 class="h2">{{ de.editEvaluation }}</h1>
+            <p class="text-muted">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }} · {{ evaluation.period.label }}</p>
+            <form id="evaluation-form" class="card card-body" @submit.prevent="save">
+                <template v-if="group.grading_model !== 'observation_scales'">
+                    <label class="form-label" for="draft-text">{{ de.evaluationDraft }}</label>
+                    <textarea id="draft-text" v-model="form.draft_text" class="form-control" rows="12" :disabled="evaluation.status === 'confirmed'"></textarea>
+                </template>
+                <div v-if="customProcessCompetences.length" class="mt-4">
+                    <h2 class="h5">{{ de.schoolObservationScale }}</h2>
+                    <div v-for="competence in customProcessCompetences" :key="competence.id" class="border-top py-3">
+                        <div class="mb-2">{{ competence.text }}</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button v-for="label in scaleLabels" :key="label" class="btn btn-sm" :class="selectedScale(competence)?.custom_scale_status === label || (label !== 'ne' && selectedScale(competence)?.custom_scale_level === scaleLabels.indexOf(label) + 1) ? 'btn-primary' : (averageFor(competence)?.rounded_level === scaleLabels.indexOf(label) + 1 ? 'bg-primary-subtle text-primary-emphasis border-primary' : 'btn-outline-secondary')" type="button" :disabled="evaluation.status === 'confirmed'" :aria-pressed="selectedScale(competence)?.custom_scale_status === label || (label !== 'ne' && selectedScale(competence)?.custom_scale_level === scaleLabels.indexOf(label) + 1)" @click="setScale(competence, label)">
+                                {{ label }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <label class="form-label mt-3" for="teacher-note">{{ de.internalNote }}</label>
+                <textarea id="teacher-note" v-model="form.teacher_note" class="form-control" rows="4" :disabled="evaluation.status === 'confirmed'"></textarea>
+                <div v-if="evaluation.status !== 'confirmed'" class="form-check mt-3">
+                    <input id="evaluation-confirmed" v-model="form.status" class="form-check-input" type="checkbox" true-value="confirmed" false-value="draft">
+                    <label class="form-check-label" for="evaluation-confirmed">{{ de.confirmEvaluation }}</label>
+                </div>
+                <div v-else class="alert alert-success mt-3 mb-0">{{ de.evaluationConfirmed }}</div>
+            </form>
+        </div>
+    </AppShell>
+</template>

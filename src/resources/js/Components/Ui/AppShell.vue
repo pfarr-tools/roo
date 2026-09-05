@@ -45,7 +45,7 @@ const moduleGroups = [
     ] },
     { title: labels.assessment, items: [
         { label: labels.observations, icon: 'bi-eye', enabled: false },
-        { label: labels.assessments, icon: 'bi-bar-chart', enabled: false },
+        { label: labels.assessments, icon: 'bi-bar-chart', url: '/bewertungen', enabled: true },
     ] },
     { title: labels.documentsAndAi, items: [
         { label: labels.documents, icon: 'bi-file-earmark-text', enabled: false },

@@ -200,6 +200,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/aufgaben/{assessmentTask}/ergebnisse', [AssessmentController::class, 'updateResult'])->name('assessments.results.update');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/neu', [EvaluationController::class, 'createPeriod'])->name('evaluations.periods.create');
+    Route::get('/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.index');
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/bearbeiten', [EvaluationController::class, 'edit'])->name('evaluations.edit');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');

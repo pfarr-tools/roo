@@ -2,6 +2,7 @@
 
 use App\Models\Assessment;
 use App\Models\Organization;
+use App\Models\ReportPeriod;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -42,6 +43,26 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/neu")
         ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm'));
+});
+
+it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', function () {
+    $organization = Organization::create(['name' => 'Bewertungsnavigation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bewertungsschule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $firstGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $secondGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    ReportPeriod::create(['organization_id' => $organization->id, 'teaching_group_id' => $secondGroup->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
+
+    $this->actingAs($user)->get('/bewertungen?group='.$secondGroup->id)
+        ->assertInertia(fn ($page) => $page
+            ->component('Evaluations/Index')
+            ->where('group.id', $secondGroup->id)
+            ->where('group.name', '5a')
+            ->where('reportPeriods.0.label', '1. Halbjahr')
+            ->where('groups.0.id', $firstGroup->id)
+            ->where('groups.1.id', $secondGroup->id)
+        );
 });
 
 it('liefert geplante Einheiten mit signierten Elternseiten im Gruppeneditor', function () {
