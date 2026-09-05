@@ -18,6 +18,7 @@ use App\Models\ResourceReference;
 use App\Models\ScheduleSlot;
 use App\Models\SocialForm;
 use App\Models\SongVersion;
+use App\Models\Student;
 use App\Services\Assessment\ClozeTaskNormalizer;
 use App\Services\AssessmentEvaluation\SentenceBuilderWordOrder;
 use App\Services\AssessmentEvaluation\SortingTaskOrder;
@@ -25,6 +26,7 @@ use App\Services\CompetencyResolver;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use App\Services\WscDocInspector;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -598,7 +600,122 @@ class LessonWorkspaceController extends Controller
             }
         });
 
-        return back()->with('success', 'Beobachtungen wurden gespeichert.');
+        return $this->observationResponse($request, 'Beobachtungen wurden gespeichert.');
+    }
+
+    public function updateStudentObservation(Request $request, ScheduleSlot $scheduleSlot, Student $student): RedirectResponse|JsonResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('view', $group);
+        abort_unless($scheduleSlot->scheduledLesson && $group->students()->whereKey($student->id)->exists(), 404);
+        $data = $request->validate([
+            'attendance' => ['nullable', 'in:present,absent,late'],
+            'note' => ['nullable', 'string', 'max:2000'],
+            'observation_type_ids' => ['sometimes', 'array'],
+            'observation_type_ids.*' => ['integer'],
+            'evidences' => ['sometimes', 'array'],
+            'evidences.*.competency_id' => ['nullable', 'integer'],
+            'evidences.*.custom_process_competence_id' => ['nullable', 'integer'],
+            'evidences.*.scale' => ['nullable', 'integer', 'between:1,5'],
+            'evidences.*.custom_scale_level' => ['nullable', 'integer'],
+            'evidences.*.custom_scale_status' => ['nullable', 'in:ne'],
+        ]);
+        $this->persistStudentObservation($scheduleSlot, $group, $student, $data);
+
+        return $this->observationResponse($request, 'Beobachtung wurde gespeichert.');
+    }
+
+    public function bulkRateObservations(Request $request, ScheduleSlot $scheduleSlot): RedirectResponse|JsonResponse
+    {
+        $group = $scheduleSlot->group;
+        $this->authorize('view', $group);
+        $scheduledLesson = $scheduleSlot->scheduledLesson;
+        abort_unless($scheduledLesson, 404);
+        $data = $request->validate([
+            'scale' => ['required', 'integer', 'between:1,5'],
+            'custom_scale_level' => ['nullable', 'integer'],
+            'custom_scale_status' => ['nullable', 'in:ne'],
+        ]);
+        $competencies = $scheduledLesson->lesson->competencies()->get(['teaching_unit_competencies.id']);
+        $customCompetences = $group->grading_model === 'observation_scales' ? $group->school->customProcessCompetences()->where('is_active', true)->get(['id']) : collect();
+        $includeCustomCompetences = $customCompetences->isNotEmpty();
+        if ($includeCustomCompetences) {
+            abort_unless(filled($data['custom_scale_level'] ?? null) xor (($data['custom_scale_status'] ?? null) === 'ne'), 422);
+            abort_unless(! filled($data['custom_scale_level'] ?? null) || ((int) $data['custom_scale_level'] >= 1 && (int) $data['custom_scale_level'] <= $group->school->observation_scale_interval_count), 422);
+        }
+
+        DB::transaction(function () use ($data, $group, $scheduledLesson, $competencies, $customCompetences, $includeCustomCompetences): void {
+            $absentStudentIds = AttendanceRecord::where('scheduled_lesson_id', $scheduledLesson->id)->where('status', 'absent')->pluck('student_id');
+            $students = $group->students()->whereNotIn('students.id', $absentStudentIds)->get(['students.id']);
+            foreach ($students as $student) {
+                foreach ($competencies as $competency) {
+                    $evidence = CompetenceEvidence::firstOrNew(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'teaching_unit_competency_id' => $competency->id]);
+                    if (! filled($evidence->scale)) {
+                        $evidence->scale = (string) $data['scale'];
+                        $evidence->save();
+                    }
+                }
+                if ($includeCustomCompetences) {
+                    foreach ($customCompetences as $competence) {
+                        $evidence = CompetenceEvidence::firstOrNew(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'custom_process_competence_id' => $competence->id]);
+                        if (! filled($evidence->custom_scale_level) && $evidence->custom_scale_status !== 'ne') {
+                            $evidence->custom_scale_level = $data['custom_scale_level'] ?? null;
+                            $evidence->custom_scale_status = $data['custom_scale_status'] ?? null;
+                            $evidence->save();
+                        }
+                    }
+                }
+            }
+        });
+
+        return $this->observationResponse($request, 'Noch nicht gesetzte Bewertungen wurden eingetragen.');
+    }
+
+    private function observationResponse(Request $request, string $message): RedirectResponse|JsonResponse
+    {
+        return $request->expectsJson()
+            ? response()->json(['message' => $message])
+            : back()->with('success', $message);
+    }
+
+    private function persistStudentObservation(ScheduleSlot $scheduleSlot, $group, Student $student, array $data): void
+    {
+        $scheduledLesson = $scheduleSlot->scheduledLesson;
+        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', request()->user()->organization_id))->pluck('id');
+        $competencyIds = $scheduledLesson->lesson->competencies()->pluck('teaching_unit_competencies.id');
+        $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
+        foreach ($data['evidences'] ?? [] as $evidence) {
+            $hasImported = filled($evidence['competency_id'] ?? null);
+            $hasCustom = filled($evidence['custom_process_competence_id'] ?? null);
+            abort_unless($hasImported xor $hasCustom, 422);
+            if ($hasImported) {
+                abort_unless($competencyIds->contains($evidence['competency_id']), 422);
+            }
+            if ($hasCustom) {
+                abort_unless($group->grading_model === 'observation_scales' && $customCompetences->contains('id', $evidence['custom_process_competence_id']), 422);
+                abort_unless(filled($evidence['custom_scale_level'] ?? null) xor (($evidence['custom_scale_status'] ?? null) === 'ne'), 422);
+                abort_unless(! filled($evidence['custom_scale_level'] ?? null) || ((int) $evidence['custom_scale_level'] >= 1 && (int) $evidence['custom_scale_level'] <= $group->school->observation_scale_interval_count), 422);
+            }
+        }
+        DB::transaction(function () use ($data, $scheduledLesson, $student, $typeIds, $competencyIds): void {
+            AttendanceRecord::updateOrCreate(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id], ['status' => $data['attendance'] ?? 'present', 'note' => $data['note'] ?? null]);
+            Observation::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student->id)->delete();
+            foreach (collect($data['observation_type_ids'] ?? [])->intersect($typeIds) as $typeId) {
+                Observation::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'observation_type_id' => $typeId, 'note' => $data['note'] ?? null]);
+            }
+            CompetenceEvidence::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student->id)->delete();
+            foreach ($data['evidences'] ?? [] as $evidence) {
+                $attributes = ['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id];
+                if (filled($evidence['competency_id'] ?? null) && $competencyIds->contains($evidence['competency_id'])) {
+                    $attributes['teaching_unit_competency_id'] = $evidence['competency_id'];
+                } elseif (filled($evidence['custom_process_competence_id'] ?? null)) {
+                    $attributes['custom_process_competence_id'] = $evidence['custom_process_competence_id'];
+                } else {
+                    continue;
+                }
+                CompetenceEvidence::create($attributes + ['scale' => isset($evidence['scale']) ? (string) $evidence['scale'] : null, 'custom_scale_level' => $evidence['custom_scale_level'] ?? null, 'custom_scale_status' => $evidence['custom_scale_status'] ?? null]);
+            }
+        });
     }
 
     private function resourceFilename($unit, $resource): string

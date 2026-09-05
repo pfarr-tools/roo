@@ -69,6 +69,38 @@ it('verhindert Beobachtungen für fremde Gruppen', function () {
     expect(AttendanceRecord::count())->toBe(0);
 });
 
+it('speichert eine einzelne Beobachtung sofort ohne andere Schülerdaten zu überschreiben', function () {
+    $fixture = observationFixture();
+    $otherStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
+    $fixture['group']->students()->attach($otherStudent->id);
+
+    $this->actingAs($fixture['user'])->put("/unterricht/{$fixture['slot']->id}/beobachtungen/{$fixture['student']->id}", [
+        'attendance' => 'absent',
+        'note' => 'Fehlt heute.',
+        'observation_type_ids' => [$fixture['type']->id],
+    ])->assertRedirect();
+
+    expect(AttendanceRecord::where('student_id', $fixture['student']->id)->value('status'))->toBe('absent')
+        ->and(Observation::where('student_id', $fixture['student']->id)->exists())->toBeTrue()
+        ->and(AttendanceRecord::where('student_id', $otherStudent->id)->exists())->toBeFalse();
+});
+
+it('bewertet mit alle bewerten nur leere Felder anwesender Schüler:innen', function () {
+    $fixture = observationFixture();
+    $otherStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
+    $fixture['group']->students()->attach($otherStudent->id);
+    $lessonCompetency = $fixture['scheduledLesson']->lesson->unit->competencies()->create(['education_plan_competency_id' => null, 'local_wording' => 'Erklärt religiöse Fragen']);
+    $fixture['scheduledLesson']->lesson->competencies()->attach($lessonCompetency->id);
+    AttendanceRecord::create(['scheduled_lesson_id' => $fixture['scheduledLesson']->id, 'student_id' => $otherStudent->id, 'status' => 'absent']);
+
+    $this->actingAs($fixture['user'])->post("/unterricht/{$fixture['slot']->id}/beobachtungen/bewerten", [
+        'scale' => 4,
+    ])->assertRedirect();
+
+    expect(CompetenceEvidence::where('student_id', $fixture['student']->id)->where('teaching_unit_competency_id', $lessonCompetency->id)->value('scale'))->toBe('4')
+        ->and(CompetenceEvidence::where('student_id', $otherStudent->id)->exists())->toBeFalse();
+});
+
 it('zeigt schulische Prozesskompetenzen und speichert eine Beobachtungsstufe', function () {
     $fixture = observationFixture();
     $fixture['group']->update(['grading_model' => 'observation_scales']);
@@ -105,6 +137,28 @@ it('speichert ne als separaten Status für schulische Prozesskompetenzen', funct
 
     expect(CompetenceEvidence::first()->custom_scale_status)->toBe('ne')
         ->and(CompetenceEvidence::first()->custom_scale_level)->toBeNull();
+});
+
+it('bewertet schulische Prozesskompetenzen im Bulk mit der gewählten Skala', function () {
+    $fixture = observationFixture();
+    $fixture['group']->update(['grading_model' => 'observation_scales']);
+    $competence = CustomProcessCompetence::create(['school_id' => $fixture['group']->school_id, 'text' => 'Wahrnehmen', 'position' => 1]);
+
+    $this->actingAs($fixture['user'])->postJson("/unterricht/{$fixture['slot']->id}/beobachtungen/bewerten", [
+        'scale' => 4,
+        'custom_scale_level' => null,
+        'custom_scale_status' => 'ne',
+    ])->assertOk();
+
+    expect(CompetenceEvidence::where('student_id', $fixture['student']->id)->where('custom_process_competence_id', $competence->id)->value('custom_scale_status'))->toBe('ne');
+});
+
+it('liefert beim normalen Bulk-Bewerten eine JSON-Erfolgsmeldung', function () {
+    $fixture = observationFixture();
+
+    $this->actingAs($fixture['user'])->postJson("/unterricht/{$fixture['slot']->id}/beobachtungen/bewerten", [
+        'scale' => 3,
+    ])->assertOk()->assertJsonPath('message', 'Noch nicht gesetzte Bewertungen wurden eingetragen.');
 });
 
 it('speichert den konfigurierbaren Beginn des zweiten Halbjahres', function () {

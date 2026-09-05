@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/unterricht/{scheduleSlot}/pruefungsaufgaben/{assessmentTask}', [LessonWorkspaceController::class, 'removeAssessmentTask'])->name('lessons.assessment-tasks.destroy');
     Route::put('/unterricht/{scheduleSlot}/durchfuehrung', [LessonWorkspaceController::class, 'updateExecution'])->name('lessons.execution.update');
     Route::put('/unterricht/{scheduleSlot}/beobachtungen', [LessonWorkspaceController::class, 'updateObservations'])->name('lessons.observations.update');
+    Route::put('/unterricht/{scheduleSlot}/beobachtungen/{student}', [LessonWorkspaceController::class, 'updateStudentObservation'])->name('lessons.observations.student.update');
+    Route::post('/unterricht/{scheduleSlot}/beobachtungen/bewerten', [LessonWorkspaceController::class, 'bulkRateObservations'])->name('lessons.observations.bulk-rate');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/bibliothek', ResourceLibraryController::class)->name('resources.library');
     Route::get('/bibliothek/pruefungsaufgaben/neu', [ResourceLibraryController::class, 'createAssessmentTask'])->name('resources.library.assessment-tasks.create');
