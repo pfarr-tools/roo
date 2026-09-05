@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationPlanController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\FluxController;
+use App\Http\Controllers\LessonGalleryController;
 use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\ParentLetterController;
 use App\Http\Controllers\ProfileController;
@@ -40,6 +41,9 @@ Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}', [PublicTeachingUn
 Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}/materialien/{resource}', [PublicTeachingUnitController::class, 'download'])
     ->middleware('signed')
     ->name('public.teaching-units.resources.download');
+Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}/galerie/{galleryImage}', [PublicTeachingUnitController::class, 'galleryImage'])
+    ->middleware('signed')
+    ->name('public.teaching-units.gallery.image');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -139,6 +143,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/jahresplanung/{teachingGroup}/curriculum-themen/{topic}/uebernehmen', [YearPlanController::class, 'takeCurriculumUnit'])->name('year-plans.curriculum-topics.take');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/stunden', [YearPlanController::class, 'storeLesson'])->name('year-plans.lessons.store');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'updateLesson'])->name('year-plans.lessons.update');
+    Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/galerie', [LessonGalleryController::class, 'store'])->name('year-plans.lessons.gallery.store');
+    Route::delete('/jahresplanung/{teachingGroup}/lessons/{lesson}/galerie/{galleryImage}', [LessonGalleryController::class, 'destroy'])->name('year-plans.lessons.gallery.destroy');
     Route::delete('/jahresplanung/{teachingGroup}/lessons/{lesson}', [YearPlanController::class, 'destroyLesson'])->name('year-plans.lessons.destroy');
     Route::put('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'updateLessonCompetencies'])->name('year-plans.lessons.competencies');
     Route::post('/jahresplanung/{teachingGroup}/lessons/{lesson}/kompetenzen', [YearPlanController::class, 'addLessonCompetency'])->name('year-plans.lessons.competencies.store');

@@ -63,6 +63,73 @@ h2 {
     white-space: pre-line;
 }
 
+.public-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 1rem;
+}
+
+.public-gallery-thumbnail {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-radius: .375rem;
+    background: #f1f3f5;
+    cursor: zoom-in;
+}
+
+.public-gallery-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.public-gallery-modal[hidden] {
+    display: none;
+}
+
+.public-gallery-modal {
+    position: fixed;
+    z-index: 1050;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 5rem;
+    background: rgba(0, 0, 0, .85);
+}
+
+.public-gallery-modal__image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.public-gallery-modal__close,
+.public-gallery-modal__previous,
+.public-gallery-modal__next {
+    position: absolute;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.public-gallery-modal__close {
+    top: 1rem;
+    right: 1.5rem;
+}
+
+.public-gallery-modal__previous {
+    left: 1rem;
+}
+
+.public-gallery-modal__next {
+    right: 1rem;
+}
+
 a {
     color: #0b5ed7;
 }

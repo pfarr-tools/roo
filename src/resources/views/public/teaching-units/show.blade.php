@@ -55,5 +55,62 @@
             </ul>
         </section>
     @endif
+
+    @php($galleryIndex = 0)
+    @foreach ($view->galleries as $gallery)
+        <section aria-labelledby="gallery-heading-{{ $loop->index }}" class="public-gallery-section">
+            <h2 id="gallery-heading-{{ $loop->index }}">Bilder vom {{ \Carbon\Carbon::parse($gallery['date'])->format('d.m.Y') }}</h2>
+            <div class="public-gallery-grid">
+                @foreach ($gallery['images'] as $image)
+                    <button class="public-gallery-thumbnail" type="button" data-gallery-index="{{ $galleryIndex++ }}" aria-label="Bild vergrößern: {{ $image['name'] }}">
+                        <img src="{{ $image['url'] }}" alt="{{ $image['name'] }}" loading="lazy">
+                    </button>
+                @endforeach
+            </div>
+        </section>
+    @endforeach
 </main>
+
+<div id="public-gallery-modal" class="public-gallery-modal" role="dialog" aria-modal="true" aria-label="Bildgalerie" hidden>
+    <button class="public-gallery-modal__close" type="button" aria-label="Schließen">&times;</button>
+    <button class="public-gallery-modal__previous" type="button" aria-label="Vorheriges Bild">&lsaquo;</button>
+    <img class="public-gallery-modal__image" alt="">
+    <button class="public-gallery-modal__next" type="button" aria-label="Nächstes Bild">&rsaquo;</button>
+</div>
+
+<script>
+    (() => {
+        const thumbnails = [...document.querySelectorAll('.public-gallery-thumbnail')]
+        const modal = document.getElementById('public-gallery-modal')
+        const image = modal?.querySelector('.public-gallery-modal__image')
+        let current = 0
+
+        function show(index) {
+            if (!image || !thumbnails.length) return
+            current = (index + thumbnails.length) % thumbnails.length
+            const thumbnail = thumbnails[current]
+            const source = thumbnail.querySelector('img')
+            image.src = source.src
+            image.alt = source.alt
+            modal.hidden = false
+            modal.querySelector('.public-gallery-modal__close').focus()
+        }
+
+        function close() {
+            if (modal) modal.hidden = true
+        }
+
+        thumbnails.forEach(thumbnail => thumbnail.addEventListener('click', () => show(Number(thumbnail.dataset.galleryIndex))))
+        modal?.querySelector('.public-gallery-modal__close').addEventListener('click', close)
+        modal?.querySelector('.public-gallery-modal__previous').addEventListener('click', () => show(current - 1))
+        modal?.querySelector('.public-gallery-modal__next').addEventListener('click', () => show(current + 1))
+        modal?.addEventListener('click', event => { if (event.target === modal) close() })
+        document.addEventListener('keydown', event => {
+            if (!modal || modal.hidden) return
+            if (event.key === 'Escape') close()
+            if (event.key === 'ArrowLeft') show(current - 1)
+            if (event.key === 'ArrowRight') show(current + 1)
+        })
+    })()
+</script>
 @endsection

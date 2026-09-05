@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LessonGalleryImage;
 use App\Models\ResourceReference;
 use App\Models\TeachingUnit;
 use App\Services\TeachingUnitPublicViewResolver;
@@ -28,5 +29,18 @@ class PublicTeachingUnitController extends Controller
         abort_unless(Storage::disk('local')->exists($resource->storage_path), 404);
 
         return Storage::disk('local')->download($resource->storage_path, $resource->original_name ?: 'Datei');
+    }
+
+    public function galleryImage(TeachingUnit $teachingUnit, LessonGalleryImage $galleryImage)
+    {
+        abort_unless($galleryImage->lesson()->where('teaching_unit_id', $teachingUnit->id)->exists(), 404);
+        $resource = $galleryImage->resource;
+        abort_unless($resource?->mime_type && str_starts_with($resource->mime_type, 'image/'), 404);
+        abort_unless(Storage::disk('local')->exists($resource->storage_path), 404);
+
+        return response()->file(Storage::disk('local')->path($resource->storage_path), [
+            'Content-Type' => $resource->mime_type,
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
     }
 }

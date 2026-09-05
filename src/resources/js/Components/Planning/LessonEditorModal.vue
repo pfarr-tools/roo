@@ -28,6 +28,36 @@ const materialItemsDraft = ref([])
 const deletedResourceLinkIds = ref([])
 const deletedMaterialItemIds = ref([])
 const preparationStatus = ref('')
+const galleryUpload = useForm({ images: [] })
+const galleryInput = ref(null)
+const cameraInput = ref(null)
+const galleryImages = computed(() => props.lesson?.gallery_images ?? [])
+
+function uploadGallery(files) {
+    const selected = [...(files ?? [])].filter(file => file.type?.startsWith('image/'))
+    if (!selected.length) return
+    galleryUpload.images = selected
+    galleryUpload.post('/jahresplanung/' + props.groupId + '/lessons/' + props.lesson.id + '/galerie', {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: page => {
+            galleryUpload.reset('images')
+            emit('saved', { workspace: page?.props?.workspace ?? null })
+        },
+    })
+}
+
+function handleGalleryDrop(event) {
+    event.preventDefault()
+    uploadGallery(event.dataTransfer?.files)
+}
+
+function removeGalleryImage(image) {
+    router.delete('/jahresplanung/' + props.groupId + '/lessons/' + props.lesson.id + '/galerie/' + image.id, {
+        preserveScroll: true,
+        onSuccess: page => emit('saved', { workspace: page?.props?.workspace ?? null }),
+    })
+}
 
 function syncLesson(lesson) {
     if (!lesson) return
@@ -154,6 +184,7 @@ function updatePreparationStatus() {
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'metadata' }" type="button" @click="activeTab = 'metadata'">{{ de.unitEditorMetadata }}</button></li>
                         <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'competencies' }" type="button" @click="activeTab = 'competencies'">{{ de.unitEditorCompetencies }}</button></li>
                         <li v-if="showPhases" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'phases' }" type="button" @click="activeTab = 'phases'">{{ de.phases }}</button></li>
+                        <li class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'gallery' }" type="button" @click="activeTab = 'gallery'">{{ de.gallery }}</button></li>
                         <li v-if="showResources" class="nav-item"><button class="nav-link" :class="{ active: activeTab === 'resources' }" type="button" @click="activeTab = 'resources'">{{ de.attachmentsAndMaterials }}</button></li>
                     </ul>
 
@@ -182,6 +213,28 @@ function updatePreparationStatus() {
                         </div>
 
                         <LessonPhasesTab v-else-if="activeTab === 'phases'" :lesson="lesson" :phases="phaseDraft" :group-id="groupId" :phase-templates="phaseTemplates" :social-forms="socialForms" :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :songs="songs" compact @update:phases="phaseDraft = $event" />
+                        <div v-else-if="activeTab === 'gallery'" class="lesson-gallery-editor" @dragover.prevent @drop="handleGalleryDrop">
+                            <div class="lesson-gallery-dropzone text-center p-5 border rounded bg-body-tertiary">
+                                <i class="bi bi-images fs-1 text-primary" aria-hidden="true"></i>
+                                <p class="mt-2 mb-3">{{ de.galleryDropHint }}</p>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <button class="btn btn-outline-primary" type="button" @click="galleryInput?.click()"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.uploadGalleryImages }}</button>
+                                    <button class="btn btn-outline-primary d-md-none" type="button" @click="cameraInput?.click()"><i class="bi bi-camera me-1" aria-hidden="true"></i>{{ de.uploadFromCamera }}</button>
+                                </div>
+                                <input ref="galleryInput" class="d-none" type="file" accept="image/*" multiple @change="uploadGallery($event.target.files)">
+                                <input ref="cameraInput" class="d-none" type="file" accept="image/*" capture="environment" @change="uploadGallery($event.target.files)">
+                                <div v-if="galleryUpload.errors.images" class="text-danger small mt-3">{{ galleryUpload.errors.images }}</div>
+                            </div>
+                            <div v-if="galleryImages.length" class="row row-cols-2 row-cols-md-4 g-3 mt-3">
+                                <div v-for="image in galleryImages" :key="image.id" class="col">
+                                    <div class="card h-100">
+                                        <img class="card-img-top lesson-gallery-thumbnail" :src="image.preview_url" :alt="image.name">
+                                        <div class="card-body p-2"><div class="small text-truncate" :title="image.name">{{ image.name }}</div><button class="btn btn-sm btn-link text-danger p-0" type="button" @click="removeGalleryImage(image)">{{ de.deleteGalleryImage }}</button></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p v-else class="small text-muted mt-3 mb-0">{{ de.noGalleryImages }}</p>
+                        </div>
                         <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :songs="lesson.songs ?? []" :songbooks="lesson.songbooks ?? []" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + groupId + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="router.reload({ preserveScroll: true })" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">

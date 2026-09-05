@@ -125,6 +125,8 @@ body {
 .roo-confirmation-modal-backdrop { z-index: 1100; }
 .roo-modal-wide { width: min(58rem, 100%); max-height: min(90vh, 52rem); overflow-y: auto; }
 .parent-letter-modal { width: 80vw; max-width: none; max-height: 80vh; }
+.lesson-gallery-thumbnail { height: 10rem; object-fit: cover; }
+.lesson-gallery-dropzone { min-height: 18rem; display: flex; flex-direction: column; justify-content: center; }
 .editor-tab-content { min-height: 0; flex: 1; }
 .song-parts-scroll { max-height: calc(94vh - 13rem); overflow-y: auto; }
 .song-preview-pane { min-width: 0; overflow-x: hidden; overflow-y: auto; }

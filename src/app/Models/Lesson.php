@@ -41,6 +41,11 @@ class Lesson extends Model
         return $this->hasMany(ResourceReference::class);
     }
 
+    public function galleryImages(): HasMany
+    {
+        return $this->hasMany(LessonGalleryImage::class)->orderBy('position');
+    }
+
     public function resourceLinks(): HasMany
     {
         return $this->hasMany(ResourceLink::class);

@@ -452,6 +452,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.unit.resources.lesson',
             'scheduledLesson.lesson.unit.materialItems',
             'scheduledLesson.lesson.resources',
+            'scheduledLesson.lesson.galleryImages.resource',
             'scheduledLesson.lesson.materialItems',
             'scheduledLesson.lesson.assessmentTasks.competency',
             'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency.variants.level',
@@ -482,6 +483,13 @@ class LessonWorkspaceController extends Controller
             }
             $resource->setAttribute('display_name', $this->resourceFilename($lesson->unit, $resource));
         });
+        $galleryImages = $lesson->galleryImages->map(fn ($image): array => [
+            'id' => $image->id,
+            'name' => $image->resource?->original_name ?: 'Bild',
+            'preview_url' => $image->resource ? route('resources.library.files.preview', $image->resource) : null,
+        ])->values();
+        $lesson->unsetRelation('galleryImages');
+        $lesson->setAttribute('gallery_images', $galleryImages);
         $lesson->phases->each(function ($phase): void {
             $phase->setAttribute('resource_ids', $phase->resources->pluck('id')->values());
             $phase->setAttribute('resource_link_ids', $phase->resourceLinks->pluck('id')->values());

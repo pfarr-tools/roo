@@ -8,6 +8,7 @@ use App\Models\LessonPhase;
 use App\Models\TeachingUnit;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\URL;
 
 final class TeachingUnitPublicViewResolver
 {
@@ -21,6 +22,7 @@ final class TeachingUnitPublicViewResolver
             'competencies.curriculumEducationPlanReference.educationPlanCompetency.area',
             'competencies.curriculumEducationPlanReference.educationPlanCompetency.variants',
             'lessons.scheduledLessons.slot',
+            'lessons.galleryImages.resource',
             'lessons.phases.resources',
             'lessons.phases.resourceLinks',
         ]);
@@ -38,6 +40,17 @@ final class TeachingUnitPublicViewResolver
 
         $visiblePhaseResources = collect();
         $visiblePhaseLinks = collect();
+        $galleries = $scheduledLessons
+            ->filter(fn (array $entry): bool => $entry['lesson']->galleryImages->isNotEmpty())
+            ->map(fn (array $entry): array => [
+                'date' => $entry['starts_at']->toDateString(),
+                'lesson_title' => $entry['lesson']->title,
+                'images' => $entry['lesson']->galleryImages->map(fn ($image): array => [
+                    'id' => $image->id,
+                    'name' => $image->resource?->original_name ?: 'Bild',
+                    'url' => URL::signedRoute('public.teaching-units.gallery.image', ['teachingUnit' => $unit, 'galleryImage' => $image]),
+                ])->values(),
+            ])->values();
         $nextVisibilityAt = null;
 
         foreach ($unit->lessons as $lesson) {
@@ -61,6 +74,7 @@ final class TeachingUnitPublicViewResolver
             scheduledLessons: $scheduledLessons,
             visiblePhaseResources: $visiblePhaseResources->values(),
             visiblePhaseLinks: $visiblePhaseLinks->values(),
+            galleries: $galleries,
             nextVisibilityAt: $nextVisibilityAt,
         );
     }

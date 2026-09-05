@@ -18,7 +18,7 @@ import { createLessonObservationApi } from '../../Features/LessonObservation/obs
 
 const props = defineProps({ slot: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, educationPlans: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) }, observationStudents: { type: Array, default: () => [] }, observationTypes: { type: Array, default: () => [] }, customProcessCompetences: { type: Array, default: () => [] }, customProcessCompetenceScaleIntervalCount: { type: Number, default: 4 }, attendanceRecords: { type: Array, default: () => [] }, observations: { type: Array, default: () => [] }, competenceEvidences: { type: Array, default: () => [] } })
 const requestedTab = new URLSearchParams(window.location.search).get('tab')
-const activeTab = ref(['planning', 'execution', 'observation', 'assessment'].includes(requestedTab) ? requestedTab : 'planning')
+const activeTab = ref(['planning', 'gallery', 'execution', 'observation', 'assessment'].includes(requestedTab) ? requestedTab : 'planning')
 const editorOpen = ref(false)
 const phaseDraft = ref((props.lesson.phases ?? []).map(phase => ({ ...phase })))
 const resourceLinks = ref((props.resourceLinks ?? []).map(link => ({ ...link })))
@@ -36,6 +36,10 @@ const showLessonSongPrintModal = ref(false)
 const lessonSongPrintFormat = ref('a4')
 const lessonSongPrintInstrument = ref('')
 const lessonSongExporting = ref(false)
+const galleryUpload = useForm({ images: [] })
+const galleryInput = ref(null)
+const cameraInput = ref(null)
+const galleryImages = computed(() => props.lesson?.gallery_images ?? [])
 const observationSortKey = ref('first_name')
 const observationSortDirection = ref('asc')
 const observationStudent = ref(null)
@@ -80,10 +84,39 @@ function refreshResources(page) {
     if (page?.props?.lesson?.resources) props.lesson.resources = page.props.lesson.resources
     if (page?.props?.lesson?.songs) props.lesson.songs = page.props.lesson.songs
     if (page?.props?.lesson?.songbooks) props.lesson.songbooks = page.props.lesson.songbooks
+    if (page?.props?.lesson?.gallery_images) props.lesson.gallery_images = page.props.lesson.gallery_images
     if (page?.props?.lesson?.phases) {
         props.lesson.phases = page.props.lesson.phases
         phaseDraft.value = page.props.lesson.phases.map(phase => ({ ...phase }))
     }
+}
+function uploadGallery(files) {
+    const selected = [...(files ?? [])].filter(file => file.type?.startsWith('image/'))
+    if (!selected.length) return
+    galleryUpload.images = selected
+    galleryUpload.post(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}/galerie`, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: page => {
+            galleryUpload.reset('images')
+            if (page?.props?.lesson?.gallery_images) props.lesson.gallery_images = page.props.lesson.gallery_images
+            addToast('success', 'Bilder wurden hochgeladen.')
+        },
+    })
+}
+function handleGalleryDrop(event) {
+    event.preventDefault()
+    uploadGallery(event.dataTransfer?.files)
+}
+async function deleteGalleryImage(image) {
+    if (!(await requestConfirmation({ message: de.deleteAttachmentConfirm }))) return
+    router.delete(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}/galerie/${image.id}`, {
+        preserveScroll: true,
+        onSuccess: page => {
+            props.lesson.gallery_images = page?.props?.lesson?.gallery_images ?? galleryImages.value.filter(item => item.id !== image.id)
+            addToast('success', 'Bild wurde entfernt.')
+        },
+    })
 }
 function updateLessonAfterSave(payload) {
     if (payload?.lesson) Object.assign(props.lesson, payload.lesson)
@@ -217,6 +250,7 @@ async function printLessonSongs() {
                 <TabHeader id="execution" :title="de.lessonExecution" :active-tab="activeTab" icon="play-circle" @select="activeTab = $event" />
                 <TabHeader id="observation" :title="de.lessonObservation" :active-tab="activeTab" icon="person-lines-fill" @select="activeTab = $event" />
                 <TabHeader id="assessment" :title="de.lessonAssessment" :active-tab="activeTab" icon="clipboard-data" @select="activeTab = $event" />
+                <TabHeader id="gallery" :title="de.gallery" :active-tab="activeTab" icon="images" @select="activeTab = $event" />
             </TabHeaders>
             <Tabs :active-tab="activeTab">
             <Tab id="planning" :active-tab="activeTab">
@@ -239,6 +273,31 @@ async function printLessonSongs() {
             </Tab>
             <Tab id="assessment" :active-tab="activeTab">
                 <LessonAssessmentTab :schedule-slot-id="slot.id" :group-id="group.id" :lesson-id="lesson.id" :competencies="targetCompetencies.content" :assessment-tasks="assessmentTasks" :education-plans="educationPlans" @refresh="refreshResources" />
+            </Tab>
+            <Tab id="gallery" :active-tab="activeTab">
+                <div class="lesson-gallery-editor" @dragover.prevent @drop="handleGalleryDrop">
+                    <div class="lesson-gallery-dropzone text-center p-5 border rounded bg-body-tertiary">
+                        <i class="bi bi-images display-4 text-muted" aria-hidden="true"></i>
+                        <p class="mt-2 mb-3">{{ de.galleryDropHint }}</p>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <button class="btn btn-outline-primary" type="button" @click="galleryInput?.click()"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.uploadGalleryImages }}</button>
+                            <button class="btn btn-outline-primary d-md-none" type="button" @click="cameraInput?.click()"><i class="bi bi-camera me-1" aria-hidden="true"></i>{{ de.uploadFromCamera }}</button>
+                        </div>
+                        <input ref="galleryInput" class="d-none" type="file" accept="image/*" multiple @change="uploadGallery($event.target.files)">
+                        <input ref="cameraInput" class="d-none" type="file" accept="image/*" capture="environment" @change="uploadGallery($event.target.files)">
+                        <div v-if="galleryUpload.processing" class="small text-muted mt-3"><span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Bilder werden hochgeladen …</div>
+                        <div v-if="galleryUpload.errors.images" class="text-danger small mt-3">{{ galleryUpload.errors.images }}</div>
+                    </div>
+                    <div v-if="galleryImages.length" class="row row-cols-2 row-cols-md-4 g-3 mt-3">
+                        <div v-for="image in galleryImages" :key="image.id" class="col">
+                            <div class="card h-100">
+                                <img class="card-img-top lesson-gallery-thumbnail" :src="image.preview_url" :alt="image.name">
+                                <div class="card-body p-2"><div class="small text-truncate" :title="image.name">{{ image.name }}</div><button class="btn btn-sm btn-outline-danger mt-2" type="button" @click="deleteGalleryImage(image)"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ de.deleteGalleryImage }}</button></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-else class="text-muted mt-3 mb-0">{{ de.noGalleryImages }}</p>
+                </div>
             </Tab>
             </Tabs>
         </div>
