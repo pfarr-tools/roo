@@ -93,6 +93,10 @@ function refreshResources(page) {
     if (page?.props?.resourceLinks) resourceLinks.value = page.props.resourceLinks.map(link => ({ ...link }))
     if (page?.props?.materialItems) resourceMaterialItems.value = page.props.materialItems.map(item => ({ ...item }))
     if (page?.props?.assessmentTasks) assessmentTasks.value = page.props.assessmentTasks.map(item => ({ ...item }))
+    if (page?.deletedResourceId) props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== page.deletedResourceId)
+    if (page?.item?.kind === 'file' && !props.lesson.resources?.some(item => item.id === page.item.id)) props.lesson.resources = [...(props.lesson.resources ?? []), page.item]
+    if (page?.deletedAssessmentTaskId) assessmentTasks.value = assessmentTasks.value.filter(item => item.id !== page.deletedAssessmentTaskId)
+    if (page?.task && !assessmentTasks.value.some(item => item.id === page.task.id)) assessmentTasks.value = [...assessmentTasks.value, page.task]
     if (page?.props?.lesson?.resources) props.lesson.resources = page.props.lesson.resources
     if (page?.props?.lesson?.songs) props.lesson.songs = page.props.lesson.songs
     if (page?.props?.lesson?.songbooks) props.lesson.songbooks = page.props.lesson.songbooks

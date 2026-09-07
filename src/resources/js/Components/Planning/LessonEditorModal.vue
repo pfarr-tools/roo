@@ -161,6 +161,10 @@ function save() {
 }
 function updateResourceDescription(resource, description, copyrights) { axios.put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { description, copyrights }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { resource.description = description; resource.copyrights = copyrights }) }
 function deleteResource(resource) { axios.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) }) }
+function refreshResources(page) {
+    if (page?.props?.lesson?.resources) props.lesson.resources = page.props.lesson.resources
+    if (page?.item?.kind === 'file' && !props.lesson.resources?.some(item => item.id === page.item.id)) props.lesson.resources = [...(props.lesson.resources ?? []), page.item]
+}
 function updatePreparationStatus() {
     if (!props.executionUrl || !preparationStatus.value) return
     axios.put(props.executionUrl, { status: preparationStatus.value, actual_on: props.scheduledLesson?.actual_on ?? null, execution_notes: props.scheduledLesson?.execution_notes ?? null }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { if (props.scheduledLesson) props.scheduledLesson.status = preparationStatus.value })
@@ -233,7 +237,7 @@ function updatePreparationStatus() {
                             </div>
                             <p v-else class="small text-muted mt-3 mb-0">{{ de.noGalleryImages }}</p>
                         </div>
-                        <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :songs="lesson.songs ?? []" :songbooks="lesson.songbooks ?? []" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + groupId + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="router.reload({ preserveScroll: true })" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" />
+                        <AttachmentList v-else :resources="lesson.resources ?? []" :resource-links="resourceLinksDraft" :material-items="materialItemsDraft" :songs="lesson.songs ?? []" :songbooks="lesson.songbooks ?? []" :material-text="lesson.materials" :manage="true" :library-attach-url="'/jahresplanung/' + groupId + '/ressourcen'" :library-target-type="'lesson'" :library-target-id="lesson.id" :upload-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" :upload-lesson-id="lesson.id" :download-base-url="`/jahresplanung/${groupId}/eigene-einheiten/${unit.id}/anhaenge`" @update="updateResourceDescription" @delete="deleteResource" @uploaded="refreshResources" @update:resource-links="resourceLinksDraft = $event" @update:material-items="materialItemsDraft = $event" />
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button class="btn btn-outline-secondary" type="button" @click="emit('close')">{{ de.cancel }}</button>
