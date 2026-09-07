@@ -34,7 +34,12 @@ const form = useForm({
 function syncTasks() {
     form.tasks = taskList.value
         .filter((task) => task.checked)
-        .map((task) => ({ task_id: task.id, weight: task.weight }));
+        .map((task) => ({
+            task_id: task.id,
+            ...(task.education_plan_competency_id ? { education_plan_competency_id: task.education_plan_competency_id } : {}),
+            ...(levelsForTask(task).length ? { levels: levelsForTask(task) } : {}),
+            weight: task.weight,
+        }));
 }
 function toggleTask(task) {
     task.checked = !task.checked;
@@ -368,7 +373,7 @@ syncTasks();
                                             <td v-if="isDifferentiated" class="text-center"><i v-if="taskHasLevel(task, 'E')" class="bi bi-check-lg" aria-label="E"></i></td>
                                             <td class="text-center">
                                                 <label class="visually-hidden" :for="`assessment-task-weight-${task.id}`">{{ de.assessmentTaskWeight }}: {{ task.title }}</label>
-                                                <input :id="`assessment-task-weight-${task.id}`" v-model.number="task.weight" class="form-range" type="range" min="0" max="100" step="1" :disabled="!task.checked" :aria-label="`${de.assessmentTaskWeight}: ${task.title}`">
+                                                <input :id="`assessment-task-weight-${task.id}`" v-model.number="task.weight" class="form-range" type="range" min="0" max="100" step="1" :disabled="!task.checked" :aria-label="`${de.assessmentTaskWeight}: ${task.title}`" @input="syncTasks">
                                             </td>
                                             <td class="text-end text-nowrap">
                                                 <button v-if="task.checked" class="btn btn-sm btn-outline-secondary" type="button" :title="de.moveAssessmentTaskUp" :aria-label="de.moveAssessmentTaskUp" @click="moveTask(task, -1)"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>

@@ -16,7 +16,7 @@ import axios from 'axios'
 import { observationScaleLabels } from '../Schools/schoolObservationScale'
 import { createLessonObservationApi } from '../../Features/LessonObservation/observationApi'
 
-const props = defineProps({ slot: Object, nextScheduledLesson: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, educationPlans: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) }, observationStudents: { type: Array, default: () => [] }, observationTypes: { type: Array, default: () => [] }, customProcessCompetences: { type: Array, default: () => [] }, customProcessCompetenceScaleIntervalCount: { type: Number, default: 4 }, attendanceRecords: { type: Array, default: () => [] }, observations: { type: Array, default: () => [] }, competenceEvidences: { type: Array, default: () => [] } })
+const props = defineProps({ slot: Object, nextScheduledLesson: Object, group: Object, lesson: Object, unit: Object, phaseTemplates: Array, socialForms: Array, materialItems: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, lessonTemplates: Array, targetCompetencies: { type: Object, default: () => ({ process: [], content: [] }) }, observationStudents: { type: Array, default: () => [] }, observationTypes: { type: Array, default: () => [] }, customProcessCompetences: { type: Array, default: () => [] }, customProcessCompetenceScaleIntervalCount: { type: Number, default: 4 }, attendanceRecords: { type: Array, default: () => [] }, observations: { type: Array, default: () => [] }, competenceEvidences: { type: Array, default: () => [] } })
 const requestedTab = new URLSearchParams(window.location.search).get('tab')
 const activeTab = ref(['planning', 'gallery', 'execution', 'observation', 'assessment'].includes(requestedTab) ? requestedTab : 'planning')
 const editorOpen = ref(false)
@@ -76,10 +76,17 @@ function savePlanning() {
         addToast('error', error instanceof Error ? error.message : 'Die Stunde konnte nicht gespeichert werden.')
     }
 }
-function saveExecution() { executionForm.put(`/unterricht/${props.slot.id}/durchfuehrung`, { preserveScroll: true }) }
+function saveExecution() {
+    if (executionForm.processing) return
+    executionForm.processing = true
+    axios.put(`/unterricht/${props.slot.id}/durchfuehrung`, { status: executionForm.status, actual_on: executionForm.actual_on || null, execution_notes: executionForm.execution_notes || null }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => { Object.assign(props.slot.scheduled_lesson, response.data); addToast('success', 'Durchführung wurde gespeichert.') })
+        .catch(error => addToast('error', Object.values(error.response?.data?.errors || {})[0] || error.response?.data?.message || 'Die Durchführung konnte nicht gespeichert werden.'))
+        .finally(() => { executionForm.processing = false })
+}
 function movePhaseToNextLesson(phase) {
     axios.post(`/jahresplanung/${props.group.id}/phasen/${phase.id}/in-naechste-stunde-verschieben`, { schedule_slot_id: props.slot.id }, { headers: { Accept: 'application/json' } })
-        .then(response => { addToast('success', response.data.message); router.reload({ preserveScroll: true }) })
+        .then(response => { props.lesson.phases = (props.lesson.phases ?? []).filter(item => item.id !== phase.id); addToast('success', response.data.message) })
         .catch(error => addToast('error', error.response?.data?.message || 'Die Phase konnte nicht verschoben werden.'))
 }
 function refreshResources(page) {
@@ -115,13 +122,9 @@ function handleGalleryDrop(event) {
 }
 async function deleteGalleryImage(image) {
     if (!(await requestConfirmation({ message: de.deleteAttachmentConfirm }))) return
-    router.delete(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}/galerie/${image.id}`, {
-        preserveScroll: true,
-        onSuccess: page => {
-            props.lesson.gallery_images = page?.props?.lesson?.gallery_images ?? galleryImages.value.filter(item => item.id !== image.id)
-            addToast('success', 'Bild wurde entfernt.')
-        },
-    })
+    axios.delete(`/jahresplanung/${props.group.id}/lessons/${props.lesson.id}/galerie/${image.id}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(() => { props.lesson.gallery_images = galleryImages.value.filter(item => item.id !== image.id); addToast('success', 'Bild wurde entfernt.') })
+        .catch(error => addToast('error', error.response?.data?.message || 'Das Bild konnte nicht entfernt werden.'))
 }
 function updateLessonAfterSave(payload) {
     if (payload?.lesson) Object.assign(props.lesson, payload.lesson)
@@ -189,8 +192,8 @@ async function bulkRateObservations() {
     }
 }
 function addToast(type, message) { const id = ++toastId; toastMessages.value.push({ id, type, message }); window.setTimeout(() => { toastMessages.value = toastMessages.value.filter(toast => toast.id !== id) }, 5000) }
-function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
-async function deleteResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) router.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
+function updateResourceDescription(resource, description, copyrights) { axios.put(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { description, copyrights }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { resource.description = description; resource.copyrights = copyrights }).catch(error => addToast('error', error.response?.data?.message || 'Die Beschreibung konnte nicht gespeichert werden.')) }
+async function deleteResource(resource) { if (await requestConfirmation({ message: de.deleteAttachmentConfirm })) axios.delete(`/jahresplanung/${props.group.id}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) }).catch(error => addToast('error', error.response?.data?.message || 'Der Anhang konnte nicht gelöscht werden.')) }
 const statusLabel = status => ({ assigned: de.lessonStatusAssigned, planned: de.lessonStatusPlanned, ready: de.lessonStatusReady, conducted: de.lessonStatusConducted, cancelled: de.cancelled, postponed: de.postponed }[status] ?? status)
 const phaseMinutes = phase => Number(phase?.duration_minutes || 0)
 const plannedMinutes = () => (props.lesson.phases ?? []).reduce((sum, phase) => sum + phaseMinutes(phase), 0) || Number(props.lesson.duration || 1) * 45
@@ -277,7 +280,7 @@ async function printLessonSongs() {
                 <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0 observation-table"><thead><tr><th scope="col"><button class="btn btn-link p-0 text-body fw-semibold" type="button" @click="sortObservationsBy('first_name')">Vorname <i v-if="observationSortKey === 'first_name'" :class="`bi bi-sort-${observationSortDirection === 'asc' ? 'down' : 'up'}`" aria-hidden="true"></i></button></th><th scope="col"><button class="btn btn-link p-0 text-body fw-semibold" type="button" @click="sortObservationsBy('last_name')">Nachname <i v-if="observationSortKey === 'last_name'" :class="`bi bi-sort-${observationSortDirection === 'asc' ? 'down' : 'up'}`" aria-hidden="true"></i></button></th><th scope="col">Anwesenheit</th><th scope="col" class="text-center">Bewertung</th><th v-for="type in observationTypes" :key="type.id" scope="col" class="text-center" :title="type.label">{{ type.symbol || type.label }}</th><th scope="col">Notiz</th></tr></thead><tbody><tr v-for="student in sortedObservationStudents" :key="student.id"><td><button class="btn btn-link p-0 text-body" type="button" @click="openObservation(student)">{{ student.first_name }}</button></td><th scope="row">{{ student.last_name }}<small v-if="student.class_name" class="d-block text-muted">{{ student.class_name }}</small></th><td><button class="btn btn-sm" :class="observationRow(student).attendance === 'absent' ? 'btn-outline-danger' : 'btn-outline-success'" type="button" :title="observationRow(student).attendance === 'absent' ? 'Als anwesend markieren' : 'Als abwesend markieren'" :aria-label="observationRow(student).attendance === 'absent' ? 'Als anwesend markieren' : 'Als abwesend markieren'" @click="observationRow(student).attendance = observationRow(student).attendance === 'absent' ? 'present' : 'absent'; saveStudentObservation(student)"><i :class="observationRow(student).attendance === 'absent' ? 'bi bi-person-x' : 'bi bi-person-check'" aria-hidden="true"></i></button></td><td class="text-center"><button class="btn btn-sm btn-outline-secondary" type="button" title="Bewertungen öffnen" :aria-label="`Bewertungen für ${student.first_name} ${student.last_name} öffnen`" @click="openObservation(student)">Bewerten</button></td><td v-for="type in observationTypes" :key="type.id" class="text-center"><button type="button" class="btn btn-sm" :class="observationRow(student).observation_type_ids.includes(type.id) ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="observationRow(student).observation_type_ids.includes(type.id)" :title="type.label" @click="toggleObservation(student, type.id); saveStudentObservation(student)">{{ type.symbol || '✓' }}</button></td><td><input v-model="observationRow(student).note" class="form-control form-control-sm" maxlength="2000" @input="scheduleNoteSave(student)"></td></tr><tr v-if="!observationStudents.length"><td colspan="99" class="text-muted">Für diese Gruppe sind keine Schüler:innen erfasst.</td></tr></tbody></table></div></div>
             </Tab>
             <Tab id="assessment" :active-tab="activeTab">
-                <LessonAssessmentTab :schedule-slot-id="slot.id" :group-id="group.id" :lesson-id="lesson.id" :competencies="targetCompetencies.content" :assessment-tasks="assessmentTasks" :education-plans="educationPlans" @refresh="refreshResources" />
+                <LessonAssessmentTab :schedule-slot-id="slot.id" :group-id="group.id" :lesson-id="lesson.id" :competencies="targetCompetencies.content" :assessment-tasks="assessmentTasks" @refresh="refreshResources" />
             </Tab>
             <Tab id="gallery" :active-tab="activeTab">
                 <div class="lesson-gallery-editor" @dragover.prevent @drop="handleGalleryDrop">

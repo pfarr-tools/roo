@@ -18,6 +18,7 @@ const props = defineProps({
     students: { type: Array, default: () => [] },
     tasks: { type: Array, default: () => [] },
     booklets: { type: Array, default: () => [] },
+    results: { type: Array, default: () => [] },
     taskFragments: { type: Array, default: () => [] },
     progress: { type: Object, default: () => ({}) },
 })
@@ -32,6 +33,22 @@ const openBooklets = computed(() => props.booklets.filter((booklet) => booklet.s
 const unassignedBooklets = computed(() => openBooklets.value.filter((booklet) => !booklet.student_id))
 const activeTask = computed(() => props.tasks.find((task) => task.id === activeTaskId.value) ?? null)
 const activeTaskFragments = computed(() => props.taskFragments.filter((fragment) => fragment.assessment_task_id === activeTaskId.value))
+const resultSearch = ref('')
+const resultLevel = ref('')
+const resultSort = ref('first_name')
+const resultSortDirection = ref('asc')
+const resultPrintOpen = ref(false)
+const resultPrintStudent = ref('all')
+const resultPrintFormat = ref('odt')
+const resultPrintTemplate = ref('default')
+const filteredResults = computed(() => props.results
+    .filter((result) => !resultLevel.value || result.level.split('/').includes(resultLevel.value))
+    .filter((result) => `${result.first_name} ${result.last_name}`.toLocaleLowerCase().includes(resultSearch.value.toLocaleLowerCase()))
+    .sort((left, right) => {
+        const comparison = String(left[resultSort.value] ?? '').localeCompare(String(right[resultSort.value] ?? ''), 'de', { sensitivity: 'base' })
+        return resultSortDirection.value === 'asc' ? comparison : -comparison
+    }))
+function sortResults(column) { resultSortDirection.value = resultSort.value === column && resultSortDirection.value === 'asc' ? 'desc' : 'asc'; resultSort.value = column }
 
 function taskProgress(task) {
     const fragments = props.taskFragments.filter((fragment) => fragment.assessment_task_id === task.id)
@@ -57,6 +74,17 @@ function createManualBooklet() {
         },
     })
 }
+function updateResultStatus(result, status) {
+    useForm({ status }).put(`/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/students/${result.student_id}/result-status`, { preserveScroll: true })
+}
+function openResultPrint(studentId = 'all') {
+    resultPrintStudent.value = String(studentId)
+    resultPrintOpen.value = true
+}
+const resultPrintUrl = computed(() => {
+    const params = new URLSearchParams({ student: resultPrintStudent.value, format: resultPrintFormat.value, template: resultPrintTemplate.value })
+    return `/unterrichtsgruppen/${props.group.id}/lernstandserhebungen/${props.assessment.id}/auswertung/ergebnisbericht?${params.toString()}`
+})
 </script>
 
 <template>
@@ -71,8 +99,11 @@ function createManualBooklet() {
             <button class="btn btn-sm btn-primary ms-2" type="button" @click="scanOpen = true">
                 <i class="bi bi-upload me-1" aria-hidden="true"></i>{{ de.assessmentScanSubmit }}
             </button>
-            <button class="btn btn-sm btn-outline-light ms-2" type="button" @click="manualBookletOpen = true">
+            <button class="btn btn-sm btn-outline-secondary ms-2" type="button" @click="manualBookletOpen = true">
                 <i class="bi bi-person-plus me-1" aria-hidden="true"></i>{{ de.assessmentManualBookletAdd }}
+            </button>
+            <button class="btn btn-sm btn-outline-secondary ms-2" type="button" data-testid="assessment-result-print-all" @click="openResultPrint()">
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>{{ de.assessmentEvaluationPrintAll }}
             </button>
         </template>
 
@@ -88,6 +119,7 @@ function createManualBooklet() {
             <TabHeaders :aria-label="de.assessmentEvaluationTitle">
                 <TabHeader id="booklets" :title="de.assessmentEvaluationAssignments" :active-tab="activeSection" icon="person-check" @select="activeSection = $event" />
                 <TabHeader id="tasks" :title="de.assessmentEvaluationTasks" :active-tab="activeSection" icon="clipboard-check" @select="activeSection = $event" />
+                <TabHeader id="results" :title="de.assessmentEvaluationResults" :active-tab="activeSection" icon="table" @select="activeSection = $event" />
             </TabHeaders>
 
             <Tabs :active-tab="activeSection">
@@ -120,6 +152,12 @@ function createManualBooklet() {
                 </div>
                 <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoTasks }}</p>
             </Tab>
+            <Tab id="results" :active-tab="activeSection">
+                <h2 id="assessment-results-heading" class="h4 mb-1">{{ de.assessmentEvaluationResults }}</h2>
+                <div class="row g-2 mb-3"><div class="col-md-8"><label class="form-label" for="assessment-results-search">{{ de.search }}</label><input id="assessment-results-search" v-model="resultSearch" class="form-control" type="search"></div><div class="col-md-4"><label class="form-label" for="assessment-results-level">{{ de.assessmentEvaluationLevelFilter }}</label><select id="assessment-results-level" v-model="resultLevel" class="form-select"><option value="">{{ de.all }}</option><option value="G">G</option><option value="M">M</option><option value="E">E</option></select></div></div>
+                <div v-if="filteredResults.length" class="table-responsive"><table class="table table-sm align-top"><thead><tr><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('first_name')">{{ de.firstName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('last_name')">{{ de.lastName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('level')">{{ de.assessmentEvaluationLevel }}</button></th><th>{{ de.assessmentEvaluationResults }}</th><th></th></tr></thead><tbody><tr v-for="result in filteredResults" :key="result.student_id"><td>{{ result.first_name }}</td><td>{{ result.last_name }}</td><td>{{ result.level || '–' }}</td><td><div v-if="!result.has_results" class="d-flex flex-wrap gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-result-status="not_evaluated" @click="updateResultStatus(result, 'not_evaluated')">{{ de.assessmentEvaluationNotEvaluated }}</button><button class="btn btn-sm btn-outline-warning" type="button" data-result-status="missing" @click="updateResultStatus(result, 'missing')">{{ de.assessmentEvaluationMissing }}</button></div><div v-for="competency in result.competencies" :key="competency.key" class="mb-2"><strong>{{ competency.title }}: {{ competency.percentage }}%</strong><ul class="mb-0 small"><li v-for="task in competency.tasks" :key="task.title">{{ task.title }}: {{ task.percentage }}% ({{ task.weight }}%)</li></ul></div><span v-if="result.has_results && !result.competencies.length" class="text-muted">–</span></td><td><button class="btn btn-sm btn-outline-secondary" type="button" :data-testid="`assessment-result-print-${result.student_id}`" :aria-label="`${de.assessmentEvaluationPrintStudent}: ${result.first_name} ${result.last_name}`" @click="openResultPrint(result.student_id)"><i class="bi bi-printer" aria-hidden="true"></i></button></td></tr></tbody></table></div>
+                <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoResults }}</p>
+            </Tab>
             </Tabs>
 
             <div v-if="scan.warnings?.length" class="alert alert-warning mt-4" role="alert">
@@ -129,6 +167,20 @@ function createManualBooklet() {
         </div>
 
         <AssessmentScanUploadModal v-if="scanOpen" :group="group" :assessment="assessment" @close="scanOpen = false" />
+        <div v-if="resultPrintOpen" class="roo-modal-backdrop" role="presentation" @click.self="resultPrintOpen = false">
+            <section class="roo-modal card border-0" role="dialog" aria-modal="true" :aria-label="de.assessmentEvaluationPrintTitle">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">{{ de.assessmentEvaluationPrintTitle }}</h2><button class="btn-close" type="button" :aria-label="de.close" @click="resultPrintOpen = false"></button></div>
+                    <label class="form-label" for="assessment-result-student">{{ de.assessmentEvaluationPrintStudentChoice }}</label>
+                    <select id="assessment-result-student" v-model="resultPrintStudent" class="form-select mb-3"><option value="all">{{ de.assessmentEvaluationPrintAll }}</option><option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.last_name }}, {{ student.first_name }}</option></select>
+                    <label class="form-label" for="assessment-result-format">{{ de.assessmentEvaluationPrintFormat }}</label>
+                    <select id="assessment-result-format" v-model="resultPrintFormat" class="form-select mb-3"><option value="odt">ODT</option><option value="docx">DOCX</option></select>
+                    <label class="form-label" for="assessment-result-template">{{ de.assessmentEvaluationPrintTemplate }}</label>
+                    <select id="assessment-result-template" v-model="resultPrintTemplate" class="form-select"><option value="default">{{ de.assessmentEvaluationPrintDefault }}</option></select>
+                    <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="resultPrintOpen = false">{{ de.cancel }}</button><a class="btn btn-primary" :href="resultPrintUrl" data-testid="assessment-result-print-start" @click="resultPrintOpen = false">{{ de.assessmentEvaluationPrintStart }}</a></div>
+                </div>
+            </section>
+        </div>
         <div v-if="manualBookletOpen" class="roo-modal-backdrop" role="presentation" @click.self="manualBookletOpen = false">
             <section class="roo-modal card border-0" role="dialog" aria-modal="true" :aria-label="de.assessmentManualBookletAdd">
                 <div class="card-body">

@@ -156,6 +156,7 @@ it('stores checkbox selections and synchronizes option and manual points', funct
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
         'organization_id' => $fixture['organization']->id,
         'title' => 'Checkbox-Aufgabe',
+        'level' => 'M',
         'task_type' => 'checkbox',
         'content' => [
             'options' => [
@@ -189,7 +190,8 @@ it('stores checkbox selections and synchronizes option and manual points', funct
     ]);
 
     expect($task->reviews()->sole()->options()->pluck('selected', 'option_id')->all())->toBe(['a1' => true, 'a2' => true])
-        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('3.00');
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('points'))->toBe('3.00')
+        ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('level'))->toBe('M');
 });
 
 it('stores image matching selections and synchronizes their points', function () {

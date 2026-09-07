@@ -3,7 +3,8 @@ import de from '../../i18n/de'
 import AttachmentList from '../Ui/AttachmentList.vue'
 import CompetencyPickerModal from './CompetencyPickerModal.vue'
 import LessonPhasesTab from './LessonPhasesTab.vue'
-import { router, useForm } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps({ lesson: Object, unit: Object, groupLessons: { type: Array, default: () => [] }, coveredHours: { type: Object, default: () => ({}) }, groupId: [String, Number], competencyOptions: Array, competencyText: Function, phaseTemplates: Array, socialForms: Array, scheduledLesson: { type: Object, default: null }, executionUrl: { type: String, default: '' }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, showPhases: { type: Boolean, default: true }, showResources: { type: Boolean, default: true } })
@@ -53,10 +54,7 @@ function handleGalleryDrop(event) {
 }
 
 function removeGalleryImage(image) {
-    router.delete('/jahresplanung/' + props.groupId + '/lessons/' + props.lesson.id + '/galerie/' + image.id, {
-        preserveScroll: true,
-        onSuccess: page => emit('saved', { workspace: page?.props?.workspace ?? null }),
-    })
+    axios.delete('/jahresplanung/' + props.groupId + '/lessons/' + props.lesson.id + '/galerie/' + image.id, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { props.lesson.gallery_images = (props.lesson.gallery_images ?? []).filter(item => item.id !== image.id); emit('saved') })
 }
 
 function syncLesson(lesson) {
@@ -137,7 +135,7 @@ function removeUnitCompetency(competency) {
         unitCompetencies.value = unitCompetencies.value.filter(item => item.id !== competency.id)
         return
     }
-    router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/kompetenzen/${competency.id}`, { preserveState: true, preserveScroll: true })
+    axios.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/kompetenzen/${competency.id}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { unitCompetencies.value = unitCompetencies.value.filter(item => item.id !== competency.id) })
 }
 
 function save() {
@@ -161,11 +159,11 @@ function save() {
         },
     })
 }
-function updateResourceDescription(resource, description, copyrights) { useForm({ description, copyrights }).put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { resource.description = description; resource.copyrights = copyrights } }) }
-function deleteResource(resource) { router.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { preserveScroll: true, onSuccess: () => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) } }) }
+function updateResourceDescription(resource, description, copyrights) { axios.put(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { description, copyrights }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { resource.description = description; resource.copyrights = copyrights }) }
+function deleteResource(resource) { axios.delete(`/jahresplanung/${props.groupId}/eigene-einheiten/${props.unit.id}/anhaenge/${resource.id}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { props.lesson.resources = (props.lesson.resources ?? []).filter(item => item.id !== resource.id) }) }
 function updatePreparationStatus() {
     if (!props.executionUrl || !preparationStatus.value) return
-    router.put(props.executionUrl, { status: preparationStatus.value, actual_on: props.scheduledLesson?.actual_on ?? null, execution_notes: props.scheduledLesson?.execution_notes ?? null }, { preserveState: true, preserveScroll: true, onSuccess: () => { if (props.scheduledLesson) props.scheduledLesson.status = preparationStatus.value } })
+    axios.put(props.executionUrl, { status: preparationStatus.value, actual_on: props.scheduledLesson?.actual_on ?? null, execution_notes: props.scheduledLesson?.execution_notes ?? null }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { if (props.scheduledLesson) props.scheduledLesson.status = preparationStatus.value })
 }
 
 </script>

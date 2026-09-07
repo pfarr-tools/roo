@@ -264,9 +264,23 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $this->actingAs($user)->get("/bibliothek/pruefungsaufgaben/{$task->id}/bearbeiten")
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('task.title', 'Begründe deine Antwort'));
     $this->actingAs($user)->get('/bibliothek?type=assessment-task')->assertInertia(fn ($page) => $page->where('items.0.description', 'Kann begründen · G, M'));
+    $this->actingAs($user)->get('/bibliothek?type=assessment-task&education_plan_competency_id='.$competency->education_plan_competency_id)
+        ->assertInertia(fn ($page) => $page->where('items.0.id', $task->id));
 
-    $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
+    $lesson->assessmentTasks()->detach($task->id);
+    expect($lesson->fresh()->assessmentTasks)->toHaveCount(0);
+
+    $this->actingAs($user)->postJson("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])
+        ->assertOk()
+        ->assertJsonPath('task.id', $task->id)
+        ->assertJsonPath('task.title', 'Begründe deine Antwort')
+        ->assertJsonPath('task.teaching_unit_competency_id', $competency->id);
     expect($lesson->fresh()->assessmentTasks)->toHaveCount(1);
+
+    $this->actingAs($user)->postJson("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/trennen", ['target_type' => 'lesson', 'target_id' => $lesson->id])
+        ->assertOk()
+        ->assertJsonPath('message', 'Prüfungsaufgabe wurde entfernt.');
+    expect($lesson->fresh()->assessmentTasks)->toHaveCount(0);
 });
 
 it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschriften', function () {

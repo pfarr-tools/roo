@@ -7,6 +7,8 @@ use App\Models\ReportPeriod;
 use App\Models\ReportPeriodEvaluationTemplate;
 use App\Models\StudentEvaluation;
 use App\Models\TeachingGroup;
+use App\Models\TeachingUnitCompetency;
+use App\Services\CompetencyResolver;
 use App\Services\EvaluationTemplateGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +23,16 @@ class EvaluationController extends Controller
             ->where('organization_id', $request->user()->organization_id)
             ->orderBy('name')
             ->get(['id', 'name', 'grading_model']);
-        $selectedGroup = $groups->firstWhere('id', $request->integer('group')) ?? $groups->first();
+        $preference = $request->user()->preferences()->where('key', 'evaluations.last_group')->first()?->value ?? [];
+        $selectedGroup = $groups->firstWhere('id', $request->integer('group'))
+            ?? $groups->firstWhere('id', (int) ($preference['group_id'] ?? 0))
+            ?? $groups->first();
+        if ($selectedGroup && (int) ($preference['group_id'] ?? 0) !== $selectedGroup->id) {
+            $request->user()->preferences()->updateOrCreate(
+                ['key' => 'evaluations.last_group'],
+                ['value' => ['group_id' => $selectedGroup->id]],
+            );
+        }
         $selectedGroup?->load('reportPeriods.evaluations.student');
 
         return Inertia::render('Evaluations/Index', [
@@ -96,47 +107,121 @@ class EvaluationController extends Controller
         return to_route('evaluations.templates.edit', [$teachingGroup, $period]);
     }
 
-    public function edit(TeachingGroup $teachingGroup, StudentEvaluation $evaluation)
+    public function edit(TeachingGroup $teachingGroup, StudentEvaluation $evaluation, CompetencyResolver $competencyResolver)
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($evaluation->period->teaching_group_id === $teachingGroup->id, 404);
 
         $evaluation->load('student', 'period', 'observationScales');
         $navigation = $this->evaluationNavigation($evaluation);
+        $lses = collect();
+        $periodLevel = $evaluation->level;
+        if (in_array($teachingGroup->grading_model, ['competency_texts_and_grades', 'grades_only'], true)) {
+            $lses = $teachingGroup->assessments()
+                ->where(function ($query) use ($evaluation): void {
+                    $query->where('report_period_id', $evaluation->period_id)
+                        ->orWhereBetween('assessed_on', [$evaluation->period->starts_on, $evaluation->period->ends_on])
+                        ->orWhereHas('scheduleSlots', fn ($slotQuery) => $slotQuery->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]));
+                })
+                ->with(['scheduleSlots' => fn ($query) => $query->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on])->orderBy('date')->orderBy('period_number'), 'tasks.levels'])
+                ->orderByRaw('COALESCE(assessed_on, created_at)')
+                ->get();
+            $studentLevels = DB::table('student_assessment_results')
+                ->where('student_id', $evaluation->student_id)
+                ->whereIn('assessment_id', $lses->pluck('id'))
+                ->get(['assessment_id', 'assessment_task_id', 'level'])
+                ->groupBy('assessment_id');
+            $levelOrder = ['G' => 1, 'M' => 2, 'E' => 3];
+            $lses = $lses->map(function ($assessment) use ($studentLevels, $levelOrder): array {
+                $studentResultRows = collect($studentLevels->get($assessment->id, []));
+                $levels = $studentResultRows->pluck('level')->filter()->unique();
+                if ($levels->isEmpty()) {
+                    $levels = $assessment->tasks
+                        ->filter(fn ($task) => $studentResultRows->pluck('assessment_task_id')->contains($task->id))
+                        ->flatMap(fn ($task) => $task->levels->pluck('level')->whenEmpty(fn ($levels) => collect([$task->level])))
+                        ->filter()->unique();
+                }
+                $levels = $levels->sortBy(fn ($level) => $levelOrder[$level] ?? 99)->values();
+                $configuredLevels = $assessment->tasks->flatMap(fn ($task) => $task->levels->pluck('level')->whenEmpty(fn ($levels) => collect([$task->level])))->filter()->unique();
+
+                return ['id' => $assessment->id, 'title' => $assessment->title, 'date' => $assessment->scheduleSlots->first()?->date?->toDateString() ?? $assessment->assessed_on?->toDateString(), 'student_levels' => $levels->all(), 'configured_levels' => $configuredLevels->sortBy(fn ($level) => $levelOrder[$level] ?? 99)->values()->all()];
+            })->values();
+            $periodLevel ??= $lses->flatMap->configured_levels->sortBy(fn ($level) => $levelOrder[$level] ?? 99)->first();
+        }
         $customProcessCompetences = $teachingGroup->grading_model === 'observation_scales'
             ? $teachingGroup->school->customProcessCompetences()->where('is_active', true)->get(['id', 'text', 'position'])
             : collect();
-        $averages = CompetenceEvidence::query()
-            ->selectRaw('custom_process_competence_id, AVG(custom_scale_level) AS average')
-            ->where('student_id', $evaluation->student_id)
-            ->whereNotNull('custom_process_competence_id')
-            ->whereNotNull('custom_scale_level')
-            ->whereHas('scheduledLesson.slot', function ($query) use ($teachingGroup, $evaluation): void {
-                $query->where('teaching_group_id', $teachingGroup->id)
-                    ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
-            })
-            ->groupBy('custom_process_competence_id')
-            ->get()
-            ->keyBy('custom_process_competence_id');
-        $competenceAverages = $customProcessCompetences->map(function ($competence) use ($averages, $teachingGroup): array {
-            $average = $averages->get($competence->id)?->average;
+        $competencies = collect();
+        $competenceAverages = collect();
+        if ($teachingGroup->grading_model === 'observation_scales') {
+            $averages = CompetenceEvidence::query()
+                ->selectRaw('custom_process_competence_id, AVG(custom_scale_level) AS average')
+                ->where('student_id', $evaluation->student_id)
+                ->whereNotNull('custom_process_competence_id')
+                ->whereNotNull('custom_scale_level')
+                ->whereHas('scheduledLesson.slot', function ($query) use ($teachingGroup, $evaluation): void {
+                    $query->where('teaching_group_id', $teachingGroup->id)
+                        ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
+                })
+                ->groupBy('custom_process_competence_id')
+                ->get()
+                ->keyBy('custom_process_competence_id');
+            $competenceAverages = $customProcessCompetences->map(function ($competence) use ($averages, $teachingGroup): array {
+                $average = $averages->get($competence->id)?->average;
 
-            return [
-                'custom_process_competence_id' => $competence->id,
-                'average' => $average !== null ? round((float) $average, 2) : null,
-                'rounded_level' => $average !== null ? (int) round((float) $average) : null,
-                'interval_count' => $teachingGroup->school->observation_scale_interval_count,
-            ];
-        })->values();
+                return [
+                    'custom_process_competence_id' => $competence->id,
+                    'average' => $average !== null ? round((float) $average, 2) : null,
+                    'rounded_level' => $average !== null ? (int) round((float) $average) : null,
+                    'interval_count' => $teachingGroup->school->observation_scale_interval_count,
+                ];
+            })->values();
+        } elseif ($teachingGroup->grading_model === 'competency_texts_and_grades') {
+            $competencies = TeachingUnitCompetency::query()
+                ->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))
+                ->whereHas('lessons.scheduledLessons.slot', function ($query) use ($teachingGroup, $evaluation): void {
+                    $query->where('teaching_group_id', $teachingGroup->id)
+                        ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
+                })
+                ->with(['educationPlanCompetency.area', 'educationPlanCompetency.variants'])
+                ->orderBy('id')
+                ->get();
+            $averages = CompetenceEvidence::query()
+                ->selectRaw('teaching_unit_competency_id, AVG(CAST(scale AS DECIMAL(10, 2))) AS average')
+                ->where('student_id', $evaluation->student_id)
+                ->whereNotNull('teaching_unit_competency_id')
+                ->whereNotNull('scale')
+                ->where('scale', '!=', '')
+                ->whereHas('scheduledLesson.slot', function ($query) use ($teachingGroup, $evaluation): void {
+                    $query->where('teaching_group_id', $teachingGroup->id)
+                        ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
+                })
+                ->groupBy('teaching_unit_competency_id')
+                ->get()
+                ->keyBy('teaching_unit_competency_id');
+            $competenceAverages = $competencies->map(function ($competence) use ($averages): array {
+                $average = $averages->get($competence->id)?->average;
+
+                return [
+                    'teaching_unit_competency_id' => $competence->id,
+                    'average' => $average !== null ? round((float) $average, 2) : null,
+                    'rounded_level' => $average !== null ? (int) round((float) $average) : null,
+                ];
+            })->values();
+            $competencies = $competencies->map(fn ($competence): array => $competencyResolver->present($competence))->values();
+        }
 
         return Inertia::render('Evaluations/Edit', [
             'group' => $teachingGroup,
             'evaluation' => $evaluation,
             'customProcessCompetences' => $customProcessCompetences,
             'customProcessCompetenceScaleIntervalCount' => $teachingGroup->school->observation_scale_interval_count,
+            'competencies' => $competencies,
             'competenceAverages' => $competenceAverages,
             'previousEvaluation' => $navigation['previous'],
             'nextEvaluation' => $navigation['next'],
+            'lses' => $lses,
+            'periodLevel' => $periodLevel,
         ]);
     }
 
@@ -145,7 +230,7 @@ class EvaluationController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($evaluation->period->teaching_group_id === $teachingGroup->id, 404);
         abort_if($evaluation->status === 'confirmed', 422, 'Eine bestätigte Bewertung kann nicht mehr geändert werden.');
-        $data = $request->validate(['draft_text' => ['nullable', 'string', 'max:10000'], 'teacher_note' => ['nullable', 'string', 'max:5000'], 'status' => ['required', 'in:draft,confirmed'], 'observation_scales' => ['sometimes', 'array'], 'observation_scales.*.custom_process_competence_id' => ['required', 'integer'], 'observation_scales.*.custom_scale_level' => ['nullable', 'integer'], 'observation_scales.*.custom_scale_status' => ['nullable', 'in:ne']]);
+        $data = $request->validate(['draft_text' => ['nullable', 'string', 'max:10000'], 'teacher_note' => ['nullable', 'string', 'max:5000'], 'level' => ['nullable', 'in:G,M,E'], 'status' => ['required', 'in:draft,confirmed'], 'observation_scales' => ['sometimes', 'array'], 'observation_scales.*.custom_process_competence_id' => ['required', 'integer'], 'observation_scales.*.custom_scale_level' => ['nullable', 'integer'], 'observation_scales.*.custom_scale_status' => ['nullable', 'in:ne']]);
         $customCompetences = $teachingGroup->school->customProcessCompetences()->where('is_active', true)->get(['id', 'text', 'position']);
         $submittedScales = collect($data['observation_scales'] ?? []);
         if ($teachingGroup->grading_model === 'observation_scales') {
@@ -161,7 +246,7 @@ class EvaluationController extends Controller
             $submittedScales = collect();
         }
         DB::transaction(function () use ($data, $evaluation, $teachingGroup, $customCompetences, $submittedScales): void {
-            $evaluation->update([...collect($data)->only(['draft_text', 'teacher_note', 'status'])->all(), 'confirmed_at' => $data['status'] === 'confirmed' ? now() : null]);
+            $evaluation->update([...collect($data)->only(['draft_text', 'teacher_note', 'level', 'status'])->all(), 'confirmed_at' => $data['status'] === 'confirmed' ? now() : null]);
             $evaluation->observationScales()->delete();
             foreach ($submittedScales as $scale) {
                 $competence = $customCompetences->firstWhere('id', $scale['custom_process_competence_id']);

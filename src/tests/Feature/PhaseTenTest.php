@@ -202,3 +202,36 @@ it('übernimmt Freitextbilder in den produktiven ODT-Download', function () {
     expect($content)->toContain('Pictures/section_image1.png')
         ->and($content)->toContain('Lies den Begleittext.');
 });
+
+it('druckt einen Ergebnisbericht für einen Schüler oder die gesamte Gruppe', function () {
+    $organization = Organization::create(['name' => 'Ergebnisbericht Organisation']);
+    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $school = School::create(['organization_id' => $organization->id, 'name' => 'Ergebnisbericht Schule']);
+    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7ab']);
+    $group->gradeLevels()->create(['grade_level' => '7 M']);
+    $student = \App\Models\Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '7ab']);
+    $group->students()->attach($student);
+    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'Test LSE', 'assessed_on' => '2026-09-06']);
+    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Test Einheit', 'position' => 1]);
+    $competency = $unit->competencies()->create(['local_wording' => 'Kann testen']);
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5, 'teaching_unit_competency_id' => $competency->id]);
+    $assessment->tasks()->attach($task);
+    \App\Models\AssessmentTaskExpectation::create(['assessment_task_id' => $task->id, 'text' => 'Erwartung erfüllt', 'points' => 5, 'position' => 1]);
+    \App\Models\StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 5, 'numeric_grade' => '1']);
+
+    $single = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/auswertung/ergebnisbericht?student={$student->id}&format=odt");
+    $single->assertOk()->assertHeader('Content-Type', 'application/vnd.oasis.opendocument.text');
+    $singlePath = tempnam(sys_get_temp_dir(), 'roo-test-result-report-');
+    file_put_contents($singlePath, $single->getContent());
+    $singleArchive = new ZipArchive;
+    $singleArchive->open($singlePath);
+    $singleContent = $singleArchive->getFromName('content.xml');
+    $singleArchive->close();
+    unlink($singlePath);
+    expect($singleContent)->toContain('Ada Lovelace')->toContain('Mock-Aufgabe')->toContain('Erwartung erfüllt');
+
+    $all = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/auswertung/ergebnisbericht?format=docx");
+    $all->assertOk()->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    expect($all->getContent())->not->toBeEmpty();
+});

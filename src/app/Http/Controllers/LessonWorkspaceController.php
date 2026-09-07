@@ -543,7 +543,6 @@ class LessonWorkspaceController extends Controller
                 $task->setAttribute('competency_identifier', $task->educationPlanCompetency?->external_identifier);
                 $task->setAttribute('has_differentiation', $task->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
             }),
-            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title']),
             'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
             'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
@@ -758,7 +757,7 @@ class LessonWorkspaceController extends Controller
         return trim((string) preg_replace(['/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], $value), ' .-');
     }
 
-    public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): RedirectResponse
+    public function updateExecution(UpdateLessonExecutionRequest $request, ScheduleSlot $scheduleSlot): RedirectResponse|JsonResponse
     {
         $group = $scheduleSlot->group;
         $this->authorize('update', $group);
@@ -766,7 +765,8 @@ class LessonWorkspaceController extends Controller
         abort_unless($scheduledLesson, 404);
         $scheduledLesson->update($request->validated());
 
-        return back()->with('success', 'Durchführung wurde gespeichert.');
+        $message = 'Durchführung wurde gespeichert.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'status' => $scheduledLesson->status, 'actual_on' => $scheduledLesson->actual_on, 'execution_notes' => $scheduledLesson->execution_notes]) : back()->with('success', $message);
     }
 
     public function exportSongs(Request $request, ScheduleSlot $scheduleSlot, SongbookContentsResolver $contents, SongbookPdfExporter $exporter)

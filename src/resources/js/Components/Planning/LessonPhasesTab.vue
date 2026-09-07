@@ -2,7 +2,7 @@
 import de from '../../i18n/de'
 import { requestConfirmation } from '../../utils/confirmation'
 import PhaseResourcePicker from './PhaseResourcePicker.vue'
-import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps({ lesson: Object, phases: { type: Array, default: () => [] }, groupId: [String, Number], phaseTemplates: { type: Array, default: () => [] }, socialForms: { type: Array, default: () => [] }, resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, compact: { type: Boolean, default: false } })
@@ -80,11 +80,11 @@ function movePhase(index, direction) {
 
 function updateStatus(status) {
     if (!scheduledLesson.value) return
-    router.put(`/jahresplanung/${props.groupId}/geplante-stunden/${scheduledLesson.value.id}/status`, { status }, { preserveScroll: true })
+    axios.put(`/jahresplanung/${props.groupId}/geplante-stunden/${scheduledLesson.value.id}/status`, { status }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => { scheduledLesson.value.status = response.data.status }).catch(() => {})
 }
 
 function savePhaseAsTemplate(phase) {
-    if (phase.id) router.post(`/jahresplanung/${props.groupId}/phasen/${phase.id}/als-vorlage`, {}, { preserveScroll: true })
+    if (phase.id) axios.post(`/jahresplanung/${props.groupId}/phasen/${phase.id}/als-vorlage`, {}, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
 }
 </script>
 

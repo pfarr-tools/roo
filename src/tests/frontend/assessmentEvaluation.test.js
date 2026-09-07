@@ -90,6 +90,7 @@ describe('assessment evaluation presentation', () => {
         expect(evaluationSections.map((section) => section.id)).toEqual([
             'booklets',
             'tasks',
+            'results',
         ])
     })
 
@@ -154,6 +155,33 @@ describe('assessment evaluation presentation', () => {
 })
 
 describe('assessment evaluation components', () => {
+
+    it('offers collective and per-student result print actions', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            scan: { warnings: [] },
+            students: [{ id: 101, first_name: 'Ada', last_name: 'Lovelace' }],
+            results: [{ student_id: 101, first_name: 'Ada', last_name: 'Lovelace', level: 'M', has_results: true, competencies: [] }],
+        })
+
+        const manualPrintButton = root.querySelector('[data-testid="assessment-result-print-all"]')
+        const manualBookletButton = [...root.querySelectorAll('button')].find((button) => button.textContent.includes('Manuelles Exemplar'))
+        expect(manualPrintButton.classList.contains('btn-outline-light')).toBe(false)
+        expect(manualBookletButton.classList.contains('btn-outline-light')).toBe(false)
+        root.querySelectorAll('[role="tab"]')[2].click()
+        await nextTick()
+        expect(root.querySelector('[data-testid="assessment-result-print-101"]')).not.toBeNull()
+        root.querySelector('[data-testid="assessment-result-print-all"]').click()
+        await nextTick()
+        expect(root.querySelector('[role="dialog"]').textContent).toContain('Ergebnis drucken')
+        expect(root.querySelector('#assessment-result-student').value).toBe('all')
+        root.querySelector('#assessment-result-format').value = 'docx'
+        root.querySelector('#assessment-result-format').dispatchEvent(new Event('change'))
+        await nextTick()
+        expect(root.querySelector('[data-testid="assessment-result-print-start"]').getAttribute('href')).toBe('/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/ergebnisbericht?student=all&format=docx&template=default')
+        unmount()
+    })
 
     it('reuses the existing scan client when completion is retried', async () => {
         testState.startScan.mockRejectedValueOnce(new Error('Netzwerk unterbrochen.')).mockResolvedValueOnce({})
@@ -221,6 +249,50 @@ describe('assessment evaluation components', () => {
         await nextTick()
         expect(root.querySelector('h3').textContent.trim()).toBe('Verantwortung erklären (0 VP)')
 
+        unmount()
+    })
+
+    it('shows sortable student results grouped by competencies', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            results: [{
+                student_id: 12,
+                first_name: 'Ada',
+                last_name: 'Lovelace',
+                level: 'M',
+                has_results: true,
+                competencies: [{ title: 'Vergleichen', percentage: 75, tasks: [{ title: 'Aufgabe', percentage: 75, weight: 50 }] }],
+            }],
+        })
+        await nextTick()
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+        expect(root.querySelector('#assessment-results-heading')).not.toBeNull()
+        expect(root.textContent).toContain('Ada')
+        expect(root.textContent).toContain('Vergleichen')
+        expect(root.textContent).toContain('75% (50%)')
+        expect(root.querySelector('#assessment-results-search')).not.toBeNull()
+        unmount()
+    })
+
+    it('offers a decision for students without results', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            students: [{ id: 12, first_name: 'Ada', last_name: 'Lovelace' }],
+            results: [{ student_id: 12, first_name: 'Ada', last_name: 'Lovelace', level: '', competencies: [], needs_result_decision: true }],
+        })
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+
+        expect(root.textContent).toContain('Nicht bewerten')
+        expect(root.textContent).toContain('Als fehlende Leistung (0%) werten')
+        expect(root.querySelector('[data-result-status="missing"]')).not.toBeNull()
+        root.querySelector('[data-result-status="missing"]').click()
+        expect(testState.forms.at(-1).put).toHaveBeenCalled()
         unmount()
     })
 

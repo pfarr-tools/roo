@@ -8,6 +8,7 @@ use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
 use App\Services\WscDocInspector;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -44,13 +45,14 @@ class TeachingUnitResourceController extends Controller
         return back()->with('success', 'Anhang wurde hochgeladen.');
     }
 
-    public function update(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource): RedirectResponse
+    public function update(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource): RedirectResponse|JsonResponse
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
         $resource->update($request->validate(['description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000'], 'publication_status' => ['sometimes', 'in:not_shared,shared_immediately']]));
 
-        return back()->with('success', 'Beschreibung des Anhangs wurde gespeichert.');
+        $message = 'Beschreibung des Anhangs wurde gespeichert.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'resource' => $resource->only(['id', 'description', 'copyrights', 'publication_status'])]) : back()->with('success', $message);
     }
 
     public function download(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource)
@@ -73,14 +75,15 @@ class TeachingUnitResourceController extends Controller
         return response()->file(Storage::disk('local')->path($resource->storage_path), ['Content-Type' => $resource->mime_type ?: 'application/octet-stream']);
     }
 
-    public function destroy(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource): RedirectResponse
+    public function destroy(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, ResourceReference $resource): RedirectResponse|JsonResponse
     {
         $this->authorizeUnit($request, $teachingGroup, $teachingUnit);
         abort_unless($resource->teaching_unit_id === $teachingUnit->id, 404);
         Storage::disk('local')->delete($resource->storage_path);
         $resource->delete();
 
-        return back()->with('success', 'Anhang wurde gelöscht.');
+        $message = 'Anhang wurde gelöscht.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'resource_id' => $resource->id]) : back()->with('success', $message);
     }
 
     private function authorizeUnit(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): void

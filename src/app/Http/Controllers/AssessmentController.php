@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Documents\AssessmentDocument;
+use App\Documents\AssessmentResultDocument;
 use App\Documents\DocumentOutputFormat;
 use App\Http\Requests\AssessmentBookletAssignmentRequest;
 use App\Http\Requests\AssessmentScanFragmentRequest;
@@ -13,7 +14,10 @@ use App\Models\Assessment;
 use App\Models\AssessmentBooklet;
 use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentScanMaterialization;
+use App\Models\AssessmentStudentResultStatus;
 use App\Models\AssessmentTask;
+use App\Models\EducationPlanCompetency;
+use App\Models\Student;
 use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Services\AssessmentEvaluation\AssignAssessmentBooklet;
@@ -114,6 +118,117 @@ class AssessmentController extends Controller
         ]);
     }
 
+    public function resultReport(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, PhpOfficeDocumentRenderer $renderer): Response
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        $options = $request->validate([
+            'student' => ['nullable', 'in:all,'.$teachingGroup->students()->pluck('students.id')->implode(',')],
+            'format' => ['nullable', 'in:odt,docx'],
+            'template' => ['nullable', 'in:default'],
+        ]);
+        $studentId = ($options['student'] ?? 'all') === 'all' ? null : (int) $options['student'];
+        $students = $teachingGroup->students()->orderBy('last_name')->orderBy('first_name')->get();
+        $teachingGroup->loadMissing('school');
+        if ($studentId !== null) {
+            $students = $students->where('id', $studentId)->values();
+        }
+
+        $assessment->load(['tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.competency', 'tasks.educationPlanCompetency.variants.level']);
+        $reports = $students->map(fn (Student $student): array => $this->resultReportForStudent($assessment, $teachingGroup, $student))->all();
+        $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
+        $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports), $format);
+        $filename = $this->downloadFilename($assessment->title).'_Ergebnisse';
+        $mimeType = $format === DocumentOutputFormat::DOCX
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/vnd.oasis.opendocument.text';
+
+        return response($contents, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="'.$filename.'.'.$format->value.'"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    private function resultReportForStudent(Assessment $assessment, TeachingGroup $teachingGroup, Student $student): array
+    {
+        $tasks = $assessment->tasks->reject(fn (AssessmentTask $task): bool => $task->task_type === 'expectation_list');
+        $taskReports = $tasks->map(function (AssessmentTask $task) use ($student, $assessment): array {
+            $result = $task->results->first(fn ($result): bool => (int) $result->student_id === (int) $student->id && ((int) ($result->assessment_id ?? $assessment->id) === (int) $assessment->id));
+            $maxPoints = $task->maximumPoints();
+            $reviewItems = $task->reviews
+                ->filter(fn ($review): bool => (int) $review->booklet?->assessment_id === (int) $assessment->id && (int) $review->booklet?->student_id === (int) $student->id)
+                ->flatMap->items
+                ->groupBy('assessment_task_expectation_id');
+            $level = $result?->level ?: ($task->levels->count() === 1 ? $task->levels->first()->level : 'M');
+
+            return [
+                'title' => $task->title,
+                'points' => $result?->points,
+                'max_points' => $maxPoints,
+                'points_label' => $result?->points === null || $maxPoints === null ? '– / '.($maxPoints ?? '–') : $result->points.' / '.$maxPoints,
+                'percentage' => round_percentage($result?->points === null || ! $maxPoints ? 0 : min(100, max(0, ((float) $result->points / $maxPoints) * 100))),
+                'competency' => $this->resultCompetencyText($task, $level),
+                'weight' => (int) ($task->pivot->weight ?? 50),
+                'grade' => $result?->numeric_grade,
+                'level' => $level,
+                'expectations' => $task->expectations->map(function ($expectation) use ($reviewItems, $result, $task): array {
+                    $maximum = (float) $expectation->points * max(1, (int) ($expectation->repetitions ?: 1));
+                    $awarded = $reviewItems->get($expectation->id)?->sum(fn ($item): float => (float) $item->awarded_points);
+                    if ($awarded === null && $task->expectations->count() === 1) {
+                        $awarded = $result?->points === null ? null : (float) $result->points;
+                    }
+
+                    return [
+                        'text' => $expectation->text,
+                        'points' => $awarded,
+                        'max_points' => $maximum,
+                    ];
+                })->values()->all(),
+            ];
+        })->values();
+        $competencies = $taskReports->groupBy('competency')->map(fn ($items, $title): array => [
+            'title' => $title,
+            'percentage' => round_percentage($items->sum(fn (array $item): float => $item['percentage'] * $item['weight']) / max(1, $items->sum('weight'))),
+        ])->values()->all();
+        $maxTotal = $taskReports->sum('max_points');
+        $pointsTotal = $taskReports->sum(fn (array $task): float => (float) ($task['points'] ?? 0));
+        $levels = $taskReports->filter(fn (array $task): bool => filled($task['grade']))->pluck('grade');
+        $studentLevels = $tasks->flatMap(fn (AssessmentTask $task) => $task->levels->pluck('level')->filter())->unique()->implode('/');
+
+        return [
+            'title' => $assessment->title,
+            'student_name' => trim($student->first_name.' '.$student->last_name),
+            'level' => $studentLevels ?: ($assessment->is_differentiated ? 'M' : ''),
+            'tasks' => $taskReports->all(),
+            'competencies' => $competencies,
+            'percentage' => round_percentage($maxTotal ? $pointsTotal / $maxTotal * 100 : 0),
+            'grade' => percentage_to_grade($maxTotal ? $pointsTotal / $maxTotal * 100 : 0),
+            'place' => $teachingGroup->school?->name ?: '',
+            'date' => ($assessment->assessed_on ?: now())->format('d.m.Y'),
+            'author' => auth()->user()?->name ?: '',
+        ];
+    }
+
+    private function resultCompetencyText(AssessmentTask $task, string $level): string
+    {
+        $competency = $task->educationPlanCompetency;
+        if ($competency !== null) {
+            $variant = $competency->variants->first(fn ($variant): bool => strtoupper((string) $variant->level?->external_identifier) === strtoupper($level));
+            $text = $variant?->text ?: $competency->text;
+
+            return trim((string) preg_replace('/^\s*(?:Du kannst\s+)?/iu', 'Du kannst ', $this->withoutCompetencyIdentifier($text)));
+        }
+
+        return $this->withoutCompetencyIdentifier($task->competency?->local_wording ?: 'Ohne Kompetenzzuordnung');
+    }
+
+    private function withoutCompetencyIdentifier(?string $text): string
+    {
+        return trim((string) preg_replace('/^\s*\d+(?:\.\d+){2,4}(?:\s*\(\d+\))?\s*[-–:]?\s*/u', '', (string) $text));
+    }
+
     public function assess(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentPdfScanner $scanner)
     {
         $this->authorize('update', $teachingGroup);
@@ -138,6 +253,9 @@ class AssessmentController extends Controller
 
         $assessment->load([
             'tasks.expectations',
+            'tasks.levels',
+            'tasks.results',
+            'tasks.educationPlanCompetency.variants',
             'tasks.images.resource',
             'booklets.student',
             'booklets.fragments',
@@ -150,6 +268,56 @@ class AssessmentController extends Controller
             ->orderBy('first_name')
             ->get(['students.id', 'students.first_name', 'students.last_name', 'students.class_name']);
         $booklets = $assessment->booklets->sortBy('number')->values();
+        $resultStatuses = AssessmentStudentResultStatus::query()
+            ->where('assessment_id', $assessment->id)
+            ->get()
+            ->keyBy('student_id');
+        $levelOrder = ['G' => 1, 'M' => 2, 'E' => 3];
+        $results = $students->map(function (Student $student) use ($assessment, $levelOrder, $resultStatuses): array {
+            $status = $resultStatuses->get($student->id)?->status;
+            $competencies = collect();
+            $studentLevels = collect();
+            $hasResult = false;
+            foreach ($assessment->tasks as $task) {
+                $result = $task->results->firstWhere('student_id', $student->id);
+                if ($result !== null && $result->points !== null && $task->maximumPoints()) {
+                    $hasResult = true;
+                } elseif ($status !== 'missing' || ! $task->maximumPoints()) {
+                    continue;
+                }
+                $taskLevels = $task->levels->pluck('level')->filter()->values();
+                if ($taskLevels->isEmpty() && filled($task->level)) {
+                    $taskLevels = collect([$task->level]);
+                }
+                $studentLevel = $result?->level ?? ($taskLevels->count() === 1 ? $taskLevels->first() : null);
+                if ($studentLevel !== null) {
+                    $studentLevels->push($studentLevel);
+                }
+                $competency = $task->educationPlanCompetency;
+                $key = $competency ? 'education-plan-'.$competency->id : 'task-'.$task->id;
+                $group = $competencies->get($key, ['key' => $key, 'title' => $competency ? $this->resolvedCompetencyText($competency) : 'Ohne Kompetenzzuordnung', 'tasks' => []]);
+                $percentage = $result === null ? 0 : min(100, max(0, ((float) $result->points / $task->maximumPoints()) * 100));
+                $group['tasks'][] = ['title' => $task->title, 'percentage' => round($percentage, 2), 'weight' => (int) ($task->pivot->weight ?? 50)];
+                $competencies->put($key, $group);
+            }
+            $competencies = $competencies->map(function (array $group): array {
+                $weightTotal = collect($group['tasks'])->sum('weight');
+                $group['percentage'] = round($weightTotal > 0 ? collect($group['tasks'])->sum(fn (array $task): float => $task['percentage'] * $task['weight']) / $weightTotal : collect($group['tasks'])->avg('percentage'), 2);
+
+                return $group;
+            })->values();
+
+            return [
+                'student_id' => $student->id,
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'level' => $studentLevels->unique()->sortBy(fn ($level) => $levelOrder[$level] ?? 99)->implode('/'),
+                'has_results' => $hasResult,
+                'competencies' => $hasResult || $status === 'missing' ? $competencies : [],
+                'result_status' => $hasResult ? null : $status,
+                'needs_result_decision' => ! $hasResult && $status === null,
+            ];
+        })->values();
         $scanWarnings = $assessment->scanMaterializations
             ->flatMap(fn (AssessmentScanMaterialization $materialization): array => $materialization->warnings ?? [])
             ->unique()
@@ -285,6 +453,7 @@ class AssessmentController extends Controller
                 'fragment_count' => $booklet->fragments->count(),
                 'reviewed_fragment_count' => $booklet->reviews->count(),
             ])->values(),
+            'results' => $results,
             'taskFragments' => $taskFragments,
             'progress' => [
                 'total_booklets' => $booklets->count(),
@@ -296,6 +465,21 @@ class AssessmentController extends Controller
                 'reviewed_fragments' => $taskFragments->filter(fn (array $fragment): bool => $fragment['review'] !== null)->count(),
             ],
         ]);
+    }
+
+    public function updateStudentResultStatus(Request $request, TeachingGroup $teachingGroup, Assessment $assessment, Student $student)
+    {
+        $this->authorize('update', $teachingGroup);
+        $this->ensureAssessmentBelongsToGroup($assessment, $teachingGroup);
+        abort_unless($teachingGroup->students()->whereKey($student->id)->exists(), 404);
+
+        $data = $request->validate(['status' => ['required', 'in:not_evaluated,missing']]);
+        AssessmentStudentResultStatus::updateOrCreate(
+            ['assessment_id' => $assessment->id, 'student_id' => $student->id],
+            ['status' => $data['status']],
+        );
+
+        return back()->with('success', 'Bewertungsstatus wurde gespeichert.');
     }
 
     public function updateBookletAssignment(AssessmentBookletAssignmentRequest $request, TeachingGroup $teachingGroup, Assessment $assessment, AssessmentBooklet $booklet, AssignAssessmentBooklet $assignment)
@@ -513,7 +697,6 @@ class AssessmentController extends Controller
         DB::transaction(function () use ($data, $assessment, $teachingGroup): void {
             $assessment->update(collect($data)->only(['report_period_id', 'grade_component_id', 'grade_component_label', 'title', 'assessed_on', 'notes'])->all());
             if (array_key_exists('tasks', $data)) {
-                $assessment->tasks()->sync([]);
                 $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
             }
         });
@@ -667,8 +850,8 @@ class AssessmentController extends Controller
         }
 
         return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $selectedTaskData, $windowTaskIds): array {
-            $educationPlanCompetency = $task->educationPlanCompetency ?? $task->competency?->educationPlanCompetency;
-            $competencyId = $task->teaching_unit_competency_id ?? $educationPlanCompetency?->id;
+            $educationPlanCompetency = $task->educationPlanCompetency;
+            $competencyId = $educationPlanCompetency?->id;
 
             return [
                 'id' => $task->id,
@@ -679,10 +862,8 @@ class AssessmentController extends Controller
                 'education_plan_competency_id' => $educationPlanCompetency?->id,
                 'competency_key' => $educationPlanCompetency
                     ? 'education-plan-'.$educationPlanCompetency->id
-                    : ($task->teaching_unit_competency_id
-                        ? 'teaching-unit-'.$task->teaching_unit_competency_id
-                        : 'text-'.md5((string) $task->competency?->local_wording)),
-                'competency' => $this->resolvedCompetencyText($educationPlanCompetency ?? $task->competency),
+                    : 'text-'.md5((string) $educationPlanCompetency?->text),
+                'competency' => $educationPlanCompetency ? $this->resolvedCompetencyText($educationPlanCompetency) : null,
                 'edit_url' => route('resources.library.assessment-tasks.edit', $task->id),
                 'checked' => in_array($task->id, $selectedTaskIds, true),
                 'position' => $selectedTaskData->get($task->id)['position'] ?? null,
@@ -767,7 +948,8 @@ class AssessmentController extends Controller
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void
     {
-        $competencyIds = $teachingGroup->teachingUnits()->with('competencies:id,teaching_unit_id')->get()->flatMap->competencies->pluck('id');
+        $groupCompetencies = $teachingGroup->teachingUnits()->with('competencies:id,teaching_unit_id,education_plan_competency_id')->get()->flatMap->competencies;
+        $educationPlanCompetencyIds = $groupCompetencies->pluck('education_plan_competency_id')->filter();
         $attach = [];
         foreach ($tasks as $position => $task) {
             $levels = collect($task['levels'] ?? (($task['level'] ?? null) ? [$task['level']] : []))->unique()->values();
@@ -777,15 +959,16 @@ class AssessmentController extends Controller
             if (! empty($task['task_id'])) {
                 $model = AssessmentTask::where('organization_id', $teachingGroup->organization_id)->whereKey($task['task_id'])->firstOrFail();
                 $assignedToGroup = $model->lessons()->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->exists();
-                abort_unless($competencyIds->contains($model->teaching_unit_competency_id) || $assignedToGroup, 422);
+                $alreadyAssigned = $assessment->tasks()->whereKey($model->id)->exists();
+                abort_unless($educationPlanCompetencyIds->contains($model->education_plan_competency_id) || $assignedToGroup || $alreadyAssigned, 422);
                 if ($levels->isNotEmpty()) {
                     $model->levels()->delete();
                     $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());
                     $model->update(['level' => $levels->first()]);
                 }
             } else {
-                abort_unless(! empty($task['competency_id']) && $competencyIds->contains($task['competency_id']), 422);
-                $model = AssessmentTask::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_competency_id' => $task['competency_id'], 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
+                abort_unless(! empty($task['education_plan_competency_id']) && $educationPlanCompetencyIds->contains($task['education_plan_competency_id']), 422);
+                $model = AssessmentTask::create(['organization_id' => $teachingGroup->organization_id, 'education_plan_competency_id' => $task['education_plan_competency_id'], 'education_plan_id' => EducationPlanCompetency::findOrFail($task['education_plan_competency_id'])->area->version->education_plan_id, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
                 $model->levels()->delete();
                 $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());
             }

@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { computed, ref, watch } from 'vue'
+import axios from 'axios'
 import { requestConfirmation } from '../../utils/confirmation'
 import de from '../../i18n/de'
 
@@ -16,13 +16,17 @@ const modal = ref(null)
 const librarySearch = ref('')
 const libraryItems = ref([])
 const libraryLoading = ref(false)
+const libraryCompetency = ref(null)
+const localAssessmentTasks = ref(props.assessmentTasks.map(task => ({ ...task })))
+watch(() => props.assessmentTasks, tasks => { localAssessmentTasks.value = tasks.map(task => ({ ...task })) })
 
 const competencyText = competency => competency.label || competency.text || ('Kompetenz ' + competency.id)
-const tasksFor = competency => props.assessmentTasks.filter(task => (
+const tasksFor = competency => localAssessmentTasks.value.filter(task => (
     ((task.teaching_unit_competency_id ?? task.competency_id) && String(task.teaching_unit_competency_id ?? task.competency_id) === String(competency.id))
     || (competency.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.education_plan_competency_id))
     || (competency.source_identifier && String(task.competency_identifier ?? task.source_identifier) === String(competency.source_identifier))
 ))
+const unassignedTasks = computed(() => localAssessmentTasks.value.filter(task => !props.competencies.some(competency => tasksFor(competency).some(assignedTask => String(assignedTask.id) === String(task.id)))))
 function newUrl(competency) {
     const params = new URLSearchParams()
     if (competency.education_plan_id) params.set('education_plan_id', competency.education_plan_id)
@@ -33,19 +37,26 @@ function newUrl(competency) {
 function editUrl(task) { return '/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/' + task.id + '/bearbeiten' }
 async function remove(task) {
     if (!await requestConfirmation({ message: de.removeAssessmentTaskConfirm })) return
-    router.delete('/unterricht/' + props.scheduleSlotId + '/pruefungsaufgaben/' + task.id, { preserveScroll: true, onSuccess: page => emit('refresh', page) })
+    axios.post('/jahresplanung/' + props.groupId + '/ressourcen/assessment-task/' + task.id + '/trennen', { target_type: 'lesson', target_id: props.lessonId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(() => { localAssessmentTasks.value = localAssessmentTasks.value.filter(existingTask => String(existingTask.id) !== String(task.id)) })
 }
-async function searchLibrary() {
+async function searchLibrary(competency = libraryCompetency.value) {
     libraryLoading.value = true
     try {
-        const response = await fetch('/ressourcen/bibliothek?q=' + encodeURIComponent(librarySearch.value) + '&type=assessment-task', { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        const params = new URLSearchParams({ q: librarySearch.value, type: 'assessment-task' })
+        if (competency?.education_plan_competency_id) params.set('education_plan_competency_id', competency.education_plan_competency_id)
+        const response = await fetch('/ressourcen/bibliothek?' + params.toString(), { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
         if (response.ok) libraryItems.value = await response.json()
     } finally { libraryLoading.value = false }
 }
 function close() { modal.value = null }
-function openLibrary() { librarySearch.value = ''; modal.value = 'library'; searchLibrary() }
+function openLibrary(competency) { librarySearch.value = ''; libraryCompetency.value = competency; modal.value = 'library'; searchLibrary(competency) }
 function assign(task) {
-    router.post('/jahresplanung/' + props.groupId + '/ressourcen/assessment-task/' + task.id + '/zuordnen', { target_type: 'lesson', target_id: props.lessonId }, { preserveScroll: true, onSuccess: page => { close(); emit('refresh', page) } })
+    axios.post('/jahresplanung/' + props.groupId + '/ressourcen/assessment-task/' + task.id + '/zuordnen', { target_type: 'lesson', target_id: props.lessonId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => {
+            if (!localAssessmentTasks.value.some(existingTask => String(existingTask.id) === String(response.data.task.id))) localAssessmentTasks.value.push(response.data.task)
+            close()
+        })
 }
 </script>
 
@@ -58,6 +69,7 @@ function assign(task) {
                 <span v-else class="text-muted small">{{ de.noAssessmentTask }}</span>
             </td><td class="text-end text-nowrap align-top"><a class="btn btn-sm btn-outline-primary me-1" :href="newUrl(competency)" :title="de.newAssessmentTask" :aria-label="de.newAssessmentTask"><i class="bi bi-plus-lg" aria-hidden="true"></i></a><button class="btn btn-sm btn-outline-secondary" type="button" @click="openLibrary(competency)"><i class="bi bi-collection me-1" aria-hidden="true"></i>Aus Bibliothek</button></td></tr>
             <tr v-if="!competencies.length"><td colspan="3" class="text-muted">{{ de.noContentCompetenciesForLesson }}</td></tr>
+            <tr v-if="unassignedTasks.length"><th class="fw-normal align-top">Ohne Kompetenzzuordnung</th><td class="align-top"><div class="list-group list-group-flush"><div v-for="task in unassignedTasks" :key="`unassigned-${task.id}`" class="list-group-item px-0 d-flex align-items-center gap-2"><span class="flex-grow-1">{{ task.title }}<small v-if="task.max_points" class="text-muted ms-2">{{ task.max_points }} Punkte</small></span><a class="btn btn-sm btn-outline-secondary" :href="editUrl(task)" title="Bearbeiten" aria-label="Prüfungsaufgabe bearbeiten"><i class="bi bi-pencil" aria-hidden="true"></i></a><button class="btn btn-sm btn-outline-danger" type="button" title="Entfernen" aria-label="Prüfungsaufgabe entfernen" @click="remove(task)"><i class="bi bi-trash" aria-hidden="true"></i></button></div></div></td><td></td></tr>
         </tbody></table></div>
     </div></article>
     <div v-if="modal === 'library'" class="roo-modal-backdrop" role="presentation" @click.self="close">

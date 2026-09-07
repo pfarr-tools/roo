@@ -182,6 +182,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/download', [AssessmentController::class, 'download'])->name('assessments.download');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswerten', [AssessmentController::class, 'assess'])->name('assessments.assess');
     Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung', [AssessmentController::class, 'evaluation'])->name('assessments.evaluation');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/ergebnisbericht', [AssessmentController::class, 'resultReport'])->name('assessments.result-report');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/students/{student}/result-status', [AssessmentController::class, 'updateStudentResultStatus'])->name('assessments.student-result-status.update');
     Route::delete('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/{booklet}/zuordnung', [AssessmentController::class, 'updateBookletAssignment'])->name('assessments.booklets.assignment.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}/auswertung/booklets/manuell', [AssessmentController::class, 'storeManualBooklet'])->name('assessments.booklets.manual.store');

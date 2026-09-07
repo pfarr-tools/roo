@@ -90,7 +90,7 @@ class ResourceLibraryController extends Controller
         return response()->json(['association_count' => $this->associationCount($item, $kind)]);
     }
 
-    public function detach(Request $request, TeachingGroup $teachingGroup, string $kind, int $resource): RedirectResponse
+    public function detach(Request $request, TeachingGroup $teachingGroup, string $kind, int $resource): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['target_type' => ['required', 'in:unit,lesson,phase'], 'target_id' => ['required', 'integer'], 'permanent' => ['sometimes', 'boolean']]);
@@ -116,6 +116,9 @@ class ResourceLibraryController extends Controller
         } elseif ($kind === 'assessment-task') {
             abort_unless($data['target_type'] === 'lesson', 422, 'Eine Prüfungsaufgabe kann nur einer Stunde zugeordnet werden.');
             $this->lessonTarget($teachingGroup, $data['target_id'])->assessmentTasks()->detach($item->id);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Prüfungsaufgabe wurde entfernt.']);
+            }
         } elseif ($kind === 'file' || $kind === 'resource') {
             if ($data['target_type'] === 'phase') {
                 $this->phaseTarget($teachingGroup, $data['target_id'])->resources()->detach($item->id);
@@ -127,10 +130,11 @@ class ResourceLibraryController extends Controller
             $relation->detach($item->id);
         }
 
-        return back()->with('success', 'Zuordnung wurde entfernt.');
+        $message = 'Zuordnung wurde entfernt.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'resource_id' => $item->id]) : back()->with('success', $message);
     }
 
-    public function assign(Request $request, TeachingGroup $teachingGroup, ResourceReference $resource): RedirectResponse
+    public function assign(Request $request, TeachingGroup $teachingGroup, ResourceReference $resource): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($resource->organization_id === $request->user()->organization_id, 404);
@@ -146,10 +150,11 @@ class ResourceLibraryController extends Controller
             $resource->update(['teaching_unit_id' => $target->teaching_unit_id, 'lesson_id' => $target->id]);
         }
 
-        return back()->with('success', 'Datei wurde zugeordnet.');
+        $message = 'Datei wurde zugeordnet.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'item' => ['id' => $resource->id, 'original_name' => $resource->original_name, 'description' => $resource->description, 'copyrights' => $resource->copyrights, 'mime_type' => $resource->mime_type, 'size' => $resource->size]]) : back()->with('success', $message);
     }
 
-    public function assignItem(Request $request, TeachingGroup $teachingGroup, string $kind, int $resource): RedirectResponse
+    public function assignItem(Request $request, TeachingGroup $teachingGroup, string $kind, int $resource): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         $item = $this->item($request, $kind, $resource);
@@ -161,6 +166,11 @@ class ResourceLibraryController extends Controller
             $target->songs()->syncWithoutDetaching([$item->id]);
             $this->addToSongbook($teachingGroup, $item);
 
+            if ($request->expectsJson()) {
+                $item->setAttribute('kind', 'song');
+                return response()->json(['message' => 'Lied wurde zugeordnet.', 'item' => $this->present($item)]);
+            }
+
             return back()->with('success', 'Lied wurde zugeordnet.');
         }
 
@@ -168,12 +178,32 @@ class ResourceLibraryController extends Controller
             $target = $data['target_type'] === 'unit' ? TeachingUnit::where('teaching_group_id', $teachingGroup->id)->findOrFail($data['target_id']) : ($data['target_type'] === 'lesson' ? Lesson::whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->findOrFail($data['target_id']) : $this->phaseTarget($teachingGroup, $data['target_id']));
             $target->songbooks()->syncWithoutDetaching([$item->id]);
 
+            if ($request->expectsJson()) {
+                $item->setAttribute('kind', 'songbook');
+                return response()->json(['message' => 'Gruppenliederbuch wurde zugeordnet.', 'item' => $this->present($item)]);
+            }
+
             return back()->with('success', 'Gruppenliederbuch wurde zugeordnet.');
         }
 
         if ($kind === 'assessment-task') {
             abort_unless($data['target_type'] === 'lesson', 422, 'Eine Prüfungsaufgabe kann nur einer Stunde zugeordnet werden.');
             $this->lessonTarget($teachingGroup, $data['target_id'])->assessmentTasks()->syncWithoutDetaching([$item->id]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Prüfungsaufgabe wurde der Stunde zugeordnet.',
+                    'task' => [
+                        'id' => $item->id,
+                        'title' => $item->title,
+                        'max_points' => $item->max_points,
+                        'teaching_unit_competency_id' => $item->teaching_unit_competency_id,
+                        'competency_id' => $item->teaching_unit_competency_id,
+                        'education_plan_competency_id' => $item->education_plan_competency_id,
+                        'competency_identifier' => $item->educationPlanCompetency?->external_identifier,
+                    ],
+                ]);
+            }
 
             return back()->with('success', 'Prüfungsaufgabe wurde der Stunde zugeordnet.');
         }
@@ -201,7 +231,13 @@ class ResourceLibraryController extends Controller
             }
         }
 
-        return back()->with('success', 'Element wurde zugeordnet.');
+        $message = 'Element wurde zugeordnet.';
+        if ($request->expectsJson()) {
+            $item->setAttribute('kind', $kind);
+            return response()->json(['message' => $message, 'item' => $this->present($item)]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function __invoke(Request $request, ?TeachingGroup $teachingGroup = null)
@@ -230,7 +266,7 @@ class ResourceLibraryController extends Controller
             $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with(['song:id,organization_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
         if ($type === 'all' || $type === 'assessment-task') {
-            $matches = $matches->concat(AssessmentTask::where('organization_id', $organizationId)->with(['competency.unit', 'educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
+            $matches = $matches->concat(AssessmentTask::where('organization_id', $organizationId)->with(['competency.unit', 'educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
         }
         if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
             $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
@@ -455,7 +491,7 @@ class ResourceLibraryController extends Controller
 
         if ($kind === 'resource') {
             $attributes = $request->validate(['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']]);
-            ResourceLink::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $target instanceof Lesson ? $target->teaching_unit_id : $target->id, 'lesson_id' => $target instanceof Lesson ? $target->id : null]);
+            $item = ResourceLink::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $target instanceof Lesson ? $target->teaching_unit_id : $target->id, 'lesson_id' => $target instanceof Lesson ? $target->id : null]);
         } elseif ($kind === 'material') {
             $item = MaterialItem::create(['organization_id' => $teachingGroup->organization_id, ...$request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']])]);
             $target->materialItems()->syncWithoutDetaching([$item->id]);
@@ -463,7 +499,13 @@ class ResourceLibraryController extends Controller
             abort(404);
         }
 
-        return back()->with('success', 'Element wurde angelegt und zugeordnet.');
+        $message = 'Element wurde angelegt und zugeordnet.';
+        if ($request->expectsJson()) {
+            $item->setAttribute('kind', $kind);
+            return response()->json(['message' => $message, 'item' => $this->present($item)]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function updateItem(Request $request, string $kind, int $resource): RedirectResponse
@@ -523,7 +565,13 @@ class ResourceLibraryController extends Controller
             $item->update(['level' => collect($levels)->first()]);
         }
 
-        return back()->with('success', 'Bibliothekseintrag wurde gespeichert.');
+        $message = 'Bibliothekseintrag wurde gespeichert.';
+        if ($request->expectsJson()) {
+            $item->setAttribute('kind', $kind);
+            return response()->json(['message' => $message, 'item' => $this->present($item)]);
+        }
+
+        return back()->with('success', $message);
     }
 
     private function validatedExpectations(Request $request): array

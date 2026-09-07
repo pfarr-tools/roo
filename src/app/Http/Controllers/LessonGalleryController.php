@@ -7,6 +7,7 @@ use App\Models\LessonGalleryImage;
 use App\Models\ResourceReference;
 use App\Models\TeachingGroup;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -52,7 +53,7 @@ class LessonGalleryController extends Controller
         return back()->with('success', 'Bilder wurden zur Galerie hinzugefügt.');
     }
 
-    public function destroy(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, LessonGalleryImage $galleryImage): RedirectResponse
+    public function destroy(Request $request, TeachingGroup $teachingGroup, Lesson $lesson, LessonGalleryImage $galleryImage): RedirectResponse|JsonResponse
     {
         $this->authorizeLesson($request, $teachingGroup, $lesson);
         abort_unless($galleryImage->lesson_id === $lesson->id, 404);
@@ -62,7 +63,8 @@ class LessonGalleryController extends Controller
         $galleryImage->delete();
         $resource?->delete();
 
-        return back()->with('success', 'Bild wurde aus der Galerie entfernt.');
+        $message = 'Bild wurde aus der Galerie entfernt.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'gallery_image_id' => $galleryImage->id]) : back()->with('success', $message);
     }
 
     private function authorizeLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): void

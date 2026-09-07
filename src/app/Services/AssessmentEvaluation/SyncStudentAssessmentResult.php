@@ -41,13 +41,17 @@ final class SyncStudentAssessmentResult
             };
         }
 
+        $levels = $task->levels()->pluck('level')->filter()->values();
+        if ($levels->isEmpty() && filled($task->level)) {
+            $levels = collect([$task->level]);
+        }
         StudentAssessmentResult::query()->updateOrCreate(
             [
                 'assessment_id' => $booklet->assessment_id,
                 'assessment_task_id' => $task->getKey(),
                 'student_id' => $booklet->student_id,
             ],
-            ['points' => number_format($points, 2, '.', '')],
+            ['points' => number_format($points, 2, '.', ''), ...($levels->count() === 1 ? ['level' => $levels->first()] : [])],
         );
     }
 

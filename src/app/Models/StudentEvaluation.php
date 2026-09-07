@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['report_period_id', 'student_id', 'draft_text', 'teacher_note', 'status', 'confirmed_at'])]
+#[Fillable(['report_period_id', 'student_id', 'level', 'draft_text', 'teacher_note', 'status', 'confirmed_at'])]
 class StudentEvaluation extends Model
 {
     protected function casts(): array

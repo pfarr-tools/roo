@@ -33,7 +33,42 @@ function mount() {
     return { root, state, unmount: () => { app.unmount(); root.remove() } }
 }
 
+function mountCompetencyTextEvaluation() {
+    const root = document.createElement('div')
+    document.body.append(root)
+    const app = createApp(EvaluationEdit, {
+        group: { id: 1, grading_model: 'competency_texts_and_grades' },
+        evaluation: { id: 2, status: 'draft', draft_text: 'Bewertungsentwurf', teacher_note: '', student: { first_name: 'Mia', last_name: 'Muster' }, period: { label: '1. Halbjahr' }, observation_scales: [] },
+        lses: [
+            { id: 11, title: 'Erste LSE', date: '2026-09-08', student_levels: ['G'] },
+            { id: 12, title: 'Zweite LSE', date: '2026-10-02', student_levels: ['M', 'E'] },
+        ],
+        periodLevel: 'G',
+        competencies: [{ id: 8, label: '3.1.1.1 – Menschliche Erfahrungen beschreiben' }],
+        competenceAverages: [{ teaching_unit_competency_id: 8, average: 3.4, rounded_level: 3 }],
+    })
+    app.mount(root)
+
+    return { root, unmount: () => { app.unmount(); root.remove() } }
+}
+
 describe('evaluation edit competence averages', () => {
+    it('shows the draft and a colored rating scale for competency text grading', async () => {
+        const { root, unmount } = mountCompetencyTextEvaluation()
+        await nextTick()
+
+        expect(root.querySelector('#draft-text')?.value).toBe('Bewertungsentwurf')
+        const buttons = [...root.querySelectorAll('.border-top .btn-sm')]
+        expect(buttons).toHaveLength(5)
+        expect(buttons[2].classList).toContain('bg-primary-subtle')
+        expect(buttons[0].classList).not.toContain('bg-primary-subtle')
+        expect(root.textContent).toContain('Erste LSE')
+        expect(root.textContent).toContain('08.09.2026')
+        expect(root.querySelector('#evaluation-level')?.value).toBe('G')
+
+        unmount()
+    })
+
     it('highlights the scale level matching the rounded competence average', async () => {
         const { root, unmount } = mount()
         await nextTick()

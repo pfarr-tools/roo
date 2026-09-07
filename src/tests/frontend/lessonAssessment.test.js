@@ -1,16 +1,19 @@
 // @vitest-environment happy-dom
 
 import { createApp, nextTick } from 'vue'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+const { axiosPost } = vi.hoisted(() => ({ axiosPost: vi.fn() }))
+
+vi.mock('axios', () => ({ default: { post: axiosPost } }))
 vi.mock('@inertiajs/vue3', () => ({
     router: {
-        delete: vi.fn(),
         post: vi.fn(),
     },
 }))
 
 import LessonAssessmentTab from '../../resources/js/Components/Planning/LessonAssessmentTab.vue'
+import { closeConfirmation } from '../../resources/js/utils/confirmation'
 
 function mount(props) {
     const root = document.createElement('div')
@@ -28,6 +31,11 @@ function mount(props) {
 }
 
 describe('LessonAssessmentTab', () => {
+    beforeEach(() => {
+        axiosPost.mockReset()
+        global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [{ id: 7, title: 'Bibliotheksaufgabe', max_points: 4, education_plan_competency_id: 55 }] })
+    })
+
     it('lists all assessment tasks associated with the displayed competency', async () => {
         const { root, unmount } = mount({
             scheduleSlotId: 81,
@@ -74,6 +82,65 @@ describe('LessonAssessmentTab', () => {
         expect(root.querySelector('a[href*="/pruefungsaufgaben/neu"]').getAttribute('href'))
             .toBe('/unterricht/81/pruefungsaufgaben/neu?education_plan_id=7&education_plan_competency_id=55')
 
+        unmount()
+    })
+
+    it('assigns a library task with a small axios request and updates the list locally', async () => {
+        axiosPost.mockResolvedValue({ data: { task: { id: 7, title: 'Bibliotheksaufgabe', max_points: 4, teaching_unit_competency_id: 101 } } })
+        const { root, unmount } = mount({
+            scheduleSlotId: 81,
+            groupId: 1,
+            lessonId: 81,
+            competencies: [{ id: 101, education_plan_competency_id: 55, label: 'Kompetenz' }],
+        })
+
+        root.querySelector('td.text-end button').click()
+        await Promise.resolve()
+        await new Promise(resolve => setTimeout(resolve, 0))
+        await nextTick()
+        root.querySelector('.library-picker-list button').click()
+        await nextTick()
+
+        expect(global.fetch).toHaveBeenCalledWith('/ressourcen/bibliothek?q=&type=assessment-task&education_plan_competency_id=55', expect.anything())
+        expect(axiosPost).toHaveBeenCalledWith('/jahresplanung/1/ressourcen/assessment-task/7/zuordnen', { target_type: 'lesson', target_id: 81 }, expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }))
+        expect(root.textContent).toContain('Bibliotheksaufgabe')
+        unmount()
+    })
+
+    it('shows an assigned task even when its competency cannot be matched after reload', async () => {
+        const { root, unmount } = mount({
+            scheduleSlotId: 81,
+            groupId: 1,
+            lessonId: 81,
+            competencies: [{ id: 101, education_plan_competency_id: 55, label: 'Kompetenz' }],
+            assessmentTasks: [{ id: 7, title: 'Nicht passend bezeichnete Aufgabe', max_points: 4, education_plan_competency_id: 999 }],
+        })
+
+        await nextTick()
+
+        expect(root.textContent).toContain('Ohne Kompetenzzuordnung')
+        expect(root.textContent).toContain('Nicht passend bezeichnete Aufgabe')
+        unmount()
+    })
+
+    it('removes an assigned task with a small axios request', async () => {
+        axiosPost.mockResolvedValue({ data: { message: 'Prüfungsaufgabe wurde entfernt.' } })
+        const { root, unmount } = mount({
+            scheduleSlotId: 81,
+            groupId: 1,
+            lessonId: 81,
+            competencies: [{ id: 101, education_plan_competency_id: 55, label: 'Kompetenz' }],
+            assessmentTasks: [{ id: 7, title: 'Aufgabe', education_plan_competency_id: 55 }],
+        })
+
+        await nextTick()
+        root.querySelector('button[aria-label="Prüfungsaufgabe entfernen"]').click()
+        closeConfirmation(true)
+        await new Promise(resolve => setTimeout(resolve, 0))
+        await nextTick()
+
+        expect(axiosPost).toHaveBeenCalledWith('/jahresplanung/1/ressourcen/assessment-task/7/trennen', { target_type: 'lesson', target_id: 81 }, expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }))
+        expect(root.querySelectorAll('.list-group-item')).toHaveLength(0)
         unmount()
     })
 })

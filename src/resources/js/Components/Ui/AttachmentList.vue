@@ -2,6 +2,7 @@
 import de from '../../i18n/de'
 import { computed, ref, watch } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import { requestConfirmation } from '../../utils/confirmation'
 
 const props = defineProps({ resources: { type: Array, default: () => [] }, resourceLinks: { type: Array, default: () => [] }, materialItems: { type: Array, default: () => [] }, songs: { type: Array, default: () => [] }, songbooks: { type: Array, default: () => [] }, assessmentTasks: { type: Array, default: () => [] }, libraryResources: { type: Array, default: () => [] }, libraryResourceLinks: { type: Array, default: () => [] }, libraryMaterialItems: { type: Array, default: () => [] }, libraryAttachUrl: { type: String, default: '' }, libraryTargetType: { type: String, default: '' }, libraryTargetId: { type: [String, Number], default: null }, materialText: { type: String, default: '' }, downloadBaseUrl: { type: String, required: true }, uploadUrl: { type: String, default: '' }, uploadLessonId: { type: [String, Number], default: null }, manage: { type: Boolean, default: false } })
@@ -62,7 +63,7 @@ function uploadFile() {
 function addResourceLink() {
     if (!resourceLinkForm.value.title.trim() || !resourceLinkForm.value.url.trim()) return
     if (props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
-        router.post(`${props.libraryAttachUrl}/resource/erstellen`, { ...resourceLinkForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => { resourceLinkForm.value = { title: '', url: '' }; activeAdd.value = null; emit('uploaded', page) }, onError: errors => emit('error', Object.values(errors)[0] || 'Die Ressource konnte nicht gespeichert werden.') })
+        axios.post(`${props.libraryAttachUrl}/resource/erstellen`, { ...resourceLinkForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => { emit('update:resource-links', [...props.resourceLinks, response.data.item]); resourceLinkForm.value = { title: '', url: '' }; activeAdd.value = null }).catch(error => emit('error', error.response?.data?.message || 'Die Ressource konnte nicht gespeichert werden.'))
         return
     }
     emit('update:resource-links', [...props.resourceLinks, { local_key: `new-link-${Date.now()}`, ...resourceLinkForm.value }])
@@ -72,7 +73,7 @@ function addResourceLink() {
 function addMaterialItem() {
     if (!materialItemForm.value.name.trim()) return
     if (props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
-        router.post(`${props.libraryAttachUrl}/material/erstellen`, { ...materialItemForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => { materialItemForm.value = { name: '', material_number: '', storage_location: '', description: '' }; activeAdd.value = null; emit('uploaded', page) }, onError: errors => emit('error', Object.values(errors)[0] || 'Das Material konnte nicht gespeichert werden.') })
+        axios.post(`${props.libraryAttachUrl}/material/erstellen`, { ...materialItemForm.value, target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => { emit('update:material-items', [...props.materialItems, response.data.item]); materialItemForm.value = { name: '', material_number: '', storage_location: '', description: '' }; activeAdd.value = null }).catch(error => emit('error', error.response?.data?.message || 'Das Material konnte nicht gespeichert werden.'))
         return
     }
     emit('update:material-items', [...props.materialItems, { local_key: `new-material-${Date.now()}`, ...materialItemForm.value }])
@@ -81,7 +82,7 @@ function addMaterialItem() {
 }
 function selectLibraryItem(item) {
     if ((item.kind === 'resource' || item.kind === 'material' || item.kind === 'song' || item.kind === 'songbook' || item.kind === 'assessment-task') && props.libraryAttachUrl && props.libraryTargetType && props.libraryTargetId) {
-        router.post(`${props.libraryAttachUrl}/${item.kind}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page), onError: errors => emit('error', Object.values(errors)[0] || 'Die Zuordnung konnte nicht gespeichert werden.') })
+        axios.post(`${props.libraryAttachUrl}/${item.kind}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => { if (item.kind === 'resource') emit('update:resource-links', [...props.resourceLinks, response.data.item || item]); if (item.kind === 'material') emit('update:material-items', [...props.materialItems, response.data.item || item]); if (item.kind === 'song') emit('update:songs', [...props.songs, response.data.item || item]); if (item.kind === 'assessment-task') emit('uploaded', response.data) }).catch(error => emit('error', error.response?.data?.message || 'Die Zuordnung konnte nicht gespeichert werden.'))
         activeAdd.value = null
         return
     }
@@ -90,7 +91,7 @@ function selectLibraryItem(item) {
     if (item.kind === 'song') emit('update:songs', [...props.songs, { ...item, local_key: `library-song-${item.id}` }])
     if (item.kind === 'file') {
         if (!props.libraryAttachUrl || !props.libraryTargetType || !props.libraryTargetId) return
-        router.post(`${props.libraryAttachUrl}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { preserveScroll: true, onSuccess: page => emit('uploaded', page) })
+        axios.post(`${props.libraryAttachUrl}/${item.id}/zuordnen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => emit('uploaded', response.data)).catch(error => emit('error', error.response?.data?.message || 'Die Datei konnte nicht zugeordnet werden.'))
     }
     activeAdd.value = null
 }
@@ -101,7 +102,7 @@ function openEdit(type, item) {
 }
 function closeEdit() { editingItem.value = null; editingType.value = null }
 function updatePublicationStatus(resource, publicationStatus) {
-    router.put(`${props.downloadBaseUrl}/${resource.id}`, { publication_status: publicationStatus }, { preserveState: true, preserveScroll: true, onSuccess: page => emit('uploaded', page) })
+    axios.put(`${props.downloadBaseUrl}/${resource.id}`, { publication_status: publicationStatus }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(() => { resource.publication_status = publicationStatus }).catch(error => emit('error', error.response?.data?.message || 'Der Freigabestatus konnte nicht gespeichert werden.'))
 }
 function saveEdit() {
     if (editingType.value === 'file') emit('update', editingItem.value, editingForm.value.description, editingForm.value.copyrights)
@@ -127,7 +128,7 @@ async function removeItem(type, item) {
         if (status.association_count <= 1) permanent = await requestConfirmation({ title: de.deleteAttachment, message: de.deleteResourcePermanentlyConfirm, actions: [{ value: false, label: de.keepInLibrary, variant: 'outline-secondary' }, { value: true, label: de.deletePermanently, variant: 'danger' }, { value: 'cancel', label: de.cancel, variant: 'secondary' }] })
         else if (!await requestConfirmation({ title: de.deleteAttachment, message: de.detachResourceConfirm, actions: [{ value: true, label: de.removeAssociation, variant: 'danger' }, { value: false, label: de.cancel, variant: 'secondary' }] })) return
         if (permanent === 'cancel') return
-        router.post(`${props.libraryAttachUrl}/${type}/${item.id}/trennen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId, permanent }, { preserveScroll: true, onSuccess: page => removeFromLocalList(type, item, page), onError: errors => emit('error', Object.values(errors)[0] || de.deleteAttachmentConfirm) })
+        axios.post(`${props.libraryAttachUrl}/${type}/${item.id}/trennen`, { target_type: props.libraryTargetType, target_id: props.libraryTargetId, permanent }, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(response => removeFromLocalList(type, item, response.data)).catch(error => emit('error', error.response?.data?.message || de.deleteAttachmentConfirm))
     } catch {
         emit('error', de.deleteAttachmentConfirm)
     }

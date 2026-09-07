@@ -1,6 +1,7 @@
 export const evaluationSections = [
     { id: 'booklets', label: 'assessmentEvaluationAssignments' },
     { id: 'tasks', label: 'assessmentEvaluationTasks' },
+    { id: 'results', label: 'assessmentEvaluationResults' },
 ]
 
 export function bookletStudentOptions(booklet, students, booklets) {

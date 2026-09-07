@@ -349,14 +349,15 @@ class YearPlanController extends Controller
         return back()->with('success', 'Kompetenz wurde als sekundäre UE-Kompetenz hinzugefügt.');
     }
 
-    public function removeTeachingUnitCompetency(TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, TeachingUnitCompetency $teachingUnitCompetency): RedirectResponse
+    public function removeTeachingUnitCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, TeachingUnitCompetency $teachingUnitCompetency): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnitCompetency->teaching_unit_id === $teachingUnit->id, 404);
         $teachingUnitCompetency->lessons()->detach();
         $teachingUnitCompetency->delete();
 
-        return back()->with('success', 'Kompetenz wurde entfernt.');
+        $message = 'Kompetenz wurde entfernt.';
+        return $request->expectsJson() ? response()->json(['message' => $message]) : back()->with('success', $message);
     }
 
     private function educationPlanIdsForGroup(TeachingGroup $teachingGroup)
@@ -578,7 +579,7 @@ class YearPlanController extends Controller
         return back()->with('success', 'Stunden-Vorlage wurde gespeichert.');
     }
 
-    public function savePhaseAsTemplate(TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse
+    public function savePhaseAsTemplate(Request $request, TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         $phase->load(['lesson.unit.template', 'lesson.template']);
@@ -604,7 +605,8 @@ class YearPlanController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Phasen-Vorlage wurde angelegt.');
+        $message = 'Phasen-Vorlage wurde angelegt.';
+        return $request->expectsJson() ? response()->json(['message' => $message]) : back()->with('success', $message);
     }
 
     public function updateLessonCompetencies(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
@@ -619,13 +621,14 @@ class YearPlanController extends Controller
         return back()->with('success', 'Kompetenzen der Stunde wurden gespeichert.');
     }
 
-    public function updatePhase(Request $request, TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse
+    public function updatePhase(Request $request, TeachingGroup $teachingGroup, LessonPhase $phase): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($phase->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
         $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'teacher_interaction' => ['nullable', 'string'], 'learner_activity' => ['nullable', 'string'], 'differentiation' => ['nullable', 'string'], 'didactic_comment' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'media' => ['nullable', 'string']]));
 
-        return back()->with('success', 'Phase wurde gespeichert.');
+        $message = 'Phase wurde gespeichert.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'phase' => $phase->fresh()]) : back()->with('success', $message);
     }
 
     public function storePhase(StoreLessonPhaseRequest $request, TeachingGroup $teachingGroup, Lesson $lesson): RedirectResponse
@@ -714,7 +717,7 @@ class YearPlanController extends Controller
         return back()->with('success', 'Reihenfolge der Phasen wurde gespeichert.');
     }
 
-    public function updateScheduledLessonStatus(UpdateScheduledLessonStatusRequest $request, TeachingGroup $teachingGroup, ScheduledLesson $scheduledLesson): RedirectResponse
+    public function updateScheduledLessonStatus(UpdateScheduledLessonStatusRequest $request, TeachingGroup $teachingGroup, ScheduledLesson $scheduledLesson): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($scheduledLesson->lesson->unit->teaching_group_id === $teachingGroup->id, 404);
@@ -724,7 +727,8 @@ class YearPlanController extends Controller
         }
         $scheduledLesson->update(['status' => $status]);
 
-        return back()->with('success', 'Stundenstatus wurde gespeichert.');
+        $message = 'Stundenstatus wurde gespeichert.';
+        return $request->expectsJson() ? response()->json(['message' => $message, 'status' => $scheduledLesson->status]) : back()->with('success', $message);
     }
 
     public function reorderLessons(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
