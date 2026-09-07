@@ -165,7 +165,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $section->addText('ROO_TASK_START_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $points = (int) ($task['max_points'] ?? 0);
         $instruction = ($task['task_type'] ?? '') === 'cloze'
-            ? (string) ($task['title'] ?? '')
+            ? (string) ($task['content']['instruction'] ?? $task['title'] ?? '')
             : (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
         $section->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => self::COMIC, 'size' => 14], ['spaceBefore' => 180, 'spaceAfter' => 120]);
 

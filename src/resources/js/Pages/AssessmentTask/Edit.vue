@@ -95,6 +95,7 @@ const newClozeBlank = (index, solution = "", points = 1) => ({
 });
 const emptyContent = () => ({
     prompt: "",
+    instruction: "",
     lines: 5,
     lineated: false,
     options: [newOption()],
@@ -132,9 +133,17 @@ const form = useForm({
     education_plan_competency_id: "",
     levels: [],
 });
+const taskPrompt = computed({
+    get: () => form.task_type === "cloze" ? form.content.instruction : form.content.prompt,
+    set: value => {
+        if (form.task_type === "cloze") form.content.instruction = value;
+        else form.content.prompt = value;
+    },
+});
 
 function resetForm() {
     const content = { ...emptyContent(), ...(props.task?.content ?? {}) };
+    if (props.task?.task_type === "cloze" && !content.instruction) content.instruction = props.task?.title ?? "";
     if (
         props.task?.task_type === "checkbox" &&
         !props.task?.content?.checkbox_scoring_mode
@@ -640,6 +649,7 @@ function save() {
         delete content.bordered;
     }
     if (form.task_type !== "cloze") {
+        delete content.instruction;
         delete content.blanks;
         delete content.split_blank_words;
     }
@@ -804,7 +814,7 @@ function save() {
                                 >{{ de.assessmentTaskPrompt }}</label
                             ><textarea
                                 id="assessment-task-prompt"
-                                v-model="form.content.prompt"
+                                v-model="taskPrompt"
                                 class="form-control"
                                 rows="4"
                                 @input="form.task_type === 'cloze' && syncClozeBlanks()"
@@ -816,7 +826,9 @@ function save() {
                                     <div class="col-md-4"><label class="form-check"><input v-model="form.content.lineated" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskLineation }}</span></label></div>
                                     <div class="col-md-4"><label class="form-check"><input v-model="form.content.split_blank_words" type="checkbox" class="form-check-input" /><span class="form-check-label">{{ de.assessmentTaskClozeSplitWords }}</span></label></div>
                                 </div>
-                                <h3 class="h6">{{ de.assessmentTaskCloze }}</h3>
+                                <label class="form-label mt-3" for="assessment-task-cloze-text">{{ de.assessmentTaskCloze }}</label>
+                                <div class="form-text mb-2">Lücken mit eckigen Klammern markieren, zum Beispiel: [Kirche].</div>
+                                <textarea id="assessment-task-cloze-text" v-model="form.content.prompt" class="form-control" rows="6" placeholder="[Lücke] im Text markieren" @input="syncClozeBlanks()" required></textarea>
                                 <div v-for="(blank, index) in form.content.blanks" :key="blank.id" class="row g-2 align-items-center mb-2" data-cloze-blank>
                                     <div class="col"><span class="form-control-plaintext">{{ blank.solution }}</span></div>
                                     <div class="col-auto"><label class="visually-hidden" :for="`assessment-task-cloze-points-${index}`">{{ de.assessmentTaskPoints }}</label><input :id="`assessment-task-cloze-points-${index}`" v-model.number="blank.points" type="number" min="1" max="10000" step="1" class="form-control" :placeholder="de.assessmentTaskPoints" required /></div>

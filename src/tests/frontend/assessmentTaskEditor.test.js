@@ -151,7 +151,7 @@ it("derives cloze blanks and submits their integer points", async () => {
         .click();
     await nextTick();
 
-    const prompt = root.querySelector("#assessment-task-prompt");
+    const prompt = root.querySelector("#assessment-task-cloze-text");
     prompt.value = "Die [Kirche] steht neben dem [Rathaus].";
     prompt.dispatchEvent(new Event("input", { bubbles: true }));
     await nextTick();
@@ -171,6 +171,25 @@ it("derives cloze blanks and submits their integer points", async () => {
         { id: "blank-1", solution: "Kirche", points: 2 },
         { id: "blank-2", solution: "Rathaus", points: 1 },
     ]);
+    unmount();
+});
+
+it("shows the Lückentext textarea in the competency create flow", async () => {
+    const { root, unmount } = mount({
+        initialEducationPlanId: 14,
+        initialCompetency: { id: 1624, number: "3.2.1 (3)", text: "Kompetenz" },
+    });
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await nextTick();
+    Array.from(root.querySelectorAll("button"))
+        .find((button) => button.textContent.includes("Lückentext"))
+        .click();
+    await nextTick();
+
+    expect(root.querySelector("#assessment-task-prompt")).not.toBeNull();
+    expect(root.querySelector('[for="assessment-task-prompt"]').textContent).toContain("Arbeitsauftrag");
+    expect(root.querySelector("#assessment-task-cloze-text")).not.toBeNull();
+    expect(root.querySelector('[for="assessment-task-cloze-text"]').textContent).toContain("Lückentext");
     unmount();
 });
 
