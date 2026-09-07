@@ -41,7 +41,7 @@ final class AssessmentScanFragmentBuilder
     }
 
     /**
-     * @return list<array{start_page:int,fragments:list<array{task_id:string,page:int,end_page:int,start_y_cm:float,end_y_cm:float}>}>
+     * @return list<array{start_page:int,level:?string,fragments:list<array{task_id:string,page:int,end_page:int,start_y_cm:float,end_y_cm:float}>}>
      */
     public function booklets(string $sessionId): array
     {
@@ -49,7 +49,7 @@ final class AssessmentScanFragmentBuilder
     }
 
     /**
-     * @return array{booklets:list<array{start_page:int,fragments:list<array{task_id:string,page:int,end_page:int,start_y_cm:float,end_y_cm:float}>}>,warnings:list<string>}
+     * @return array{booklets:list<array{start_page:int,level:?string,fragments:list<array{task_id:string,page:int,end_page:int,start_y_cm:float,end_y_cm:float}>}>,warnings:list<string>}
      */
     public function analysis(string $sessionId, ?int $assessmentId): array
     {
@@ -75,7 +75,11 @@ final class AssessmentScanFragmentBuilder
 
                         continue;
                     }
-                    $booklets[] = ['start_page' => $page['page'], 'fragments' => []];
+                    $booklets[] = [
+                        'start_page' => $page['page'],
+                        'level' => $marker['level'] ?? null,
+                        'fragments' => [],
+                    ];
                     $currentBooklet = array_key_last($booklets);
                     $openTasks = [];
 

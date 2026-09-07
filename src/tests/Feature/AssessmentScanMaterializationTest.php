@@ -59,7 +59,7 @@ it('materializes uploaded pages and redirects their completion to the durable ev
 
         public function decode(string $imagePath): iterable
         {
-            yield ['payload' => "ROO1|A={$this->assessmentId}|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
+            yield ['payload' => "ROO1|A={$this->assessmentId}|L=E|K=PAGE", 'x_px' => 20, 'y_px' => 100, 'width_px' => 10, 'height_px' => 10];
             yield ['payload' => "ROO1|T={$this->taskId}|K=START", 'x_px' => 20, 'y_px' => 500, 'width_px' => 10, 'height_px' => 10];
             yield ['payload' => "ROO1|T={$this->taskId}|K=END", 'x_px' => 20, 'y_px' => 1200, 'width_px' => 10, 'height_px' => 10];
         }
@@ -83,6 +83,7 @@ it('materializes uploaded pages and redirects their completion to the durable ev
         ->assertJsonPath('redirect_url', url("/unterrichtsgruppen/{$fixture['group']->id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung"));
 
     expect($fixture['assessment']->booklets()->count())->toBe(1)
+        ->and($fixture['assessment']->booklets()->first()->level)->toBe('E')
         ->and($fixture['assessment']->booklets()->first()->fragments)->toHaveCount(1)
         ->and(app(AssessmentScanSessionStore::class)->manifest($session))->toBeNull();
 });

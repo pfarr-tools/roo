@@ -24,6 +24,7 @@ use App\Services\AssessmentEvaluation\AssignAssessmentBooklet;
 use App\Services\AssessmentEvaluation\MaterializeAssessmentScan;
 use App\Services\AssessmentEvaluation\SaveAssessmentTaskReview;
 use App\Services\AssessmentEvaluation\SentenceBuilderWordOrder;
+use App\Services\AssessmentEvaluation\SortingTaskEvaluator;
 use App\Services\AssessmentScan\AssessmentPdfScanner;
 use App\Services\AssessmentScan\AssessmentScanPageProcessor;
 use App\Services\AssessmentScan\AssessmentScanSessionStore;
@@ -129,12 +130,12 @@ class AssessmentController extends Controller
         ]);
         $studentId = ($options['student'] ?? 'all') === 'all' ? null : (int) $options['student'];
         $students = $teachingGroup->students()->orderBy('last_name')->orderBy('first_name')->get();
-        $teachingGroup->loadMissing('school');
+        $teachingGroup->loadMissing(['school', 'schoolYear']);
         if ($studentId !== null) {
             $students = $students->where('id', $studentId)->values();
         }
 
-        $assessment->load(['tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.competency', 'tasks.educationPlanCompetency.variants.level']);
+        $assessment->load(['booklets.student', 'tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.competency', 'tasks.educationPlanCompetency.variants.level']);
         $reports = $students->map(fn (Student $student): array => $this->resultReportForStudent($assessment, $teachingGroup, $student))->all();
         $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
         $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports), $format);
@@ -154,25 +155,40 @@ class AssessmentController extends Controller
     private function resultReportForStudent(Assessment $assessment, TeachingGroup $teachingGroup, Student $student): array
     {
         $tasks = $assessment->tasks->reject(fn (AssessmentTask $task): bool => $task->task_type === 'expectation_list');
-        $taskReports = $tasks->map(function (AssessmentTask $task) use ($student, $assessment): array {
+        $studentBookletLevel = $assessment->booklets
+            ->first(fn (AssessmentBooklet $booklet): bool => (int) $booklet->student_id === (int) $student->id && $booklet->status === 'open')?->level;
+        $studentLevel = strtoupper(trim((string) $studentBookletLevel));
+        $tasks = $tasks->filter(fn (AssessmentTask $task): bool => $studentLevel === ''
+            || $task->levels->isEmpty()
+            || $task->levels->contains(fn ($taskLevel): bool => strtoupper((string) $taskLevel->level) === $studentLevel));
+        $taskReports = $tasks->map(function (AssessmentTask $task) use ($student, $assessment, $studentBookletLevel): array {
             $result = $task->results->first(fn ($result): bool => (int) $result->student_id === (int) $student->id && ((int) ($result->assessment_id ?? $assessment->id) === (int) $assessment->id));
             $maxPoints = $task->maximumPoints();
+            $review = $task->reviews
+                ->first(fn ($review): bool => (int) $review->booklet?->assessment_id === (int) $assessment->id && (int) $review->booklet?->student_id === (int) $student->id);
             $reviewItems = $task->reviews
                 ->filter(fn ($review): bool => (int) $review->booklet?->assessment_id === (int) $assessment->id && (int) $review->booklet?->student_id === (int) $student->id)
                 ->flatMap->items
                 ->groupBy('assessment_task_expectation_id');
-            $level = $result?->level ?: ($task->levels->count() === 1 ? $task->levels->first()->level : 'M');
+            $level = $studentBookletLevel ?: $result?->level ?: ($task->levels->count() === 1 ? $task->levels->first()->level : '');
+            $competencyLevel = $level !== '' ? $level : ($task->levels->count() === 1 ? $task->levels->first()->level : 'M');
+            $competencyKey = $task->educationPlanCompetency !== null
+                ? 'education-plan-'.$task->educationPlanCompetency->id
+                : ($task->competency !== null ? 'teaching-unit-'.$task->competency->id : 'task-'.$task->id);
 
             return [
                 'title' => $task->title,
                 'points' => $result?->points,
                 'max_points' => $maxPoints,
-                'points_label' => $result?->points === null || $maxPoints === null ? '– / '.($maxPoints ?? '–') : $result->points.' / '.$maxPoints,
+                'points_label' => $result?->points === null || $maxPoints === null ? '– / '.($maxPoints ?? '–') : $this->formatResultPoints($result->points).' / '.$maxPoints,
                 'percentage' => round_percentage($result?->points === null || ! $maxPoints ? 0 : min(100, max(0, ((float) $result->points / $maxPoints) * 100))),
-                'competency' => $this->resultCompetencyText($task, $level),
+                'competency_key' => $competencyKey,
+                'competency' => $this->resultCompetencyText($task, $competencyLevel),
                 'weight' => (int) ($task->pivot->weight ?? 50),
                 'grade' => $result?->numeric_grade,
                 'level' => $level,
+                'explanation' => $this->resultTaskExplanation($task, $review),
+                'extra_note' => $review?->extra_note,
                 'expectations' => $task->expectations->map(function ($expectation) use ($reviewItems, $result, $task): array {
                     $maximum = (float) $expectation->points * max(1, (int) ($expectation->repetitions ?: 1));
                     $awarded = $reviewItems->get($expectation->id)?->sum(fn ($item): float => (float) $item->awarded_points);
@@ -184,44 +200,117 @@ class AssessmentController extends Controller
                         'text' => $expectation->text,
                         'points' => $awarded,
                         'max_points' => $maximum,
+                        'notes' => $reviewItems->get($expectation->id)?->pluck('note')->filter()->unique()->values()->all() ?? [],
                     ];
                 })->values()->all(),
             ];
         })->values();
-        $competencies = $taskReports->groupBy('competency')->map(fn ($items, $title): array => [
-            'title' => $title,
+        $competencyWeights = $taskReports->groupBy('competency_key')->map(fn ($items): int => max(1, (int) $items->sum('weight')));
+        $taskReports = $taskReports->map(function (array $task) use ($competencyWeights): array {
+            $task['weight_percentage'] = round_percentage($task['weight'] / $competencyWeights->get($task['competency_key'], 1) * 100);
+
+            return $task;
+        });
+        $competencies = $taskReports->groupBy('competency_key')->map(fn ($items): array => [
+            'title' => $items->first()['competency'],
             'percentage' => round_percentage($items->sum(fn (array $item): float => $item['percentage'] * $item['weight']) / max(1, $items->sum('weight'))),
         ])->values()->all();
         $maxTotal = $taskReports->sum('max_points');
         $pointsTotal = $taskReports->sum(fn (array $task): float => (float) ($task['points'] ?? 0));
         $levels = $taskReports->filter(fn (array $task): bool => filled($task['grade']))->pluck('grade');
-        $studentLevels = $tasks->flatMap(fn (AssessmentTask $task) => $task->levels->pluck('level')->filter())->unique()->implode('/');
+        $studentLevels = collect([$studentBookletLevel])->merge($taskReports->pluck('level'))->filter()->unique()->implode('/');
 
         return [
             'title' => $assessment->title,
             'student_name' => trim($student->first_name.' '.$student->last_name),
-            'level' => $studentLevels ?: ($assessment->is_differentiated ? 'M' : ''),
+            'level' => $studentLevels,
             'tasks' => $taskReports->all(),
             'competencies' => $competencies,
             'percentage' => round_percentage($maxTotal ? $pointsTotal / $maxTotal * 100 : 0),
-            'grade' => percentage_to_grade($maxTotal ? $pointsTotal / $maxTotal * 100 : 0),
+            'grade' => $student->receives_grades ? percentage_to_grade($maxTotal ? $pointsTotal / $maxTotal * 100 : 0) : null,
+            'receives_grades' => $student->receives_grades,
             'place' => $teachingGroup->school?->name ?: '',
             'date' => ($assessment->assessed_on ?: now())->format('d.m.Y'),
             'author' => auth()->user()?->name ?: '',
+            'school' => $teachingGroup->school?->name ?: '',
+            'school_year' => $teachingGroup->schoolYear?->name ?: '',
+            'group' => $teachingGroup->name,
+            'footer_title' => $assessment->title.($studentLevels !== '' ? " ({$studentLevels})" : ''),
         ];
+    }
+
+    private function resultTaskExplanation(AssessmentTask $task, mixed $review): ?string
+    {
+        if ($task->task_type === 'sorting') {
+            $questions = collect($task->content['questions'] ?? [])
+                ->filter(fn ($question): bool => is_array($question) && filled($question['label'] ?? null))
+                ->values();
+            $correctAnswer = $questions->pluck('label')->implode(' · ');
+            $explanation = $correctAnswer !== '' ? 'Richtige Lösung: '.$correctAnswer.'.' : null;
+            if ($review === null) {
+                return $explanation;
+            }
+            $sequence = is_array($review->sorting_sequence) ? $review->sorting_sequence : [];
+            $answer = $questions
+                ->sortBy(fn (array $question): int => (int) ($sequence[$question['id'] ?? ''] ?? PHP_INT_MAX))
+                ->pluck('label')
+                ->implode(' · ');
+            $totalPairs = count($questions) * (count($questions) - 1) / 2;
+            $percentage = app(SortingTaskEvaluator::class)->percentage($task, $sequence);
+            $correctPairs = (int) round($percentage / 100 * $totalPairs);
+
+            return trim(($explanation ? $explanation.' ' : '').'Deine Lösung: '.$answer.' ('.$correctPairs.' von '.$totalPairs.' Satzbeziehungen richtig.)');
+        }
+        if ($task->task_type === 'sentence_builder') {
+            $parts = [];
+            if (filled($task->solution)) {
+                $parts[] = 'Richtige Lösung: '.rtrim((string) $task->solution, '.').'.';
+            }
+            if ($review !== null && filled($review->student_sentence)) {
+                $parts[] = 'Deine Lösung: '.$review->student_sentence;
+            }
+
+            return $parts === [] ? null : implode(' ', $parts);
+        }
+        if (filled($task->solution)) {
+            return 'Richtige Lösung: '.rtrim((string) $task->solution, '.').'.';
+        }
+
+        return null;
     }
 
     private function resultCompetencyText(AssessmentTask $task, string $level): string
     {
         $competency = $task->educationPlanCompetency;
         if ($competency !== null) {
-            $variant = $competency->variants->first(fn ($variant): bool => strtoupper((string) $variant->level?->external_identifier) === strtoupper($level));
+            $variants = $competency->variants->values();
+            $variant = $variants->first(fn ($variant): bool => strtoupper((string) $variant->level?->external_identifier) === strtoupper($level));
+            if ($variant === null && $variants->count() === 3) {
+                $variant = $variants->get(array_search(strtoupper($level), ['G', 'M', 'E'], true));
+            }
             $text = $variant?->text ?: $competency->text;
 
-            return trim((string) preg_replace('/^\s*(?:Du kannst\s+)?/iu', 'Du kannst ', $this->withoutCompetencyIdentifier($text)));
+            return $this->formatCompetencyText($text);
         }
 
-        return $this->withoutCompetencyIdentifier($task->competency?->local_wording ?: 'Ohne Kompetenzzuordnung');
+        return $this->formatCompetencyText($task->competency?->local_wording ?: 'Ohne Kompetenzzuordnung');
+    }
+
+    private function formatCompetencyText(?string $text): string
+    {
+        $text = $this->withoutCompetencyIdentifier($text);
+        $text = (string) preg_replace('/\s*\([^()]*\)/u', '', $text);
+        $text = trim((string) preg_replace('/\s+/u', ' ', $text));
+        $text = trim((string) preg_replace('/^\s*(?:Du kannst\s+)?/iu', 'Du kannst ', $text));
+
+        return rtrim($text, ' .!?;:').'.';
+    }
+
+    private function formatResultPoints(mixed $points): string
+    {
+        $formatted = number_format((float) $points, 2, '.', '');
+
+        return rtrim(rtrim($formatted, '0'), '.');
     }
 
     private function withoutCompetencyIdentifier(?string $text): string

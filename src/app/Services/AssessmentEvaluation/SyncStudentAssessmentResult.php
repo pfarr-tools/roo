@@ -41,7 +41,10 @@ final class SyncStudentAssessmentResult
             };
         }
 
-        $levels = $task->levels()->pluck('level')->filter()->values();
+        $levels = collect([$booklet->level])->filter()->values();
+        if ($levels->isEmpty()) {
+            $levels = $task->levels()->pluck('level')->filter()->values();
+        }
         if ($levels->isEmpty() && filled($task->level)) {
             $levels = collect([$task->level]);
         }

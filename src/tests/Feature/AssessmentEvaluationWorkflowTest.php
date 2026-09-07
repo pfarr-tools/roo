@@ -194,6 +194,24 @@ it('stores checkbox selections and synchronizes option and manual points', funct
         ->and(StudentAssessmentResult::where('assessment_task_id', $task->id)->where('student_id', $fixture['student']->id)->value('level'))->toBe('M');
 });
 
+it('uses the scanned booklet level for the student result', function () {
+    $fixture = assessmentEvaluationWorkflowFixture(1);
+    $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id, 'level' => 'E']);
+
+    app(SaveAssessmentTaskReview::class)->handle($fixture['booklets'][0], $fixture['task'], [
+        'items' => [
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 1, 'awarded_points' => 1],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 2, 'awarded_points' => 0],
+            ['expectation_id' => $fixture['expectation']->id, 'occurrence' => 3, 'awarded_points' => 0],
+        ],
+        'extra_points' => 0,
+    ]);
+
+    expect(StudentAssessmentResult::where('assessment_task_id', $fixture['task']->id)
+        ->where('student_id', $fixture['student']->id)
+        ->value('level'))->toBe('E');
+});
+
 it('stores image matching selections and synchronizes their points', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([

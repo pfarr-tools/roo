@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Documents\AssessmentDocument;
+use App\Documents\AssessmentResultDocument;
 use App\Documents\Document;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplateRegistry;
@@ -848,17 +849,25 @@ class PhpOfficeDocumentRenderer
             $pageMarkerPng = $this->pageMarkerPng($this->pageMarker($metadata));
             $taskMarkers = $this->taskMarkers($document);
 
-            $styles = preg_replace(
+            if ($document instanceof AssessmentResultDocument) {
+                $styles = $this->normalizeAssessmentResultTableStyleDefinitions($styles);
+            }
+
+            $styles = preg_replace_callback(
                 '/(<style:page-layout-properties\b)([^>]*)(>)/',
-                '$1$2 fo:border="0.05cm solid #000000" fo:padding="0.4cm"$3',
+                static function (array $matches): string {
+                    $attributes = $matches[2];
+                    $attributes = preg_replace('/\s+fo:border="[^"]*"/', '', $attributes) ?: $attributes;
+                    $attributes = preg_replace('/\s+fo:padding="[^"]*"/', '', $attributes) ?: $attributes;
+
+                    return $matches[1].$attributes.' fo:border="0.05cm solid #000000" fo:padding="0.4cm"'.$matches[3];
+                },
                 $styles,
-                1,
             ) ?: $styles;
             $styles = preg_replace_callback(
                 '/(<style:page-layout-properties\b[^>]*?) fo:margin-left="([^"]+)" fo:margin-right="([^"]+)"/',
                 static fn (array $matches): string => $matches[1].' fo:margin-left="'.$matches[3].'" fo:margin-right="'.$matches[2].'"',
                 $styles,
-                1,
             ) ?: $styles;
             $styles = preg_replace_callback(
                 '/(<style:page-layout-properties\b[^>]*>)/',
@@ -869,7 +878,6 @@ class PhpOfficeDocumentRenderer
                     return $properties;
                 },
                 $styles,
-                1,
             ) ?: $styles;
             if (! $isParentLetter) {
                 $styles = str_replace(
@@ -940,6 +948,9 @@ class PhpOfficeDocumentRenderer
             ])));
             $content = $archive->getFromName('content.xml');
             if (is_string($content)) {
+                if ($document instanceof AssessmentResultDocument) {
+                    $content = $this->normalizeAssessmentResultTableStyles($content, $styles);
+                }
                 if (! $isParentLetter) {
                     $content = preg_replace(
                         '/(style:name="SB1"[^>]*style:master-page-name=")Standard1/',
@@ -959,6 +970,75 @@ class PhpOfficeDocumentRenderer
         } finally {
             unlink($temporaryPath);
         }
+    }
+
+    private function normalizeAssessmentResultTableStyles(string $content, string $styles): string
+    {
+        if (! preg_match('/<style:style\s+style:name="([^"]+)"\s+style:family="table"[^>]*><style:table-properties[^>]*style:width="17\.1cm"/', $styles, $matches)) {
+            return $content;
+        }
+
+        $tableStyle = $matches[1];
+
+        return preg_replace_callback(
+            '/<table:table\s[^>]*>\s*(?:<table:table-column\s[^>]*>\s*){3}/s',
+            static function (array $tableMatches) use ($tableStyle): string {
+                $table = preg_replace(
+                    '/(table:style-name=")[^"]+(")/',
+                    '$1'.$tableStyle.'$2',
+                    $tableMatches[0],
+                    1,
+                ) ?: $tableMatches[0];
+                $table = preg_replace(
+                    '/(table:table-column\s+table:style-name=")[^"]+(\.[0-2]")/',
+                    '$1'.$tableStyle.'$2',
+                    $table,
+                ) ?: $table;
+
+                return $table;
+            },
+            $content,
+        ) ?: $content;
+    }
+
+    private function normalizeAssessmentResultTableStyleDefinitions(string $styles): string
+    {
+        $tableStyles = [];
+        preg_match_all(
+            '/<style:style\s+style:name="([^"]+)"\s+style:family="table"><style:table-properties\b[^>]*\/><\/style:style>/',
+            $styles,
+            $tableMatches,
+        );
+
+        foreach ($tableMatches[1] as $tableStyle) {
+            preg_match_all(
+                '/<style:style\s+style:name="'.preg_quote($tableStyle, '/').'\.\d+"\s+style:family="table-column"[^>]*>.*?style:column-width="([^"]+)".*?<\/style:style>/s',
+                $styles,
+                $columnMatches,
+            );
+            $widths = $columnMatches[1] ?? [];
+
+            if ($widths === ['10.29cm', '1.69cm', '5.12cm']) {
+                $tableStyles[$tableStyle] = '17.1cm';
+            } elseif ($widths === ['2.56cm', '2.56cm']) {
+                $tableStyles[$tableStyle] = '5.12cm';
+            }
+        }
+
+        foreach ($tableStyles as $tableStyle => $width) {
+            $styles = preg_replace_callback(
+                '/(<style:style\s+style:name="'.preg_quote($tableStyle, '/').'"\s+style:family="table"><style:table-properties\b)([^>]*)(\/>)<\/style:style>/',
+                static function (array $matches) use ($width): string {
+                    $attributes = preg_replace('/\s+style:rel-width="[^"]*"/', '', $matches[2]) ?: $matches[2];
+                    $attributes = preg_replace('/\s+style:width="[^"]*"/', '', $attributes) ?: $attributes;
+
+                    return $matches[1].$attributes.' style:width="'.$width.'"'.$matches[3].'</style:style>';
+                },
+                $styles,
+            ) ?: $styles;
+        }
+
+        return $styles;
     }
 
     /** @param array<string, mixed> $metadata */

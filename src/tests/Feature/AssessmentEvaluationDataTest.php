@@ -11,7 +11,9 @@ use App\Models\AssessmentTaskReviewItem;
 use App\Models\AssessmentTaskReviewOption;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
+use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanLevel;
 use App\Models\EducationPlanVersion;
 use App\Models\Organization;
 use App\Models\School;
@@ -138,10 +140,10 @@ it('uses only the selected level competency variant without its identifier in th
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'VARIANT-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => null, 'position' => 1, 'is_active' => true]);
-    $level = \App\Models\EducationPlanLevel::create(['education_plan_version_id' => $version->id, 'external_identifier' => 'M', 'label' => 'Mittleres Niveau', 'position' => 2]);
-    \App\Models\EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => $level->id, 'text' => 'die M-Kompetenzvariante', 'position' => 1]);
+    $level = EducationPlanLevel::create(['education_plan_version_id' => $version->id, 'external_identifier' => 'M', 'label' => 'Mittleres Niveau', 'position' => 2]);
+    EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => $level->id, 'text' => 'die M-Kompetenzvariante', 'position' => 1]);
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
-    \App\Models\StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'M']);
+    StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'M']);
     $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
@@ -156,6 +158,158 @@ it('uses only the selected level competency variant without its identifier in th
     expect($content)->toContain('die M-Kompetenzvariante')
         ->not->toContain('3.1.1')
         ->not->toContain('G-Kompetenz');
+});
+
+it('includes the scanned student level, task details, notes, and branded page furniture in the result report', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $fixture['task']->updateQuietly([
+        'task_type' => 'sorting',
+        'max_points' => 4,
+        'content' => ['questions' => [['id' => 'first', 'label' => 'Ich'], ['id' => 'second', 'label' => 'bin']], 'points_per_sentence' => 2],
+    ]);
+    $booklet = $fixture['assessment']->booklets()->create([
+        'student_id' => $fixture['student']->id,
+        'number' => 1,
+        'status' => 'open',
+        'level' => 'E',
+    ]);
+    AssessmentTaskReview::create([
+        'assessment_booklet_id' => $booklet->id,
+        'assessment_task_id' => $fixture['task']->id,
+        'extra_note' => 'Zusätzliche Anmerkung',
+        'sorting_sequence' => ['first' => 2, 'second' => 1],
+    ]);
+    AssessmentTaskReviewItem::create([
+        'assessment_task_review_id' => $booklet->reviews()->sole()->id,
+        'assessment_task_expectation_id' => $fixture['expectation']->id,
+        'occurrence' => 1,
+        'awarded_points' => 2,
+        'note' => 'Hier genauer prüfen',
+    ]);
+    StudentAssessmentResult::create([
+        'assessment_id' => $fixture['assessment']->id,
+        'assessment_task_id' => $fixture['task']->id,
+        'student_id' => $fixture['student']->id,
+        'points' => 2,
+        'level' => 'E',
+    ]);
+    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-result-report-');
+    file_put_contents($path, $response->getContent());
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $styles = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->not->toContain('Lernstandserhebung Schöpfung (E)')
+        ->toContain('Hier genauer prüfen')
+        ->toContain('Zusätzliche Anmerkung')
+        ->toContain('Richtige Lösung: Ich · bin.')
+        ->toContain('Deine Lösung: bin · Ich')
+        ->toContain('Erreicht: 2 / 4 VP')
+        ->not->toContain('Mara Muster</text:span></text:p>')
+        ->and($styles)->toContain('Lernstandserhebung Schöpfung (E)')
+        ->toContain('assessmentFooterText')
+        ->toContain('Mara Muster')
+        ->toContain('FirstPage')
+        ->toContain('resultHeader')
+        ->toContain('24pt')
+        ->toContain('Resultate')
+        ->toContain('Seite')
+        ->toContain('text:page-number')
+        ->not->toContain('text:page-count')
+        ->toContain('style:column-width="10.29cm"')
+        ->toContain('style:column-width="1.69cm"')
+        ->toContain('style:column-width="5.12cm"')
+        ->and($content.$styles)->toContain('fo:background-color="#5B9BD5"')
+        ->toContain('fo:background-color="#E7E6E6"')
+        ->not->toContain('████')
+        ->toContain('style:width="17.1cm"')
+        ->toContain('color="#000000"')
+        ->and($content)->toMatch('/Auswertungsschule, [^<]+<\/text:span><\/text:p><text:p[^>]*><text:span[^>]*>[^<]+<\/text:span>/s')
+        ->and($content)->toContain('style:page-number="1"');
+});
+
+it('druckt nur aktive Aufgaben, Gewichtungen und Noten nur für benotete Schüler', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'REPORT', 'subject' => 'Religion', 'title' => 'Berichtsplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'REPORT-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Du kannst Inhalte (Zusatz) vergleichen', 'position' => 1, 'is_active' => true]);
+    $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe M und E']);
+    $fixture['task']->levels()->createMany([['level' => 'M'], ['level' => 'E']]);
+    $fixture['assessment']->tasks()->updateExistingPivot($fixture['task']->id, ['weight' => 75]);
+    $activeTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['organization']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe ebenfalls M']));
+    $activeTask->levels()->create(['level' => 'M']);
+    $activeTask->expectations()->create(['text' => 'Ebenfalls drucken', 'points' => 1, 'position' => 1]);
+    $fixture['assessment']->tasks()->attach($activeTask, ['position' => 2, 'weight' => 25]);
+    $inactiveTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['organization']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe nur G']));
+    $inactiveTask->levels()->create(['level' => 'G']);
+    $inactiveTask->expectations()->create(['text' => 'Nicht drucken', 'points' => 1, 'position' => 1]);
+    $fixture['assessment']->tasks()->attach($inactiveTask, ['position' => 3, 'weight' => 10]);
+    $booklet = $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'level' => 'M']);
+    StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'M']);
+    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-filtered-report-');
+    file_put_contents($path, $response->getContent());
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Aufgabe M und E')
+        ->not->toContain('Aufgabe nur G')
+        ->toContain('75 %')
+        ->toContain('Du kannst Inhalte vergleichen.')
+        ->not->toContain('Insgesamt hast du')
+        ->not->toContain('Für diese LSE erhältst du die Note');
+
+    $fixture['student']->update(['receives_grades' => true]);
+    $gradedResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
+    $gradedPath = tempnam(sys_get_temp_dir(), 'roo-test-graded-report-');
+    file_put_contents($gradedPath, $gradedResponse->getContent());
+    $gradedArchive = new ZipArchive;
+    $gradedArchive->open($gradedPath);
+    $gradedContent = $gradedArchive->getFromName('content.xml');
+    $gradedArchive->close();
+    unlink($gradedPath);
+
+    expect($gradedContent)->toContain('Insgesamt hast du')
+        ->toContain('Für diese LSE erhältst du die Note');
+});
+
+it('uses ordered unlabelled level variants for the student result report', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'ORDERED', 'subject' => 'Religion', 'title' => 'Reihenfolgeplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'ORDERED-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.2', 'text' => null, 'position' => 1, 'is_active' => true]);
+    foreach (['G' => 'G-Text', 'M' => 'M-Text', 'E' => 'E-Text'] as $text) {
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'text' => $text, 'position' => array_search($text, ['G-Text', 'M-Text', 'E-Text'], true) + 1]);
+    }
+    $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
+    StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'E']);
+    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+
+    $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-ordered-variants-');
+    file_put_contents($path, $response->getContent());
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    expect($content)->toContain('Du kannst E-Text')
+        ->not->toContain('Du kannst G-Text')
+        ->not->toContain('Du kannst M-Text');
 });
 
 it('keeps already assigned legacy tasks editable before competency backfill runs', function () {

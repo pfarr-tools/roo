@@ -3938,12 +3938,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PHPWord.git",
-                "reference": "378acb34b35a8f454ab0745673b9f658e3f1268b"
+                "reference": "cce373a558b0677e9e1c1ab8de72ac84f8a9d895"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/378acb34b35a8f454ab0745673b9f658e3f1268b",
-                "reference": "378acb34b35a8f454ab0745673b9f658e3f1268b",
+                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/cce373a558b0677e9e1c1ab8de72ac84f8a9d895",
+                "reference": "cce373a558b0677e9e1c1ab8de72ac84f8a9d895",
                 "shasum": ""
             },
             "require": {
@@ -3960,7 +3960,7 @@
                 "friendsofphp/php-cs-fixer": "^3.3",
                 "mpdf/mpdf": "^7.0 || ^8.0",
                 "phpmd/phpmd": "^2.13",
-                "phpstan/phpstan": "^0.12.88 || ^1.0.0 || ^2.0.0",
+                "phpstan/phpstan": "^0.12.88 || ^1.0.0 || >=2.0.0 <2.2.11",
                 "phpstan/phpstan-phpunit": "^1.0 || ^2.0",
                 "phpunit/phpunit": "^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0",
                 "symfony/process": "^4.4 || ^5.0",
@@ -4039,7 +4039,7 @@
                 "issues": "https://github.com/PHPOffice/PHPWord/issues",
                 "source": "https://github.com/PHPOffice/PHPWord/tree/master"
             },
-            "time": "2026-08-31T08:40:09+00:00"
+            "time": "2026-09-06T14:42:57+00:00"
         },
         {
             "name": "phpoption/phpoption",

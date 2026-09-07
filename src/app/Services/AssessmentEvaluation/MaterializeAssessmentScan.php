@@ -62,6 +62,7 @@ final class MaterializeAssessmentScan
                         'assessment_id' => $lockedAssessment->id,
                         'number' => $nextNumber++,
                         'status' => 'open',
+                        'level' => $scanBooklet['level'] ?? null,
                     ]);
                     $namePath = $this->pathFor($booklet, 'name.png');
                     $this->store($namePath, $this->cropper->nameFragment($this->sessions->pageContents($sessionId, $scanBooklet['start_page'])));

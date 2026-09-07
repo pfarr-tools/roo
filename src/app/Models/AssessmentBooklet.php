@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['assessment_id', 'student_id', 'number', 'status', 'source', 'name_fragment_path'])]
+#[Fillable(['assessment_id', 'student_id', 'number', 'status', 'source', 'level', 'name_fragment_path'])]
 class AssessmentBooklet extends Model
 {
     protected static function booted(): void

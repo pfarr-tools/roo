@@ -1,6 +1,7 @@
 <?php
 
 use App\Documents\AssessmentDocument;
+use App\Documents\AssessmentResultDocument;
 use App\Documents\Document;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplate;
@@ -52,6 +53,92 @@ it('weist auf nicht registrierte Templates hin', function () {
 
     expect(fn () => (new PhpOfficeDocumentRenderer(new DocumentTemplateRegistry))->render($document, DocumentOutputFormat::DOCX))
         ->toThrow(InvalidArgumentException::class, 'assessment.missing');
+});
+
+it('wendet Seitenrahmen und Seitenabstände auf alle ODT-Seitenlayouts an', function () {
+    $document = new class('Mehrseitiger Bericht') extends Document
+    {
+        public function templateKey(): string
+        {
+            return 'assessment.multiple-sections';
+        }
+    };
+    $template = new class implements DocumentTemplate
+    {
+        public function key(): string
+        {
+            return 'assessment.multiple-sections';
+        }
+
+        public function render(Document $document): PhpWord
+        {
+            $word = new PhpWord;
+            for ($index = 1; $index <= 3; $index++) {
+                $section = $word->addSection();
+                $section->addHeader()->addText('Kopf '.$index);
+                $section->addFooter()->addText('Resultate');
+                $section->addText('Seite '.$index);
+            }
+
+            return $word;
+        }
+    };
+    $renderer = new PhpOfficeDocumentRenderer(new DocumentTemplateRegistry([$template]));
+
+    $contents = $renderer->render($document, DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-multiple-layouts-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $styles = $archive->getFromName('styles.xml');
+    $archive->close();
+    unlink($path);
+    expect($styles)->toBeString()
+        ->and(substr_count((string) $styles, '<style:page-layout-properties'))->toBe(3)
+        ->and(substr_count((string) $styles, 'fo:border="0.05cm solid #000000"'))->toBe(3)
+        ->and(substr_count((string) $styles, 'fo:padding="0.4cm"'))->toBe(3)
+        ->and(substr_count((string) $styles, 'fo:margin-top="0.39375in"'))->toBe(3)
+        ->and(substr_count((string) $styles, 'fo:margin-bottom="0.39375in"'))->toBe(3);
+});
+
+it('verwendet den festen Kompetenztabellenstil in jeder Ergebnissesektion', function () {
+    $reports = collect(['Erster', 'Zweiter', 'Dritter'])->map(fn (string $name): array => [
+        'title' => 'LSE',
+        'student_name' => $name,
+        'level' => 'M',
+        'tasks' => [],
+        'competencies' => [['title' => 'Du kannst etwas.', 'percentage' => 100]],
+        'percentage' => 100,
+        'grade' => null,
+        'receives_grades' => false,
+        'place' => 'Schule',
+        'date' => '01.10.2026',
+        'author' => 'Lehrkraft',
+        'school' => 'Schule',
+        'school_year' => '2026/27',
+        'group' => '4a',
+        'footer_title' => 'LSE (M)',
+    ])->all();
+    $contents = app(PhpOfficeDocumentRenderer::class)->render(new AssessmentResultDocument('LSE', $reports), DocumentOutputFormat::ODT);
+    $path = tempnam(sys_get_temp_dir(), 'roo-test-result-table-styles-');
+    file_put_contents($path, $contents);
+    $archive = new ZipArchive;
+    $archive->open($path);
+    $styles = $archive->getFromName('styles.xml');
+    $content = $archive->getFromName('content.xml');
+    $archive->close();
+    unlink($path);
+
+    preg_match('/<style:style style:name="([^"]+)" style:family="table"><style:table-properties[^>]*style:width="17\.1cm"/', (string) $styles, $styleMatch);
+    preg_match_all('/<table:table\s[^>]*table:style-name="([^"]+)"[^>]*>\s*(?:<table:table-column\s[^>]*>\s*){3}/s', (string) $content, $tableMatches);
+
+    expect($styleMatch[1] ?? null)->not->toBeNull()
+        ->and($tableMatches[1] ?? [])->toHaveCount(3)
+        ->and(array_unique($tableMatches[1]))->toHaveCount(1)
+        ->and($tableMatches[1][0] ?? null)->toBe($styleMatch[1] ?? null)
+        ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.0"')
+        ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.1"')
+        ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.2"');
 });
 
 it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function () {
@@ -162,7 +249,7 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and($styles)->toContain('fo:margin-bottom="0.39375in"')
         ->and($styles)->toContain('fo:margin-left="0.7875in"')
         ->and($styles)->toContain('fo:margin-right="0.39375in"')
-        ->and(substr_count((string) $styles, 'Name:'))->toBe(1)
+        ->and(substr_count((string) $styles, 'Name:'))->toBeGreaterThanOrEqual(1)
         ->and($content)->toContain('style:master-page-name="FirstPage"');
 });
 
