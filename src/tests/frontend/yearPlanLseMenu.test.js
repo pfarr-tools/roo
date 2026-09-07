@@ -7,4 +7,8 @@ describe('year plan LSE menu', () => {
     it('stops status menu clicks from opening the LSE editor', () => {
         expect(yearPlanSource).toContain('@click.stop="selectSlotStatus(slot, option.value)"')
     })
+
+    it('does not submit an empty target slot when deleting an LSE', () => {
+        expect(yearPlanSource).toContain("...(assessmentTargetSlotId != null ? { assessment_target_slot_id: assessmentTargetSlotId } : {})")
+    })
 })

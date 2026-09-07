@@ -75,12 +75,15 @@ it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', functi
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Gewichtungsgruppe']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = $unit->competencies()->create(['local_wording' => 'Kann anwenden']);
+    $lesson = $unit->lessons()->create(['title' => 'Aufgabenstunde', 'position' => 1]);
     $first = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
     $second = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
+    $lesson->assessmentTasks()->attach([$first->id, $second->id]);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gewichtung']);
 
     $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", [
         'title' => 'LSE Gewichtung',
+        'grade_component_id' => null,
         'tasks' => [
             ['task_id' => $second->id, 'weight' => 100],
             ['task_id' => $first->id, 'weight' => 0],
@@ -89,6 +92,18 @@ it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', functi
 
     expect($assessment->fresh()->tasks->pluck('id')->all())->toBe([$second->id, $first->id])
         ->and($assessment->fresh()->tasks->pluck('pivot.weight')->all())->toBe([100, 0]);
+
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", [
+        'title' => 'LSE Gewichtung',
+        'grade_component_id' => null,
+        'tasks' => [
+            ['task_id' => $first->id, 'weight' => 25],
+            ['task_id' => $second->id, 'weight' => 75],
+        ],
+    ])->assertRedirect();
+
+    expect($assessment->fresh()->tasks->pluck('id')->all())->toBe([$first->id, $second->id])
+        ->and($assessment->fresh()->tasks->pluck('pivot.weight')->all())->toBe([25, 75]);
 });
 
 it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne Aufgabe', function () {

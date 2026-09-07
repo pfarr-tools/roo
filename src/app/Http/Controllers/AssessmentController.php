@@ -974,6 +974,11 @@ class AssessmentController extends Controller
             }
             $attach[$model->id] = ['position' => $position + 1, 'weight' => $task['weight'] ?? 50];
         }
+        if ($attach !== []) {
+            DB::table('assessment_task_assessment')
+                ->where('assessment_id', $assessment->getKey())
+                ->update(['position' => DB::raw('position + 1000000')]);
+        }
         $assessment->tasks()->sync($attach);
     }
 
