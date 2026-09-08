@@ -3,10 +3,11 @@ import logo from '../../../images/branding/roo-logo.png'
 import icon from '../../../images/branding/roo-icon.png'
 import ConfirmationModal from './ConfirmationModal.vue'
 import de from '../../i18n/de'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+const sidebarPinStorageKey = 'roo.sidebar.pinned'
 const sidebarPinned = ref(false)
 const sidebarHovered = ref(false)
 const mobileSidebarOpen = ref(false)
@@ -21,6 +22,14 @@ const userInitials = computed(() => {
 const flashToasts = ref([])
 let flashToastId = 0
 const sidebarExpanded = computed(() => sidebarPinned.value || sidebarHovered.value || mobileSidebarOpen.value)
+
+onMounted(() => {
+    sidebarPinned.value = window.localStorage.getItem(sidebarPinStorageKey) === 'true'
+})
+
+watch(sidebarPinned, pinned => {
+    window.localStorage.setItem(sidebarPinStorageKey, String(pinned))
+})
 const globalSearchQuery = ref('')
 const globalSearchResults = ref({})
 const globalSearchOpen = ref(false)

@@ -9,6 +9,7 @@ import AppShell from '../../resources/js/Components/Ui/AppShell.vue'
 
 describe('AppShell navigation', () => {
     it('places Stundenplan under Unterricht and removes Dokumente und KI', async () => {
+        window.localStorage.clear()
         const root = document.createElement('div')
         document.body.append(root)
         const app = createApp(AppShell)
@@ -29,6 +30,35 @@ describe('AppShell navigation', () => {
 
         app.unmount()
         root.remove()
+        window.localStorage.clear()
+    })
+
+    it('persists the pinned navigation state across remounts', async () => {
+        window.localStorage.clear()
+        const firstRoot = document.createElement('div')
+        document.body.append(firstRoot)
+        const firstApp = createApp(AppShell)
+
+        firstApp.mount(firstRoot)
+        await nextTick()
+        firstRoot.querySelector('.roo-sidebar-toggle').click()
+        await nextTick()
+
+        expect(window.localStorage.getItem('roo.sidebar.pinned')).toBe('true')
+        firstApp.unmount()
+        firstRoot.remove()
+
+        const secondRoot = document.createElement('div')
+        document.body.append(secondRoot)
+        const secondApp = createApp(AppShell)
+        secondApp.mount(secondRoot)
+        await nextTick()
+
+        expect(secondRoot.querySelector('.roo-sidebar-toggle').getAttribute('aria-label')).toBe('Navigation lösen')
+
+        secondApp.unmount()
+        secondRoot.remove()
+        window.localStorage.clear()
     })
 
     it('shows debounced global search results in a dropdown', async () => {
