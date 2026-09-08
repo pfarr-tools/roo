@@ -10,6 +10,7 @@ use App\Http\Controllers\FluxController;
 use App\Http\Controllers\LessonGalleryController;
 use App\Http\Controllers\LessonWorkspaceController;
 use App\Http\Controllers\LessonCalendarController;
+use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\ParentLetterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicTeachingUnitController;
@@ -123,6 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/curricula/{curriculum}/bearbeitung', [CurriculumController::class, 'toggleEditing'])->name('curricula.editing.toggle');
     Route::get('/curricula/{curriculum}', [CurriculumController::class, 'show'])->name('curricula.show');
     Route::get('/unterrichtsgruppen', [TeachingGroupController::class, 'index'])->name('teaching-groups.index');
+    Route::get('/beobachtungen', [ObservationController::class, 'index'])->name('observations.index');
     Route::get('/jahresplanung', [YearPlanController::class, 'index'])->name('year-plans.index');
     Route::get('/jahresplanung/{teachingGroup}', [YearPlanController::class, 'show'])->name('year-plans.show');
     Route::get('/jahresplanung/{teachingGroup}/kompetenzen/picker', [YearPlanController::class, 'competencyPicker'])->name('year-plans.competencies.picker');

@@ -42,6 +42,41 @@ it('zeigt Schüler:innen und konfigurierbare Beobachtungstypen im Stundenarbeits
         ->where('observationTypes.0.label', 'Material fehlt'));
 });
 
+it('zeigt Beobachtungen organisationsgeschützt, filterbar und sortierbar', function () {
+    $fixture = observationFixture();
+    $otherStudent = Student::create([
+        'organization_id' => $fixture['user']->organization_id,
+        'school_id' => $fixture['group']->school_id,
+        'first_name' => 'Noah',
+        'last_name' => 'Anders',
+        'class_name' => '4a',
+    ]);
+    $fixture['group']->students()->attach($otherStudent->id);
+    Observation::create([
+        'scheduled_lesson_id' => $fixture['scheduledLesson']->id,
+        'student_id' => $otherStudent->id,
+        'observation_type_id' => $fixture['type']->id,
+        'note' => 'Andere Notiz',
+    ]);
+    Observation::create([
+        'scheduled_lesson_id' => $fixture['scheduledLesson']->id,
+        'student_id' => $fixture['student']->id,
+        'observation_type_id' => $fixture['type']->id,
+        'note' => 'Mia beteiligt sich.',
+    ]);
+
+    $this->actingAs($fixture['user'])->get('/beobachtungen?q=beteiligt&group='.$fixture['group']->id.'&type='.$fixture['type']->id.'&sort=student&direction=desc')
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.q', 'beteiligt')
+            ->where('filters.group', $fixture['group']->id)
+            ->where('filters.type', $fixture['type']->id)
+            ->where('filters.sort', 'student')
+            ->has('observations.data', 1)
+            ->where('observations.data.0.student.first_name', 'Mia')
+            ->where('observations.data.0.type.label', 'Material fehlt')
+            ->where('observations.data.0.scheduled_lesson.lesson.title', 'Stunde'));
+});
+
 it('speichert Anwesenheit und Beobachtungen nur für Schüler:innen der Gruppe', function () {
     $fixture = observationFixture();
 

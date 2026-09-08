@@ -115,7 +115,7 @@ const moduleGroups = [
         { label: labels.library, icon: 'bi-folder2-open', url: '/bibliothek', enabled: true },
     ] },
     { title: labels.assessment, items: [
-        { label: labels.observations, icon: 'bi-eye', enabled: false },
+        { label: labels.observations, icon: 'bi-eye', url: '/beobachtungen', enabled: true },
         { label: labels.assessments, icon: 'bi-bar-chart', url: '/bewertungen', enabled: true },
     ] },
 ]
