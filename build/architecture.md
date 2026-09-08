@@ -105,6 +105,25 @@ Eine spätere Abweichung benötigt eine ADR.
 - Standard: Europe/Berlin.
 - Datum ohne Uhrzeit als `date`, nicht als Mitternachts-Timestamp speichern.
 
+## Kompetenzreferenzen
+
+`EducationPlanCompetency` ist die einzige offizielle Kompetenzentität.
+Curriculumthemen und Unterrichtseinheiten speichern direkte Referenzen auf
+Bildungsplandaten; der Unterrichtseinheit-Pivot
+`teaching_unit_education_plan_competencies` bewahrt zusätzlich Curriculum- und
+Herkunftskontext. Stunden und Kompetenznachweise verwenden direkte
+`education_plan_competency_id`-Fremdschlüssel. Eigene
+`CustomProcessCompetence`-Datensätze sind davon getrennt.
+
+## Suche
+
+Die globale Suche unter `/suche` bündelt die unterstützten, mandantengeschützten
+Datentypen. Nicht-personenbezogene Inhalte werden über Meilisearch gefunden;
+Schüler:innen werden für die Suche direkt in PostgreSQL abgefragt und niemals
+in den Meilisearch-Index geschrieben. Beobachtungen und Bewertungen werden
+nicht als globale Suchtreffer ausgegeben. Das Topbar-Feld sucht entprellt und
+öffnet beim Drücken der Eingabetaste die vollständige Ergebnisseite.
+
 ## Dokumente
 
 Dateiinhalte liegen im Object Storage. PostgreSQL speichert:

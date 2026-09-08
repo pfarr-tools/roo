@@ -6,10 +6,11 @@ Angenommen
 
 ## Kontext
 
-`TeachingUnitCompetency` beschreibt keine eigene Kompetenz. Jede vorhandene
-Zeile verweist auf eine offizielle `EducationPlanCompetency`. Die Entität wurde
-jedoch als Identität für Unterrichtseinheits-, Stunden- und Nachweiszuordnungen
-verwendet und enthält zusätzlich Curriculum-Kontext.
+Der frühere Unterrichtseinheits-Zuordnungsdatensatz beschrieb keine eigene
+Kompetenz. Jede vorhandene Zeile verwies auf eine offizielle
+`EducationPlanCompetency`, wurde aber als Identität für
+Unterrichtseinheits-, Stunden- und Nachweiszuordnungen verwendet und enthielt
+zusätzlich Curriculum-Kontext.
 
 ## Entscheidung
 

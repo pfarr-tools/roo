@@ -166,9 +166,9 @@ Bildungspläne können versioniert importiert oder manuell erfasst werden.
 - EducationPlanVersion
 - SchoolType
 - GradeLevel
-- CompetenceArea
-- Competence
-- CompetenceRelation
+- EducationPlanCompetenceArea
+- EducationPlanCompetency
+- EducationPlanCompetenceRelation
 - ImportRun
 
 ### Funktionen
@@ -277,18 +277,10 @@ enthalten.
 
 - Policies und Mandantenscopes vollständig
 - Export- und Löschpfade vorbereiten
-- minimierter Schülerindex in Meilisearch: Nachname, Vorname, tatsächliche
-  Klasse und zugehörige Unterrichtsgruppen; Notizen, Beobachtungen und
-  Bewertungen werden nicht indexiert
-- Der Index ist mandantengefiltert, intern zugriffsbeschränkt und muss bei
-  Änderungen oder Löschungen synchron zur relationalen Quelle aktualisiert
-  werden
-- Das ist eine Maßnahme zur Datenminimierung: Ein Suchindex ist eine zusätzliche,
-  dauerhaft gespeicherte Kopie außerhalb der relationalen Quelle. Bei einer
-  Fehlkonfiguration, einem zu weit gefassten Suchschlüssel, Logs/Backups oder
-  einem unvollständigen Löschlauf könnten Namen, Klassen und Suchfragmente
-  darüber zusätzlich zugänglich werden. Meilisearch würde die Daten nicht von
-  selbst veröffentlichen, aber die Angriffs- und Fehlerfläche vergrößern.
+- Schüler:innen werden nicht in Meilisearch indexiert. Die globale Suche fragt
+  sie bei authentifizierten Anfragen mandantengeschützt direkt in PostgreSQL
+  ab; Notizen, Beobachtungen und Bewertungen werden nicht als globale Treffer
+  ausgegeben.
 - Schüler:innen-CSV erwartet `Vorname`, `Nachname` und `Klasse`; `Notizen` ist optional.
 - Mitgliedschaften können mit Beginn und Ende erfasst werden.
 

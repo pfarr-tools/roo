@@ -1,14 +1,23 @@
-# Remove TeachingUnitCompetency Implementation Plan
+# Direkte Bildungsplan-Kompetenzen – abgeschlossener Implementierungsplan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+**Status:** Abgeschlossen am 8. September 2026.
 
-**Goal:** Make `EducationPlanCompetency` the sole official competency entity and remove `TeachingUnitCompetency` without losing curriculum context, lesson assignments, evidence, assessments, or evaluation behavior.
+Dieser Plan ist als abgeschlossener Implementierungsnachweis dokumentiert; die
+Checkboxen spiegeln den Stand des Commits vom 8. September 2026 wider.
 
-**Architecture:** Replace the current unit-scoped competency model with direct EducationPlan foreign keys. Preserve unit-level curriculum context in a dedicated pivot, keep lesson assignments as a direct lesson-to-EducationPlan pivot, and keep custom process competencies separate from official competencies. Use additive migrations and explicit data assertions before dropping legacy structures.
+**Goal:** `EducationPlanCompetency` ist die einzige offizielle Kompetenzentität.
+Unterrichtseinheiten, Stunden, Nachweise, Bewertungen und LSEs verwenden direkte
+Bildungsplanreferenzen; Curriculum-Kontext liegt ausschließlich in relationalen
+Referenz- und Pivotdaten.
+
+**Architecture:** Der frühere einheitsbezogene Zuordnungsdatensatz wurde durch
+direkte EducationPlan-Fremdschlüssel ersetzt. Der Unterrichtseinheits-Pivot
+bewahrt Curriculumreferenz, Herkunft und Sekundärstatus; eigene
+Prozesskompetenzen bleiben separat.
 
 **Tech Stack:** Laravel 13, PHP 8.4, PostgreSQL 17, Eloquent, Inertia/Vue 3, Pest, Vitest, Docker via `./roo`.
 
-**Spec:** `build/decisions/0011-kompetenzpraesentation.md` and the competency definition in `build/masterplan.md`.
+**Entscheidung:** `build/decisions/0015-direct-education-plan-competency-references.md`.
 
 ## Global Constraints
 
@@ -20,14 +29,14 @@
 
 ### Task 1: Lock down the current invariants
 
-**Files:** `src/tests/Feature/TeachingUnitCompetencyMigrationTest.php`
+**Files:** der Feature-Migrationstest für die direkte Referenzstruktur
 
 - [x] Add migration guards and schema tests for official references and preserved assignment context.
-- [x] Run `./roo test --compact tests/Feature/TeachingUnitCompetencyMigrationTest.php` against the migrated schema.
+- [x] Run the migration test against the migrated schema.
 
 ### Task 2: Add the replacement schema and reversible backfill
 
-**Files:** additive migrations under `src/database/migrations/`, `src/tests/Feature/TeachingUnitCompetencyMigrationTest.php`
+**Files:** additive migrations under `src/database/migrations/` and the migration test.
 
 - [x] Add a unit assignment pivot retaining assignment context and a direct official reference.
 - [x] Add the direct official reference to the existing lesson pivot and preserve its curriculum reference.
@@ -55,7 +64,7 @@
 
 ### Task 5: Drop the legacy table and compatibility code
 
-**Files:** final migration under `src/database/migrations/`, `src/app/Models/TeachingUnitCompetency.php`, all legacy reference matches, `build/masterplan.md`, new ADR
+**Files:** final migration under `src/database/migrations/`, all legacy runtime references, `build/masterplan.md`, new ADR
 
 - [x] Add preconditions to the drop migration and drop legacy structures only after they pass.
 - [x] Remove the legacy model and runtime references; route names remain stable for URLs.

@@ -15,8 +15,8 @@ werden.
 - Die Vorlagen gelten nur für `competency_texts_and_grades`; bei
   `observation_scales` und `grades_only` werden keine Vorlagen erzeugt oder
   angezeigt.
-- Behandelte Kompetenzen sind Inhaltskompetenzen, die über eine
-  `TeachingUnitCompetency` einer Lesson zugeordnet sind und deren
+- Behandelte Kompetenzen sind Inhaltskompetenzen, die über eine direkte
+  `education_plan_competency_id`-Zuordnung einer Lesson zugeordnet sind und deren
   `ScheduledLesson` innerhalb der Grenzen des Zeitraums liegt.
 - Der Vorschlag wird aus `data/bildungsplaene/Kompetenzsaetze.json` gebildet.
   Die Zuordnung erfolgt über die externe Kennung der

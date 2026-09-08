@@ -1,6 +1,7 @@
-# Vorläufiges Domänenmodell
+# Domänenmodell
 
-Dieses Dokument ist eine fachliche Landkarte, kein fertiges Datenbankschema.
+Dieses Dokument beschreibt den aktuellen fachlichen Zuschnitt. Es ersetzt keine
+Migrationen, benennt aber die maßgeblichen Modelle und Beziehungen.
 
 ## Beziehungen
 
@@ -25,12 +26,12 @@ EducationPlan
        ├── EducationPlanStage
        │    ├── GradeLevel (n:m)
        │    ├── Level (n:m)
-       │    └── CompetenceArea
-       │         └── Competence
-       │              ├── CompetenceVariant
-       │              └── CompetenceRelation
-       ├── CompetenceArea (processbezogen)
-       │    └── Competence
+       │    └── EducationPlanCompetenceArea
+       │         └── EducationPlanCompetency
+       │              ├── EducationPlanCompetenceVariant
+       │              └── EducationPlanCompetenceRelation
+       ├── EducationPlanCompetenceArea (processbezogen)
+       │    └── EducationPlanCompetency
        └── GuidingPrinciple
 
 EducationPlanImportRun
@@ -128,6 +129,18 @@ Die tatsächlich durchgeführte Stunde kann vom Plan abweichen.
 Der Bildungsplan definiert Kompetenzen. Das Curriculum ordnet Themen,
 Jahrgänge, Kompetenzen, Zeitbudgets und konfessionelle Hinweise.
 
+### Kompetenzreferenzen
+
+`EducationPlanCompetency` ist die einzige offizielle Kompetenzdefinition in
+Roo. `CurriculumTopicEducationPlanReference` verbindet ein Curriculumthema
+direkt mit dieser offiziellen Kompetenz und bewahrt den Curriculumkontext.
+Unterrichtseinheiten verwenden den Pivot
+`teaching_unit_education_plan_competencies`; dort bleiben Bildungsplan-ID,
+Curriculumreferenz, Herkunftsthema und Sekundärstatus erhalten. Stunden,
+Kompetenznachweise, Bewertungen und LSEs referenzieren die offizielle
+Kompetenz direkt. `CustomProcessCompetence` ist davon getrennt und dient
+ausschließlich schulischen eigenen Prozesskompetenzen für Beobachtungsskalen.
+
 ### Bildungsplanimport
 
 Die Dateien unter `data/bildungsplaene` werden als versionsgebundene,
@@ -147,19 +160,19 @@ Die generische Austauschstruktur wird wie folgt relational abgebildet:
 
 - `guiding_principles` werden zu `GuidingPrinciple`.
 - Prozessbezogene Bereiche und stufenbezogene Inhaltsbereiche werden beide als
-  `CompetenceArea` gespeichert. `kind` unterscheidet `process` und `content`;
+  `EducationPlanCompetenceArea` gespeichert. `kind` unterscheidet `process` und `content`;
   ein Bereichstitel ist kein Enum.
 - Stufen werden als `EducationPlanStage` mit Position, Label und optionaler
   Kursart gespeichert. Jahrgänge (`GradeLevel`) und Differenzierungsniveaus
   (`Level`) sind jeweils n:m an eine Stufe gebunden und bleiben damit für
   nichtnumerische bzw. planabhängige Bezeichnungen offen.
-- Eine `Competence` trägt externe Kennung und laufende Nummer. Der direkte
+- Eine `EducationPlanCompetency` trägt externe Kennung und laufende Nummer. Der direkte
   Text ist optional; differenzierte Formulierungen werden als geordnete
-  `CompetenceVariant` mit optionalem Niveau gespeichert. Kompetenzen besitzen
+  `EducationPlanCompetenceVariant` mit optionalem Niveau gespeichert. Kompetenzen besitzen
   außerdem einen fachlichen Aktivstatus, damit importierte, aber für Roo nicht
   verwendete Einträge ausgeblendet bzw. gezielt wieder aktiviert werden können.
 - Strukturierte oder rohe Kompetenzverweise werden als
-  `CompetenceRelation` gespeichert. Die Rohreferenz sowie, sofern vorhanden,
+  `EducationPlanCompetenceRelation` gespeichert. Die Rohreferenz sowie, sofern vorhanden,
   Typ, Zielplan und Zielkennung bleiben erhalten; eine spätere Normalisierung
   kann interne oder planübergreifende Zielbeziehungen ergänzen.
 - Bereichsnotizen und Rohtexte werden strukturiert bzw. als Text übernommen.

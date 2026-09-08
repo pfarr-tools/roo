@@ -38,8 +38,9 @@ nicht blind alle Jobs wiederholen.
 
 Meilisearch-Erreichbarkeit und Schlüssel prüfen. PostgreSQL bleibt die Quelle der
 Wahrheit. Indexoperationen in einem Wartungsfenster und nach einem Backup der
-Anwendungskonfiguration durchführen. Keine Schülerdaten zum Beheben der Suche
-in einen Index aufnehmen.
+Anwendungskonfiguration durchführen. Schüler:innen werden nicht in den Index
+aufgenommen; ihre Suchtreffer werden bei authentifizierten Anfragen direkt aus
+dem mandantengeschützten PostgreSQL-Bestand ermittelt.
 
 ## Seite bleibt leer oder Assets werden als HTTP geladen
 
@@ -72,6 +73,12 @@ Wartungsmodus beibehalten, Fehlermeldung und Migration-ID sichern und keine
 weiteren Releases starten. Datenbankstatus und Backup prüfen. Eine
 Gegenmigration nur nach Codeprüfung ausführen; bei Unsicherheit Rollback in
 Staging testen und erst dann produktiv wiederherstellen.
+
+Die Migration zur Entfernung der früheren Unterrichtseinheits-
+Kompetenzstruktur ist nach erfolgreicher Prüfung absichtlich nicht
+rückwärtsausführbar. Nach ihrem Lauf darf kein spontanes `migrate:rollback`
+versucht werden; für eine Datenrückkehr ist ein vorher geprüftes
+Datenbankbackup in einer isolierten Umgebung wiederherzustellen.
 
 ## Notfall-Checkliste
 

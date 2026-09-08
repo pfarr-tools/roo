@@ -122,22 +122,24 @@ Die Herkunft bleibt als Referenz erhalten (`source_curriculum_unit_id` o. ä.), 
 
 Beim Übernehmen einer Curriculum-UE werden deren Kompetenzen in die eigene UE übernommen.
 
-Eine `TeachingUnitCompetency` muss ihre Herkunft weiterhin referenzieren können:
+Die direkte Unterrichtseinheits-Zuordnung zur offiziellen Kompetenz muss ihre
+Curriculum-Herkunft weiterhin referenzieren können:
 
 ```text
-TeachingUnitCompetency
+TeachingUnitEducationPlanCompetency
+├── teaching_unit_id
 ├── education_plan_competency_id
-├── curriculum_competency_id (nullable)
-├── source_curriculum_unit_id (nullable)
-└── local_wording (nullable)
+├── curriculum_topic_education_plan_reference_id (nullable)
+├── source_curriculum_topic_id (nullable)
+└── is_secondary
 ```
 
 Die konkrete Implementierung darf vom Schema abweichen, solange folgende Eigenschaften garantiert sind:
 
 - offizielle Lehrplankompetenz bleibt identifizierbar;
 - Curriculum-Herkunft bleibt nachvollziehbar;
-- Nutzer:innen können eine eigene Arbeitsformulierung verwenden;
-- eigene zusätzliche Kompetenzen sind möglich;
+- Curriculum-Herkunft und sekundäre Zuordnung bleiben relational erhalten;
+- eigene Kompetenzen werden als separate `CustomProcessCompetence` modelliert;
 - Coverage darf nicht durch Textvergleich ermittelt werden.
 
 ### 2.5 Lesson
@@ -173,7 +175,7 @@ Im Normalfall wählt eine Stunde Kompetenzen aus der zugehörigen `TeachingUnit`
 ```text
 Lesson
       ↓
-TeachingUnitCompetency
+lesson_competencies.education_plan_competency_id
       ↓
 EducationPlanCompetency
 ```
@@ -673,7 +675,7 @@ Insbesondere sicherstellen:
 - Curriculum-Referenz ↔ EducationPlan-Kompetenz
 - CurriculumUnit ↔ optionale Stunden-Vorschläge
 - TeachingUnit
-- TeachingUnitCompetency
+- TeachingUnitEducationPlanCompetency (Pivot-Zuordnung)
 - Lesson
 - LessonCompetency
 - ScheduleSlot

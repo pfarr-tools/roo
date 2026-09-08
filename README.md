@@ -33,6 +33,8 @@ Fachdaten nicht.
 - Bildungspläne versioniert und relational importieren
 - Kompetenzbereiche, Kompetenzen, Varianten und Verweise hierarchisch
   durchsuchen und vergleichen
+- offizielle Kompetenzen direkt aus den Bildungsplänen referenzieren; eigene
+  schulische Prozesskompetenzen getrennt verwalten
 - eigene Curricula mit Themen, Jahrgangszuordnung, Zeitbedarf und
   Kompetenzbezügen erstellen
 - evangelische, katholische und gemeinsame Perspektiven dokumentieren
@@ -271,9 +273,11 @@ benötigt.
 
 Schülerdaten, Beobachtungen und Bewertungen sind besonders schützenswert.
 Roo berücksichtigt deshalb von Beginn an Mandantenscopes, Policies, private
-Dateispeicher und den Verzicht auf Schülerdaten in Logs, Suchindizes und
-KI-Anfragen. Dokumente und Scanfragmente werden nur über autorisierte Routen
-oder kurzlebige signierte Zugriffe ausgeliefert.
+Dateispeicher und den Verzicht auf Schülerdaten in Logs, Meilisearch und
+KI-Anfragen. Schüler:innen können in der authentifizierten globalen Suche
+mandantengeschützt direkt aus PostgreSQL gefunden werden. Dokumente und
+Scanfragmente werden nur über autorisierte Routen oder signierte Zugriffe
+ausgeliefert.
 
 ## Mitentwicklung
 

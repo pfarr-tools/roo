@@ -15,7 +15,7 @@ externem TLS-Reverse-Proxy. Die Anwendung besteht aus:
 | Scheduler | `schedule:work` | genau eine Instanz |
 | PostgreSQL 17 | fachliche Quelle der Wahrheit | persistenter, gesicherter Speicher |
 | Redis | Cache, Sessions, Queue, Horizon | persistenter Betrieb und Zugriffsschutz |
-| Meilisearch | Suche ohne Schülerdaten | privates Netz, Schlüssel gesetzt |
+| Meilisearch | Indexsuche für nicht-personenbezogene Inhalte | privates Netz, Schlüssel gesetzt; Schüler:innen werden nur mandantengeschützt aus PostgreSQL gesucht |
 | S3-Storage | private Dokumente und Exporte | verschlüsselt, nicht öffentlich |
 
 Mailpit ist ausschließlich für lokale Entwicklung. In Produktion ist ein

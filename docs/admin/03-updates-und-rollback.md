@@ -42,6 +42,14 @@ unterstützen. Eine bereits ausgeführte inkompatible oder destruktive Migration
 nicht spontan zurückdrehen. In diesem Fall die Wiederherstellung des Backups
 nach dem [Störungsbehebungsverfahren](06-stoerungsbehebung.md) organisieren.
 
+Das gilt insbesondere für die Migration, die nach dem Backfill die frühere
+Unterrichtseinheits-Kompetenzstruktur entfernt. Sie prüft vorab auf nicht
+übertragbare oder doppelte Zuordnungen und ist nach erfolgreichem Abschluss
+bewusst vorwärtsgerichtet. Ein Release-Rollback kann deshalb nur mit einer
+Anwendungsversion erfolgen, die die neue Struktur unterstützt; eine Rückkehr
+zu den alten Daten erfordert die Wiederherstellung des gesicherten
+Datenbankstands.
+
 ## Nachprüfung
 
 ```bash
@@ -52,4 +60,3 @@ nach dem [Störungsbehebungsverfahren](06-stoerungsbehebung.md) organisieren.
 Danach Anmeldung, Mandantentrennung, private Dateien, Suche, Queue, Mail und
 die zentralen Fachabläufe prüfen. Weitere Hinweise stehen unter
 [Produktionsskripte verwenden](07-produktionsskripte.md).
-

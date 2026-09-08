@@ -29,8 +29,9 @@ Nach Erstinstallation und jedem relevanten Update testen:
    fremden Organisation aufrufen.
 3. Abgemeldete Personen erhalten keine privaten Dateien.
 4. Ein abgelaufener oder widerrufener Download-Link funktioniert nicht mehr.
-5. Suchergebnisse enthalten keine Schüler:innen, Beobachtungen oder
-   Bewertungen.
+5. Die globale Suche darf Schüler:innen nur im authentifizierten und
+   mandantengeschützten PostgreSQL-Abgleich anzeigen; Beobachtungen und
+   Bewertungen erscheinen nicht als globale Treffer.
 
 ## Vorfälle
 
@@ -39,4 +40,3 @@ Passwörter und S3-Schlüssel sperren bzw. rotieren, Zugriffe und Logs sichern,
 keine Logs nachträglich überschreiben und die für Datenschutz und Sicherheit
 verantwortlichen Personen informieren. `APP_KEY` nicht ohne abgestimmte
 Schlüsselrotation ändern.
-

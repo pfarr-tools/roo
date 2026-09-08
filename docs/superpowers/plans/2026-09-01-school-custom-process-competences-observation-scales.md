@@ -153,7 +153,7 @@ git commit -m "feat(assessment): Beobachtungsskalen je Schule verwalten"
 - Modify `src/tests/Feature/PhaseNineTest.php`.
 
 **Interfaces:**
-- Evidence accepts exactly one of `teaching_unit_competency_id` and `custom_process_competence_id`.
+- Evidence accepts exactly one of `education_plan_competency_id` and `custom_process_competence_id`.
 - Custom scale values are integer levels `1..observation_scale_interval_count` or the literal status `ne`.
 - Custom evidence is exposed only when the lesson’s teaching group has `grading_model = observation_scales`.
 

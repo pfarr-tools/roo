@@ -10,23 +10,24 @@ Kompetenzen werden in der Oberfläche nicht mehr durch eigenes Raten des
 jeweiligen Relationsfeldes dargestellt. `App\Services\CompetencyResolver`
 ist die zentrale Auflösungsstelle für Kennung, Kompetenzart, Text und Label.
 
-Die Auflösung verwendet diese Reihenfolge:
+Die Auflösung verwendet ausschließlich die direkte offizielle
+`EducationPlanCompetency`-Referenz:
 
-1. `local_wording` der konkreten Zuordnung,
-2. Text bzw. `raw_text` des Curriculum-Snapshots,
-3. Text des Bildungsplan-Datensatzes,
-4. Varianten des Bildungsplans,
-5. lokale Fallback-Felder.
+1. Text des Bildungsplan-Datensatzes,
+2. passende Varianten des Bildungsplans,
+3. der zentrale Fallback `Kompetenz`, falls die importierte offizielle
+   Kompetenz noch keinen Text besitzt.
 
-Die Kompetenzart kommt aus dem Bildungsplanbereich und danach aus dem
-Curriculum-Snapshot. Fehlt beides, ist sie `content`. Die normalisierten Daten
+Die Kompetenzart kommt aus dem Bildungsplanbereich; bei einer
+Curriculumreferenz kann sie zusätzlich aus deren `competency_kind` stammen.
+Fehlt beides, ist sie `content`. Die normalisierten Daten
 werden als `competency_presentation` mit `kind`, `identifier`, `text` und
 `label` an Inertia-Ansichten gegeben.
 
 ## Konsequenzen
 
 Neue Ansichten laden die benötigten Relationen einmal im Controller und
-verwenden anschließend `competency_presentation`. Frontend-Komponenten dürfen
-für Übergangskompatibilität rohe Relationen als Fallback lesen, sollen aber
-keine eigene Textpriorität mehr erfinden. Änderungen an Import- oder
-Snapshot-Feldern werden dadurch an einer Stelle nachvollziehbar angepasst.
+verwenden anschließend `competency_presentation`. Frontend-Komponenten
+verwenden die vom Backend präsentierten offiziellen Daten. Es gibt keine
+Übergangskompatibilität zu einer lokalen Kompetenzformulierung oder zu
+Curriculum-Textfeldern.
