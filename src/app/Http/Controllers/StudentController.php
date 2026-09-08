@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
+use App\Models\Observation;
+use App\Models\StudentAssessmentResult;
+use App\Models\StudentEvaluationCompetenceRating;
+use App\Models\StudentEvaluation;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Students\PronounSets\PronounSets;
@@ -13,6 +17,27 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
+    public function show(Request $request, Student $student): Response
+    {
+        $this->authorize('view', $student);
+        $student->load(['school:id,name', 'teachingGroups:id,name,school_id,school_year_id', 'teachingGroups.schoolYear:id,name,starts_on,ends_on', 'teachingGroups.school:id,name']);
+
+        $availableSchoolYears = $student->teachingGroups->pluck('schoolYear')->filter()->unique('id')->sortByDesc('starts_on')->values();
+        $selectedSchoolYearId = $request->integer('school_year') ?: $availableSchoolYears->first()?->id;
+        if (! $availableSchoolYears->contains('id', $selectedSchoolYearId)) {
+            $selectedSchoolYearId = $availableSchoolYears->first()?->id;
+        }
+        $selectedSchoolYear = $availableSchoolYears->firstWhere('id', $selectedSchoolYearId);
+        $groupIds = $student->teachingGroups->where('school_year_id', $selectedSchoolYearId)->pluck('id');
+
+        $observations = Observation::query()->where('student_id', $student->id)->whereHas('scheduledLesson.slot', fn ($query) => $query->whereIn('teaching_group_id', $groupIds))->with(['type:id,label,symbol,color', 'scheduledLesson.lesson:id,title,teaching_unit_id', 'scheduledLesson.slot:id,teaching_group_id,date,period_number', 'scheduledLesson.slot.group:id,name'])->get();
+        $assessmentResults = StudentAssessmentResult::query()->where('student_id', $student->id)->whereHas('assessment.group', fn ($query) => $query->whereIn('id', $groupIds))->with(['assessment:id,teaching_group_id,title,assessed_on,status', 'assessment.group:id,name', 'task:id,title,max_points'])->get();
+        $evaluations = StudentEvaluation::query()->where('student_id', $student->id)->whereHas('period', fn ($query) => $query->whereIn('teaching_group_id', $groupIds))->with(['period:id,teaching_group_id,label,starts_on,ends_on,whole_grades', 'period.group:id,name', 'blocks:id,student_evaluation_id,area,text,position', 'observationScales', 'competenceRatings.competence:id,text'])->get();
+        $ratings = StudentEvaluationCompetenceRating::query()->whereNotNull('rating')->whereHas('evaluation', fn ($query) => $query->where('student_id', $student->id)->whereHas('period', fn ($periodQuery) => $periodQuery->whereIn('teaching_group_id', $groupIds)))->with(['evaluation.period:id,teaching_group_id,label', 'evaluation.period.group:id,name', 'competence:id,text'])->get();
+
+        return Inertia::render('Students/Show', compact('student', 'availableSchoolYears', 'selectedSchoolYear', 'observations', 'assessmentResults', 'evaluations', 'ratings') + ['groups' => $student->teachingGroups->whereIn('id', $groupIds)->values()]);
+    }
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Student::class);

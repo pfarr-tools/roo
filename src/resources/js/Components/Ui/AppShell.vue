@@ -40,7 +40,7 @@ const globalSearchGroups = [
     { key: 'groups', label: labels.teachingGroups, title: item => item.name, href: item => `/unterrichtsgruppen/${item.id}` },
     { key: 'curricula', label: labels.curricula, title: item => item.title, href: item => `/curricula/${item.id}` },
     { key: 'educationPlans', label: labels.educationPlans, title: item => item.title, href: item => `/bildungsplaene/${item.id}` },
-    { key: 'students', label: labels.students, title: item => `${item.last_name}, ${item.first_name}`, href: () => '/schueler:innen' },
+    { key: 'students', label: labels.students, title: item => `${item.last_name}, ${item.first_name}`, href: item => `/schueler:innen/${item.id}` },
     { key: 'teachingUnits', label: labels.teachingUnits, title: item => item.title, href: () => '/unterrichtseinheiten' },
     { key: 'unitTemplates', label: labels.unitTemplates, title: item => item.title, href: () => '/unterrichtseinheiten' },
     { key: 'lessonTemplates', label: labels.lessonTemplates, title: item => item.title, href: () => '/unterrichtseinheiten' },

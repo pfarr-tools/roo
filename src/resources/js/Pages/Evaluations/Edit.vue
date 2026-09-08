@@ -102,7 +102,7 @@ function formatDate(value) { const parts = String(value ?? '').slice(0, 10).spli
         </template>
         <div class="container-full px-3 py-4">
             <h1 class="h2">{{ de.editEvaluation }}</h1>
-            <p class="text-muted">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }} · {{ evaluation.period.label }}</p>
+            <p class="text-muted"><a :href="`/schueler:innen/${evaluation.student.id}`">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }}</a> · {{ evaluation.period.label }}</p>
             <label v-if="['competency_texts_and_grades', 'grades_only'].includes(group.grading_model)" class="form-label" for="evaluation-level">{{ de.evaluationPeriodLevel }}</label>
             <select v-if="['competency_texts_and_grades', 'grades_only'].includes(group.grading_model)" id="evaluation-level" v-model="form.level" class="form-select mb-3" :disabled="evaluation.status === 'confirmed'" @change="regenerateDraft"><option value="">{{ de.notSet }}</option><option v-for="level in ['G', 'M', 'E']" :key="level" :value="level">{{ level }}</option></select>
             <hr v-if="['competency_texts_and_grades', 'grades_only'].includes(group.grading_model)">

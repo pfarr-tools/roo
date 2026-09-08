@@ -50,7 +50,7 @@ function observationScaleText(evaluation, scale) {
                     <div v-if="!period.evaluations?.length" class="small text-muted mt-1">Keine Schüler:innen in diesem Zeitraum.</div>
                     <div v-for="evaluation in period.evaluations" :key="evaluation.id" class="d-flex justify-content-between align-items-start mt-2">
                         <div>
-                            <span>{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }}</span>
+                            <a :href="`/schueler:innen/${evaluation.student.id}`">{{ evaluation.student.last_name }}, {{ evaluation.student.first_name }}</a>
                             <span class="badge ms-2" :class="evaluation.status === 'confirmed' ? 'text-bg-success' : 'text-bg-light'">{{ evaluation.status === 'confirmed' ? 'bestätigt' : 'Entwurf' }}</span>
                             <p v-if="group.grading_model === 'competency_texts_and_grades'" class="mb-0 mt-1 small text-muted text-pre-wrap">{{ evaluation.draft_text || 'Noch kein Bewertungsentwurf.' }}</p>
                             <table v-else-if="evaluation.observation_scales?.length" class="evaluation-observation-scales table table-sm table-borderless w-100 mb-0 mt-1 small text-muted" style="table-layout: fixed;">

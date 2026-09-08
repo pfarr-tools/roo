@@ -9,7 +9,7 @@ const groups = [
     { key: 'groups', label: de.teachingGroups, title: item => item.name, subtitle: item => item.school?.name, href: item => `/unterrichtsgruppen/${item.id}` },
     { key: 'curricula', label: de.curricula, title: item => item.title, subtitle: item => item.external_identifier, href: item => `/curricula/${item.id}` },
     { key: 'educationPlans', label: de.educationPlans, title: item => item.title, subtitle: item => item.external_identifier, href: item => `/bildungsplaene/${item.id}` },
-    { key: 'students', label: de.students, title: item => `${item.last_name}, ${item.first_name}`, subtitle: item => `${item.class_name} · ${item.school?.name}`, href: () => '/schueler:innen' },
+    { key: 'students', label: de.students, title: item => `${item.last_name}, ${item.first_name}`, subtitle: item => `${item.class_name} · ${item.school?.name}`, href: item => `/schueler:innen/${item.id}` },
     { key: 'teachingUnits', label: de.teachingUnits, title: item => item.title, subtitle: item => item.group?.name, href: () => '/unterrichtseinheiten' },
     { key: 'unitTemplates', label: de.unitTemplates, title: item => item.title, subtitle: item => item.description, href: () => '/unterrichtseinheiten' },
     { key: 'lessonTemplates', label: de.lessonTemplates, title: item => item.title, subtitle: item => item.objective, href: () => '/unterrichtseinheiten' },

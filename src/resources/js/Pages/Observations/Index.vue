@@ -72,7 +72,7 @@ onBeforeUnmount(() => clearTimeout(searchTimeout))
                 <th>{{ de.notes }}</th>
             </tr></thead><tbody><tr v-for="observation in observations.data" :key="observation.id">
                 <td class="text-nowrap"><a :href="observationUrl(observation)" class="text-decoration-none">{{ formatObservationDate(observation.scheduled_lesson?.slot?.date) }}</a><div class="small text-muted">{{ observation.scheduled_lesson?.slot?.period_number ? `${de.period} ${observation.scheduled_lesson.slot.period_number}` : '' }}</div></td>
-                <td><strong>{{ observation.student?.last_name }}, {{ observation.student?.first_name }}</strong><div class="small text-muted">{{ observation.student?.class_name }}</div></td>
+                <td><a :href="'/schueler:innen/' + observation.student?.id" class="text-decoration-none"><strong>{{ observation.student?.last_name }}, {{ observation.student?.first_name }}</strong></a><div class="small text-muted">{{ observation.student?.class_name }}</div></td>
                 <td>{{ observation.scheduled_lesson?.slot?.group?.name }}</td>
                 <td><a :href="observationUrl(observation)" class="text-decoration-none">{{ observation.scheduled_lesson?.lesson?.title }}</a></td>
                 <td><span class="badge text-bg-light">{{ observation.type?.label }}</span><span v-if="observation.type?.symbol" class="small text-muted ms-1">{{ observation.type.symbol }}</span></td>

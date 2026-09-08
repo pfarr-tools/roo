@@ -176,6 +176,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/vorkommnisse/{occurrence}', [YearPlanController::class, 'updateOccurrence'])->name('year-plans.occurrences.update');
     Route::get('/schueler:innen', [StudentController::class, 'index'])->name('students.index');
     Route::get('/schueler:innen/export', [StudentController::class, 'export'])->name('students.export');
+    Route::get('/schueler:innen/{student}', [StudentController::class, 'show'])->name('students.show');
     Route::get('/schüler:innen', fn () => to_route('students.index'));
     Route::get('/schuelerinnen', fn () => to_route('students.index'))->name('students.index.legacy');
     Route::post('/unterrichtsgruppen', [TeachingGroupController::class, 'store'])->name('teaching-groups.store');
