@@ -106,7 +106,7 @@ class AssessmentController extends Controller
             ],
         );
         $contents = $renderer->render($document, $format);
-        $filename = $this->downloadFilename($assessment->title);
+        $filename = $this->assessmentDownloadFilename($teachingGroup, $assessment);
         $mimeType = $format === DocumentOutputFormat::DOCX
             ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             : 'application/vnd.oasis.opendocument.text';
@@ -139,7 +139,7 @@ class AssessmentController extends Controller
         $reports = $students->map(fn (Student $student): array => $this->resultReportForStudent($assessment, $teachingGroup, $student))->all();
         $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
         $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports), $format);
-        $filename = $this->downloadFilename($assessment->title).'_Ergebnisse';
+        $filename = $this->resultReportFilename($teachingGroup, $assessment, $studentId !== null ? $students->first() : null);
         $mimeType = $format === DocumentOutputFormat::DOCX
             ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             : 'application/vnd.oasis.opendocument.text';
@@ -344,7 +344,7 @@ class AssessmentController extends Controller
             'tasks.expectations',
             'tasks.levels',
             'tasks.results',
-            'tasks.educationPlanCompetency.variants',
+            'tasks.educationPlanCompetency.variants.level',
             'tasks.images.resource',
             'booklets.student',
             'booklets.fragments',
@@ -355,7 +355,7 @@ class AssessmentController extends Controller
         $students = $teachingGroup->students()
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->get(['students.id', 'students.first_name', 'students.last_name', 'students.class_name']);
+            ->get(['students.id', 'students.first_name', 'students.last_name', 'students.class_name', 'students.receives_grades']);
         $booklets = $assessment->booklets->sortBy('number')->values();
         $resultStatuses = AssessmentStudentResultStatus::query()
             ->where('assessment_id', $assessment->id)
@@ -367,13 +367,18 @@ class AssessmentController extends Controller
             $competencies = collect();
             $studentLevels = collect();
             $hasResult = false;
+            $maxTotal = 0;
+            $pointsTotal = 0;
             foreach ($assessment->tasks as $task) {
                 $result = $task->results->firstWhere('student_id', $student->id);
-                if ($result !== null && $result->points !== null && $task->maximumPoints()) {
+                $maxPoints = $task->maximumPoints();
+                if ($result !== null && $result->points !== null && $maxPoints) {
                     $hasResult = true;
-                } elseif ($status !== 'missing' || ! $task->maximumPoints()) {
+                } elseif ($status !== 'missing' || ! $maxPoints) {
                     continue;
                 }
+                $maxTotal += $maxPoints;
+                $pointsTotal += min($maxPoints, max(0, (float) ($result?->points ?? 0)));
                 $taskLevels = $task->levels->pluck('level')->filter()->values();
                 if ($taskLevels->isEmpty() && filled($task->level)) {
                     $taskLevels = collect([$task->level]);
@@ -384,7 +389,7 @@ class AssessmentController extends Controller
                 }
                 $competency = $task->educationPlanCompetency;
                 $key = $competency ? 'education-plan-'.$competency->id : 'task-'.$task->id;
-                $group = $competencies->get($key, ['key' => $key, 'title' => $competency ? $this->resolvedCompetencyText($competency) : 'Ohne Kompetenzzuordnung', 'tasks' => []]);
+                $group = $competencies->get($key, ['key' => $key, 'title' => $competency ? $this->resultCompetencyText($task, (string) ($studentLevel ?: 'M')) : 'Ohne Kompetenzzuordnung', 'tasks' => []]);
                 $percentage = $result === null ? 0 : min(100, max(0, ((float) $result->points / $task->maximumPoints()) * 100));
                 $group['tasks'][] = ['title' => $task->title, 'percentage' => round($percentage, 2), 'weight' => (int) ($task->pivot->weight ?? 50)];
                 $competencies->put($key, $group);
@@ -402,6 +407,9 @@ class AssessmentController extends Controller
                 'last_name' => $student->last_name,
                 'level' => $studentLevels->unique()->sortBy(fn ($level) => $levelOrder[$level] ?? 99)->implode('/'),
                 'has_results' => $hasResult,
+                'percentage' => $hasResult || $status === 'missing' ? round_percentage($maxTotal ? $pointsTotal / $maxTotal * 100 : 0) : null,
+                'grade' => $hasResult || $status === 'missing' ? percentage_to_grade($maxTotal ? $pointsTotal / $maxTotal * 100 : 0) : null,
+                'receives_grades' => $student->receives_grades,
                 'competencies' => $hasResult || $status === 'missing' ? $competencies : [],
                 'result_status' => $hasResult ? null : $status,
                 'needs_result_decision' => ! $hasResult && $status === null,
@@ -972,11 +980,40 @@ class AssessmentController extends Controller
         return redirect()->route('teaching-groups.show', ['teachingGroup' => $teachingGroup, 'tab' => $data['return_tab'] ?? 'assessments']);
     }
 
-    private function downloadFilename(string $title): string
+    private function resultReportFilename(TeachingGroup $teachingGroup, Assessment $assessment, ?Student $student): string
     {
-        $filename = preg_replace('/[^\pL\pN._-]+/u', '_', trim($title)) ?: 'lernstandserhebung';
+        $prefix = collect([
+            $teachingGroup->aktenzeichen ? $this->resultFilenamePart($teachingGroup->aktenzeichen) : null,
+            $this->resultFilenamePart($teachingGroup->name),
+            $assessment->assessed_on?->format('Ymd'),
+        ])->filter()->implode('_');
+        $studentPart = $student === null
+            ? ''
+            : ' '.$this->resultFilenamePart($student->last_name).', '.$this->resultFilenamePart($student->first_name);
+        $ending = $student === null ? 'Ergebnisse' : 'Ergebnis';
 
-        return trim($filename, '._-') ?: 'lernstandserhebung';
+        return trim($prefix.' '.$this->resultFilenamePart($assessment->title).$studentPart.' '.$ending);
+    }
+
+    private function resultFilenamePart(?string $value): string
+    {
+        return trim((string) preg_replace(['/[^\pL\pN,._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', ' ', '.'], (string) $value), ' .-_');
+    }
+
+    private function assessmentDownloadFilename(TeachingGroup $teachingGroup, Assessment $assessment): string
+    {
+        $schoolYear = $teachingGroup->schoolYear;
+        $schoolYearName = $schoolYear?->starts_on
+            ? $schoolYear->starts_on->format('Y').'-'.$schoolYear->starts_on->copy()->addYear()->format('y')
+            : $this->resultFilenamePart($schoolYear?->name);
+        $prefix = collect([
+            $teachingGroup->aktenzeichen ? $this->resultFilenamePart($teachingGroup->aktenzeichen) : null,
+            $schoolYearName,
+            $this->resultFilenamePart($teachingGroup->name),
+            $assessment->assessed_on?->format('Ymd'),
+        ])->filter()->implode('_');
+
+        return trim($prefix.' '.$this->resultFilenamePart($assessment->title));
     }
 
     /** @return array<string, mixed> */

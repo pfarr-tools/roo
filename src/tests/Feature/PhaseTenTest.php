@@ -2,6 +2,7 @@
 
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
+use App\Models\AssessmentTaskExpectation;
 use App\Models\AssessmentTaskImage;
 use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
@@ -13,6 +14,8 @@ use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\Student;
+use App\Models\StudentAssessmentResult;
 use App\Models\TeachingGroup;
 use App\Models\TeachingGroupGradeLevel;
 use App\Models\User;
@@ -148,14 +151,14 @@ it('lädt eine Lernstandserhebung als ODT herunter', function () {
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download")
         ->assertOk()
         ->assertHeader('Content-Type', 'application/vnd.oasis.opendocument.text')
-        ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.odt"');
+        ->assertHeader('Content-Disposition', 'attachment; filename="2026-27_2a_20261001 LSE Lesen.odt"');
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store');
 
     $docxResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download?level=M&format=docx&template=primary-school-lower-secondary")
         ->assertOk()
         ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-        ->assertHeader('Content-Disposition', 'attachment; filename="LSE_Lesen.docx"');
+        ->assertHeader('Content-Disposition', 'attachment; filename="2026-27_2a_20261001 LSE Lesen.docx"');
 
     expect($docxResponse->getContent())->not->toBeEmpty();
 });
@@ -223,20 +226,22 @@ it('druckt einen Ergebnisbericht für einen Schüler oder die gesamte Gruppe', f
     $user = User::factory()->create(['organization_id' => $organization->id]);
     $school = School::create(['organization_id' => $organization->id, 'name' => 'Ergebnisbericht Schule']);
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7ab']);
+    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7ab', 'aktenzeichen' => '62.55']);
     $group->gradeLevels()->create(['grade_level' => '7 M']);
-    $student = \App\Models\Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '7ab']);
+    $student = Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '7ab']);
     $group->students()->attach($student);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'Test LSE', 'assessed_on' => '2026-09-06']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Test Einheit', 'position' => 1]);
     $competency = $unit->competencies()->create(['local_wording' => 'Kann testen']);
     $task = AssessmentTask::create(['organization_id' => $organization->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5, 'teaching_unit_competency_id' => $competency->id]);
     $assessment->tasks()->attach($task);
-    \App\Models\AssessmentTaskExpectation::create(['assessment_task_id' => $task->id, 'text' => 'Erwartung erfüllt', 'points' => 5, 'position' => 1]);
-    \App\Models\StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 5, 'numeric_grade' => '1']);
+    AssessmentTaskExpectation::create(['assessment_task_id' => $task->id, 'text' => 'Erwartung erfüllt', 'points' => 5, 'position' => 1]);
+    StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 5, 'numeric_grade' => '1']);
 
     $single = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/auswertung/ergebnisbericht?student={$student->id}&format=odt");
-    $single->assertOk()->assertHeader('Content-Type', 'application/vnd.oasis.opendocument.text');
+    $single->assertOk()
+        ->assertHeader('Content-Type', 'application/vnd.oasis.opendocument.text')
+        ->assertHeader('Content-Disposition', 'attachment; filename="62.55_7ab_20260906 Test LSE Lovelace, Ada Ergebnis.odt"');
     $singlePath = tempnam(sys_get_temp_dir(), 'roo-test-result-report-');
     file_put_contents($singlePath, $single->getContent());
     $singleArchive = new ZipArchive;
@@ -244,9 +249,11 @@ it('druckt einen Ergebnisbericht für einen Schüler oder die gesamte Gruppe', f
     $singleContent = $singleArchive->getFromName('content.xml');
     $singleArchive->close();
     unlink($singlePath);
-    expect($singleContent)->toContain('Ada Lovelace')->toContain('Mock-Aufgabe')->toContain('Erwartung erfüllt');
+    expect($singleContent)->toContain('Mock-Aufgabe')->toContain('Erwartung erfüllt');
 
     $all = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/auswertung/ergebnisbericht?format=docx");
-    $all->assertOk()->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    $all->assertOk()
+        ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        ->assertHeader('Content-Disposition', 'attachment; filename="62.55_7ab_20260906 Test LSE Ergebnisse.docx"');
     expect($all->getContent())->not->toBeEmpty();
 });

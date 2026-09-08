@@ -34,4 +34,9 @@ class StudentEvaluation extends Model
     {
         return $this->hasMany(StudentEvaluationObservationScale::class)->orderBy('position_snapshot');
     }
+
+    public function competenceRatings(): HasMany
+    {
+        return $this->hasMany(StudentEvaluationCompetenceRating::class)->orderBy('education_plan_competency_id');
+    }
 }

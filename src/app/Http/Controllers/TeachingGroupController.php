@@ -23,7 +23,6 @@ use App\Models\SongVersion;
 use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Services\CompetencyResolver;
-use App\Services\EvaluationTemplateGenerator;
 use App\Services\SongbookContentsResolver;
 use App\Services\SongbookPdfExporter;
 use App\Students\PronounSets\PronounSets;
@@ -49,18 +48,10 @@ class TeachingGroupController extends Controller
         ]);
     }
 
-    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver, EvaluationTemplateGenerator $templateGenerator): Response
+    public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student', 'reportPeriods.evaluationTemplates']);
-        if ($teachingGroup->grading_model === 'competency_texts_and_grades') {
-            foreach ($teachingGroup->reportPeriods as $period) {
-                if (! $period->evaluationTemplates->isNotEmpty()) {
-                    $period->evaluationTemplates()->createMany($templateGenerator->generate($period)->all());
-                }
-            }
-            $teachingGroup->load('reportPeriods.evaluationTemplates');
-        }
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
         $organizationId = auth()->user()->organization_id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
         $planCompetencies = CurriculumTopicEducationPlanReference::query()
@@ -353,6 +344,7 @@ class TeachingGroupController extends Controller
         DB::transaction(function () use ($data, $teachingGroup): void {
             $student = Student::create($data + ['organization_id' => $teachingGroup->organization_id]);
             $teachingGroup->students()->attach($student->id);
+            $this->ensurePeriodEvaluations($teachingGroup, collect([$student->id]));
             $student->searchable();
         });
 
@@ -415,10 +407,22 @@ class TeachingGroupController extends Controller
         $studentIds = collect($data['student_ids'] ?? [$data['student_id']])->filter()->unique()->values();
         abort_unless(Student::whereIn('id', $studentIds)->where('organization_id', $request->user()->organization_id)->where('school_id', $teachingGroup->school_id)->count() === $studentIds->count(), 422);
         $pivot = collect($data)->only(['starts_on', 'ends_on'])->all();
-        $teachingGroup->students()->syncWithoutDetaching($studentIds->mapWithKeys(fn (int $studentId): array => [$studentId => $pivot])->all());
+        DB::transaction(function () use ($teachingGroup, $studentIds, $pivot): void {
+            $teachingGroup->students()->syncWithoutDetaching($studentIds->mapWithKeys(fn (int $studentId): array => [$studentId => $pivot])->all());
+            $this->ensurePeriodEvaluations($teachingGroup, $studentIds);
+        });
         Student::whereIn('id', $studentIds)->get()->each->searchable();
 
         return back()->with('success', 'Schüler:in wurde der Gruppe zugeordnet.');
+    }
+
+    private function ensurePeriodEvaluations(TeachingGroup $teachingGroup, $studentIds): void
+    {
+        foreach ($teachingGroup->reportPeriods as $period) {
+            foreach ($studentIds as $studentId) {
+                $period->evaluations()->firstOrCreate(['student_id' => $studentId]);
+            }
+        }
     }
 
     public function destroyMembership(TeachingGroup $teachingGroup, Student $student): RedirectResponse

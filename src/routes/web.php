@@ -202,12 +202,17 @@ Route::middleware('auth')->group(function () {
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/lernstandserhebungen/aufgaben/{assessmentTask}/ergebnisse', [AssessmentController::class, 'updateResult'])->name('assessments.results.update');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/neu', [EvaluationController::class, 'createPeriod'])->name('evaluations.periods.create');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/bearbeiten', [EvaluationController::class, 'editPeriod'])->name('evaluations.periods.edit');
+    Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}', [EvaluationController::class, 'updatePeriod'])->name('evaluations.periods.update');
+    Route::delete('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}', [EvaluationController::class, 'deletePeriod'])->name('evaluations.periods.destroy');
+    Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.group-index');
     Route::get('/bewertungen', [EvaluationController::class, 'index'])->name('evaluations.index');
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume', [EvaluationController::class, 'storePeriod'])->name('evaluations.periods.store');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage', [EvaluationController::class, 'editTemplate'])->name('evaluations.templates.edit');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage', [EvaluationController::class, 'updateTemplate'])->name('evaluations.templates.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/zeiträume/{period}/vorlage/{template}/zurücksetzen', [EvaluationController::class, 'resetTemplate'])->name('evaluations.templates.reset');
     Route::get('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/bearbeiten', [EvaluationController::class, 'edit'])->name('evaluations.edit');
+    Route::post('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}/entwurf', [EvaluationController::class, 'draftText'])->name('evaluations.draft-text');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungen/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
     Route::put('/unterrichtsgruppen/{teachingGroup}/bewertungseinstellungen', [TeachingGroupController::class, 'updateGradingSettings'])->name('teaching-groups.grading-settings.update');
     Route::post('/unterrichtsgruppen/{teachingGroup}/liederbuch/titelseite', [TeachingGroupController::class, 'uploadSongbookTitlePage'])->name('teaching-groups.songbook.title-page.upload');

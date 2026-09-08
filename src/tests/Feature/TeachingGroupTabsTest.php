@@ -6,6 +6,7 @@ use App\Models\ReportPeriod;
 use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
+use App\Models\Student;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
 use App\Models\User;
@@ -52,7 +53,7 @@ it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', fu
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $firstGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $secondGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    ReportPeriod::create(['organization_id' => $organization->id, 'teaching_group_id' => $secondGroup->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
+    $period = ReportPeriod::create(['organization_id' => $organization->id, 'teaching_group_id' => $secondGroup->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
 
     $this->actingAs($user)->get('/bewertungen?group='.$secondGroup->id)
         ->assertInertia(fn ($page) => $page
@@ -63,6 +64,34 @@ it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', fu
             ->where('groups.0.id', $firstGroup->id)
             ->where('groups.1.id', $secondGroup->id)
         );
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$secondGroup->id}/bewertungen")
+        ->assertInertia(fn ($page) => $page
+            ->component('Evaluations/Index')
+            ->where('group.id', $secondGroup->id)
+        );
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$secondGroup->id}/bewertungen/zeiträume/{$period->id}/bearbeiten")
+        ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm')->where('period.id', $period->id));
+
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$secondGroup->id}/bewertungen/zeiträume/{$period->id}", [
+        'label' => 'Ganzes Jahr',
+        'starts_on' => '2026-09-01',
+        'ends_on' => '2027-07-31',
+        'whole_grades' => true,
+        'include_full_school_year' => true,
+    ])->assertRedirect("/unterrichtsgruppen/{$secondGroup->id}?tab=evaluations");
+    expect($period->fresh()->whole_grades)->toBeTrue()
+        ->and($period->fresh()->include_full_school_year)->toBeTrue();
+
+    $student = Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '5a']);
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$secondGroup->id}/mitglieder", ['student_id' => $student->id])
+        ->assertRedirect();
+    $this->assertDatabaseHas('student_evaluations', ['report_period_id' => $period->id, 'student_id' => $student->id]);
+
+    $this->actingAs($user)->delete("/unterrichtsgruppen/{$secondGroup->id}/bewertungen/zeiträume/{$period->id}")
+        ->assertRedirect("/unterrichtsgruppen/{$secondGroup->id}?tab=evaluations");
+    expect($period->fresh())->toBeNull();
 });
 
 it('liefert geplante Einheiten mit signierten Elternseiten im Gruppeneditor', function () {

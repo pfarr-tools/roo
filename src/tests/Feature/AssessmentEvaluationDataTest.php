@@ -90,6 +90,20 @@ it('provides capped weighted student results for the evaluation tab', function (
             ->where('results.0.competencies.0.percentage', 100));
 });
 
+it('provides the calculated total percentage and grade for evaluation results', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $fixture['expectation']->update(['points' => 10, 'repetitions' => 1]);
+    $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
+    StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 8]);
+    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page
+            ->where('results.0.percentage', 80)
+            ->where('results.0.grade', '2')
+            ->where('results.0.receives_grades', false));
+});
+
 it('lists every group student and allows a missing result decision to count as zero', function () {
     $fixture = assessmentEvaluationDataFixture();
     $secondStudent = Student::create([
@@ -131,7 +145,7 @@ it('uses the assessment task education plan competency in result groups', functi
     $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
-        ->assertInertia(fn ($page) => $page->where('results.0.competencies.0.title', 'Du kannst Kompetenz direkt aus dem Bildungsplan (3.1.1)'));
+        ->assertInertia(fn ($page) => $page->where('results.0.competencies.0.title', 'Du kannst Kompetenz direkt aus dem Bildungsplan.'));
 });
 
 it('uses only the selected level competency variant without its identifier in the result report', function () {
@@ -158,6 +172,23 @@ it('uses only the selected level competency variant without its identifier in th
     expect($content)->toContain('die M-Kompetenzvariante')
         ->not->toContain('3.1.1')
         ->not->toContain('G-Kompetenz');
+});
+
+it('uses the student level competency variant in evaluation result groups', function () {
+    $fixture = assessmentEvaluationDataFixture();
+    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'LEVEL', 'subject' => 'Religion', 'title' => 'Niveausplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'LEVEL-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'die Grundkompetenz', 'position' => 1, 'is_active' => true]);
+    $level = EducationPlanLevel::create(['education_plan_version_id' => $version->id, 'external_identifier' => 'M', 'label' => 'Mittleres Niveau', 'position' => 2]);
+    EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => $level->id, 'text' => 'die M-Kompetenzvariante', 'position' => 1]);
+    $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
+    $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
+    StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 1, 'level' => 'M']);
+    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+
+    $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
+        ->assertInertia(fn ($page) => $page->where('results.0.competencies.0.title', 'Du kannst die M-Kompetenzvariante.'));
 });
 
 it('includes the scanned student level, task details, notes, and branded page furniture in the result report', function () {

@@ -46,6 +46,19 @@ class CompetencyResolver
         return $this->text($competency);
     }
 
+    public function textForLevel(Model $competency, ?string $level): string
+    {
+        $plan = $this->related($competency, 'educationPlanCompetency') ?? $competency;
+        $variants = collect($this->relatedMany($plan, 'variants'));
+        $variant = $variants->first(fn ($variant): bool => strtoupper((string) $variant->level?->external_identifier) === strtoupper((string) $level));
+
+        if (! $variant && $level && $variants->count() === 3) {
+            $variant = $variants->values()->get(array_search(strtoupper($level), ['G', 'M', 'E'], true));
+        }
+
+        return $variant?->text ? $this->clean($variant->text, $this->identifier($competency)) : $this->text($competency);
+    }
+
     public function duKannst(Model $competency, bool $numberInParentheses = true, bool $removeParentheses = true): string
     {
         $text = $this->text($competency);
@@ -64,6 +77,7 @@ class CompetencyResolver
     public function kind(Model $competency): string
     {
         $plan = $this->related($competency, 'educationPlanCompetency');
+
         return $plan?->area?->kind ?? 'content';
     }
 
@@ -72,7 +86,9 @@ class CompetencyResolver
         $plan = $this->related($competency, 'educationPlanCompetency') ?? $competency;
         $identifier = $this->identifier($competency);
         $variants = collect($this->relatedMany($competency, 'variants'));
-        if ($variants->isEmpty()) $variants = collect($this->relatedMany($plan, 'variants'));
+        if ($variants->isEmpty()) {
+            $variants = collect($this->relatedMany($plan, 'variants'));
+        }
         $variants = $variants
             ->pluck('text')
             ->filter()
@@ -127,5 +143,4 @@ class CompetencyResolver
 
         return trim((string) preg_replace('/^\s*'.$identifierPattern.'\s*(?:[-–:]\s*)?[GME]?\s*/iu', '', $text));
     }
-
 }

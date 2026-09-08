@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppShell from '../../Components/Ui/AppShell.vue'
 import Tab from '../../Components/Ui/Tabs/Tab.vue'
@@ -41,14 +41,33 @@ const resultPrintOpen = ref(false)
 const resultPrintStudent = ref('all')
 const resultPrintFormat = ref('odt')
 const resultPrintTemplate = ref('default')
+const debouncedResultSearch = ref('')
+let resultSearchTimer
+watch(resultSearch, (value) => {
+    clearTimeout(resultSearchTimer)
+    resultSearchTimer = setTimeout(() => { debouncedResultSearch.value = value.trim().toLocaleLowerCase() }, 250)
+})
+onBeforeUnmount(() => clearTimeout(resultSearchTimer))
 const filteredResults = computed(() => props.results
     .filter((result) => !resultLevel.value || result.level.split('/').includes(resultLevel.value))
-    .filter((result) => `${result.first_name} ${result.last_name}`.toLocaleLowerCase().includes(resultSearch.value.toLocaleLowerCase()))
+    .filter((result) => `${result.first_name} ${result.last_name}`.toLocaleLowerCase().includes(debouncedResultSearch.value))
     .sort((left, right) => {
-        const comparison = String(left[resultSort.value] ?? '').localeCompare(String(right[resultSort.value] ?? ''), 'de', { sensitivity: 'base' })
+        const leftValue = resultSort.value === 'percentage' ? (left.percentage ?? -1) : left[resultSort.value]
+        const rightValue = resultSort.value === 'percentage' ? (right.percentage ?? -1) : right[resultSort.value]
+        const comparison = resultSort.value === 'percentage'
+            ? Number(leftValue) - Number(rightValue)
+            : String(leftValue ?? '').localeCompare(String(rightValue ?? ''), 'de', { sensitivity: 'base' })
         return resultSortDirection.value === 'asc' ? comparison : -comparison
     }))
 function sortResults(column) { resultSortDirection.value = resultSort.value === column && resultSortDirection.value === 'asc' ? 'desc' : 'asc'; resultSort.value = column }
+function resultRows(result) {
+    const rows = (result.competencies ?? []).flatMap((competency) => [
+        { type: 'competency', text: competency.title, percentage: competency.percentage },
+        ...(competency.tasks ?? []).map((task) => ({ type: 'task', text: task.title, percentage: task.percentage })),
+    ])
+
+    return rows.length ? rows : [{ type: 'empty', text: null, percentage: null }]
+}
 
 function taskProgress(task) {
     const fragments = props.taskFragments.filter((fragment) => fragment.assessment_task_id === task.id)
@@ -155,7 +174,7 @@ const resultPrintUrl = computed(() => {
             <Tab id="results" :active-tab="activeSection">
                 <h2 id="assessment-results-heading" class="h4 mb-1">{{ de.assessmentEvaluationResults }}</h2>
                 <div class="row g-2 mb-3"><div class="col-md-8"><label class="form-label" for="assessment-results-search">{{ de.search }}</label><input id="assessment-results-search" v-model="resultSearch" class="form-control" type="search"></div><div class="col-md-4"><label class="form-label" for="assessment-results-level">{{ de.assessmentEvaluationLevelFilter }}</label><select id="assessment-results-level" v-model="resultLevel" class="form-select"><option value="">{{ de.all }}</option><option value="G">G</option><option value="M">M</option><option value="E">E</option></select></div></div>
-                <div v-if="filteredResults.length" class="table-responsive"><table class="table table-sm align-top"><thead><tr><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('first_name')">{{ de.firstName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('last_name')">{{ de.lastName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('level')">{{ de.assessmentEvaluationLevel }}</button></th><th>{{ de.assessmentEvaluationResults }}</th><th></th></tr></thead><tbody><tr v-for="result in filteredResults" :key="result.student_id"><td>{{ result.first_name }}</td><td>{{ result.last_name }}</td><td>{{ result.level || '–' }}</td><td><div v-if="!result.has_results" class="d-flex flex-wrap gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-result-status="not_evaluated" @click="updateResultStatus(result, 'not_evaluated')">{{ de.assessmentEvaluationNotEvaluated }}</button><button class="btn btn-sm btn-outline-warning" type="button" data-result-status="missing" @click="updateResultStatus(result, 'missing')">{{ de.assessmentEvaluationMissing }}</button></div><div v-for="competency in result.competencies" :key="competency.key" class="mb-2"><strong>{{ competency.title }}: {{ competency.percentage }}%</strong><ul class="mb-0 small"><li v-for="task in competency.tasks" :key="task.title">{{ task.title }}: {{ task.percentage }}% ({{ task.weight }}%)</li></ul></div><span v-if="result.has_results && !result.competencies.length" class="text-muted">–</span></td><td><button class="btn btn-sm btn-outline-secondary" type="button" :data-testid="`assessment-result-print-${result.student_id}`" :aria-label="`${de.assessmentEvaluationPrintStudent}: ${result.first_name} ${result.last_name}`" @click="openResultPrint(result.student_id)"><i class="bi bi-printer" aria-hidden="true"></i></button></td></tr></tbody></table></div>
+                <div v-if="filteredResults.length" class="table-responsive"><table class="table table-sm align-top"><thead><tr><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('first_name')">{{ de.firstName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('last_name')">{{ de.lastName }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('level')">{{ de.assessmentEvaluationLevel }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('percentage')">{{ de.assessmentEvaluationOverall }}</button></th><th><button class="btn btn-link p-0 text-body" type="button" @click="sortResults('grade')">{{ de.assessmentEvaluationGrade }}</button></th><th colspan="2">{{ de.assessmentEvaluationResult }}</th><th></th></tr></thead><tbody><template v-for="result in filteredResults" :key="result.student_id"><tr v-for="(row, rowIndex) in resultRows(result)" :key="`${result.student_id}-${row.type}-${rowIndex}`"><template v-if="rowIndex === 0"><td :rowspan="resultRows(result).length">{{ result.first_name }}</td><td :rowspan="resultRows(result).length">{{ result.last_name }}</td><td :rowspan="resultRows(result).length">{{ result.level || '–' }}</td><td :rowspan="resultRows(result).length">{{ result.percentage === null || result.percentage === undefined ? '–' : `${result.percentage}%` }}</td><td :rowspan="resultRows(result).length">{{ result.grade ? (result.receives_grades ? result.grade : `(${result.grade})`) : '–' }}</td></template><template v-if="row.type === 'empty'"><td colspan="2"><div v-if="!result.has_results" class="d-flex flex-wrap gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-result-status="not_evaluated" @click="updateResultStatus(result, 'not_evaluated')">{{ de.assessmentEvaluationNotEvaluated }}</button><button class="btn btn-sm btn-outline-warning" type="button" data-result-status="missing" @click="updateResultStatus(result, 'missing')">{{ de.assessmentEvaluationMissing }}</button></div><span class="text-muted">–</span></td></template><template v-else><td :class="{ 'fw-semibold': row.type === 'competency' }">{{ row.text }}</td><td :class="{ 'fw-semibold': row.type === 'competency' }">{{ row.percentage }}%</td></template><td v-if="rowIndex === 0" :rowspan="resultRows(result).length"><button class="btn btn-sm btn-outline-secondary" type="button" :data-testid="`assessment-result-print-${result.student_id}`" :aria-label="`${de.assessmentEvaluationPrintStudent}: ${result.first_name} ${result.last_name}`" @click="openResultPrint(result.student_id)"><i class="bi bi-printer" aria-hidden="true"></i></button></td></tr></template></tbody></table></div>
                 <p v-else class="text-muted mb-0">{{ de.assessmentEvaluationNoResults }}</p>
             </Tab>
             </Tabs>

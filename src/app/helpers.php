@@ -18,3 +18,10 @@ if (! function_exists('percentage_to_grade')) {
         ][$quarter];
     }
 }
+
+if (! function_exists('percentage_to_whole_grade')) {
+    function percentage_to_whole_grade(int|float|null $percentage): string
+    {
+        return (string) (int) round((float) str_replace(',', '.', preg_replace('/[+-]$/', '', percentage_to_grade($percentage))), 0, PHP_ROUND_HALF_UP);
+    }
+}

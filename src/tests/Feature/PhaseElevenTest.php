@@ -79,9 +79,9 @@ it('generates differentiated proposal sentences from treated content competences
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.3.1.1', 'text' => null, 'position' => 1]);
     $secondCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.3.1.2', 'text' => null, 'position' => 2]);
-    foreach (['G', 'M', 'E'] as $position => $level) {
-        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $level, 'position' => $position]);
-        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $secondCompetency->id, 'education_plan_level_id' => null, 'text' => $level, 'position' => $position]);
+    foreach (['G' => 'auf G-Niveau beschreiben', 'M' => 'auf M-Niveau erklären', 'E' => 'auf E-Niveau beurteilen'] as $position => $text) {
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $secondCompetency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
     }
     $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
@@ -120,12 +120,19 @@ it('shows competency scales and the evaluation draft for competency text grading
     $school = School::create(['organization_id' => $org->id, 'name' => 'Kompetenzschule']);
     $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5b', 'grading_model' => 'competency_texts_and_grades']);
+    $group->gradeComponents()->createMany([
+        ['type' => 'observations', 'label' => 'Beobachtungen im Unterricht', 'percentage' => 50, 'position' => 1],
+        ['type' => 'written_assessments', 'label' => 'Schriftliche Leistungen', 'percentage' => 50, 'position' => 2],
+    ]);
     $student = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '5b']);
     $group->students()->attach($student->id);
     $plan = EducationPlan::create(['external_identifier' => 'KOMPETENZBEWERTUNG', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1.1', 'text' => 'Menschliche Erfahrungen beschreiben', 'position' => 1]);
+    foreach (['G' => 'auf G-Niveau beschreiben', 'M' => 'auf M-Niveau erklären', 'E' => 'auf E-Niveau beurteilen'] as $position => $text) {
+        EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
+    }
     $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $unitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $competency->id]);
@@ -139,26 +146,36 @@ it('shows competency scales and the evaluation draft for competency text grading
     $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
     $evaluation = $period->evaluations()->create(['student_id' => $student->id, 'draft_text' => 'Bewertungsentwurf']);
     $assessment = Assessment::create(['organization_id' => $org->id, 'teaching_group_id' => $group->id, 'report_period_id' => $period->id, 'title' => 'LSE September', 'assessed_on' => '2026-09-08']);
-    $task = AssessmentTask::create(['organization_id' => $org->id, 'teaching_unit_competency_id' => $unitCompetency->id, 'title' => 'Aufgabe']);
+    $task = AssessmentTask::create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe', 'max_points' => 10]);
     $task->levels()->create(['level' => 'G']);
     $assessment->tasks()->attach($task->id);
-    StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'level' => 'G']);
+    StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'level' => 'G', 'points' => 8]);
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/{$evaluation->id}/bearbeiten")
         ->assertInertia(fn ($page) => $page
             ->where('evaluation.draft_text', 'Bewertungsentwurf')
             ->where('competencies.0.id', $unitCompetency->id)
-            ->where('competencies.0.text', 'Menschliche Erfahrungen beschreiben')
+            ->where('competencies.0.text', 'auf G-Niveau beschreiben')
+            ->where('competencies.0.level_texts.G', 'auf G-Niveau beschreiben')
+            ->where('competencies.0.level_texts.M', 'auf M-Niveau erklären')
             ->where('competenceAverages.0.teaching_unit_competency_id', $unitCompetency->id)
-            ->where('competenceAverages.0.average', 3)
-            ->where('competenceAverages.0.rounded_level', 3)
+            ->where('competenceAverages.0.average', 3.5)
+            ->where('competenceAverages.0.rounded_level', 4)
             ->where('lses.0.title', 'LSE September')
             ->where('lses.0.date', '2026-09-08')
             ->where('lses.0.student_levels.0', 'G')
+            ->where('lses.0.percentage', 80)
+            ->where('lses.0.grade', '2')
+            ->where('lses.0.receives_grades', false)
+            ->where('competenceAverages.0.percentage', 70)
+            ->where('competenceAverages.0.sources.0.percentage', 80)
+            ->where('competenceAverages.0.sources.1.percentage', 40)
+            ->where('competenceAverages.0.sources.2.percentage', 80)
             ->where('periodLevel', 'G'));
 
-    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/{$evaluation->id}", ['draft_text' => 'Bewertungsentwurf', 'teacher_note' => '', 'level' => 'M', 'status' => 'draft'])->assertRedirect();
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/{$evaluation->id}", ['draft_text' => 'Bewertungsentwurf', 'teacher_note' => '', 'level' => 'M', 'status' => 'draft', 'competence_ratings' => [['education_plan_competency_id' => $unitCompetency->education_plan_competency_id, 'rating' => 4]]])->assertRedirect();
     expect($evaluation->fresh()->level)->toBe('M');
+    expect(DB::table('student_evaluation_competence_ratings')->where('student_evaluation_id', $evaluation->id)->value('rating'))->toBe(4);
 });
 
 it('uses live school scale definitions in drafts and snapshots them on confirmation', function () {

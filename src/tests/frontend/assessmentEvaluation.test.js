@@ -272,8 +272,112 @@ describe('assessment evaluation components', () => {
         expect(root.querySelector('#assessment-results-heading')).not.toBeNull()
         expect(root.textContent).toContain('Ada')
         expect(root.textContent).toContain('Vergleichen')
-        expect(root.textContent).toContain('75% (50%)')
+        expect(root.textContent).toContain('75%')
+        expect(root.textContent).toContain('Aufgabe')
         expect(root.querySelector('#assessment-results-search')).not.toBeNull()
+        unmount()
+    })
+
+    it('shows and sorts total percentages and grades in the results table', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            results: [
+                { student_id: 12, first_name: 'Ada', last_name: 'Lovelace', level: 'M', has_results: true, percentage: 80, grade: '2', receives_grades: true, competencies: [] },
+                { student_id: 13, first_name: 'Grace', last_name: 'Hopper', level: 'M', has_results: true, percentage: 60, grade: '3', receives_grades: true, competencies: [] },
+            ],
+        })
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+
+        expect(root.textContent).toContain('Gesamtergebnis')
+        expect(root.textContent).toContain('Note')
+        expect(root.textContent).toContain('80%')
+        expect(root.textContent).toContain('2')
+
+        const totalHeader = [...root.querySelectorAll('th button')].find((button) => button.textContent.includes('Gesamtergebnis'))
+        totalHeader.click()
+        await nextTick()
+        expect(root.querySelector('tbody tr td').textContent).toBe('Grace')
+        unmount()
+    })
+
+    it('filters student names after the search input debounce', async () => {
+        vi.useFakeTimers()
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            results: [
+                { student_id: 12, first_name: 'Ada', last_name: 'Lovelace', level: 'M', has_results: true, competencies: [] },
+                { student_id: 13, first_name: 'Grace', last_name: 'Hopper', level: 'M', has_results: true, competencies: [] },
+            ],
+        })
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+        const search = root.querySelector('#assessment-results-search')
+        search.value = 'hopper'
+        search.dispatchEvent(new Event('input'))
+        await nextTick()
+        expect(root.textContent).toContain('Ada')
+
+        vi.advanceTimersByTime(249)
+        await nextTick()
+        expect(root.textContent).toContain('Ada')
+
+        vi.advanceTimersByTime(1)
+        await nextTick()
+        expect(root.textContent).not.toContain('Ada')
+        expect(root.textContent).toContain('Grace')
+        unmount()
+        vi.useRealTimers()
+    })
+
+    it('renders competence and task results as aligned result rows', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            results: [{
+                student_id: 12,
+                first_name: 'Ada',
+                last_name: 'Lovelace',
+                level: 'M',
+                has_results: true,
+                percentage: 80,
+                grade: '2',
+                receives_grades: true,
+                competencies: [{ title: 'Du kannst vergleichen.', percentage: 75, tasks: [{ title: 'Aufgabe 1', percentage: 50, weight: 50 }, { title: 'Aufgabe 2', percentage: 100, weight: 50 }] }],
+            }],
+        })
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+
+        const headerRows = root.querySelectorAll('thead tr')
+        expect(headerRows).toHaveLength(1)
+        expect(headerRows[0].querySelector('th[colspan="2"]').textContent).toBe('Ergebnis')
+        expect(root.querySelectorAll('tbody tr')).toHaveLength(3)
+        expect(root.querySelector('tbody tr td[rowspan="3"]').textContent).toBe('Ada')
+        expect(root.querySelectorAll('tbody tr')[0].querySelectorAll('td')[6].classList.contains('fw-semibold')).toBe(true)
+        expect(root.textContent).toContain('Du kannst vergleichen.')
+        expect(root.textContent).toContain('Aufgabe 1')
+        expect(root.textContent).toContain('50%')
+        unmount()
+    })
+
+    it('labels the grade column when grades are disabled', async () => {
+        const { root, unmount } = mount(Assess, {
+            group,
+            assessment,
+            results: [{ student_id: 12, first_name: 'Ada', last_name: 'Lovelace', level: '', has_results: true, percentage: 80, grade: '2', receives_grades: false, competencies: [] }],
+        })
+
+        root.querySelector('[aria-controls="results-panel"]').click()
+        await nextTick()
+
+        expect(root.textContent).toContain('Note')
+        expect(root.textContent).toContain('(2)')
         unmount()
     })
 
