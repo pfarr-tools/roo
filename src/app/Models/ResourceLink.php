@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Laravel\Scout\Searchable;
+use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'publication_status'])]
 class ResourceLink extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['title', 'url', 'description'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->searchablePayload();
+    }
+
     protected function casts(): array
     {
         return ['publication_status' => PublicationStatus::class];

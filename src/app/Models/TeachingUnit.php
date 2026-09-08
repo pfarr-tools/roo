@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
+use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'created_by_user_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes', 'introduction_text'])]
 class TeachingUnit extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['title', 'keyword'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->searchablePayload();
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');

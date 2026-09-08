@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
+use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'name', 'slug', 'short_name', 'city', 'notes', 'messenger_name', 'observation_scale_interval_count'])]
 class School extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['name', 'short_name', 'city'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->searchablePayload();
+    }
+
     protected function casts(): array
     {
         return ['observation_scale_interval_count' => 'integer'];

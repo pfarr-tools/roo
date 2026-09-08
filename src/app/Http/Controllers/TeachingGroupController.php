@@ -278,18 +278,29 @@ class TeachingGroupController extends Controller
         $school = School::whereKey($data['school_id'])->where('organization_id', $request->user()->organization_id)->firstOrFail();
         $schoolYear = SchoolYear::whereKey($data['school_year_id'])->where('organization_id', $request->user()->organization_id)->where('school_id', $school->id)->firstOrFail();
 
-        $group = DB::transaction(function () use ($data, $request): TeachingGroup {
-            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
+        $group = DB::transaction(function () use ($data, $request, $schoolYear): TeachingGroup {
+            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
             $group->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
             $group->gradeComponents()->createMany([
                 ['type' => 'observations', 'label' => 'Beobachtungen im Unterricht', 'percentage' => 50, 'position' => 1],
                 ['type' => 'written_assessments', 'label' => 'Schriftliche Leistungen', 'percentage' => 50, 'position' => 2],
             ]);
+            $this->createDefaultReportPeriods($group, $schoolYear);
 
             return $group;
         });
 
         return to_route('teaching-groups.show', $group)->with('success', 'Unterrichtsgruppe wurde angelegt.');
+    }
+
+    private function createDefaultReportPeriods(TeachingGroup $teachingGroup, SchoolYear $schoolYear): void
+    {
+        $secondHalfStart = $schoolYear->second_half_start_on ?? $schoolYear->starts_on->copy()->addYear()->setMonth(2)->setDay(1);
+
+        $teachingGroup->reportPeriods()->createMany([
+            ['organization_id' => $teachingGroup->organization_id, 'label' => '1. Halbjahr', 'starts_on' => $schoolYear->starts_on, 'ends_on' => $secondHalfStart->copy()->subDay(), 'whole_grades' => false, 'include_full_school_year' => false],
+            ['organization_id' => $teachingGroup->organization_id, 'label' => '2. Halbjahr', 'starts_on' => $secondHalfStart, 'ends_on' => $schoolYear->ends_on, 'whole_grades' => true, 'include_full_school_year' => true],
+        ]);
     }
 
     public function update(StoreTeachingGroupRequest $request, TeachingGroup $teachingGroup): RedirectResponse
@@ -331,6 +342,7 @@ class TeachingGroupController extends Controller
         $data = $request->validated();
         $school = School::whereKey($data['school_id'])->where('organization_id', $request->user()->organization_id)->firstOrFail();
         $student = Student::create($data + ['organization_id' => $school->organization_id]);
+        $student->searchable();
 
         return back()->with('success', 'Schüler:in wurde angelegt.');
     }
@@ -362,25 +374,27 @@ class TeachingGroupController extends Controller
         $aliases = ['vorname' => 'first_name', 'nachname' => 'last_name', 'klasse' => 'class_name', 'notizen' => 'notes'];
         $headers = array_map(fn (string $header): string => $aliases[$header] ?? $header, $headers);
         abort_unless(collect(['first_name', 'last_name', 'class_name'])->diff($headers)->isEmpty(), 422, 'Die CSV-Datei benötigt die Spalten Vorname, Nachname und Klasse.');
+        $createdStudents = collect();
         $created = 0;
-        DB::transaction(function () use ($lines, $delimiter, $headers, $school, &$created): void {
+        DB::transaction(function () use ($lines, $delimiter, $headers, $school, &$created, &$createdStudents): void {
             foreach (array_slice($lines, 1) as $line) {
                 $values = str_getcsv($line, $delimiter);
                 $row = array_combine($headers, array_slice(array_pad($values, count($headers), null), 0, count($headers)));
                 if (! trim((string) ($row['first_name'] ?? '')) || ! trim((string) ($row['last_name'] ?? '')) || ! trim((string) ($row['class_name'] ?? ''))) {
                     continue;
                 }
-                Student::create([
+                $createdStudents->push(Student::create([
                     'organization_id' => $school->organization_id,
                     'school_id' => $school->id,
                     'first_name' => trim($row['first_name']),
                     'last_name' => trim($row['last_name']),
                     'class_name' => trim($row['class_name']),
                     'notes' => filled($row['notes'] ?? null) ? trim($row['notes']) : null,
-                ]);
+                ]));
                 $created++;
             }
         });
+        $createdStudents->each->searchable();
 
         return back()->with('success', $created.' Schüler:innen wurden importiert.');
     }
@@ -388,6 +402,7 @@ class TeachingGroupController extends Controller
     public function updateStudent(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
         $student->update($request->validated());
+        $student->searchable();
 
         return back()->with('success', 'Schüler:in wurde gespeichert.');
     }
@@ -395,6 +410,7 @@ class TeachingGroupController extends Controller
     public function destroyStudent(Student $student): RedirectResponse
     {
         $this->authorize('delete', $student);
+        $student->unsearchable();
         $student->delete();
 
         return back()->with('success', 'Schüler:in wurde gelöscht.');

@@ -8,10 +8,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
+use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes', 'grading_model', 'numeric_grades_enabled'])]
 class TeachingGroup extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['name', 'aktenzeichen', 'denomination'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->searchablePayload();
+    }
+
     protected function casts(): array
     {
         return ['numeric_grades_enabled' => 'boolean'];

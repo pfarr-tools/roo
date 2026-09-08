@@ -40,6 +40,24 @@ it('remembers the last selected evaluation group', function () {
 
     $this->actingAs($user)->get('/bewertungen')->assertInertia(fn ($page) => $page->where('group.id', $second->id));
 });
+
+it('creates the two default evaluation periods when creating a teaching group', function () {
+    $org = Organization::create(['name' => 'Standardzeiträume']);
+    $user = User::factory()->create(['organization_id' => $org->id]);
+    $school = School::create(['organization_id' => $org->id, 'name' => 'Schule']);
+    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'second_half_start_on' => '2027-02-01']);
+
+    $this->actingAs($user)->post('/unterrichtsgruppen', ['school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grade_levels' => ['4']])->assertRedirect();
+
+    $periods = ReportPeriod::query()->orderBy('starts_on')->get();
+    expect($periods)->toHaveCount(2)
+        ->and($periods[0]->label)->toBe('1. Halbjahr')
+        ->and($periods[0]->whole_grades)->toBeFalse()
+        ->and($periods[0]->include_full_school_year)->toBeFalse()
+        ->and($periods[1]->label)->toBe('2. Halbjahr')
+        ->and($periods[1]->whole_grades)->toBeTrue()
+        ->and($periods[1]->include_full_school_year)->toBeTrue();
+});
 it('legt einen Bewertungszeitraum an und trennt den Entwurf vom Bestätigungsstatus', function () {
     $org = Organization::create(['name' => 'Evaluation']);
     $user = User::factory()->create(['organization_id' => $org->id]);

@@ -51,6 +51,21 @@ it('creates an empty teaching group with multiple grade levels', function () {
     $this->assertDatabaseHas('teaching_group_grade_levels', ['grade_level' => '3']);
 });
 
+it('stores the denomination when creating a teaching group', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+
+    $this->actingAs($user)->post('/unterrichtsgruppen', [
+        'school_id' => $school->id,
+        'school_year_id' => $year->id,
+        'name' => 'Konfessionsgruppe',
+        'denomination' => 'catholic',
+        'grade_levels' => ['3'],
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('teaching_groups', ['name' => 'Konfessionsgruppe', 'denomination' => 'catholic']);
+});
+
 it('stores whether a student receives grades and their pronoun set when creating', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);
@@ -126,6 +141,28 @@ it('rejects unsupported student pronoun sets', function () {
     ])->assertSessionHasErrors('pronoun_set');
 });
 
+it('allows editing and deleting organization students from the global student routes', function () {
+    $user = phaseFourUser();
+    [$school] = phaseFourSchoolYear($user);
+    $student = Student::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'first_name' => 'Mia',
+        'last_name' => 'Beispiel',
+        'class_name' => '4a',
+    ]);
+
+    $this->actingAs($user)->put("/schuelerinnen/{$student->id}", [
+        'first_name' => 'Mia',
+        'last_name' => 'Neu',
+        'class_name' => '5b',
+    ])->assertRedirect();
+    $this->assertDatabaseHas('students', ['id' => $student->id, 'last_name' => 'Neu', 'class_name' => '5b']);
+
+    $this->actingAs($user)->delete("/schuelerinnen/{$student->id}")->assertRedirect();
+    $this->assertDatabaseMissing('students', ['id' => $student->id]);
+});
+
 it('shows the organization-wide searchable and filterable student list', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
@@ -142,6 +179,37 @@ it('shows the organization-wide searchable and filterable student list', functio
         ->has('students.data', 1)
         ->where('students.data.0.first_name', 'Anna')
         ->where('students.data.0.school.name', 'Schule Phase 4'));
+});
+
+it('searches all global search record types case insensitively', function () {
+    $user = phaseFourUser();
+    [$school] = phaseFourSchoolYear($user);
+    Student::create([
+        'organization_id' => $user->organization_id,
+        'school_id' => $school->id,
+        'first_name' => 'Simon',
+        'last_name' => 'Schäberle',
+        'class_name' => '7a',
+    ]);
+
+    $this->actingAs($user)->get('/suche?q=sCHäBERLE')->assertSuccessful()->assertInertia(fn ($page) => $page
+        ->has('results.schools', 0)
+        ->has('results.students', 1)
+        ->where('results.students.0.last_name', 'Schäberle'));
+});
+
+it('filters students by the numeric grade level prefix', function () {
+    $user = phaseFourUser();
+    [$school] = phaseFourSchoolYear($user);
+    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Sieben', 'class_name' => '7a']);
+    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Ben', 'last_name' => 'Sieben', 'class_name' => '7b']);
+    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Clara', 'last_name' => 'Acht', 'class_name' => '8a']);
+
+    $this->actingAs($user)->get('/schueler:innen?grade_level=7')->assertSuccessful()->assertInertia(fn ($page) => $page
+        ->where('filters.grade_level', '7')
+        ->has('students.data', 2)
+        ->where('students.data.0.class_name', '7a')
+        ->where('students.data.1.class_name', '7b'));
 });
 
 it('indexes only the students minimal search fields and includes teaching groups', function () {

@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Laravel\Scout\Searchable;
+use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'derived_from_id', 'external_identifier', 'title', 'country', 'state', 'school_type', 'grades', 'variant', 'cooperation_model', 'denominations'])]
 class Curriculum extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['title', 'external_identifier', 'school_type', 'variant'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->searchablePayload();
+    }
+
     protected function casts(): array
     {
         return ['grades' => 'array', 'denominations' => 'array'];

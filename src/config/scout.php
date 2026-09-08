@@ -140,6 +140,66 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
+            'schools' => [
+                'searchableAttributes' => ['search_text', 'name', 'short_name', 'city'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'teaching_groups' => [
+                'searchableAttributes' => ['search_text', 'name', 'aktenzeichen', 'denomination'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'curricula' => [
+                'searchableAttributes' => ['search_text', 'title', 'external_identifier', 'school_type', 'variant'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'education_plans' => [
+                'searchableAttributes' => ['search_text', 'title', 'external_identifier', 'subject', 'school_type'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'teaching_units' => [
+                'searchableAttributes' => ['search_text', 'title', 'keyword'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'unit_templates' => [
+                'searchableAttributes' => ['search_text', 'title', 'description'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'lesson_templates' => [
+                'searchableAttributes' => ['search_text', 'title', 'objective'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'phase_templates' => [
+                'searchableAttributes' => ['search_text', 'title', 'teacher_interaction', 'learner_activity', 'material'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'songs' => [
+                'searchableAttributes' => ['search_text', 'title', 'composer', 'author'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'assessment_tasks' => [
+                'searchableAttributes' => ['search_text', 'title', 'task_type', 'level'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'school_years' => [
+                'searchableAttributes' => ['search_text', 'name', 'slug'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'assessments' => [
+                'searchableAttributes' => ['search_text', 'title', 'grade_component_label', 'status'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'resource_references' => [
+                'searchableAttributes' => ['search_text', 'original_name', 'description', 'mime_type'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'resource_links' => [
+                'searchableAttributes' => ['search_text', 'title', 'url', 'description'],
+                'filterableAttributes' => ['organization_id'],
+            ],
+            'material_items' => [
+                'searchableAttributes' => ['search_text', 'name', 'material_number', 'storage_location', 'description'],
+                'filterableAttributes' => ['organization_id'],
+            ],
             'students' => [
                 'searchableAttributes' => ['search_text', 'first_name', 'last_name', 'class_name', 'teaching_groups'],
                 'filterableAttributes' => ['organization_id', 'class_name'],

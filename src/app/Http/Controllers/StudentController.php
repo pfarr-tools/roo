@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\TeachingGroup;
+use App\Students\PronounSets\PronounSets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,6 +19,7 @@ class StudentController extends Controller
         $organizationId = $request->user()->organization_id;
         $search = trim((string) $request->query('q', ''));
         $schoolId = $request->integer('school_id') ?: null;
+        $gradeLevel = trim((string) $request->query('grade_level', ''));
         $className = trim((string) $request->query('class_name', ''));
         $groupId = $request->integer('teaching_group_id') ?: null;
         $schoolYearId = $request->integer('school_year_id') ?: null;
@@ -36,6 +38,7 @@ class StudentController extends Controller
             ->with(['school:id,name', 'teachingGroups:id,name,school_year_id'])
             ->with('teachingGroups.schoolYear:id,name')
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->when($gradeLevel !== '', fn ($query) => $query->where('class_name', 'like', $gradeLevel.'%'))
             ->when($className !== '', fn ($query) => $query->where('class_name', $className))
             ->when($groupId, fn ($query) => $query->whereHas('teachingGroups', fn ($groupQuery) => $groupQuery->whereKey($groupId)))
             ->when($schoolYearId, fn ($query) => $query->whereHas('teachingGroups', fn ($groupQuery) => $groupQuery->where('school_year_id', $schoolYearId)))
@@ -50,9 +53,11 @@ class StudentController extends Controller
             'students' => $students,
             'schools' => School::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
             'classes' => Student::where('organization_id', $organizationId)->distinct()->orderBy('class_name')->pluck('class_name')->values(),
+            'gradeLevels' => Student::where('organization_id', $organizationId)->pluck('class_name')->map(fn (string $className): ?string => preg_match('/^\d+/', $className, $matches) ? $matches[0] : null)->filter()->unique()->sort()->values(),
             'groups' => TeachingGroup::where('organization_id', $organizationId)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
             'schoolYears' => TeachingGroup::where('organization_id', $organizationId)->with('schoolYear:id,name')->get()->pluck('schoolYear')->filter()->unique('id')->sortBy('name')->map(fn ($schoolYear) => ['id' => $schoolYear->id, 'name' => $schoolYear->name])->values(),
-            'filters' => ['q' => $search, 'school_id' => $schoolId, 'class_name' => $className, 'teaching_group_id' => $groupId, 'school_year_id' => $schoolYearId, 'sort' => $sort, 'direction' => $direction],
+            'filters' => ['q' => $search, 'school_id' => $schoolId, 'grade_level' => $gradeLevel, 'class_name' => $className, 'teaching_group_id' => $groupId, 'school_year_id' => $schoolYearId, 'sort' => $sort, 'direction' => $direction],
+            'pronounSets' => PronounSets::toArray(),
         ]);
     }
 

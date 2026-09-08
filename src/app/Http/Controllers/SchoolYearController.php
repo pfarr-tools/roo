@@ -13,6 +13,7 @@ use App\Models\HolidayPeriod;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\SchoolYearDay;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,7 +34,9 @@ class SchoolYearController extends Controller
     public function store(StoreSchoolYearRequest $request): RedirectResponse
     {
         $school = School::whereKey($request->integer('school_id'))->where('organization_id', $request->user()->organization_id)->firstOrFail();
-        $year = SchoolYear::create([...$request->validated(), 'organization_id' => $request->user()->organization_id]);
+        $data = $request->validated();
+        $data['second_half_start_on'] ??= Carbon::parse($data['starts_on'])->addYear()->setMonth(2)->setDay(1)->toDateString();
+        $year = SchoolYear::create([...$data, 'organization_id' => $request->user()->organization_id]);
         app(GenerateSchoolYearDays::class)->execute($year);
 
         return to_route('school-years.show', ['school' => $school, 'schoolYear' => $year])->with('success', 'Schuljahr wurde angelegt.');

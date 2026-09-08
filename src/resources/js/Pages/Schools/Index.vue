@@ -8,7 +8,7 @@ const props = defineProps({ schools: Array })
 const showSchoolForm = ref(false)
 const showYearForm = ref(false)
 const schoolForm = useForm({ name: '', short_name: '', school_type: '', city: '', notes: '' })
-const yearForm = useForm({ school_id: '', starts_on: '', ends_on: '', timezone: 'Europe/Berlin' })
+const yearForm = useForm({ school_id: '', starts_on: '', ends_on: '', second_half_start_on: '', timezone: 'Europe/Berlin' })
 
 const schoolYearName = computed(() => {
     const year = Number.parseInt(String(yearForm.starts_on).slice(0, 4), 10)
@@ -16,11 +16,17 @@ const schoolYearName = computed(() => {
     return Number.isInteger(year) ? `${year}/${String((year + 1) % 100).padStart(2, '0')}` : ''
 })
 
+function defaultSecondHalfStart(value) {
+    const year = Number.parseInt(String(value).slice(0, 4), 10)
+    return Number.isInteger(year) ? `${year + 1}-02-01` : ''
+}
+
 function createSchool() { schoolForm.post('/schulen', { onSuccess: () => { schoolForm.reset(); showSchoolForm.value = false } }) }
 function createYear() {
+    if (!yearForm.second_half_start_on) yearForm.second_half_start_on = defaultSecondHalfStart(yearForm.starts_on)
     yearForm.transform(data => ({ ...data, name: schoolYearName.value })).post('/schuljahre', { onSuccess: () => { yearForm.reset(); showYearForm.value = false } })
 }
-function openYearForm(schoolId) { yearForm.school_id = schoolId; showYearForm.value = true }
+function openYearForm(schoolId) { yearForm.school_id = schoolId; yearForm.second_half_start_on = defaultSecondHalfStart(yearForm.starts_on); showYearForm.value = true }
 </script>
 
 <style scoped>
