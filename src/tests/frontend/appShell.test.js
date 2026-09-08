@@ -3,7 +3,7 @@
 import { createApp, nextTick } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('@inertiajs/vue3', () => ({ usePage: () => ({ props: { flash: {} } }) }))
+vi.mock('@inertiajs/vue3', () => ({ usePage: () => ({ props: { auth: { user: { name: 'Max Mustermann' } }, flash: {} } }) }))
 
 import AppShell from '../../resources/js/Components/Ui/AppShell.vue'
 
@@ -23,6 +23,9 @@ describe('AppShell navigation', () => {
         expect(teachingHeading.nextElementSibling.textContent).toContain('Stundenplan')
         expect(teachingHeading.nextElementSibling.getAttribute('href')).toBe('/dashboard')
         expect(root.textContent).not.toContain('Dokumente und KI')
+        expect(root.querySelector('.roo-avatar').textContent).toBe('MM')
+        expect(root.textContent).toContain('Max Mustermann')
+        expect(root.querySelector('.roo-profile-dropdown').textContent).not.toContain('Profil')
 
         app.unmount()
         root.remove()

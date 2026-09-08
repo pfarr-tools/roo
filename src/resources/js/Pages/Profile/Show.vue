@@ -6,6 +6,7 @@ import { useForm } from '@inertiajs/vue3'
 const props = defineProps({
     user: { type: Object, required: true },
     integrations: { type: Object, default: () => ({}) },
+    calendarUrl: { type: String, default: '' },
 })
 
 const form = useForm({ name: props.user.name, email: props.user.email, public_phone: props.user.public_phone ?? '', openai_api_key: '', flux_api_key: '' })
@@ -24,6 +25,16 @@ const form = useForm({ name: props.user.name, email: props.user.email, public_ph
                             <div class="mb-3"><label class="form-label" for="profile-name">{{ de.name }}</label><input id="profile-name" v-model="form.name" class="form-control" :class="{ 'is-invalid': form.errors.name }" autocomplete="name"><div v-if="form.errors.name" class="invalid-feedback">{{ form.errors.name }}</div></div>
                             <div class="mb-3"><label class="form-label" for="profile-email">E-Mail-Adresse</label><input id="profile-email" v-model="form.email" class="form-control" :class="{ 'is-invalid': form.errors.email }" type="email" autocomplete="email"><div v-if="form.errors.email" class="invalid-feedback">{{ form.errors.email }}</div></div>
                             <div class="mb-3"><label class="form-label" for="profile-public-phone">{{ de.publicPhone }}</label><input id="profile-public-phone" v-model="form.public_phone" class="form-control" :class="{ 'is-invalid': form.errors.public_phone }" type="tel" autocomplete="tel"><div class="form-text">{{ de.publicPhoneIntro }}</div><div v-if="form.errors.public_phone" class="invalid-feedback">{{ form.errors.public_phone }}</div></div>
+                        </div>
+                    </div>
+                </section>
+                <section class="col-12 col-xl-7" aria-labelledby="calendar-heading">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h2 id="calendar-heading" class="h5">{{ de.lessonCalendar }}</h2>
+                            <p class="text-muted">{{ de.lessonCalendarIntro }}</p>
+                            <label class="form-label" for="lesson-calendar-url">{{ de.calendarFeedUrl }}</label>
+                            <div class="input-group"><input id="lesson-calendar-url" class="form-control" :value="calendarUrl" readonly><a class="btn btn-outline-secondary" :href="calendarUrl" target="_blank" rel="noopener">{{ de.openCalendar }}</a></div>
                         </div>
                     </div>
                 </section>

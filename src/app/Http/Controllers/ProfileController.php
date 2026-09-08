@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +26,7 @@ class ProfileController extends Controller
                 'openai' => filled($user->openai_api_key),
                 'flux' => filled($user->flux_api_key),
             ],
+            'calendarUrl' => URL::signedRoute('calendar.lessons', ['user' => $user->id]),
         ]);
     }
 

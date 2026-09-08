@@ -9,6 +9,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\FluxController;
 use App\Http\Controllers\LessonGalleryController;
 use App\Http\Controllers\LessonWorkspaceController;
+use App\Http\Controllers\LessonCalendarController;
 use App\Http\Controllers\ParentLetterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicTeachingUnitController;
@@ -255,3 +256,7 @@ Route::middleware('auth')->group(function () {
     });
     Route::post('/schuljahre', [SchoolYearController::class, 'store'])->name('school-years.store');
 });
+
+Route::get('/kalender/{user}/unterricht.ics', LessonCalendarController::class)
+    ->middleware('signed')
+    ->name('calendar.lessons');
