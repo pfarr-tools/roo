@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Search\SearchableFields;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
-use App\Search\SearchableFields;
 
 #[Fillable(['organization_id', 'created_by_user_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes', 'introduction_text'])]
 class TeachingUnit extends Model
@@ -55,9 +55,11 @@ class TeachingUnit extends Model
         return $this->belongsTo(UnitTemplate::class, 'unit_template_id');
     }
 
-    public function competencies(): HasMany
+    public function educationPlanCompetencies(): BelongsToMany
     {
-        return $this->hasMany(TeachingUnitCompetency::class);
+        return $this->belongsToMany(EducationPlanCompetency::class, 'teaching_unit_education_plan_competencies')
+            ->withPivot(['id', 'curriculum_topic_education_plan_reference_id', 'source_curriculum_topic_id', 'is_secondary'])
+            ->withTimestamps();
     }
 
     public function lessons(): HasMany

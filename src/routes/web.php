@@ -135,8 +135,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/reihenfolge', [YearPlanController::class, 'reorderUnits'])->name('year-plans.teaching-units.reorder');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}', [YearPlanController::class, 'updateTeachingUnit'])->name('year-plans.teaching-units.update');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/kompetenzen', [YearPlanController::class, 'updateTeachingUnitCompetencies'])->name('year-plans.teaching-units.competencies');
-    Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/kompetenzen', [YearPlanController::class, 'addTeachingUnitCompetency'])->name('year-plans.teaching-units.competencies.store');
-    Route::delete('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/kompetenzen/{teachingUnitCompetency}', [YearPlanController::class, 'removeTeachingUnitCompetency'])->name('year-plans.teaching-units.competencies.destroy');
+    Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/kompetenzen', [YearPlanController::class, 'addEducationPlanCompetency'])->name('year-plans.teaching-units.competencies.store');
+    Route::delete('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/kompetenzen/{assignment}', [YearPlanController::class, 'removeEducationPlanCompetency'])->name('year-plans.teaching-units.competencies.destroy');
     Route::post('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/anhaenge', [TeachingUnitResourceController::class, 'store'])->name('year-plans.teaching-units.resources.store');
     Route::put('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/anhaenge/{resource}', [TeachingUnitResourceController::class, 'update'])->name('year-plans.teaching-units.resources.update');
     Route::get('/jahresplanung/{teachingGroup}/eigene-einheiten/{teachingUnit}/anhaenge/{resource}/download', [TeachingUnitResourceController::class, 'download'])->name('year-plans.teaching-units.resources.download');

@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Documents\DocumentOutputFormat;
 use App\Documents\ParentLetterDocument;
-use App\Models\TeachingUnit;
+use App\Models\CurriculumTopicEducationPlanReference;
 use App\Models\TeachingGroup;
+use App\Models\TeachingUnit;
 use App\Models\UserPreference;
 use App\Services\PhpOfficeDocumentRenderer;
 use App\Services\QrCodeRenderer;
@@ -78,18 +79,18 @@ final class ParentLetterController extends Controller
 
     private function competencyKind($competency): string
     {
-        return (string) ($competency->curriculumEducationPlanReference?->competency_kind
-            ?? $competency->educationPlanCompetency?->area?->kind
-            ?? 'content');
+        $referenceId = $competency->pivot?->curriculum_topic_education_plan_reference_id;
+
+        return (string) ($referenceId
+            ? CurriculumTopicEducationPlanReference::find($referenceId)?->competency_kind
+            : null) ?: (string) ($competency->area?->kind ?? 'content');
     }
 
     private function competencyText($competency): string
     {
-        $educationPlanCompetency = $competency->educationPlanCompetency
-            ?? $competency->curriculumEducationPlanReference?->educationPlanCompetency;
+        $educationPlanCompetency = $competency;
 
-        return (string) ($competency->local_wording
-            ?: $educationPlanCompetency?->text
+        return (string) ($educationPlanCompetency?->text
             ?: $educationPlanCompetency?->variants?->sortBy('position')->first()?->text
             ?: 'Kompetenz');
     }

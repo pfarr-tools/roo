@@ -79,6 +79,7 @@ it("keeps Textaufgabe first and sorts the remaining task types", async () => {
     expect(typeButtons.slice(1).map((button) => button.textContent.trim())).toEqual([
         "Ankreuzaufgabe",
         "Bild beschriften",
+        "Erwartungsliste",
         "Gestaltungsaufgabe",
         "Lückentext",
         "Satz aus vorgegebenen Worten",

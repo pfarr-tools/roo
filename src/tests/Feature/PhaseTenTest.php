@@ -31,7 +31,7 @@ it('legt eine Lernstandserhebung zunächst ohne Aufgaben an', function () {
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
 
-    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE ohne Aufgaben'])->assertRedirect();
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE ohne Aufgaben', 'grade_component_id' => null])->assertRedirect();
 
     expect(Assessment::first()->tasks)->toBeEmpty();
 });
@@ -43,9 +43,9 @@ it('legt eine Lernstandserhebung mit differenzierten Aufgaben an', function () {
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann erklären']);
+    $competency = officialCompetency($unit, 'Kann erklären');
 
-    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE Schöpfung', 'assessed_on' => '2026-11-12', 'tasks' => [['title' => 'Erkläre den Begriff', 'max_points' => 10, 'level' => 'M', 'competency_id' => $competency->id]]])->assertRedirect();
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE Schöpfung', 'grade_component_id' => null, 'assessed_on' => '2026-11-12', 'tasks' => [['title' => 'Erkläre den Begriff', 'max_points' => 10, 'level' => 'M', 'competency_id' => $competency->id]]])->assertRedirect();
 
     expect(Assessment::first()->tasks)->toHaveCount(1)
         ->and(Assessment::first()->tasks->first()->level)->toBe('M')
@@ -60,10 +60,10 @@ it('verwendet eine Bibliotheksaufgabe in mehreren Erhebungen und verlangt mehrer
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5 G/M/E']);
     TeachingGroupGradeLevel::create(['teaching_group_id' => $group->id, 'grade_level' => 'G/M/E']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann vergleichen']);
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Vergleiche', 'max_points' => 6]);
+    $competency = officialCompetency($unit, 'Kann vergleichen');
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Vergleiche', 'max_points' => 6]);
 
-    $payload = ['title' => 'LSE', 'tasks' => [['task_id' => $task->id, 'levels' => ['G', 'M']]]];
+    $payload = ['title' => 'LSE', 'grade_component_id' => null, 'tasks' => [['task_id' => $task->id, 'levels' => ['G', 'M']]]];
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", $payload)->assertRedirect();
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", $payload)->assertRedirect();
 
@@ -77,10 +77,10 @@ it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', functi
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Gewichtungsgruppe']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann anwenden']);
+    $competency = officialCompetency($unit, 'Kann anwenden');
     $lesson = $unit->lessons()->create(['title' => 'Aufgabenstunde', 'position' => 1]);
-    $first = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
-    $second = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
+    $first = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
+    $second = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
     $lesson->assessmentTasks()->attach([$first->id, $second->id]);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gewichtung']);
 
@@ -122,10 +122,8 @@ it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne
     $withTask = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.2', 'text' => 'Mit Aufgabe', 'position' => 2, 'is_active' => true]);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1, 'duration' => 1]);
-    $lesson->competencies()->attach([
-        $unit->competencies()->create(['education_plan_competency_id' => $withoutTask->id])->id,
-        $unit->competencies()->create(['education_plan_competency_id' => $withTask->id])->id,
-    ]);
+    $unit->educationPlanCompetencies()->attach([$withoutTask->id, $withTask->id]);
+    $lesson->educationPlanCompetencies()->attach([$withoutTask->id, $withTask->id]);
     $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $withTask->id, 'title' => 'Aufgabe']);
     $lesson->assessmentTasks()->attach($task);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE', 'assessed_on' => '2026-10-01']);
@@ -170,10 +168,11 @@ it('lädt bei einer differenzierten Lernstandserhebung nur das gewählte Niveau'
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann unterscheiden']);
+    $competency = officialCompetency($unit, 'Kann unterscheiden');
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", [
         'title' => 'LSE Niveaus',
+        'grade_component_id' => null,
         'tasks' => [
             ['title' => 'G-Aufgabe', 'max_points' => 4, 'level' => 'G', 'competency_id' => $competency->id],
             ['title' => 'E-Aufgabe', 'max_points' => 8, 'level' => 'E', 'competency_id' => $competency->id],
@@ -232,8 +231,8 @@ it('druckt einen Ergebnisbericht für einen Schüler oder die gesamte Gruppe', f
     $group->students()->attach($student);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'Test LSE', 'assessed_on' => '2026-09-06']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Test Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann testen']);
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5, 'teaching_unit_competency_id' => $competency->id]);
+    $competency = officialCompetency($unit, 'Kann testen');
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5]);
     $assessment->tasks()->attach($task);
     AssessmentTaskExpectation::create(['assessment_task_id' => $task->id, 'text' => 'Erwartung erfüllt', 'points' => 5, 'position' => 1]);
     StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 5, 'numeric_grade' => '1']);

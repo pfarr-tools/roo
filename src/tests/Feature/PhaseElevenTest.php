@@ -20,7 +20,6 @@ use App\Models\Student;
 use App\Models\StudentAssessmentResult;
 use App\Models\StudentEvaluationObservationScale;
 use App\Models\TeachingGroup;
-use App\Models\TeachingUnitCompetency;
 use App\Models\User;
 use App\Models\UserPreference;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -103,10 +102,8 @@ it('generates differentiated proposal sentences from treated content competences
     }
     $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
-    $unitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $competency->id]);
-    $secondUnitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $secondCompetency->id]);
-    $lesson->competencies()->attach($unitCompetency->id);
-    $lesson->competencies()->attach($secondUnitCompetency->id);
+    $unit->educationPlanCompetencies()->attach([$competency->id, $secondCompetency->id]);
+    $lesson->educationPlanCompetencies()->attach([$competency->id, $secondCompetency->id]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
 
@@ -153,14 +150,15 @@ it('shows competency scales and the evaluation draft for competency text grading
     }
     $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
-    $unitCompetency = TeachingUnitCompetency::create(['teaching_unit_id' => $unit->id, 'education_plan_competency_id' => $competency->id]);
-    $lesson->competencies()->attach($unitCompetency->id);
+    $unit->educationPlanCompetencies()->attach($competency->id);
+    $lesson->educationPlanCompetencies()->attach($competency->id);
+    $unitCompetency = $competency;
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $scheduledLesson = ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
-    CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'teaching_unit_competency_id' => $unitCompetency->id, 'scale' => '2']);
+    CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'education_plan_competency_id' => $competency->id, 'scale' => '2']);
     $secondSlot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-15', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $secondScheduledLesson = ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $secondSlot->id]);
-    CompetenceEvidence::create(['scheduled_lesson_id' => $secondScheduledLesson->id, 'student_id' => $student->id, 'teaching_unit_competency_id' => $unitCompetency->id, 'scale' => '4']);
+    CompetenceEvidence::create(['scheduled_lesson_id' => $secondScheduledLesson->id, 'student_id' => $student->id, 'education_plan_competency_id' => $competency->id, 'scale' => '4']);
     $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
     $evaluation = $period->evaluations()->create(['student_id' => $student->id, 'draft_text' => 'Bewertungsentwurf']);
     $assessment = Assessment::create(['organization_id' => $org->id, 'teaching_group_id' => $group->id, 'report_period_id' => $period->id, 'title' => 'LSE September', 'assessed_on' => '2026-09-08']);
@@ -176,7 +174,7 @@ it('shows competency scales and the evaluation draft for competency text grading
             ->where('competencies.0.text', 'auf G-Niveau beschreiben')
             ->where('competencies.0.level_texts.G', 'auf G-Niveau beschreiben')
             ->where('competencies.0.level_texts.M', 'auf M-Niveau erklären')
-            ->where('competenceAverages.0.teaching_unit_competency_id', $unitCompetency->id)
+            ->where('competenceAverages.0.education_plan_competency_id', $competency->id)
             ->where('competenceAverages.0.average', 3.5)
             ->where('competenceAverages.0.rounded_level', 4)
             ->where('lses.0.title', 'LSE September')
@@ -191,7 +189,7 @@ it('shows competency scales and the evaluation draft for competency text grading
             ->where('competenceAverages.0.sources.2.percentage', 80)
             ->where('periodLevel', 'G'));
 
-    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/{$evaluation->id}", ['draft_text' => 'Bewertungsentwurf', 'teacher_note' => '', 'level' => 'M', 'status' => 'draft', 'competence_ratings' => [['education_plan_competency_id' => $unitCompetency->education_plan_competency_id, 'rating' => 4]]])->assertRedirect();
+    $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/bewertungen/{$evaluation->id}", ['draft_text' => 'Bewertungsentwurf', 'teacher_note' => '', 'level' => 'M', 'status' => 'draft', 'competence_ratings' => [['education_plan_competency_id' => $unitCompetency->id, 'rating' => 4]]])->assertRedirect();
     expect($evaluation->fresh()->level)->toBe('M');
     expect(DB::table('student_evaluation_competence_ratings')->where('student_evaluation_id', $evaluation->id)->value('rating'))->toBe(4);
 });

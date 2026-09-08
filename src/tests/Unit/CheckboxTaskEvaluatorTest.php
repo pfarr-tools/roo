@@ -2,6 +2,9 @@
 
 use App\Models\AssessmentTask;
 use App\Services\AssessmentEvaluation\CheckboxTaskEvaluator;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 function checkboxTask(array $content = []): AssessmentTask
 {

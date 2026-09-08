@@ -28,7 +28,8 @@ it('öffnet die Prüfungsaufgabe als eigene Seite und schützt fremde Aufgaben',
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $unit->competencies()->create(['local_wording' => 'Kann erklären'])->id, 'title' => 'Erkläre']);
+    $competency = officialCompetency($unit, 'Kann erklären');
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Erkläre']);
     $lesson->assessmentTasks()->attach($task);
 
     $this->actingAs($user)->get("/unterricht/{$slot->id}/pruefungsaufgaben/neu")
@@ -70,7 +71,8 @@ it('liefert Kompetenz und Bildungsplan für eine neue Prüfungsaufgabe vor', fun
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Kann unterscheiden', 'position' => 1, 'is_active' => true]);
-    $lesson->competencies()->attach($unit->competencies()->create(['education_plan_competency_id' => $competency->id]));
+    $unit->educationPlanCompetencies()->syncWithoutDetaching([$competency->id]);
+    $lesson->educationPlanCompetencies()->attach($competency->id);
 
     $this->actingAs($user)->get("/unterricht/{$slot->id}/pruefungsaufgaben/neu?education_plan_id={$plan->id}&education_plan_competency_id={$competency->id}")
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')

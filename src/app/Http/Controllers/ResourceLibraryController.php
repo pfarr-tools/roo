@@ -15,7 +15,6 @@ use App\Models\ResourceReference;
 use App\Models\SongVersion;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
-use App\Models\TeachingUnitCompetency;
 use App\Services\Assessment\ClozeTaskNormalizer;
 use App\Services\AssessmentEvaluation\SentenceBuilderWordOrder;
 use App\Services\AssessmentEvaluation\SortingTaskOrder;
@@ -49,7 +48,7 @@ class ResourceLibraryController extends Controller
     public function editAssessmentTask(Request $request, int $assessmentTask)
     {
         $task = $this->item($request, 'assessment-task', $assessmentTask);
-        $task->load(['educationPlanCompetency.variants', 'competency.educationPlanCompetency.variants', 'competency.educationPlanCompetency.area.version', 'levels', 'expectations', 'images.resource', 'images.labels']);
+        $task->load(['educationPlanCompetency.variants', 'levels', 'expectations', 'images.resource', 'images.labels']);
         $task->setRelation('images', $task->images->map(fn ($image): array => [
             'resource_reference_id' => $image->resource_reference_id,
             'identifier' => $image->identifier,
@@ -60,11 +59,6 @@ class ResourceLibraryController extends Controller
             'preview_url' => $image->resource === null ? null : route('resources.library.files.preview', $image->resource),
             'labels' => $image->labels->map(fn ($label): array => ['id' => $label->id, 'position' => $label->position, 'x_percent' => (float) $label->x_percent, 'y_percent' => (float) $label->y_percent, 'solution' => $label->solution, 'lines' => $label->lines])->values()->all(),
         ]));
-        if (! $task->education_plan_competency_id && $task->competency?->education_plan_competency_id) {
-            $task->setAttribute('education_plan_competency_id', $task->competency->education_plan_competency_id);
-            $task->setAttribute('education_plan_id', $task->competency->educationPlanCompetency?->area?->version?->education_plan_id);
-            $task->setRelation('educationPlanCompetency', $task->competency->educationPlanCompetency);
-        }
         $task->setAttribute('has_differentiation', $task->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
 
         $returnTo = (string) $request->query('return_to', '');
@@ -131,6 +125,7 @@ class ResourceLibraryController extends Controller
         }
 
         $message = 'Zuordnung wurde entfernt.';
+
         return $request->expectsJson() ? response()->json(['message' => $message, 'resource_id' => $item->id]) : back()->with('success', $message);
     }
 
@@ -151,6 +146,7 @@ class ResourceLibraryController extends Controller
         }
 
         $message = 'Datei wurde zugeordnet.';
+
         return $request->expectsJson() ? response()->json(['message' => $message, 'item' => ['id' => $resource->id, 'original_name' => $resource->original_name, 'description' => $resource->description, 'copyrights' => $resource->copyrights, 'mime_type' => $resource->mime_type, 'size' => $resource->size]]) : back()->with('success', $message);
     }
 
@@ -168,6 +164,7 @@ class ResourceLibraryController extends Controller
 
             if ($request->expectsJson()) {
                 $item->setAttribute('kind', 'song');
+
                 return response()->json(['message' => 'Lied wurde zugeordnet.', 'item' => $this->present($item)]);
             }
 
@@ -180,6 +177,7 @@ class ResourceLibraryController extends Controller
 
             if ($request->expectsJson()) {
                 $item->setAttribute('kind', 'songbook');
+
                 return response()->json(['message' => 'Gruppenliederbuch wurde zugeordnet.', 'item' => $this->present($item)]);
             }
 
@@ -197,8 +195,7 @@ class ResourceLibraryController extends Controller
                         'id' => $item->id,
                         'title' => $item->title,
                         'max_points' => $item->max_points,
-                        'teaching_unit_competency_id' => $item->teaching_unit_competency_id,
-                        'competency_id' => $item->teaching_unit_competency_id,
+                        'competency_id' => $item->education_plan_competency_id,
                         'education_plan_competency_id' => $item->education_plan_competency_id,
                         'competency_identifier' => $item->educationPlanCompetency?->external_identifier,
                     ],
@@ -234,6 +231,7 @@ class ResourceLibraryController extends Controller
         $message = 'Element wurde zugeordnet.';
         if ($request->expectsJson()) {
             $item->setAttribute('kind', $kind);
+
             return response()->json(['message' => $message, 'item' => $this->present($item)]);
         }
 
@@ -266,7 +264,7 @@ class ResourceLibraryController extends Controller
             $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with(['song:id,organization_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
         if ($type === 'all' || $type === 'assessment-task') {
-            $matches = $matches->concat(AssessmentTask::where('organization_id', $organizationId)->with(['competency.unit', 'educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
+            $matches = $matches->concat(AssessmentTask::where('organization_id', $organizationId)->with(['educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
         }
         if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
             $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
@@ -438,7 +436,9 @@ class ResourceLibraryController extends Controller
         $this->validateCheckboxContent($request);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.lineated' => ['sometimes', 'boolean'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'max_points' => ['nullable', 'integer', 'min:1'], 'competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedDrawingContent($request, $data['task_type']));
-        if ($data['task_type'] === 'cloze') $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        if ($data['task_type'] === 'cloze') {
+            $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        }
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedClozeFields($request, $data['task_type']));
         $cloze = $this->normalizedCloze($data['task_type'], $data['content'] ?? []);
         $data['content'] = array_replace($data['content'] ?? [], $cloze['content']);
@@ -465,8 +465,9 @@ class ResourceLibraryController extends Controller
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
             $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         } else {
-            $competency = TeachingUnitCompetency::whereKey($data['competency_id'])->whereHas('unit', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->firstOrFail();
-            $attributes['teaching_unit_competency_id'] = $competency->id;
+            $competency = EducationPlanCompetency::whereKey($data['competency_id'])->whereHas('teachingUnits', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->firstOrFail();
+            $attributes['education_plan_competency_id'] = $competency->id;
+            $attributes['education_plan_id'] = $competency->area?->version?->education_plan_id;
         }
         $task = AssessmentTask::create($attributes);
         $task->expectations()->createMany($expectations);
@@ -503,6 +504,7 @@ class ResourceLibraryController extends Controller
         $message = 'Element wurde angelegt und zugeordnet.';
         if ($request->expectsJson()) {
             $item->setAttribute('kind', $kind);
+
             return response()->json(['message' => $message, 'item' => $this->present($item)]);
         }
 
@@ -525,7 +527,9 @@ class ResourceLibraryController extends Controller
         $validated = $request->validate($rules);
         if ($kind === 'assessment-task') {
             $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedDrawingContent($request, $validated['task_type']));
-            if ($validated['task_type'] === 'cloze') $validated['content']['instruction'] = (string) $request->input('content.instruction', '');
+            if ($validated['task_type'] === 'cloze') {
+                $validated['content']['instruction'] = (string) $request->input('content.instruction', '');
+            }
             $validated['content'] = array_replace($validated['content'] ?? [], $this->validatedClozeFields($request, $validated['task_type']));
             $cloze = $this->normalizedCloze($validated['task_type'], $validated['content'] ?? [], $item->content ?? []);
             $validated['content'] = array_replace($validated['content'] ?? [], $cloze['content']);
@@ -549,7 +553,7 @@ class ResourceLibraryController extends Controller
         if ($kind === 'assessment-task') {
             abort_unless(EducationPlan::whereKey($validated['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($validated['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $validated['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
-            $item->update($validated + ['teaching_unit_competency_id' => null]);
+            $item->update($validated + ['education_plan_competency_id' => null]);
             $item->expectations()->delete();
             $item->expectations()->createMany($expectations);
             $item->load('expectations');
@@ -570,6 +574,7 @@ class ResourceLibraryController extends Controller
         $message = 'Bibliothekseintrag wurde gespeichert.';
         if ($request->expectsJson()) {
             $item->setAttribute('kind', $kind);
+
             return response()->json(['message' => $message, 'item' => $this->present($item)]);
         }
 
@@ -828,12 +833,12 @@ class ResourceLibraryController extends Controller
         $songDescription = $item->kind === 'song' ? $this->songCredits($item) : null;
         $taskDescription = $item->kind === 'assessment-task' ? $this->assessmentTaskDescription($item) : null;
 
-        return ['id' => $item->id, 'song_id' => $item->song?->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $taskDescription ?? $songDescription ?? $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'solution' => $item->solution, 'max_points' => $item->max_points, 'competency_id' => $item->teaching_unit_competency_id, 'competency' => $item->kind === 'assessment-task' ? $this->assessmentTaskCompetencyText($item) : $item->competency?->local_wording, 'education_plan_id' => $item->education_plan_id, 'education_plan_competency_id' => $item->education_plan_competency_id, 'education_plan' => $item->educationPlan?->title, 'has_differentiation' => $item->kind === 'assessment-task' && $item->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)), 'levels' => $item->kind === 'assessment-task' ? $item->levels->pluck('level')->values()->all() : [], 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString(), 'can_delete' => $item->kind === 'song' ? $item->song?->organization_id === auth()->user()->organization_id : null, 'generated_sheet_path' => $item->generated_sheet_path, 'generated_sheet_a4_path' => $item->generated_sheet_a4_path, 'generated_chord_sheet_paths' => $item->generated_chord_sheet_paths, 'sheet_id' => $item->sheet?->id];
+        return ['id' => $item->id, 'song_id' => $item->song?->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $taskDescription ?? $songDescription ?? $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'solution' => $item->solution, 'max_points' => $item->max_points, 'competency_id' => $item->education_plan_competency_id, 'competency' => $item->kind === 'assessment-task' ? $this->assessmentTaskCompetencyText($item) : null, 'education_plan_id' => $item->education_plan_id, 'education_plan_competency_id' => $item->education_plan_competency_id, 'education_plan' => $item->educationPlan?->title, 'has_differentiation' => $item->kind === 'assessment-task' && $item->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)), 'levels' => $item->kind === 'assessment-task' ? $item->levels->pluck('level')->values()->all() : [], 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString(), 'can_delete' => $item->kind === 'song' ? $item->song?->organization_id === auth()->user()->organization_id : null, 'generated_sheet_path' => $item->generated_sheet_path, 'generated_sheet_a4_path' => $item->generated_sheet_a4_path, 'generated_chord_sheet_paths' => $item->generated_chord_sheet_paths, 'sheet_id' => $item->sheet?->id];
     }
 
     private function assessmentTaskDescription(AssessmentTask $task): string
     {
-        return collect([$this->assessmentTaskCompetencyIdentifier($task) ?: $task->competency?->local_wording ?: 'Kompetenz '.$task->teaching_unit_competency_id, $task->levels->pluck('level')->implode(', ')])->filter()->implode(' · ');
+        return collect([$this->assessmentTaskCompetencyText($task) ?: 'Kompetenz '.$task->education_plan_competency_id, $task->levels->pluck('level')->implode(', ')])->filter()->implode(' · ');
     }
 
     private function assessmentTaskCompetencyIdentifier(AssessmentTask $task): ?string
@@ -856,7 +861,7 @@ class ResourceLibraryController extends Controller
             return collect([$number, $text])->filter()->implode(' – ') ?: null;
         }
 
-        return $task->competency?->local_wording;
+        return null;
     }
 
     private function songCredits(SongVersion $version): string
@@ -936,7 +941,7 @@ class ResourceLibraryController extends Controller
 
     private function competencies(int $organizationId)
     {
-        return TeachingUnitCompetency::whereHas('unit', fn ($query) => $query->where('organization_id', $organizationId))->with('unit:id,title,teaching_group_id')->get(['id', 'teaching_unit_id', 'local_wording'])->map(fn ($item) => ['id' => $item->id, 'label' => $item->local_wording ?: 'Kompetenz '.$item->id, 'unit' => $item->unit?->title]);
+        return EducationPlanCompetency::whereHas('teachingUnits', fn ($query) => $query->where('organization_id', $organizationId))->with('teachingUnits:id,title')->get(['id', 'external_identifier', 'number', 'text'])->map(fn ($item) => ['id' => $item->id, 'label' => $item->external_identifier ?: ($item->number ?: $item->text), 'unit' => $item->teachingUnits->pluck('title')->unique()->implode(', ')]);
     }
 
     private function addToSongbook(TeachingGroup $group, SongVersion $version): void

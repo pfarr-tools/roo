@@ -56,7 +56,7 @@ class AssessmentController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($assessment->teaching_group_id === $teachingGroup->id, 404);
 
-        $assessment->load('tasks.levels', 'tasks.competency');
+        $assessment->load('tasks.levels', 'tasks.educationPlanCompetency');
 
         return Inertia::render('Assessments/Form', $this->formProps($teachingGroup, $assessment, request('return_tab', 'assessments'), request('return_to', 'group')));
     }
@@ -135,7 +135,7 @@ class AssessmentController extends Controller
             $students = $students->where('id', $studentId)->values();
         }
 
-        $assessment->load(['booklets.student', 'tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.competency', 'tasks.educationPlanCompetency.variants.level']);
+        $assessment->load(['booklets.student', 'tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.educationPlanCompetency.variants.level']);
         $reports = $students->map(fn (Student $student): array => $this->resultReportForStudent($assessment, $teachingGroup, $student))->all();
         $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
         $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports), $format);
@@ -174,7 +174,7 @@ class AssessmentController extends Controller
             $competencyLevel = $level !== '' ? $level : ($task->levels->count() === 1 ? $task->levels->first()->level : 'M');
             $competencyKey = $task->educationPlanCompetency !== null
                 ? 'education-plan-'.$task->educationPlanCompetency->id
-                : ($task->competency !== null ? 'teaching-unit-'.$task->competency->id : 'task-'.$task->id);
+                : 'task-'.$task->id;
 
             return [
                 'title' => $task->title,
@@ -293,7 +293,7 @@ class AssessmentController extends Controller
             return $this->formatCompetencyText($text);
         }
 
-        return $this->formatCompetencyText($task->competency?->local_wording ?: 'Ohne Kompetenzzuordnung');
+        return $this->formatCompetencyText('Ohne Kompetenzzuordnung');
     }
 
     private function formatCompetencyText(?string $text): string
@@ -866,20 +866,18 @@ class AssessmentController extends Controller
         return $teachingGroup->teachingUnits()
             ->with(['lessons' => fn ($query) => $query
                 ->whereHas('scheduledLessons.slot', $slotFilter)
-                ->with(['competencies.educationPlanCompetency.area', 'competencies.educationPlanCompetency.variants'])])
+                ->with(['educationPlanCompetencies.area', 'educationPlanCompetencies.variants'])])
             ->get()
             ->flatMap->lessons
-            ->flatMap->competencies
-            ->filter(fn ($competency) => $competency->educationPlanCompetency?->area?->kind === 'content'
-                || $competency->educationPlanCompetency?->area?->kind === 'content')
+            ->flatMap->educationPlanCompetencies
+            ->filter(fn ($competency) => $competency->area?->kind === 'content')
             ->map(function ($competency): array {
-                $educationPlanCompetency = $competency->educationPlanCompetency
-                    ?? $competency->educationPlanCompetency;
+                $educationPlanCompetency = $competency;
 
                 return [
                     'key' => $educationPlanCompetency
                         ? 'education-plan-'.$educationPlanCompetency->id
-                        : 'teaching-unit-'.$competency->id,
+                        : 'education-plan-'.$competency->id,
                     'title' => $this->resolvedCompetencyText($educationPlanCompetency ?? $competency),
                 ];
             })
@@ -926,7 +924,7 @@ class AssessmentController extends Controller
                 ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
                 ->whereHas('scheduledLessons.slot', $slotFilter))
             ->with([
-                'levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency.variants', 'educationPlanCompetency.area', 'educationPlanCompetency.variants',
+                'levels', 'expectations', 'educationPlanCompetency.area', 'educationPlanCompetency.variants',
                 'lessons' => fn ($query) => $query
                     ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
                     ->with(['scheduledLessons' => fn ($scheduledQuery) => $scheduledQuery->whereHas('slot', $slotFilter)->with('slot:id,date')]),
@@ -943,7 +941,7 @@ class AssessmentController extends Controller
         $windowTaskIds = $tasks->pluck('id')->all();
 
         if ($assessment) {
-            $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'competency.unit', 'competency.educationPlanCompetency.variants', 'educationPlanCompetency.area', 'educationPlanCompetency.variants'])->get())->unique('id')->sortBy('title')->values();
+            $tasks = $tasks->merge($assessment->tasks()->with(['levels', 'expectations', 'educationPlanCompetency.area', 'educationPlanCompetency.variants'])->get())->unique('id')->sortBy('title')->values();
         }
 
         return $tasks->map(function (AssessmentTask $task) use ($selectedTaskIds, $selectedTaskData, $windowTaskIds): array {
@@ -1074,8 +1072,8 @@ class AssessmentController extends Controller
 
     private function syncTasks(Assessment $assessment, TeachingGroup $teachingGroup, array $tasks): void
     {
-        $groupCompetencies = $teachingGroup->teachingUnits()->with('competencies:id,teaching_unit_id,education_plan_competency_id')->get()->flatMap->competencies;
-        $educationPlanCompetencyIds = $groupCompetencies->pluck('education_plan_competency_id')->filter();
+        $groupCompetencies = $teachingGroup->teachingUnits()->with('educationPlanCompetencies:id')->get()->flatMap->educationPlanCompetencies;
+        $educationPlanCompetencyIds = $groupCompetencies->pluck('id')->filter();
         $attach = [];
         foreach ($tasks as $position => $task) {
             $levels = collect($task['levels'] ?? (($task['level'] ?? null) ? [$task['level']] : []))->unique()->values();
@@ -1093,8 +1091,10 @@ class AssessmentController extends Controller
                     $model->update(['level' => $levels->first()]);
                 }
             } else {
-                abort_unless(! empty($task['education_plan_competency_id']) && $educationPlanCompetencyIds->contains($task['education_plan_competency_id']), 422);
-                $model = AssessmentTask::create(['organization_id' => $teachingGroup->organization_id, 'education_plan_competency_id' => $task['education_plan_competency_id'], 'education_plan_id' => EducationPlanCompetency::findOrFail($task['education_plan_competency_id'])->area->version->education_plan_id, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
+                $competencyId = $task['education_plan_competency_id'] ?? $task['competency_id'] ?? null;
+                abort_unless($competencyId && $educationPlanCompetencyIds->contains($competencyId), 422);
+                $educationPlanCompetency = EducationPlanCompetency::with('area.version')->findOrFail($competencyId);
+                $model = AssessmentTask::create(['organization_id' => $teachingGroup->organization_id, 'education_plan_competency_id' => $competencyId, 'education_plan_id' => $educationPlanCompetency->area->version->education_plan_id, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
                 $model->levels()->delete();
                 $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());
             }

@@ -21,9 +21,10 @@ class Lesson extends Model
         return $this->belongsTo(LessonTemplate::class, 'lesson_template_id');
     }
 
-    public function competencies(): BelongsToMany
+    public function educationPlanCompetencies(): BelongsToMany
     {
-        return $this->belongsToMany(TeachingUnitCompetency::class, 'lesson_competencies');
+        return $this->belongsToMany(EducationPlanCompetency::class, 'lesson_competencies', 'lesson_id', 'education_plan_competency_id')
+            ->withPivot('curriculum_topic_education_plan_reference_id');
     }
 
     public function phases(): HasMany

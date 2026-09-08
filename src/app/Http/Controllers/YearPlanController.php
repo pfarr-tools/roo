@@ -30,7 +30,6 @@ use App\Models\SocialForm;
 use App\Models\SongVersion;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
-use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
 use App\Models\UserPreference;
 use App\Services\CompetencyResolver;
@@ -109,8 +108,8 @@ class YearPlanController extends Controller
             ->mapWithKeys(fn ($competency) => [$competency->external_identifier => $competency->area])
             ->filter();
 
-        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description', 'songs.song:id,title', 'competencies.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'competencies.educationPlanCompetency.variants:id,education_plan_competency_id,text,position', 'competencies.educationPlanCompetency.area:id,kind,external_identifier,title', 'competencies.curriculumEducationPlanReference:id,education_plan_competency_id,competency_kind,denomination', 'competencies.curriculumEducationPlanReference.educationPlanCompetency.area:id,kind,external_identifier,title', 'lessons.template:id,title', 'lessons.resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,source,version', 'lessons.galleryImages.resource:id,original_name,mime_type', 'lessons.resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.materialItems:id,name,description', 'lessons.songs.song:id,title', 'lessons.songbooks', 'lessons.competencies', 'lessons.phases.socialForm', 'lessons.phases.songs.song:id,title', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
-        $workspaceUnits->each(function ($unit) use ($teachingGroup, $competencyResolver): void {
+        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description', 'songs.song:id,title', 'educationPlanCompetencies:id,education_plan_competence_area_id,external_identifier,number,text', 'educationPlanCompetencies.variants:id,education_plan_competency_id,text,position', 'educationPlanCompetencies.area:id,kind,external_identifier,title', 'lessons.template:id,title', 'lessons.resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,source,version', 'lessons.galleryImages.resource:id,original_name,mime_type', 'lessons.resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.materialItems:id,name,description', 'lessons.songs.song:id,title', 'lessons.songbooks', 'lessons.educationPlanCompetencies', 'lessons.phases.socialForm', 'lessons.phases.songs.song:id,title', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
+        $workspaceUnits->each(function ($unit) use ($competencyResolver): void {
             $unit->lessons->each(function ($lesson): void {
                 $galleryImages = $lesson->galleryImages->map(fn ($image): array => [
                     'id' => $image->id,
@@ -120,12 +119,14 @@ class YearPlanController extends Controller
                 $lesson->unsetRelation('galleryImages');
                 $lesson->setAttribute('gallery_images', $galleryImages);
             });
-            $unit->setRelation('competencies', $unit->competencies->filter(fn ($competency) => ! $competency->curriculumEducationPlanReference || ! $teachingGroup->denomination || blank($competency->curriculumEducationPlanReference->denomination) || $competency->curriculumEducationPlanReference->denomination === $teachingGroup->denomination)->values());
-            $unit->competencies->each(function ($competency) use ($competencyResolver): void {
+            $unit->educationPlanCompetencies->each(function ($competency) use ($competencyResolver): void {
                 $competency->setAttribute('competency_presentation', $competencyResolver->present($competency));
-                $area = $competency->educationPlanCompetency?->area;
+                $competency->setAttribute('assignment_id', $competency->pivot->id);
+                $area = $competency->area;
                 $competency->setAttribute('competency_area', $area ? ['identifier' => $area->external_identifier, 'title' => $area->title] : null);
             });
+            $unit->setRelation('competencies', $unit->educationPlanCompetencies->values());
+            $unit->lessons->each(fn ($lesson) => $lesson->setRelation('competencies', $lesson->educationPlanCompetencies->values()));
         });
         $curricula = $teachingGroup->curricula()->with(['versions.topics' => fn ($query) => $query->whereIn('year', $gradeLevels), 'versions.topics.educationPlanReferences.educationPlanCompetency:id,education_plan_competence_area_id,external_identifier,number,text', 'versions.topics.educationPlanReferences.educationPlanCompetency.area:id,kind,external_identifier,title', 'versions.topics.educationPlanReferences.educationPlanCompetency.variants:id,education_plan_competency_id,text,position'])->get();
         $curricula->each(fn ($curriculum) => $curriculum->versions->each(fn ($version) => $version->topics->each(fn ($topic) => $topic->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency))))));
@@ -271,19 +272,13 @@ class YearPlanController extends Controller
                 ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
                 ->pluck('id');
             abort_unless($validEducationIds->count() === $educationIds->count(), 422, 'Eine Kompetenz gehört nicht zum Bildungsplan dieser Unterrichtsgruppe.');
-            foreach ($validEducationIds as $educationId) {
-                $data['competency_ids'][] = $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $educationId], ['is_secondary' => false])->id;
-            }
-            $data['competency_ids'] = collect($data['competency_ids'])->unique()->values()->all();
+            $teachingUnit->educationPlanCompetencies()->syncWithoutDetaching($validEducationIds->mapWithKeys(fn ($educationId) => [$educationId => ['is_secondary' => false]])->all());
+            $data['competency_ids'] = $validEducationIds->all();
         }
         if (array_key_exists('competency_ids', $data)) {
-            $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'])->pluck('id');
+            $validIds = $teachingUnit->educationPlanCompetencies()->whereIn('education_plan_competencies.id', $data['competency_ids'])->pluck('education_plan_competencies.id');
             abort_unless($validIds->count() === count($data['competency_ids']), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
-            $removedCompetencies = $teachingUnit->competencies()->when($validIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $validIds))->get();
-            foreach ($removedCompetencies as $competency) {
-                $competency->lessons()->detach();
-                $competency->delete();
-            }
+            $teachingUnit->educationPlanCompetencies()->detach($teachingUnit->educationPlanCompetencies()->whereNotIn('education_plan_competencies.id', $validIds)->pluck('education_plan_competencies.id'));
         }
 
         return back()->with('success', 'Unterrichtseinheit wurde gespeichert.');
@@ -294,20 +289,14 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['competency_ids' => ['array'], 'competency_ids.*' => ['integer']]);
-        $validIds = $teachingUnit->competencies()->whereIn('id', $data['competency_ids'] ?? [])->pluck('id');
+        $validIds = $teachingUnit->educationPlanCompetencies()->whereIn('education_plan_competencies.id', $data['competency_ids'] ?? [])->pluck('education_plan_competencies.id');
         abort_unless($validIds->count() === count($data['competency_ids'] ?? []), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
-        $removedCompetencies = $teachingUnit->competencies()->when($validIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $validIds))->get();
-        foreach ($removedCompetencies as $competency) {
-            $competency->lessons()->detach();
-        }
-        if ($validIds->isEmpty()) {
-            $teachingUnit->competencies()->delete();
-        }
+        $teachingUnit->educationPlanCompetencies()->detach($teachingUnit->educationPlanCompetencies()->whereNotIn('education_plan_competencies.id', $validIds)->pluck('education_plan_competencies.id'));
 
         return back()->with('success', 'Kompetenzen der Unterrichtseinheit wurden gespeichert.');
     }
 
-    public function addTeachingUnitCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
+    public function addEducationPlanCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): RedirectResponse
     {
         $this->authorize('update', $teachingGroup);
         abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
@@ -315,7 +304,7 @@ class YearPlanController extends Controller
         $competency = EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
             ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
             ->firstOrFail();
-        $teachingUnit->competencies()->firstOrCreate(['education_plan_competency_id' => $competency->id], ['is_secondary' => (bool) ($data['is_secondary'] ?? false)]);
+        $teachingUnit->educationPlanCompetencies()->syncWithoutDetaching([$competency->id => ['is_secondary' => (bool) ($data['is_secondary'] ?? false)]]);
 
         return back()->with('success', 'Kompetenz wurde hinzugefügt.');
     }
@@ -334,29 +323,24 @@ class YearPlanController extends Controller
         $competency = $curriculumReference?->educationPlanCompetency ?? EducationPlanCompetency::whereKey($data['education_plan_competency_id'])
             ->whereIn('education_plan_competence_area_id', fn ($query) => $query->select('id')->from('education_plan_competence_areas')->whereIn('education_plan_version_id', fn ($versions) => $versions->select('id')->from('education_plan_versions')->whereIn('education_plan_id', $this->educationPlanIdsForGroup($teachingGroup))))
             ->firstOrFail();
-        $unitCompetency = $lesson->unit->competencies()
-            ->where(fn ($query) => $query->where('curriculum_topic_education_plan_reference_id', $curriculumReference?->id)->orWhere('education_plan_competency_id', $competency->id))
-            ->first();
-        if (! $unitCompetency) {
-            $unitCompetency = $lesson->unit->competencies()->create([
-                'curriculum_topic_education_plan_reference_id' => $curriculumReference?->id,
-                'education_plan_competency_id' => $competency->id,
-                'is_secondary' => true,
-            ]);
-        }
-        $lesson->competencies()->syncWithoutDetaching([$unitCompetency->id]);
+        $lesson->unit->educationPlanCompetencies()->syncWithoutDetaching([$competency->id => [
+            'curriculum_topic_education_plan_reference_id' => $curriculumReference?->id,
+            'is_secondary' => true,
+        ]]);
+        $lesson->educationPlanCompetencies()->syncWithoutDetaching([$competency->id]);
 
         return back()->with('success', 'Kompetenz wurde als sekundäre UE-Kompetenz hinzugefügt.');
     }
 
-    public function removeTeachingUnitCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, TeachingUnitCompetency $teachingUnitCompetency): RedirectResponse|JsonResponse
+    public function removeEducationPlanCompetency(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit, int $assignment): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
-        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnitCompetency->teaching_unit_id === $teachingUnit->id, 404);
-        $teachingUnitCompetency->lessons()->detach();
-        $teachingUnitCompetency->delete();
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id, 404);
+        $assignment = $teachingUnit->educationPlanCompetencies()->wherePivot('id', $assignment)->firstOrFail();
+        DB::table('teaching_unit_education_plan_competencies')->where('id', $assignment->pivot->id)->delete();
 
         $message = 'Kompetenz wurde entfernt.';
+
         return $request->expectsJson() ? response()->json(['message' => $message]) : back()->with('success', $message);
     }
 
@@ -519,17 +503,16 @@ class YearPlanController extends Controller
                     ->pluck('id');
                 abort_unless($validEducationIds->count() === $educationIds->count(), 422, 'Eine Kompetenz gehört nicht zum Bildungsplan dieser Unterrichtsgruppe.');
                 foreach ($validEducationIds as $educationId) {
-                    $selectedIds->push($lesson->unit->competencies()->firstOrCreate(['education_plan_competency_id' => $educationId], ['is_secondary' => true])->id);
+                    $lesson->unit->educationPlanCompetencies()->syncWithoutDetaching([$educationId => ['is_secondary' => true]]);
+                    $selectedIds->push($educationId);
                 }
             }
             $selectedIds = $selectedIds->unique()->values();
-            $validIds = $lesson->unit->competencies()->whereIn('id', $selectedIds)->pluck('id');
+            $validIds = $lesson->unit->educationPlanCompetencies()->whereIn('education_plan_competencies.id', $selectedIds)->pluck('education_plan_competencies.id');
             abort_unless($validIds->count() === $selectedIds->count(), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
-            $lesson->competencies()->sync($validIds);
-            $lesson->unit->competencies()
-                ->where('is_secondary', true)
-                ->whereDoesntHave('lessons')
-                ->delete();
+            $secondaryIds = $lesson->unit->educationPlanCompetencies()->wherePivot('is_secondary', true)->pluck('education_plan_competencies.id');
+            $lesson->educationPlanCompetencies()->sync($validIds);
+            $lesson->unit->educationPlanCompetencies()->detach($secondaryIds->diff($validIds));
         }
 
         return back()->with('success', 'Stunde wurde gespeichert.');
@@ -606,6 +589,7 @@ class YearPlanController extends Controller
         ]);
 
         $message = 'Phasen-Vorlage wurde angelegt.';
+
         return $request->expectsJson() ? response()->json(['message' => $message]) : back()->with('success', $message);
     }
 
@@ -614,9 +598,9 @@ class YearPlanController extends Controller
         $this->authorize('update', $teachingGroup);
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validate(['competency_ids' => ['array'], 'competency_ids.*' => ['integer']]);
-        $validIds = $lesson->unit->competencies()->whereIn('id', $data['competency_ids'] ?? [])->pluck('id');
+        $validIds = $lesson->unit->educationPlanCompetencies()->whereIn('education_plan_competencies.id', $data['competency_ids'] ?? [])->pluck('education_plan_competencies.id');
         abort_unless($validIds->count() === count($data['competency_ids'] ?? []), 422, 'Eine Kompetenz gehört nicht zu dieser Unterrichtseinheit.');
-        $lesson->competencies()->sync($validIds);
+        $lesson->educationPlanCompetencies()->sync($validIds);
 
         return back()->with('success', 'Kompetenzen der Stunde wurden gespeichert.');
     }
@@ -628,6 +612,7 @@ class YearPlanController extends Controller
         $phase->update($request->validate(['title' => ['required', 'string', 'max:255'], 'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:999'], 'social_form_id' => ['nullable', 'integer', 'exists:social_forms,id'], 'teacher_interaction' => ['nullable', 'string'], 'learner_activity' => ['nullable', 'string'], 'differentiation' => ['nullable', 'string'], 'didactic_comment' => ['nullable', 'string'], 'materials' => ['nullable', 'string'], 'media' => ['nullable', 'string']]));
 
         $message = 'Phase wurde gespeichert.';
+
         return $request->expectsJson() ? response()->json(['message' => $message, 'phase' => $phase->fresh()]) : back()->with('success', $message);
     }
 
@@ -728,6 +713,7 @@ class YearPlanController extends Controller
         $scheduledLesson->update(['status' => $status]);
 
         $message = 'Stundenstatus wurde gespeichert.';
+
         return $request->expectsJson() ? response()->json(['message' => $message, 'status' => $scheduledLesson->status]) : back()->with('success', $message);
     }
 

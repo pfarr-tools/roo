@@ -25,7 +25,6 @@ use App\Models\SchoolYear;
 use App\Models\SocialForm;
 use App\Models\TeachingGroup;
 use App\Models\TeachingUnit;
-use App\Models\TeachingUnitCompetency;
 use App\Models\UnitTemplate;
 use App\Models\User;
 use App\Services\YearPlanningWorkspace;
@@ -70,7 +69,7 @@ it('übernimmt eine Curriculum-UE als unabhängige eigene UE mit Herkunft', func
     $unit = TeachingUnit::firstOrFail();
     expect($unit->source_curriculum_topic_id)->toBe($topic->id)
         ->and($unit->lessons)->toHaveCount(2)
-        ->and($unit->competencies->first()->education_plan_competency_id)->toBe($competency->id);
+        ->and($unit->educationPlanCompetencies->first()->id)->toBe($competency->id);
     $topic->refresh();
     expect($topic->title)->toBe('Nach Gott fragen')->and($topic->hours)->toBe(2);
 });
@@ -115,21 +114,21 @@ it('speichert Kompetenzen aus dem Picker einer UE und kann sie wieder entfernen'
         'competency_ids' => [],
         'education_plan_competency_ids' => [$competency->id, $secondCompetency->id],
     ])->assertRedirect();
-    expect($unit->fresh()->competencies->pluck('education_plan_competency_id')->all())->toBe([$competency->id, $secondCompetency->id]);
+    expect($unit->fresh()->educationPlanCompetencies->pluck('id')->all())->toBe([$competency->id, $secondCompetency->id]);
 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", [
         'title' => $unit->title,
         'competency_ids' => [],
         'education_plan_competency_ids' => [$competency->id],
     ])->assertRedirect();
-    expect($unit->fresh()->competencies->pluck('education_plan_competency_id')->all())->toBe([$competency->id]);
+    expect($unit->fresh()->educationPlanCompetencies->pluck('id')->all())->toBe([$competency->id]);
 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/eigene-einheiten/{$unit->id}", [
         'title' => $unit->title,
         'competency_ids' => [],
         'education_plan_competency_ids' => [],
     ])->assertRedirect();
-    expect($unit->fresh()->competencies)->toBeEmpty();
+    expect($unit->fresh()->educationPlanCompetencies)->toBeEmpty();
 });
 
 it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot', function () {
@@ -313,10 +312,11 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
     $contentCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.2.3.4', 'text' => null, 'position' => 1, 'is_active' => true]);
     EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $contentCompetency->id, 'text' => 'die Sprache der biblischen Bildworte wahrnehmen und deuten', 'position' => 1]);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
-    $link = $unit->competencies()->create(['education_plan_competency_id' => $educationCompetency->id]);
-    $contentLink = $unit->competencies()->create(['education_plan_competency_id' => $contentCompetency->id]);
+    $unit->educationPlanCompetencies()->attach([$educationCompetency->id, $contentCompetency->id]);
+    $link = $educationCompetency;
+    $contentLink = $contentCompetency;
     $lesson = $unit->lessons()->create(['title' => 'Kompetenzstunde', 'position' => 1, 'duration' => 1]);
-    $lesson->competencies()->attach([$link->id, $contentLink->id]);
+    $lesson->educationPlanCompetencies()->attach([$link->id, $contentLink->id]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'planned']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => 'planned']);
 
@@ -339,8 +339,9 @@ it('entfernt abgewählte sekundäre Kompetenzen vollständig aus der Stunde', fu
     $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Eine Kompetenz', 'position' => 1, 'is_active' => true]);
     $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Kompetenzstunde', 'position' => 1, 'duration' => 1]);
-    $unitCompetency = $unit->competencies()->create(['education_plan_competency_id' => $educationCompetency->id, 'is_secondary' => true]);
-    $lesson->competencies()->attach($unitCompetency->id);
+    $unit->educationPlanCompetencies()->attach($educationCompetency->id, ['is_secondary' => true]);
+    $unitCompetency = $educationCompetency;
+    $lesson->educationPlanCompetencies()->attach($unitCompetency->id);
 
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
         'title' => $lesson->title,
@@ -349,8 +350,8 @@ it('entfernt abgewählte sekundäre Kompetenzen vollständig aus der Stunde', fu
         'education_plan_competency_ids' => [],
     ])->assertRedirect();
 
-    expect($lesson->fresh()->competencies)->toBeEmpty()
-        ->and(TeachingUnitCompetency::find($unitCompetency->id))->toBeNull();
+    expect($lesson->fresh()->educationPlanCompetencies)->toBeEmpty()
+        ->and($unit->educationPlanCompetencies()->whereKey($unitCompetency->id)->exists())->toBeFalse();
 });
 
 it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', function () {

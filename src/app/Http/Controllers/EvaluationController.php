@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompetenceEvidence;
+use App\Models\EducationPlanCompetency;
 use App\Models\ReportPeriod;
 use App\Models\ReportPeriodEvaluationTemplate;
 use App\Models\StudentEvaluation;
 use App\Models\TeachingGroup;
-use App\Models\TeachingUnitCompetency;
 use App\Services\CompetencyResolver;
 use App\Services\EvaluationTemplateGenerator;
 use Illuminate\Http\Request;
@@ -178,7 +178,7 @@ class EvaluationController extends Controller
                         ->orWhereBetween('assessed_on', [$evaluation->period->starts_on, $evaluation->period->ends_on])
                         ->orWhereHas('scheduleSlots', fn ($slotQuery) => $slotQuery->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]));
                 })
-                ->with(['scheduleSlots' => fn ($query) => $query->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on])->orderBy('date')->orderBy('period_number'), 'tasks.levels', 'tasks.competency', 'tasks.expectations'])
+                ->with(['scheduleSlots' => fn ($query) => $query->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on])->orderBy('date')->orderBy('period_number'), 'tasks.levels', 'tasks.educationPlanCompetency', 'tasks.expectations'])
                 ->orderByRaw('COALESCE(assessed_on, created_at)')
                 ->get();
             $studentLevels = DB::table('student_assessment_results')
@@ -214,9 +214,7 @@ class EvaluationController extends Controller
                     ->mapToGroups(function ($resultRow) use ($assessment): array {
                         $task = $assessment->tasks->firstWhere('id', $resultRow->assessment_task_id);
                         $maxPoints = $task?->max_points !== null ? (int) $task->max_points : $task?->maximumPoints();
-                        $competenceKey = $task?->teaching_unit_competency_id
-                            ? 'teaching_unit:'.$task->teaching_unit_competency_id
-                            : ($task?->education_plan_competency_id ? 'education_plan:'.$task->education_plan_competency_id : null);
+                        $competenceKey = $task?->education_plan_competency_id ? 'education_plan:'.$task->education_plan_competency_id : null;
 
                         return $competenceKey ? [$competenceKey => ['points' => $resultRow->points, 'max_points' => $maxPoints, 'weight' => (int) ($task->pivot->weight ?? 50)]] : [];
                     })
@@ -271,7 +269,7 @@ class EvaluationController extends Controller
             $observationEvidences = CompetenceEvidence::query()
                 ->with(['scheduledLesson.lesson', 'scheduledLesson.slot'])
                 ->where('student_id', $evaluation->student_id)
-                ->whereNotNull('teaching_unit_competency_id')
+                ->whereNotNull('education_plan_competency_id')
                 ->whereNotNull('scale')
                 ->where('scale', '!=', '')
                 ->whereHas('scheduledLesson.slot', function ($query) use ($teachingGroup, $evaluation): void {
@@ -279,16 +277,16 @@ class EvaluationController extends Controller
                         ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
                 })
                 ->get();
-            $competencies = TeachingUnitCompetency::query()
-                ->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))
+            $competencies = EducationPlanCompetency::query()
+                ->whereHas('lessons.unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))
                 ->whereHas('lessons.scheduledLessons.slot', function ($query) use ($teachingGroup, $evaluation): void {
                     $query->where('teaching_group_id', $teachingGroup->id)
                         ->whereBetween('date', [$evaluation->period->starts_on, $evaluation->period->ends_on]);
                 })
-                ->with(['educationPlanCompetency.area', 'educationPlanCompetency.variants'])
+                ->with(['area', 'variants'])
                 ->orderBy('id')
                 ->get();
-            $observationSources = $observationEvidences->groupBy('teaching_unit_competency_id')->map(fn ($evidences) => $evidences->map(function ($evidence): array {
+            $observationSources = $observationEvidences->groupBy('education_plan_competency_id')->map(fn ($evidences) => $evidences->map(function ($evidence): array {
                 $rating = (float) $evidence->scale <= 0 ? '0' : str_repeat('★', (int) round((float) $evidence->scale));
 
                 return ['type' => 'observations', 'title' => $evidence->scheduledLesson?->slot?->date?->format('d.m.Y') ?: 'Beobachtung', 'date' => $evidence->scheduledLesson?->slot?->date?->toDateString(), 'percentage' => round_percentage((float) $evidence->scale / 5 * 100), 'text' => ($evidence->scheduledLesson?->slot?->date?->format('d.m.Y') ?: 'Beobachtung').': '.$rating];
@@ -296,7 +294,7 @@ class EvaluationController extends Controller
             $writtenWeight = (int) ($teachingGroup->gradeComponents->firstWhere('type', 'written_assessments')?->percentage ?? 0);
             $observationWeight = (int) ($teachingGroup->gradeComponents->firstWhere('type', 'observations')?->percentage ?? 0);
             $competenceAverages = $competencies->map(function ($competence) use ($lses, $observationSources, $writtenWeight, $observationWeight): array {
-                $lseSources = $lses->flatMap(fn (array $lse): array => collect($lse['competence_results']['teaching_unit:'.$competence->id] ?? $lse['competence_results']['education_plan:'.$competence->education_plan_competency_id] ?? [])->map(fn (int $percentage): array => ['type' => 'written_assessments', 'title' => $lse['title'], 'date' => $lse['date'], 'percentage' => $percentage, 'grade' => $lse['grade'], 'text' => ($lse['date'] ? date('d.m.Y', strtotime($lse['date'])) : '–').': '.$lse['title'].' ('.(implode(', ', $lse['student_levels']) ?: '–').'): '.$percentage.'% / '.($lse['grade'] ?? '–')])->all())->values();
+                $lseSources = $lses->flatMap(fn (array $lse): array => collect($lse['competence_results']['education_plan:'.$competence->id] ?? [])->map(fn (int $percentage): array => ['type' => 'written_assessments', 'title' => $lse['title'], 'date' => $lse['date'], 'percentage' => $percentage, 'grade' => $lse['grade'], 'text' => ($lse['date'] ? date('d.m.Y', strtotime($lse['date'])) : '–').': '.$lse['title'].' ('.(implode(', ', $lse['student_levels']) ?: '–').'): '.$percentage.'% / '.($lse['grade'] ?? '–')])->all())->values();
                 $sources = $lseSources->concat($observationSources->get($competence->id, collect()))->sortBy('date')->values();
                 $sourceAverages = collect([
                     'written_assessments' => [$lseSources, $writtenWeight],
@@ -312,11 +310,11 @@ class EvaluationController extends Controller
                 $percentage = $weightTotal > 0 ? $sourceAverages->sum(fn (array $source): float => $source['average'] * $source['weight']) / $weightTotal : null;
                 $average = $percentage !== null ? round($percentage / 20, 2) : null;
 
-                return ['teaching_unit_competency_id' => $competence->id, 'average' => $average, 'rounded_level' => $average !== null ? (int) round($average) : null, 'percentage' => $percentage !== null ? round_percentage($percentage) : null, 'sources' => $sources->all()];
+                return ['education_plan_competency_id' => $competence->id, 'average' => $average, 'rounded_level' => $average !== null ? (int) round($average) : null, 'percentage' => $percentage !== null ? round_percentage($percentage) : null, 'sources' => $sources->all()];
             })->values();
             $competencies = $competencies->map(function ($competence) use ($competencyResolver, $periodLevel): array {
                 $presented = $competencyResolver->present($competence);
-                $presented['education_plan_competency_id'] = $competence->education_plan_competency_id;
+                $presented['education_plan_competency_id'] = $competence->id;
                 $presented['level_texts'] = collect(['G', 'M', 'E'])->mapWithKeys(fn (string $level): array => [$level => $competencyResolver->textForLevel($competence, $level)])->all();
                 $presented['text'] = $presented['level_texts'][$periodLevel] ?? $presented['text'];
                 $presented['label'] = $presented['text'];
@@ -349,7 +347,7 @@ class EvaluationController extends Controller
         abort_if($evaluation->status === 'confirmed', 422, 'Eine bestätigte Bewertung kann nicht mehr geändert werden.');
         $data = $request->validate(['level' => ['nullable', 'in:G,M,E'], 'competence_ratings' => ['sometimes', 'array'], 'competence_ratings.*.education_plan_competency_id' => ['required', 'integer'], 'competence_ratings.*.rating' => ['nullable', 'integer', 'between:0,5'], 'competence_ratings.*.include_in_text' => ['sometimes', 'boolean'], 'competence_ratings.*.include_in_grade' => ['sometimes', 'boolean']]);
         $ratings = collect($data['competence_ratings'] ?? []);
-        $allowedCompetenceIds = TeachingUnitCompetency::query()->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->pluck('education_plan_competency_id');
+        $allowedCompetenceIds = EducationPlanCompetency::query()->whereHas('lessons.unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->pluck('education_plan_competencies.id');
         abort_unless($ratings->pluck('education_plan_competency_id')->diff($allowedCompetenceIds)->isEmpty(), 422);
 
         return response()->json(['draft_text' => $templateGenerator->draft($evaluation->period, $evaluation->student, $ratings, $data['level'] ?? null), 'grade_components' => $this->gradeComponents($teachingGroup, $evaluation, $ratings)]);
@@ -407,15 +405,15 @@ class EvaluationController extends Controller
             return ['percentage' => $percentage, 'date' => $assessment->scheduleSlots->first()?->date?->toDateString() ?? $assessment->assessed_on?->toDateString(), 'text' => $date.': '.$assessment->title.' ('.($levels ?: '–').'): '.$percentage.'% / '.percentage_to_grade($percentage)];
         })->filter();
         $writtenPercentages = $writtenSources->pluck('percentage');
-        $available = TeachingUnitCompetency::query()
-            ->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))
+        $available = EducationPlanCompetency::query()
+            ->whereHas('lessons.unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))
             ->whereHas('lessons.scheduledLessons.slot', fn ($query) => $query->whereBetween('date', [$start, $end]))
-            ->pluck('education_plan_competency_id');
+            ->pluck('education_plan_competencies.id');
         $excluded = collect($ratings)->filter(fn (array $rating): bool => ($rating['include_in_grade'] ?? true) === false)->pluck('education_plan_competency_id');
         $included = $available->diff($excluded);
-        $observationPercentages = CompetenceEvidence::query()->with('competency')->where('student_id', $evaluation->student_id)->whereNotNull('teaching_unit_competency_id')->whereNotNull('scale')->where('scale', '!=', '')->whereHas('scheduledLesson.slot', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id)->whereBetween('date', [$start, $end]))->get()->filter(fn ($evidence): bool => $included->contains($evidence->competency?->education_plan_competency_id))->map(fn ($evidence): int => round_percentage((float) $evidence->scale / 5 * 100));
+        $observationPercentages = CompetenceEvidence::query()->with('educationPlanCompetency')->where('student_id', $evaluation->student_id)->whereNotNull('education_plan_competency_id')->whereNotNull('scale')->where('scale', '!=', '')->whereHas('scheduledLesson.slot', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id)->whereBetween('date', [$start, $end]))->get()->filter(fn ($evidence): bool => $included->contains($evidence->education_plan_competency_id))->map(fn ($evidence): int => round_percentage((float) $evidence->scale / 5 * 100));
 
-        $observationSources = CompetenceEvidence::query()->with(['competency', 'scheduledLesson.slot'])->where('student_id', $evaluation->student_id)->whereNotNull('teaching_unit_competency_id')->whereHas('scheduledLesson.slot', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id)->whereBetween('date', [$start, $end]))->get()->filter(fn ($evidence): bool => $included->contains($evidence->competency?->education_plan_competency_id))->map(function ($evidence): array {
+        $observationSources = CompetenceEvidence::query()->with(['educationPlanCompetency', 'scheduledLesson.slot'])->where('student_id', $evaluation->student_id)->whereNotNull('education_plan_competency_id')->whereHas('scheduledLesson.slot', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id)->whereBetween('date', [$start, $end]))->get()->filter(fn ($evidence): bool => $included->contains($evidence->education_plan_competency_id))->map(function ($evidence): array {
             $rating = $evidence->scale === null || $evidence->scale === '' ? '-' : ((float) $evidence->scale <= 0 ? '0' : str_repeat('★', (int) round((float) $evidence->scale)));
 
             return ['percentage' => round_percentage((float) $evidence->scale / 5 * 100), 'text' => ($evidence->scheduledLesson?->slot?->date?->format('d.m.Y') ?? 'Beobachtung').': '.$rating];
@@ -461,7 +459,7 @@ class EvaluationController extends Controller
         }
         $submittedRatings = collect($data['competence_ratings'] ?? []);
         if ($teachingGroup->grading_model === 'competency_texts_and_grades') {
-            $allowedCompetenceIds = TeachingUnitCompetency::query()->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->pluck('education_plan_competency_id');
+            $allowedCompetenceIds = EducationPlanCompetency::query()->whereHas('lessons.unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->pluck('education_plan_competencies.id');
             abort_unless($submittedRatings->pluck('education_plan_competency_id')->diff($allowedCompetenceIds)->isEmpty(), 422);
         } else {
             $submittedRatings = collect();

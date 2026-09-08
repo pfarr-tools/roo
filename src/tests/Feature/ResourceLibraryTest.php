@@ -177,7 +177,7 @@ it('speichert Sätze sortieren mit stabilen Satz-IDs und Punkten pro Satz', func
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann ordnen']);
+    $competency = officialCompetency($unit, 'Kann ordnen');
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Sätze ordnen',
@@ -208,7 +208,7 @@ it('speichert Referenzpunkte für Bildbeschriftungen', function () {
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Pflanzen', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann beschriften']);
+    $competency = officialCompetency($unit, 'Kann beschriften');
     $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Pflanze.png', 'storage_path' => 'library/pflanze.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -239,13 +239,13 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann begründen']);
+    $competency = officialCompetency($unit, 'Kann begründen');
     $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true, 'image_width_cm' => 3.5, 'optional_reading_text' => 'Lies diesen Text.', 'rating_scale' => 'stars', 'rating_scale_label' => 'Wie sicher bist du?'], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
     $task = AssessmentTask::firstOrFail();
-    expect($task->teaching_unit_competency_id)->toBe($competency->id)
+    expect($task->education_plan_competency_id)->toBe($competency->id)
         ->and($task->task_type)->toBe('free_text')
         ->and($task->content['lines'])->toBe(5)
         ->and($task->content['lineated'])->toBeTrue()
@@ -263,7 +263,7 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('method', 'post'));
     $this->actingAs($user)->get("/bibliothek/pruefungsaufgaben/{$task->id}/bearbeiten")
         ->assertInertia(fn ($page) => $page->component('AssessmentTask/Edit')->where('libraryMode', true)->where('task.title', 'Begründe deine Antwort'));
-    $this->actingAs($user)->get('/bibliothek?type=assessment-task')->assertInertia(fn ($page) => $page->where('items.0.description', 'Kann begründen · G, M'));
+    $this->actingAs($user)->get('/bibliothek?type=assessment-task')->assertInertia(fn ($page) => $page->where('items.0.description', '1.1.1 – Kann begründen · G, M'));
     $this->actingAs($user)->get('/bibliothek?type=assessment-task&education_plan_competency_id='.$competency->education_plan_competency_id)
         ->assertInertia(fn ($page) => $page->where('items.0.id', $task->id));
 
@@ -274,7 +274,7 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
         ->assertOk()
         ->assertJsonPath('task.id', $task->id)
         ->assertJsonPath('task.title', 'Begründe deine Antwort')
-        ->assertJsonPath('task.teaching_unit_competency_id', $competency->id);
+        ->assertJsonPath('task.education_plan_competency_id', $competency->id);
     expect($lesson->fresh()->assessmentTasks)->toHaveCount(1);
 
     $this->actingAs($user)->postJson("/jahresplanung/{$group->id}/ressourcen/assessment-task/{$task->id}/trennen", ['target_type' => 'lesson', 'target_id' => $lesson->id])
@@ -290,7 +290,7 @@ it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschrifte
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann zuordnen']);
+    $competency = officialCompetency($unit, 'Kann zuordnen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Teilaufgaben',
@@ -327,7 +327,7 @@ it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', func
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann darstellen']);
+    $competency = officialCompetency($unit, 'Kann darstellen');
     $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Baum.png', 'storage_path' => 'library/baum.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -367,7 +367,7 @@ it('speichert eine Gestaltungsaufgabe mit manuellen Erwartungen', function () {
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann gestalten']);
+    $competency = officialCompetency($unit, 'Kann gestalten');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Gestaltungsaufgabe',
@@ -394,7 +394,7 @@ it('speichert Lückentexte mit automatisch synchronisierten Erwartungen', functi
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann ergänzen']);
+    $competency = officialCompetency($unit, 'Kann ergänzen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Lückentext',
@@ -434,7 +434,7 @@ it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', functi
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann ordnen']);
+    $competency = officialCompetency($unit, 'Kann ordnen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Überschriftentabelle',
@@ -479,7 +479,7 @@ it('speichert Zuordnungstabellen und berechnet beide Bewertungsmodi', function (
     $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
     $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
     $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann zuordnen']);
+    $competency = officialCompetency($unit, 'Kann zuordnen');
 
     $payload = [
         'title' => 'Kategorien zuordnen',

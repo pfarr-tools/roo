@@ -75,11 +75,10 @@ class YearPlanningWorkspace
             ]);
 
             foreach ($topic->educationPlanReferences as $competency) {
-                $unit->competencies()->create([
-                    'education_plan_competency_id' => $competency->education_plan_competency_id,
+                $unit->educationPlanCompetencies()->attach($competency->education_plan_competency_id, [
                     'curriculum_topic_education_plan_reference_id' => $competency->id,
                     'source_curriculum_topic_id' => $topic->id,
-                    'local_wording' => null,
+                    'is_secondary' => false,
                 ]);
             }
 
@@ -88,7 +87,7 @@ class YearPlanningWorkspace
                 $unit->lessons()->create(['title' => $topic->title.' – '.$position.'. Stunde', 'position' => $position, 'duration' => 1]);
             }
 
-            return $unit->load(['competencies.curriculumEducationPlanReference', 'lessons']);
+            return $unit->load(['educationPlanCompetencies', 'lessons']);
         });
     }
 
@@ -97,7 +96,7 @@ class YearPlanningWorkspace
         abort_unless($source->organization_id === $targetGroup->organization_id, 404);
 
         return DB::transaction(function () use ($targetGroup, $source): TeachingUnit {
-            $source->load(['competencies', 'lessons' => fn ($query) => $query->orderBy('position'), 'lessons.competencies', 'lessons.phases' => fn ($query) => $query->orderBy('position')]);
+            $source->load(['educationPlanCompetencies', 'lessons' => fn ($query) => $query->orderBy('position'), 'lessons.educationPlanCompetencies', 'lessons.phases' => fn ($query) => $query->orderBy('position')]);
             $copy = $targetGroup->teachingUnits()->create([
                 'organization_id' => $targetGroup->organization_id,
                 'education_plan_id' => $source->education_plan_id,
@@ -108,20 +107,20 @@ class YearPlanningWorkspace
                 'position' => ($targetGroup->teachingUnits()->max('position') ?? 0) + 1,
                 'notes' => $source->notes,
             ]);
-            $competencies = [];
-            foreach ($source->competencies as $competency) {
-                $copyCompetency = $copy->competencies()->create($competency->only(['education_plan_competency_id', 'curriculum_topic_education_plan_reference_id', 'source_curriculum_topic_id', 'local_wording', 'is_secondary']));
-                $competencies[$competency->id] = $copyCompetency;
-            }
+            $copy->educationPlanCompetencies()->attach($source->educationPlanCompetencies->mapWithKeys(fn ($competency) => [$competency->id => [
+                'curriculum_topic_education_plan_reference_id' => $competency->pivot->curriculum_topic_education_plan_reference_id,
+                'source_curriculum_topic_id' => $competency->pivot->source_curriculum_topic_id,
+                'is_secondary' => $competency->pivot->is_secondary,
+            ]])->all());
             foreach ($source->lessons as $lesson) {
                 $lessonCopy = $copy->lessons()->create($lesson->only(['title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes']));
-                $lessonCopy->competencies()->sync(collect($lesson->competencies)->map(fn ($competency) => $competencies[$competency->id]?->id)->filter()->all());
+                $lessonCopy->educationPlanCompetencies()->sync($lesson->educationPlanCompetencies->pluck('id')->all());
                 foreach ($lesson->phases as $phase) {
                     $lessonCopy->phases()->create($phase->only(['title', 'position', 'duration_minutes', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'materials', 'media']));
                 }
             }
 
-            return $copy->load(['competencies', 'lessons.phases']);
+            return $copy->load(['educationPlanCompetencies', 'lessons.phases']);
         });
     }
 
@@ -601,9 +600,9 @@ class YearPlanningWorkspace
 
     public function coverage(TeachingGroup $group): array
     {
-        $units = $group->teachingUnits()->with(['competencies', 'lessons.competencies'])->get();
-        $unitCompetencies = $units->flatMap->competencies;
-        $lessonCompetencies = $units->flatMap(fn ($unit) => $unit->lessons->flatMap->competencies);
+        $units = $group->teachingUnits()->with(['educationPlanCompetencies', 'lessons.educationPlanCompetencies'])->get();
+        $unitCompetencies = $units->flatMap->educationPlanCompetencies;
+        $lessonCompetencies = $units->flatMap(fn ($unit) => $unit->lessons->flatMap->educationPlanCompetencies);
         $plannedEducation = $unitCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
         $lessonEducation = $lessonCompetencies->pluck('education_plan_competency_id')->filter()->unique()->values();
         $curriculumReferences = $group->curricula()->with(['versions.topics.educationPlanReferences' => fn ($query) => $query->forGroup($group)])->get()->flatMap(fn ($curriculum) => $curriculum->versions->flatMap->topics)->flatMap->educationPlanReferences;

@@ -2,16 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\EducationPlanCompetency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
  * Resolves the canonical presentation of a competency relation.
  *
- * TeachingUnitCompetency is the assignment record. Its wording comes from an
- * optional local wording or the official education plan, with level variants
- * as an additional source. Consumers should use the returned presentation
- * instead of guessing which relation contains the text.
+ * Consumers should use the returned presentation instead of guessing which
+ * relation contains the official wording.
  */
 class CompetencyResolver
 {
@@ -76,14 +75,14 @@ class CompetencyResolver
 
     public function kind(Model $competency): string
     {
-        $plan = $this->related($competency, 'educationPlanCompetency');
+        $plan = $this->plan($competency);
 
         return $plan?->area?->kind ?? 'content';
     }
 
     public function text(Model $competency): string
     {
-        $plan = $this->related($competency, 'educationPlanCompetency') ?? $competency;
+        $plan = $this->plan($competency);
         $identifier = $this->identifier($competency);
         $variants = collect($this->relatedMany($competency, 'variants'));
         if ($variants->isEmpty()) {
@@ -94,7 +93,7 @@ class CompetencyResolver
             ->filter()
             ->implode(' / ');
 
-        return (string) ($this->clean($competency->local_wording, $identifier)
+        return (string) ($this->clean($this->hasAttribute($competency, 'local_wording') ? $competency->local_wording : null, $identifier)
             ?: $this->clean($plan?->text, $identifier)
             ?: $variants
             ?: '');
@@ -102,13 +101,23 @@ class CompetencyResolver
 
     public function identifier(Model $competency): string
     {
-        $plan = $this->related($competency, 'educationPlanCompetency');
-        $raw = $competency->external_identifier
-            ?: $competency->number
+        $plan = $this->plan($competency);
+        $raw = ($this->hasAttribute($competency, 'external_identifier') ? $competency->external_identifier : null)
+            ?: ($this->hasAttribute($competency, 'number') ? $competency->number : null)
             ?: $plan?->external_identifier
             ?: $plan?->number;
 
         return $this->formatIdentifier($raw);
+    }
+
+    private function plan(Model $competency): ?Model
+    {
+        return $this->related($competency, 'educationPlanCompetency') ?? ($competency instanceof EducationPlanCompetency ? $competency : null);
+    }
+
+    private function hasAttribute(Model $model, string $attribute): bool
+    {
+        return array_key_exists($attribute, $model->getAttributes());
     }
 
     private function related(Model $model, string $relation): ?Model

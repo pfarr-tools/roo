@@ -22,7 +22,7 @@ watch(() => props.assessmentTasks, tasks => { localAssessmentTasks.value = tasks
 
 const competencyText = competency => competency.label || competency.text || ('Kompetenz ' + competency.id)
 const tasksFor = competency => localAssessmentTasks.value.filter(task => (
-    ((task.teaching_unit_competency_id ?? task.competency_id) && String(task.teaching_unit_competency_id ?? task.competency_id) === String(competency.id))
+    task.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.id)
     || (competency.education_plan_competency_id && String(task.education_plan_competency_id) === String(competency.education_plan_competency_id))
     || (competency.source_identifier && String(task.competency_identifier ?? task.source_identifier) === String(competency.source_identifier))
 ))

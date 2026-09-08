@@ -49,7 +49,7 @@ function mountCompetencyTextEvaluation() {
         gradeComponents: [{ type: 'written_assessments', label: 'Schriftliche Leistungen', weight: 50, percentage: 88, grade: '2-', sources: ['Erste LSE (G, 08.09.2026): 80% / 2'] }],
         periodLevel: 'G',
         competencies: [{ id: 8, identifier: '3.1.1.1', label: 'Menschliche Erfahrungen auf G-Niveau beschreiben', text: 'Menschliche Erfahrungen beschreiben', level_texts: { G: 'Menschliche Erfahrungen auf G-Niveau beschreiben', M: 'Menschliche Erfahrungen auf M-Niveau erklären', E: 'Menschliche Erfahrungen auf E-Niveau beurteilen' } }],
-        competenceAverages: [{ teaching_unit_competency_id: 8, average: 3.5, rounded_level: 4, percentage: 70, sources: [{ type: 'written_assessments', title: 'Erste LSE', percentage: 80, text: 'Erste LSE (G, 08.09.2026): 80% / 2' }, { type: 'observations', title: 'Stunde · 08.09.2026', percentage: 40, text: 'Stunde: 40%' }] }],
+        competenceAverages: [{ education_plan_competency_id: 8, average: 3.5, rounded_level: 4, percentage: 70, sources: [{ type: 'written_assessments', title: 'Erste LSE', percentage: 80, text: 'Erste LSE (G, 08.09.2026): 80% / 2' }, { type: 'observations', title: 'Stunde · 08.09.2026', percentage: 40, text: 'Stunde: 40%' }] }],
     })
     app.mount(root)
 

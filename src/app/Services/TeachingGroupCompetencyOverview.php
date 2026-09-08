@@ -21,8 +21,8 @@ class TeachingGroupCompetencyOverview
             ->forGroup($teachingGroup)
             ->with(['topic:id,title,year', 'educationPlanCompetency.area:id,kind'])
             ->orderBy('competency_kind')->orderBy('position')->get();
-        $plannedCompetencies = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.competencies:id,teaching_unit_id,curriculum_topic_education_plan_reference_id,education_plan_competency_id'])->get()
-            ->flatMap(fn ($unit) => $unit->lessons->flatMap(fn ($lesson) => $lesson->competencies->map(fn ($competency) => ['curriculum_id' => $competency->curriculum_topic_education_plan_reference_id, 'education_id' => $competency->education_plan_competency_id, 'hours' => $lesson->duration])))
+        $plannedCompetencies = $teachingGroup->teachingUnits()->with(['lessons:id,teaching_unit_id,duration', 'lessons.educationPlanCompetencies:id'])->get()
+            ->flatMap(fn ($unit) => $unit->lessons->flatMap(fn ($lesson) => $lesson->educationPlanCompetencies->map(fn ($competency) => ['curriculum_id' => $competency->pivot->curriculum_topic_education_plan_reference_id, 'education_id' => $competency->id, 'hours' => $lesson->duration])))
             ->groupBy('curriculum_id');
         $coveredEducationHours = $plannedCompetencies->filter(fn ($items, $id) => $id === '' || $id === null)->flatten(1)->groupBy('education_id')->map(fn ($items) => $items->sum('hours'));
         $coveredHours = $plannedCompetencies->reject(fn ($items, $id) => $id === '' || $id === null)->map(fn ($items) => $items->sum('hours'));

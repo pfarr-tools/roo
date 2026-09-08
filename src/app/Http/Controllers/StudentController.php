@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\School;
 use App\Models\Observation;
-use App\Models\StudentAssessmentResult;
-use App\Models\StudentEvaluationCompetenceRating;
-use App\Models\StudentEvaluation;
+use App\Models\School;
 use App\Models\Student;
+use App\Models\StudentAssessmentResult;
+use App\Models\StudentEvaluation;
+use App\Models\StudentEvaluationCompetenceRating;
 use App\Models\TeachingGroup;
 use App\Students\PronounSets\PronounSets;
 use Illuminate\Http\Request;
@@ -51,11 +51,7 @@ class StudentController extends Controller
         $sort = in_array($request->query('sort'), ['last_name', 'first_name', 'class_name', 'school'], true) ? $request->query('sort') : 'last_name';
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
-        $searchableStudentIds = $search === ''
-            ? null
-            : Student::search($search)
-                ->where('organization_id', (string) $organizationId)
-                ->keys();
+        $searchableStudentIds = $this->searchableStudentIds($search, $organizationId);
 
         $students = Student::query()
             ->where('students.organization_id', $organizationId)
@@ -95,11 +91,7 @@ class StudentController extends Controller
         $className = trim((string) $request->query('class_name', ''));
         $groupId = $request->integer('teaching_group_id') ?: null;
         $schoolYearId = $request->integer('school_year_id') ?: null;
-        $searchableStudentIds = $search === ''
-            ? null
-            : Student::search($search)
-                ->where('organization_id', (string) $organizationId)
-                ->keys();
+        $searchableStudentIds = $this->searchableStudentIds($search, $organizationId);
 
         $students = Student::query()
             ->where('organization_id', $organizationId)
@@ -128,5 +120,28 @@ class StudentController extends Controller
             }
             fclose($handle);
         }, 'schuelerinnen.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function searchableStudentIds(string $search, int $organizationId): ?array
+    {
+        if ($search === '') {
+            return null;
+        }
+
+        $indexedIds = Student::search($search)
+            ->where('organization_id', $organizationId)
+            ->keys();
+        $needle = mb_strtolower($search);
+        $databaseIds = Student::query()
+            ->where('organization_id', $organizationId)
+            ->where(function ($query) use ($needle): void {
+                foreach (['first_name', 'last_name', 'class_name'] as $column) {
+                    $query->orWhereRaw('LOWER('.$column.') LIKE ?', ['%'.$needle.'%']);
+                }
+                $query->orWhereHas('teachingGroups', fn ($groupQuery) => $groupQuery->whereRaw('LOWER(name) LIKE ?', ['%'.$needle.'%']));
+            })
+            ->pluck('id');
+
+        return collect($indexedIds)->merge($databaseIds)->unique()->values()->all();
     }
 }

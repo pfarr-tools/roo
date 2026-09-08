@@ -76,11 +76,11 @@ class LessonWorkspaceController extends Controller
         $initialCompetency = null;
         $initialEducationPlanId = null;
         if (! $task && $request->filled('education_plan_competency_id')) {
-            $candidate = $scheduleSlot->scheduledLesson?->lesson?->competencies()
-                ->with(['educationPlanCompetency.variants', 'educationPlanCompetency.area.version'])
-                ->where('education_plan_competency_id', $request->integer('education_plan_competency_id'))
+            $candidate = $scheduleSlot->scheduledLesson?->lesson?->educationPlanCompetencies()
+                ->with(['variants', 'area.version'])
+                ->where('education_plan_competencies.id', $request->integer('education_plan_competency_id'))
                 ->first();
-            $educationPlanCompetency = $candidate?->educationPlanCompetency;
+            $educationPlanCompetency = $candidate;
             $initialEducationPlanId = $educationPlanCompetency?->area?->version?->education_plan_id;
             if ($educationPlanCompetency && (! $request->filled('education_plan_id') || (int) $request->input('education_plan_id') === $initialEducationPlanId)) {
                 $initialCompetency = $educationPlanCompetency->only(['id', 'external_identifier', 'number', 'text', 'is_active', 'position']);
@@ -158,7 +158,9 @@ class LessonWorkspaceController extends Controller
             'levels.*' => ['in:G,M,E'],
         ]);
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedDrawingContent($request, $data['task_type']));
-        if ($data['task_type'] === 'cloze') $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        if ($data['task_type'] === 'cloze') {
+            $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        }
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedClozeFields($request, $data['task_type']));
         $cloze = $this->normalizedCloze($data['task_type'], $data['content'] ?? []);
         $data['content'] = array_replace($data['content'] ?? [], $cloze['content']);
@@ -189,7 +191,7 @@ class LessonWorkspaceController extends Controller
         ];
         abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
         abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
-        $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id'], 'teaching_unit_competency_id' => null];
+        $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         $task = AssessmentTask::create($attributes);
         $task->expectations()->createMany($expectations);
         $task->load('expectations');
@@ -211,9 +213,11 @@ class LessonWorkspaceController extends Controller
         abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
         $expectations = $this->validatedExpectations($request);
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
-        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'teaching_unit_competency_id' => ['nullable', 'integer'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedDrawingContent($request, $data['task_type']));
-        if ($data['task_type'] === 'cloze') $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        if ($data['task_type'] === 'cloze') {
+            $data['content']['instruction'] = (string) $request->input('content.instruction', '');
+        }
         $data['content'] = array_replace($data['content'] ?? [], $this->validatedClozeFields($request, $data['task_type']));
         $cloze = $this->normalizedCloze($data['task_type'], $data['content'] ?? [], $assessmentTask->content ?? []);
         $data['content'] = array_replace($data['content'] ?? [], $cloze['content']);
@@ -238,7 +242,7 @@ class LessonWorkspaceController extends Controller
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
             abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
-            $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id'], 'teaching_unit_competency_id' => null];
+            $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         }
         $assessmentTask->update($attributes);
         $assessmentTask->expectations()->delete();
@@ -460,25 +464,23 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency.variants.level',
             'scheduledLesson.lesson.assessmentTasks.levels',
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
-            'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.area.version',
-            'scheduledLesson.lesson.unit.competencies.educationPlanCompetency.variants',
-            'scheduledLesson.lesson.unit.competencies.curriculumEducationPlanReference',
+            'scheduledLesson.lesson.unit.educationPlanCompetencies.area.version',
+            'scheduledLesson.lesson.unit.educationPlanCompetencies.variants',
             'scheduledLesson.lesson.phases.socialForm',
             'scheduledLesson.lesson.phases.resources',
             'scheduledLesson.lesson.phases.resourceLinks',
             'scheduledLesson.lesson.phases.materialItems',
             'scheduledLesson.lesson.phases.songs.song:id,title,author,composer,copyright_notice',
             'scheduledLesson.lesson.phases.songs.parts',
-            'scheduledLesson.lesson.competencies.educationPlanCompetency.area.version',
-            'scheduledLesson.lesson.competencies.educationPlanCompetency.variants',
-            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference',
-            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference.educationPlanCompetency.area',
-            'scheduledLesson.lesson.competencies.curriculumEducationPlanReference.educationPlanCompetency.variants',
+            'scheduledLesson.lesson.educationPlanCompetencies.area.version',
+            'scheduledLesson.lesson.educationPlanCompetencies.variants',
         ]);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
         abort_unless($lesson, 404, 'Für diesen Termin ist keine Unterrichtsstunde eingeplant.');
-        $lesson->unit->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
-        $lesson->competencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        $lesson->unit->educationPlanCompetencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        $lesson->educationPlanCompetencies->each(fn ($competency) => $competency->setAttribute('competency_presentation', $competencyResolver->present($competency)));
+        $lesson->unit->setRelation('competencies', $lesson->unit->educationPlanCompetencies);
+        $lesson->setRelation('competencies', $lesson->educationPlanCompetencies);
         $lesson->resources->each(function ($resource) use ($lesson, $inspector): void {
             if ($resource->page_count === null && strtolower(pathinfo($resource->original_name, PATHINFO_EXTENSION)) === 'wscdoc') {
                 $resource->page_count = $inspector->pageCount(Storage::disk('local')->path($resource->storage_path));
@@ -521,9 +523,9 @@ class LessonWorkspaceController extends Controller
         }
         $targetCompetencies = $lesson->competencies
             ->map(fn ($competency) => $competencyResolver->present($competency) + [
-                'education_plan_competency_id' => $competency->education_plan_competency_id,
-                'education_plan_id' => $competency->educationPlanCompetency?->area?->version?->education_plan_id,
-                'source_identifier' => $competency->educationPlanCompetency?->external_identifier,
+                'education_plan_competency_id' => $competency->id,
+                'education_plan_id' => $competency->area?->version?->education_plan_id,
+                'source_identifier' => $competency->external_identifier,
             ])
             ->groupBy('kind')
             ->map(fn ($competencies) => $competencies->values())
@@ -557,7 +559,7 @@ class LessonWorkspaceController extends Controller
             'observationTypes' => $observationTypes,
             'attendanceRecords' => $scheduledLesson->attendanceRecords()->get(['student_id', 'status', 'note']),
             'observations' => $scheduledLesson->observations()->get(['student_id', 'observation_type_id', 'note']),
-            'competenceEvidences' => $scheduledLesson->competenceEvidences()->get(['student_id', 'teaching_unit_competency_id', 'custom_process_competence_id', 'scale', 'custom_scale_level', 'custom_scale_status', 'note']),
+            'competenceEvidences' => $scheduledLesson->competenceEvidences()->get(['student_id', 'education_plan_competency_id', 'custom_process_competence_id', 'scale', 'custom_scale_level', 'custom_scale_status', 'note']),
         ]);
     }
 
@@ -586,7 +588,7 @@ class LessonWorkspaceController extends Controller
         $studentIds = collect($data['students'])->pluck('student_id');
         abort_unless($studentIds->unique()->count() === $studentIds->count() && $studentIds->diff($students)->isEmpty(), 422);
         $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->pluck('id');
-        $competencyIds = $scheduledLesson->lesson->competencies()->pluck('teaching_unit_competencies.id');
+        $competencyIds = $scheduledLesson->lesson->educationPlanCompetencies()->pluck('education_plan_competencies.id');
         $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
         foreach ($data['students'] as $student) {
             foreach ($student['evidences'] ?? [] as $evidence) {
@@ -613,7 +615,7 @@ class LessonWorkspaceController extends Controller
                 CompetenceEvidence::where('scheduled_lesson_id', $scheduledLesson->id)->where('student_id', $student['student_id'])->delete();
                 foreach ($student['evidences'] ?? [] as $evidence) {
                     if (filled($evidence['competency_id'] ?? null) && $competencyIds->contains($evidence['competency_id'])) {
-                        CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'teaching_unit_competency_id' => $evidence['competency_id'], 'scale' => $evidence['scale'] ?? null, 'note' => $evidence['note'] ?? null]);
+                        CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'education_plan_competency_id' => $evidence['competency_id'], 'scale' => $evidence['scale'] ?? null, 'note' => $evidence['note'] ?? null]);
                     } elseif (filled($evidence['custom_process_competence_id'] ?? null)) {
                         CompetenceEvidence::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student['student_id'], 'custom_process_competence_id' => $evidence['custom_process_competence_id'], 'custom_scale_level' => $evidence['custom_scale_level'] ?? null, 'custom_scale_status' => $evidence['custom_scale_status'] ?? null, 'note' => $evidence['note'] ?? null]);
                     }
@@ -657,7 +659,7 @@ class LessonWorkspaceController extends Controller
             'custom_scale_level' => ['nullable', 'integer'],
             'custom_scale_status' => ['nullable', 'in:ne'],
         ]);
-        $competencies = $scheduledLesson->lesson->competencies()->get(['teaching_unit_competencies.id']);
+        $competencies = $scheduledLesson->lesson->educationPlanCompetencies()->get(['education_plan_competencies.id']);
         $customCompetences = $group->grading_model === 'observation_scales' ? $group->school->customProcessCompetences()->where('is_active', true)->get(['id']) : collect();
         $includeCustomCompetences = $customCompetences->isNotEmpty();
         if ($includeCustomCompetences) {
@@ -670,7 +672,7 @@ class LessonWorkspaceController extends Controller
             $students = $group->students()->whereNotIn('students.id', $absentStudentIds)->get(['students.id']);
             foreach ($students as $student) {
                 foreach ($competencies as $competency) {
-                    $evidence = CompetenceEvidence::firstOrNew(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'teaching_unit_competency_id' => $competency->id]);
+                    $evidence = CompetenceEvidence::firstOrNew(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'education_plan_competency_id' => $competency->id]);
                     if (! filled($evidence->scale)) {
                         $evidence->scale = (string) $data['scale'];
                         $evidence->save();
@@ -703,7 +705,7 @@ class LessonWorkspaceController extends Controller
     {
         $scheduledLesson = $scheduleSlot->scheduledLesson;
         $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', request()->user()->organization_id))->pluck('id');
-        $competencyIds = $scheduledLesson->lesson->competencies()->pluck('teaching_unit_competencies.id');
+        $competencyIds = $scheduledLesson->lesson->educationPlanCompetencies()->pluck('education_plan_competencies.id');
         $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
         foreach ($data['evidences'] ?? [] as $evidence) {
             $hasImported = filled($evidence['competency_id'] ?? null);
@@ -728,7 +730,7 @@ class LessonWorkspaceController extends Controller
             foreach ($data['evidences'] ?? [] as $evidence) {
                 $attributes = ['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id];
                 if (filled($evidence['competency_id'] ?? null) && $competencyIds->contains($evidence['competency_id'])) {
-                    $attributes['teaching_unit_competency_id'] = $evidence['competency_id'];
+                    $attributes['education_plan_competency_id'] = $evidence['competency_id'];
                 } elseif (filled($evidence['custom_process_competence_id'] ?? null)) {
                     $attributes['custom_process_competence_id'] = $evidence['custom_process_competence_id'];
                 } else {
@@ -768,6 +770,7 @@ class LessonWorkspaceController extends Controller
         $scheduledLesson->update($request->validated());
 
         $message = 'Durchführung wurde gespeichert.';
+
         return $request->expectsJson() ? response()->json(['message' => $message, 'status' => $scheduledLesson->status, 'actual_on' => $scheduledLesson->actual_on, 'execution_notes' => $scheduledLesson->execution_notes]) : back()->with('success', $message);
     }
 

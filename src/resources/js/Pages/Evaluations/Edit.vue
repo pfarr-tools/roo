@@ -17,7 +17,7 @@ const scaleLabels = computed(() => observationScaleLabels(props.customProcessCom
 const standardScaleLabels = [0, 1, 2, 3, 4, 5]
 function selectedScale(competence) { return form.observation_scales.find(scale => scale.custom_process_competence_id === competence.id) }
 function averageFor(competence) { return props.competenceAverages.find(average => average.custom_process_competence_id === competence.id) }
-function standardAverageFor(competence) { return props.competenceAverages.find(average => average.teaching_unit_competency_id === competence.id) }
+function standardAverageFor(competence) { return props.competenceAverages.find(average => average.education_plan_competency_id === competence.id) }
 function gradeForPercentage(percentage) { if (percentage === null || percentage === undefined) return null; const grade = ['6', '6+', '5,5', '5-', '5', '5+', '4,5', '4-', '4', '4+', '3,5', '3-', '3', '3+', '2,5', '2-', '2', '2+', '1,5', '1-', '1'][Math.round(Math.max(0, Math.min(100, percentage)) / 5)]; return props.evaluation.period?.whole_grades ? String(Math.round(Number(grade.replace(',', '.').replace(/[+-]$/, '')))) : grade }
 function finalGradePercentage() { const active = gradeComponentResults.value.filter(component => component.percentage !== null && component.percentage !== undefined); const weight = active.reduce((sum, component) => sum + component.weight, 0); return weight ? Math.round(active.reduce((sum, component) => sum + component.percentage * component.weight, 0) / weight) : null }
 function selectedCompetenceSetting(competence) { return form.competence_ratings.find(rating => rating.education_plan_competency_id === competenceKey(competence)) }

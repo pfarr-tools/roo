@@ -61,7 +61,7 @@ const assessmentTaskDescription = task => {
     const competency = task.education_plan_competency || task.educationPlanCompetency
     const rawIdentifier = competency?.external_identifier
     const identifier = rawIdentifier ? rawIdentifier.replace(/^(\d+\.\d+\.\d+)\.(\d+)$/, '$1 ($2)') : competency?.number
-    return [identifier || (task.teaching_unit_competency_id ? `Kompetenz ${task.teaching_unit_competency_id}` : ''), (task.levels ?? []).map(level => level.level || level).filter(Boolean).join(', ')].filter(Boolean).join(' · ')
+    return [identifier || (task.education_plan_competency_id ? `Kompetenz ${task.education_plan_competency_id}` : ''), (task.levels ?? []).map(level => level.level || level).filter(Boolean).join(', ')].filter(Boolean).join(' · ')
 }
 
 function uploadFile() {

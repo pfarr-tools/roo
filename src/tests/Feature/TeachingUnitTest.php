@@ -20,9 +20,9 @@ it('lists canonical teaching units and imports a recursive independent copy', fu
     $sourceGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $targetGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4b']);
     $source = $sourceGroup->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Schöpfung bewahren', 'position' => 1, 'notes' => 'Quelle']);
-    $competency = $source->competencies()->create(['local_wording' => 'Verantwortung übernehmen']);
+    $competency = officialCompetency($source, 'Verantwortung übernehmen');
     $lesson = $source->lessons()->create(['title' => 'Einstieg', 'position' => 1, 'duration' => 1]);
-    $lesson->competencies()->attach($competency->id);
+    $lesson->educationPlanCompetencies()->attach($competency->id);
     $lesson->phases()->create(['title' => 'Gespräch', 'position' => 1]);
 
     $this->actingAs($user)->get('/unterrichtseinheiten')->assertInertia(fn ($page) => $page->component('TeachingUnits/Index')->has('units', 1));
@@ -32,7 +32,7 @@ it('lists canonical teaching units and imports a recursive independent copy', fu
     expect($copy->copied_from_id)->toBe($source->id)
         ->and($copy->lessons)->toHaveCount(1)
         ->and($copy->lessons->first()->phases)->toHaveCount(1)
-        ->and($copy->lessons->first()->competencies)->toHaveCount(1);
+        ->and($copy->lessons->first()->educationPlanCompetencies)->toHaveCount(1);
 
     $source->update(['title' => 'Geänderte Quelle']);
     expect($copy->fresh()->title)->toBe('Schöpfung bewahren');

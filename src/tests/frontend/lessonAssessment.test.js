@@ -48,7 +48,7 @@ describe('LessonAssessmentTab', () => {
                 label: '3.2.1 (3) – Kompetenz',
             }],
             assessmentTasks: [
-                { id: 1, title: 'Aufgabe über direkte Kompetenz', teaching_unit_competency_id: 101 },
+                { id: 1, title: 'Aufgabe über direkte Kompetenz', education_plan_competency_id: 55 },
                 { id: 2, title: 'Aufgabe über Bildungsplan-ID', education_plan_competency_id: 55 },
                 { id: 3, title: 'Aufgabe über Kompetenzkennung', competency_identifier: '3.2.1.3' },
             ],
@@ -86,7 +86,7 @@ describe('LessonAssessmentTab', () => {
     })
 
     it('assigns a library task with a small axios request and updates the list locally', async () => {
-        axiosPost.mockResolvedValue({ data: { task: { id: 7, title: 'Bibliotheksaufgabe', max_points: 4, teaching_unit_competency_id: 101 } } })
+        axiosPost.mockResolvedValue({ data: { task: { id: 7, title: 'Bibliotheksaufgabe', max_points: 4, education_plan_competency_id: 55 } } })
         const { root, unmount } = mount({
             scheduleSlotId: 81,
             groupId: 1,

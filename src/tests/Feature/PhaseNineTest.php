@@ -124,15 +124,15 @@ it('bewertet mit alle bewerten nur leere Felder anwesender Schüler:innen', func
     $fixture = observationFixture();
     $otherStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
     $fixture['group']->students()->attach($otherStudent->id);
-    $lessonCompetency = $fixture['scheduledLesson']->lesson->unit->competencies()->create(['education_plan_competency_id' => null, 'local_wording' => 'Erklärt religiöse Fragen']);
-    $fixture['scheduledLesson']->lesson->competencies()->attach($lessonCompetency->id);
+    $lessonCompetency = officialCompetency($fixture['scheduledLesson']->lesson->unit, 'Erklärt religiöse Fragen');
+    $fixture['scheduledLesson']->lesson->educationPlanCompetencies()->attach($lessonCompetency->id);
     AttendanceRecord::create(['scheduled_lesson_id' => $fixture['scheduledLesson']->id, 'student_id' => $otherStudent->id, 'status' => 'absent']);
 
     $this->actingAs($fixture['user'])->post("/unterricht/{$fixture['slot']->id}/beobachtungen/bewerten", [
         'scale' => 4,
     ])->assertRedirect();
 
-    expect(CompetenceEvidence::where('student_id', $fixture['student']->id)->where('teaching_unit_competency_id', $lessonCompetency->id)->value('scale'))->toBe('4')
+    expect(CompetenceEvidence::where('student_id', $fixture['student']->id)->where('education_plan_competency_id', $lessonCompetency->id)->value('scale'))->toBe('4')
         ->and(CompetenceEvidence::where('student_id', $otherStudent->id)->exists())->toBeFalse();
 });
 

@@ -38,8 +38,8 @@ it('zeigt die Schülerin im gewählten Schuljahr mit Beobachtungen, LSE-Ergebnis
     $scheduledLesson = ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
     $type = ObservationType::create(['organization_id' => $organization->id, 'label' => 'Beteiligt']);
     Observation::create(['scheduled_lesson_id' => $scheduledLesson->id, 'student_id' => $student->id, 'observation_type_id' => $type->id, 'note' => 'Gute Mitarbeit.']);
-    $competency = $unit->competencies()->create(['local_wording' => 'Kann Gleichnisse erklären']);
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'teaching_unit_competency_id' => $competency->id, 'title' => 'Gleichnis erklären', 'task_type' => 'free_text', 'max_points' => 10]);
+    $competency = officialCompetency($unit, 'Kann Gleichnisse erklären');
+    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Gleichnis erklären', 'task_type' => 'free_text', 'max_points' => 10]);
     $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gleichnisse', 'assessed_on' => '2026-11-01']);
     $assessment->tasks()->attach($task->id);
     StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 8, 'level' => 'M']);

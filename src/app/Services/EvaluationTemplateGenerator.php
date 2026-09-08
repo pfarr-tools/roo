@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\EducationPlanCompetency;
 use App\Models\ReportPeriod;
 use App\Models\Student;
-use App\Models\TeachingUnitCompetency;
 use Illuminate\Support\Collection;
 
 class EvaluationTemplateGenerator
@@ -15,8 +14,8 @@ class EvaluationTemplateGenerator
         $competencies = $this->competencies($period);
 
         $sentences = json_decode((string) file_get_contents(base_path('../data/bildungsplaene/Kompetenzsaetze.json')), true, 512, JSON_THROW_ON_ERROR);
-        $levels = $competencies->flatMap(function (TeachingUnitCompetency $competency): Collection {
-            $variants = $competency->educationPlanCompetency->variants;
+        $levels = $competencies->flatMap(function (EducationPlanCompetency $competency): Collection {
+            $variants = $competency->variants;
             $explicitLevels = $variants->pluck('level.external_identifier')->filter(fn ($level): bool => in_array($level, ['G', 'M', 'E'], true));
 
             return $explicitLevels->isNotEmpty() ? $explicitLevels : ($variants->count() === 3 ? collect(['G', 'M', 'E']) : collect());
@@ -113,25 +112,23 @@ class EvaluationTemplateGenerator
 
     private function competencies(ReportPeriod $period): Collection
     {
-        return TeachingUnitCompetency::query()
-            ->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $period->teaching_group_id))
-            ->whereHas('educationPlanCompetency.area', fn ($query) => $query->where('kind', 'content'))
-            ->whereHas('lessons.scheduledLessons.slot', fn ($query) => $query->whereBetween('date', [$period->starts_on, $period->ends_on]))
-            ->with(['unit:id,position', 'educationPlanCompetency.area.version.plan', 'educationPlanCompetency.variants.level', 'lessons.scheduledLessons.slot'])
+        return EducationPlanCompetency::query()
+            ->whereHas('area', fn ($query) => $query->where('kind', 'content'))
+            ->whereHas('lessons', fn ($query) => $query->whereHas('unit', fn ($unit) => $unit->where('teaching_group_id', $period->teaching_group_id))
+                ->whereHas('scheduledLessons.slot', fn ($slot) => $slot->whereBetween('date', [$period->starts_on, $period->ends_on])))
+            ->with(['area.version.plan', 'variants.level', 'lessons.unit:id,position', 'lessons.scheduledLessons.slot'])
             ->get()
-            ->sortBy(fn (TeachingUnitCompetency $competency): array => [
+            ->sortBy(fn (EducationPlanCompetency $competency): array => [
                 $competency->lessons->flatMap->scheduledLessons->map(fn ($scheduled) => (string) $scheduled->slot->date)->sort()->first() ?? '9999-12-31',
-                $competency->unit->position,
-                $competency->educationPlanCompetency->position,
+                $competency->lessons->map(fn ($lesson) => $lesson->unit?->position)->min() ?? PHP_INT_MAX,
+                $competency->position,
             ])
-            ->unique('education_plan_competency_id')
             ->values();
     }
 
     private function textFor(Collection $competencies, array $sentences, ?string $level = null): string
     {
-        return $competencies->map(function (TeachingUnitCompetency $competency) use ($sentences, $level): ?string {
-            $educationPlanCompetency = $competency->educationPlanCompetency;
+        return $competencies->map(function (EducationPlanCompetency $educationPlanCompetency) use ($sentences, $level): ?string {
             $planIdentifier = $educationPlanCompetency->area->version->plan->external_identifier;
             $identifier = $educationPlanCompetency->external_identifier;
             $keys = collect([$planIdentifier.'.'.$identifier.($level ? '.'.$level : ''), $identifier.($level ? '.'.$level : ''), $planIdentifier.'.'.$identifier, $identifier])->filter();

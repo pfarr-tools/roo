@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\EducationPlan;
+use App\Models\EducationPlanCompetenceArea;
+use App\Models\EducationPlanCompetency;
+use App\Models\EducationPlanVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +51,15 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function officialCompetency($unit, string $text)
+{
+    $plan = EducationPlan::create(['external_identifier' => 'TEST-'.uniqid(), 'subject' => 'Religion', 'title' => 'Testbildungsplan']);
+    $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '1', 'schema_version' => '1.0', 'title' => 'Testfassung', 'raw_payload' => []]);
+    $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '1.1', 'title' => 'Testbereich', 'position' => 1]);
+    $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '1.1.1', 'text' => $text, 'position' => 1]);
+    $unit->educationPlanCompetencies()->attach($competency->id);
+
+    return $competency;
 }

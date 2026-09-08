@@ -2,8 +2,11 @@
 
 use App\Models\AssessmentTask;
 use App\Services\AssessmentEvaluation\SentenceBuilderTaskEvaluator;
+use Tests\TestCase;
 
-function sentenceBuilderTask(array $content = [], ?string $solution = 'Die Katze schläft') : AssessmentTask
+uses(TestCase::class);
+
+function sentenceBuilderTask(array $content = [], ?string $solution = 'Die Katze schläft'): AssessmentTask
 {
     return new AssessmentTask([
         'task_type' => 'sentence_builder',
