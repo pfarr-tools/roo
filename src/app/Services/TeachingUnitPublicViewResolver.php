@@ -27,8 +27,7 @@ final class TeachingUnitPublicViewResolver
         ]);
         $creator = $unit->creator;
         if ($creator === null) {
-            $organizationUsers = User::query()->where('organization_id', $unit->organization_id)->limit(2)->get();
-            $creator = $organizationUsers->count() === 1 ? $organizationUsers->first() : null;
+            $creator = User::query()->find($unit->user_id);
         }
 
         $scheduledLessons = $unit->lessons

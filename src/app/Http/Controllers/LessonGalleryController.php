@@ -33,7 +33,7 @@ class LessonGalleryController extends Controller
                     'local',
                 );
                 $resource = ResourceReference::create([
-                    'organization_id' => $request->user()->organization_id,
+                    'user_id' => $request->user()->id,
                     'original_name' => $image->getClientOriginalName(),
                     'storage_path' => $path,
                     'mime_type' => $image->getMimeType(),
@@ -70,6 +70,6 @@ class LessonGalleryController extends Controller
     private function authorizeLesson(Request $request, TeachingGroup $teachingGroup, Lesson $lesson): void
     {
         $this->authorize('update', $teachingGroup);
-        abort_unless($lesson->unit()->where('teaching_group_id', $teachingGroup->id)->where('organization_id', $request->user()->organization_id)->exists(), 404);
+        abort_unless($lesson->unit()->where('teaching_group_id', $teachingGroup->id)->where('user_id', $request->user()->id)->exists(), 404);
     }
 }

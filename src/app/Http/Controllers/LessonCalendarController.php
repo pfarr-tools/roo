@@ -13,7 +13,7 @@ class LessonCalendarController extends Controller
     {
         $timezone = (string) config('app.timezone', 'Europe/Berlin');
         $lessons = ScheduledLesson::query()
-            ->whereHas('slot.group', fn ($query) => $query->where('organization_id', $user->organization_id))
+            ->whereHas('slot.group', fn ($query) => $query->where('user_id', $user->id))
             ->with(['slot.group.school:id,name', 'lesson.unit:id,title'])
             ->whereHas('slot')
             ->orderBy('id')

@@ -2,7 +2,6 @@
 
 use App\Models\Curriculum;
 use App\Models\Lesson;
-use App\Models\Organization;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
@@ -26,15 +25,13 @@ beforeEach(function () {
 
 function phaseFourUser(): User
 {
-    $organization = Organization::create(['name' => 'Phase 4 Organisation']);
-
-    return User::factory()->create(['organization_id' => $organization->id]);
+    return User::factory()->create();
 }
 
 function phaseFourSchoolYear(User $user): array
 {
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule Phase 4']);
-    $year = SchoolYear::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule Phase 4']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin']);
 
     return [$school, $year];
 }
@@ -45,7 +42,7 @@ it('creates an empty teaching group with multiple grade levels', function () {
 
     $this->actingAs($user)->post('/unterrichtsgruppen', ['school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2ab', 'grade_levels' => ['2', '3']])->assertRedirect();
 
-    $this->assertDatabaseHas('teaching_groups', ['organization_id' => $user->organization_id, 'name' => '2ab']);
+    $this->assertDatabaseHas('teaching_groups', ['user_id' => $user->id, 'name' => '2ab']);
     $this->assertDatabaseCount('teaching_group_memberships', 0);
     $this->assertDatabaseHas('teaching_group_grade_levels', ['grade_level' => '2']);
     $this->assertDatabaseHas('teaching_group_grade_levels', ['grade_level' => '3']);
@@ -69,7 +66,7 @@ it('stores the denomination when creating a teaching group', function () {
 it('stores whether a student receives grades and their pronoun set when creating', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Notengruppe']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Notengruppe']);
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/schuelerinnen", [
         'school_id' => $school->id,
@@ -92,7 +89,7 @@ it('defaults new students to no grades and the er pronoun set', function () {
     [$school] = phaseFourSchoolYear($user);
 
     $student = Student::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Mia',
         'last_name' => 'Beispiel',
@@ -106,9 +103,9 @@ it('defaults new students to no grades and the er pronoun set', function () {
 it('updates a students grading flag and pronoun set', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Updategruppe']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Updategruppe']);
     $student = Student::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Mia',
         'last_name' => 'Beispiel',
@@ -130,7 +127,7 @@ it('updates a students grading flag and pronoun set', function () {
 it('rejects unsupported student pronoun sets', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Validierungsgruppe']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Validierungsgruppe']);
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/schuelerinnen", [
         'school_id' => $school->id,
@@ -145,7 +142,7 @@ it('allows editing and deleting organization students from the global student ro
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
     $student = Student::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Mia',
         'last_name' => 'Beispiel',
@@ -166,11 +163,11 @@ it('allows editing and deleting organization students from the global student ro
 it('shows the organization-wide searchable and filterable student list', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Ziegler', 'class_name' => '2a']);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Ben', 'last_name' => 'Albrecht', 'class_name' => '2b']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Ziegler', 'class_name' => '2a']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Ben', 'last_name' => 'Albrecht', 'class_name' => '2b']);
     $otherUser = phaseFourUser();
     [$otherSchool] = phaseFourSchoolYear($otherUser);
-    Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
+    Student::create(['user_id' => $otherUser->id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
     $this->actingAs($user)->get('/schueler:innen?q=Anna&class_name=2a&sort=first_name&direction=desc')->assertSuccessful()->assertInertia(fn ($page) => $page
         ->where('filters.q', 'Anna')
@@ -185,7 +182,7 @@ it('searches all global search record types case insensitively', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
     Student::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Simon',
         'last_name' => 'Schäberle',
@@ -201,9 +198,9 @@ it('searches all global search record types case insensitively', function () {
 it('filters students by the numeric grade level prefix', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Sieben', 'class_name' => '7a']);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Ben', 'last_name' => 'Sieben', 'class_name' => '7b']);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Clara', 'last_name' => 'Acht', 'class_name' => '8a']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Sieben', 'class_name' => '7a']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Ben', 'last_name' => 'Sieben', 'class_name' => '7b']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Clara', 'last_name' => 'Acht', 'class_name' => '8a']);
 
     $this->actingAs($user)->get('/schueler:innen?grade_level=7')->assertSuccessful()->assertInertia(fn ($page) => $page
         ->where('filters.grade_level', '7')
@@ -212,44 +209,20 @@ it('filters students by the numeric grade level prefix', function () {
         ->where('students.data.1.class_name', '7b'));
 });
 
-it('indexes only the students minimal search fields and includes teaching groups', function () {
-    $user = phaseFourUser();
-    [$school, $year] = phaseFourSchoolYear($user);
-    $group = TeachingGroup::create([
-        'organization_id' => $user->organization_id,
-        'school_id' => $school->id,
-        'school_year_id' => $year->id,
-        'name' => 'Suchgruppe 2ab',
-    ]);
-    $student = Student::create([
-        'organization_id' => $user->organization_id,
-        'school_id' => $school->id,
-        'first_name' => 'Mina',
-        'last_name' => 'Beispiel',
-        'class_name' => '2a',
-        'notes' => 'Vertrauliche Beobachtung',
-    ]);
-    $group->students()->attach($student->id);
-    $searchable = $student->fresh()->toSearchableArray();
-
-    expect($searchable['teaching_groups'])->toContain('Suchgruppe 2ab')
-        ->and($searchable['search_text'])->toContain('Mina')
-        ->and($searchable['search_text'])->toContain('Beispiel')
-        ->and($searchable['search_text'])->toContain('2a')
-        ->and($searchable['search_text'])->toContain('Suchgruppe 2ab')
-        ->and($searchable)->not->toHaveKey('notes');
+it('keeps student records out of the global search index', function () {
+    expect(class_uses_recursive(Student::class))->not->toContain(Laravel\Scout\Searchable::class);
 });
 
 it('exports only the organizations students with their school years', function () {
     $user = phaseFourUser();
     [$school, $year] = phaseFourSchoolYear($user);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Exportgruppe']);
-    $student = Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Export', 'class_name' => '2a']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Exportgruppe']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Export', 'class_name' => '2a']);
     $group->students()->attach($student->id);
-    Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Nicht', 'last_name' => 'Export', 'class_name' => '3a']);
+    Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Nicht', 'last_name' => 'Export', 'class_name' => '3a']);
     $otherUser = phaseFourUser();
     [$otherSchool] = phaseFourSchoolYear($otherUser);
-    Student::create(['organization_id' => $otherUser->organization_id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
+    Student::create(['user_id' => $otherUser->id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
     $response = $this->actingAs($user)->get('/schueler:innen/export?class_name=2a');
     ob_start();
@@ -305,7 +278,7 @@ it('creates a student on a group page and assigns several existing students at o
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/schuelerinnen", ['school_id' => $school->id, 'first_name' => 'Neu', 'last_name' => 'Gruppe', 'class_name' => '2a'])->assertRedirect();
     expect($group->fresh()->students)->toHaveCount(1);
 
-    $students = collect(['A', 'B'])->map(fn (string $lastName) => Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Mehrfach', 'last_name' => $lastName, 'class_name' => '2b']));
+    $students = collect(['A', 'B'])->map(fn (string $lastName) => Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mehrfach', 'last_name' => $lastName, 'class_name' => '2b']));
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/mitglieder", ['student_ids' => $students->pluck('id')->all()])->assertRedirect();
     expect($group->fresh()->students)->toHaveCount(3);
 });
@@ -313,7 +286,7 @@ it('creates a student on a group page and assigns several existing students at o
 it('allows editing and deleting a student only within the organization', function () {
     $user = phaseFourUser();
     [$school] = phaseFourSchoolYear($user);
-    $student = Student::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'A', 'class_name' => '2a']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'A', 'class_name' => '2a']);
 
     $this->actingAs($user)->put("/schuelerinnen/{$student->id}", ['first_name' => 'Anja', 'last_name' => 'A', 'class_name' => '2b'])->assertRedirect();
     expect($student->fresh()->first_name)->toBe('Anja')->and($student->fresh()->class_name)->toBe('2b');
@@ -377,9 +350,9 @@ it('shows the selected groups in the weekly dashboard', function () {
     [$school, $year] = phaseFourSchoolYear($user);
     $period = SchoolPeriod::create(['school_id' => $school->id, 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $school->update(['short_name' => 'DGS']);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Dashboardgruppe']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Dashboardgruppe']);
     DB::table('teaching_group_periods')->insert(['teaching_group_id' => $group->id, 'school_period_id' => $period->id, 'weekday' => 2]);
-    $unit = TeachingUnit::create(['organization_id' => $user->organization_id, 'teaching_group_id' => $group->id, 'title' => 'Schöpfung', 'position' => 1]);
+    $unit = TeachingUnit::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'Schöpfung', 'position' => 1]);
     $lesson = Lesson::create(['teaching_unit_id' => $unit->id, 'title' => 'Die erste Stunde', 'duration' => 1, 'position' => 1]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-15', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => 'prepared']);

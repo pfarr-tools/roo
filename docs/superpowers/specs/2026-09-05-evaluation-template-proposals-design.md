@@ -57,4 +57,4 @@ Unterrichtsgruppe.
 - Zeitraum-Anlage bleibt für andere Bewertungsmodelle funktionsfähig.
 - Bei einem differenzierten Plan werden die Niveau-Vorlagen korrekt getrennt.
 - Platzhalter- und Leerzeichenregeln sind automatisiert getestet.
-- Editieren, Zurücksetzen, Speichern und Mandant-/Gruppenscope sind getestet.
+- Editieren, Zurücksetzen, Speichern und Benutzerkonto-/Gruppenscope sind getestet.

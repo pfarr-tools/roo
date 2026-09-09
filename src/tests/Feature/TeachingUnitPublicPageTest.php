@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\ResourceReference;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -14,19 +13,18 @@ uses(RefreshDatabase::class);
 
 function publicUnitFixture(): array
 {
-    $organization = Organization::create(['name' => 'Öffentliche Seite Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id, 'name' => 'Lehrkraft Beispiel', 'email' => 'lehrkraft@example.test', 'public_phone' => '+49 170 1234567']);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Öffentliche Schule', 'messenger_name' => 'Untis']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'title' => 'Wasser des Lebens', 'position' => 1, 'introduction_text' => 'Eine Einführung für Familien.']);
+    $user = User::factory()->create(['name' => 'Lehrkraft Beispiel', 'email' => 'lehrkraft@example.test', 'public_phone' => '+49 170 1234567']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Öffentliche Schule', 'messenger_name' => 'Untis']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'created_by_user_id' => $user->id, 'title' => 'Wasser des Lebens', 'position' => 1, 'introduction_text' => 'Eine Einführung für Familien.']);
     $lesson = $unit->lessons()->create(['title' => 'Wasserbilder', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
-    $resource = ResourceReference::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/'.$unit->id.'/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'security_status' => 'approved']);
+    $resource = ResourceReference::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/'.$unit->id.'/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'security_status' => 'approved']);
     Storage::disk('local')->put($resource->storage_path, 'PDF-Inhalt');
     $phase->resources()->attach($resource, ['publication_status' => 'shared_immediately']);
 
-    return compact('organization', 'user', 'school', 'year', 'group', 'unit', 'lesson', 'phase', 'resource');
+    return compact('user', 'school', 'year', 'group', 'unit', 'lesson', 'phase', 'resource');
 }
 
 it('renders the current public unit page without authentication', function () {
@@ -60,12 +58,11 @@ it('rejects an invalid signature and a revoked public file download', function (
 });
 
 it('uses the sole organization user for contacts on legacy units without a creator', function () {
-    $organization = Organization::create(['name' => 'Legacy Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id, 'email' => 'legacy@example.test', 'public_phone' => '+49 170 7654321']);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Legacy Schule', 'messenger_name' => 'Untis']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Alte Einheit', 'position' => 1]);
+    $user = User::factory()->create(['email' => 'legacy@example.test', 'public_phone' => '+49 170 7654321']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Legacy Schule', 'messenger_name' => 'Untis']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Alte Einheit', 'position' => 1]);
 
     $this->get(URL::signedRoute('public.teaching-units.show', ['teachingUnit' => $unit]))
         ->assertOk()

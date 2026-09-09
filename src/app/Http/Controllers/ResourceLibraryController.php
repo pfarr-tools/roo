@@ -41,7 +41,7 @@ class ResourceLibraryController extends Controller
             'images' => [],
             'imageLibrary' => $this->images($request)->getData(true),
             'imageUploadUrl' => route('resources.library.images.store'),
-            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
+            'educationPlans' => EducationPlan::whereNull('user_id')->orWhere('user_id', $request->user()->id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
         ]);
     }
 
@@ -72,7 +72,7 @@ class ResourceLibraryController extends Controller
             'task' => $task,
             'imageLibrary' => $this->images($request)->getData(true),
             'imageUploadUrl' => route('resources.library.images.store'),
-            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
+            'educationPlans' => EducationPlan::whereNull('user_id')->orWhere('user_id', $request->user()->id)->orderBy('title')->get(['id', 'title', 'external_identifier']),
         ]);
     }
 
@@ -132,7 +132,7 @@ class ResourceLibraryController extends Controller
     public function assign(Request $request, TeachingGroup $teachingGroup, ResourceReference $resource): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $teachingGroup);
-        abort_unless($resource->organization_id === $request->user()->organization_id, 404);
+        abort_unless($resource->user_id === $request->user()->id, 404);
         $data = $request->validate(['target_type' => ['required', 'in:unit,lesson,phase'], 'target_id' => ['required', 'integer']]);
         if ($data['target_type'] === 'phase') {
             $target = $this->phaseTarget($teachingGroup, $data['target_id']);
@@ -244,27 +244,27 @@ class ResourceLibraryController extends Controller
         $type = (string) $request->query('type', 'all');
         $sort = (string) $request->query('sort', 'name');
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
-        $organizationId = $request->user()->organization_id;
+        $userId = $request->user()->id;
         if ($teachingGroup) {
             $this->authorize('view', $teachingGroup);
-            abort_unless($teachingGroup->organization_id === $organizationId, 404);
+            abort_unless($teachingGroup->user_id === $userId, 404);
         }
         $matches = collect();
 
         if ($type === 'all' || $type === 'file') {
-            $matches = $matches->concat(ResourceReference::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where('original_name', 'like', "%{$query}%"))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'copyrights', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
+            $matches = $matches->concat(ResourceReference::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where('original_name', 'like', "%{$query}%"))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'copyrights', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
         }
         if ($type === 'all' || $type === 'resource') {
-            $matches = $matches->concat(ResourceLink::where('organization_id', $organizationId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('title', 'like', "%{$query}%")->orWhere('url', 'like', "%{$query}%")))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
+            $matches = $matches->concat(ResourceLink::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('title', 'like', "%{$query}%")->orWhere('url', 'like', "%{$query}%")))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
         }
         if ($type === 'all' || $type === 'material') {
-            $matches = $matches->concat(MaterialItem::where('organization_id', $organizationId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
+            $matches = $matches->concat(MaterialItem::where('user_id', $userId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
         }
         if ($type === 'all' || $type === 'song') {
-            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with(['song:id,organization_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
+            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('user_id')->orWhere('user_id', $userId))->with(['song:id,user_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
         if ($type === 'all' || $type === 'assessment-task') {
-            $matches = $matches->concat(AssessmentTask::where('organization_id', $organizationId)->with(['educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
+            $matches = $matches->concat(AssessmentTask::where('user_id', $userId)->with(['educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
         }
         if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
             $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
@@ -278,24 +278,24 @@ class ResourceLibraryController extends Controller
         }
 
         $items = $matches->sortBy(fn ($item) => Str::lower((string) ($item->getAttribute($sort) ?? $item->getAttribute('name') ?? $item->getAttribute('title') ?? $item->getAttribute('original_name'))), SORT_NATURAL, $direction === 'desc')->values()->map(fn ($item) => $this->present($item));
-        $totalCount = ResourceReference::where('organization_id', $organizationId)->count()
-            + ResourceLink::where('organization_id', $organizationId)->count()
-            + MaterialItem::where('organization_id', $organizationId)->count()
-            + SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('organization_id')->orWhere('organization_id', $organizationId))->count()
-            + AssessmentTask::where('organization_id', $organizationId)->count();
+        $totalCount = ResourceReference::where('user_id', $userId)->count()
+            + ResourceLink::where('user_id', $userId)->count()
+            + MaterialItem::where('user_id', $userId)->count()
+            + SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('user_id')->orWhere('user_id', $userId))->count()
+            + AssessmentTask::where('user_id', $userId)->count();
 
         return Inertia::render('Resources/Library', [
             'items' => $items,
             'filters' => ['q' => $query, 'type' => $type, 'sort' => $sort, 'direction' => $direction],
             'counts' => $matches->countBy('kind')->put('total', $totalCount),
-            'competencies' => $this->competencies($organizationId),
-            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $organizationId)->orderBy('title')->get(['id', 'title', 'external_identifier']),
+            'competencies' => $this->competencies($userId),
+            'educationPlans' => EducationPlan::whereNull('user_id')->orWhere('user_id', $userId)->orderBy('title')->get(['id', 'title', 'external_identifier']),
         ]);
     }
 
     public function educationPlanCompetencyPicker(Request $request, EducationPlan $educationPlan, CompetencyResolver $competencyResolver): JsonResponse
     {
-        abort_unless(is_null($educationPlan->organization_id) || $educationPlan->organization_id === $request->user()->organization_id, 404);
+        abort_unless(is_null($educationPlan->user_id) || $educationPlan->user_id === $request->user()->id, 404);
         $competencies = EducationPlanCompetency::whereHas('area.version', fn ($query) => $query->where('education_plan_id', $educationPlan->id))
             ->with(['area:id,kind,external_identifier,title', 'variants:id,education_plan_competency_id,education_plan_level_id,text,position', 'variants.level:id,label'])
             ->orderBy('external_identifier')->get(['id', 'education_plan_competence_area_id', 'external_identifier', 'number', 'text'])
@@ -315,7 +315,7 @@ class ResourceLibraryController extends Controller
         $data = $request->validate(['resource' => ['required', 'file', 'max:51200'], 'description' => ['nullable', 'string', 'max:1000'], 'copyrights' => ['nullable', 'string', 'max:1000']]);
         $file = $data['resource'];
         $path = $file->storeAs('library', Str::uuid().($file->getClientOriginalExtension() ? '.'.$file->getClientOriginalExtension() : ''), 'local');
-        ResourceReference::create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'description' => $data['description'] ?? null, 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'checksum' => hash_file('sha256', $file->getRealPath()), 'security_status' => 'pending', 'source' => 'user_upload', 'version' => 1]);
+        ResourceReference::create(['user_id' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'description' => $data['description'] ?? null, 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'checksum' => hash_file('sha256', $file->getRealPath()), 'security_status' => 'pending', 'source' => 'user_upload', 'version' => 1]);
 
         return back()->with('success', 'Datei wurde zur Bibliothek hinzugefügt.');
     }
@@ -336,7 +336,7 @@ class ResourceLibraryController extends Controller
             foreach ($data['files'] ?? [] as $file) {
                 $path = $file->storeAs('library', Str::uuid().($file->getClientOriginalExtension() ? '.'.$file->getClientOriginalExtension() : ''), 'local');
                 $items->push(ResourceReference::create([
-                    'organization_id' => $request->user()->organization_id,
+                    'user_id' => $request->user()->id,
                     'original_name' => $file->getClientOriginalName(),
                     'storage_path' => $path,
                     'mime_type' => $file->getMimeType(),
@@ -350,7 +350,7 @@ class ResourceLibraryController extends Controller
 
             foreach ($data['urls'] ?? [] as $url) {
                 $items->push(ResourceLink::create([
-                    'organization_id' => $request->user()->organization_id,
+                    'user_id' => $request->user()->id,
                     'title' => $url,
                     'url' => $url,
                 ]));
@@ -369,7 +369,7 @@ class ResourceLibraryController extends Controller
     public function images(Request $request): JsonResponse
     {
         return response()->json(ResourceReference::query()
-            ->where('organization_id', $request->user()->organization_id)
+            ->where('user_id', $request->user()->id)
             ->where('mime_type', 'like', 'image/%')
             ->orderBy('original_name')
             ->get(['id', 'original_name', 'mime_type', 'description', 'copyrights'])
@@ -388,7 +388,7 @@ class ResourceLibraryController extends Controller
         $file = $data['image'];
         $path = $file->storeAs('library', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local');
         $image = ResourceReference::create([
-            'organization_id' => $request->user()->organization_id,
+            'user_id' => $request->user()->id,
             'original_name' => $file->getClientOriginalName(),
             'storage_path' => $path,
             'mime_type' => $file->getMimeType(),
@@ -412,7 +412,7 @@ class ResourceLibraryController extends Controller
 
     public function storeResource(Request $request): RedirectResponse
     {
-        ResourceLink::create(['organization_id' => $request->user()->organization_id, ...$request->validate(['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']])]);
+        ResourceLink::create(['user_id' => $request->user()->id, ...$request->validate(['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']])]);
 
         return back()->with('success', 'Ressource wurde zur Bibliothek hinzugefügt.');
     }
@@ -422,7 +422,7 @@ class ResourceLibraryController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000'], 'image' => ['nullable', 'image', 'max:10240']]);
         $image = $data['image'] ?? null;
         unset($data['image']);
-        $item = MaterialItem::create(['organization_id' => $request->user()->organization_id, ...$data]);
+        $item = MaterialItem::create(['user_id' => $request->user()->id, ...$data]);
         if ($image) {
             $item->update(['image_path' => $image->store('material-items', 'local'), 'image_mime_type' => $image->getMimeType()]);
         }
@@ -459,13 +459,13 @@ class ResourceLibraryController extends Controller
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $checkboxContent = $request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? [];
         $data['content'] = ($data['content'] ?? []) + $checkboxContent + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
-        $attributes = ['organization_id' => $request->user()->organization_id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $data['task_type'] === 'sentence_builder' ? ($data['max_points'] ?? null) : ($expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null), 'level' => collect($data['levels'] ?? [])->first()];
+        $attributes = ['user_id' => $request->user()->id, 'title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $data['task_type'] === 'sentence_builder' ? ($data['max_points'] ?? null) : ($expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null), 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
-            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
             $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         } else {
-            $competency = EducationPlanCompetency::whereKey($data['competency_id'])->whereHas('teachingUnits', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->firstOrFail();
+            $competency = EducationPlanCompetency::whereKey($data['competency_id'])->whereHas('teachingUnits', fn ($query) => $query->where('user_id', $request->user()->id))->firstOrFail();
             $attributes['education_plan_competency_id'] = $competency->id;
             $attributes['education_plan_id'] = $competency->area?->version?->education_plan_id;
         }
@@ -493,9 +493,9 @@ class ResourceLibraryController extends Controller
 
         if ($kind === 'resource') {
             $attributes = $request->validate(['title' => ['required', 'string', 'max:255'], 'url' => ['required', 'url', 'max:2000'], 'description' => ['nullable', 'string', 'max:1000']]);
-            $item = ResourceLink::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $target instanceof Lesson ? $target->teaching_unit_id : $target->id, 'lesson_id' => $target instanceof Lesson ? $target->id : null]);
+            $item = ResourceLink::create($attributes + ['user_id' => $teachingGroup->user_id, 'teaching_unit_id' => $target instanceof Lesson ? $target->teaching_unit_id : $target->id, 'lesson_id' => $target instanceof Lesson ? $target->id : null]);
         } elseif ($kind === 'material') {
-            $item = MaterialItem::create(['organization_id' => $teachingGroup->organization_id, ...$request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']])]);
+            $item = MaterialItem::create(['user_id' => $teachingGroup->user_id, ...$request->validate(['name' => ['required', 'string', 'max:255'], 'material_number' => ['nullable', 'string', 'max:255'], 'storage_location' => ['nullable', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:1000']])]);
             $target->materialItems()->syncWithoutDetaching([$item->id]);
         } else {
             abort(404);
@@ -551,7 +551,7 @@ class ResourceLibraryController extends Controller
             $validated['content'] = ($validated['content'] ?? []) + ($request->validate(['content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.checkbox_scoring_mode' => ['nullable', Rule::in(['correct_states', 'correct_selections'])], 'content.options.*.id' => ['required_with:content.options', 'string', 'max:100']])['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         }
         if ($kind === 'assessment-task') {
-            abort_unless(EducationPlan::whereKey($validated['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlan::whereKey($validated['education_plan_id'])->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($validated['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $validated['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
             $item->update($validated + ['education_plan_competency_id' => null]);
             $item->expectations()->delete();
@@ -697,7 +697,7 @@ class ResourceLibraryController extends Controller
     {
         $ids = collect($images)->pluck('resource_id')->filter()->unique()->values();
         $resources = ResourceReference::query()
-            ->where('organization_id', $request->user()->organization_id)
+            ->where('user_id', $request->user()->id)
             ->whereIn('id', $ids)
             ->where('mime_type', 'like', 'image/%')
             ->pluck('id');
@@ -782,7 +782,7 @@ class ResourceLibraryController extends Controller
 
     public function uploadMaterialImage(Request $request, int $resource): RedirectResponse
     {
-        $item = MaterialItem::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        $item = MaterialItem::where('user_id', $request->user()->id)->findOrFail($resource);
         $data = $request->validate(['image' => ['required', 'image', 'max:10240']]);
         if ($item->image_path) {
             Storage::disk('local')->delete($item->image_path);
@@ -795,7 +795,7 @@ class ResourceLibraryController extends Controller
 
     public function materialImage(Request $request, int $resource)
     {
-        $item = MaterialItem::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        $item = MaterialItem::where('user_id', $request->user()->id)->findOrFail($resource);
         abort_unless($item->image_path && Storage::disk('local')->exists($item->image_path), 404);
 
         return response()->file(Storage::disk('local')->path($item->image_path), ['Content-Type' => $item->image_mime_type ?: 'application/octet-stream']);
@@ -815,14 +815,14 @@ class ResourceLibraryController extends Controller
 
     public function download(Request $request, int $resource)
     {
-        $item = ResourceReference::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        $item = ResourceReference::where('user_id', $request->user()->id)->findOrFail($resource);
 
         return Storage::disk('local')->download($item->storage_path, $item->original_name);
     }
 
     public function preview(Request $request, int $resource)
     {
-        $item = ResourceReference::where('organization_id', $request->user()->organization_id)->findOrFail($resource);
+        $item = ResourceReference::where('user_id', $request->user()->id)->findOrFail($resource);
 
         return response()->file(Storage::disk('local')->path($item->storage_path), ['Content-Type' => $item->mime_type ?: 'application/octet-stream']);
     }
@@ -833,7 +833,7 @@ class ResourceLibraryController extends Controller
         $songDescription = $item->kind === 'song' ? $this->songCredits($item) : null;
         $taskDescription = $item->kind === 'assessment-task' ? $this->assessmentTaskDescription($item) : null;
 
-        return ['id' => $item->id, 'song_id' => $item->song?->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $taskDescription ?? $songDescription ?? $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'solution' => $item->solution, 'max_points' => $item->max_points, 'competency_id' => $item->education_plan_competency_id, 'competency' => $item->kind === 'assessment-task' ? $this->assessmentTaskCompetencyText($item) : null, 'education_plan_id' => $item->education_plan_id, 'education_plan_competency_id' => $item->education_plan_competency_id, 'education_plan' => $item->educationPlan?->title, 'has_differentiation' => $item->kind === 'assessment-task' && $item->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)), 'levels' => $item->kind === 'assessment-task' ? $item->levels->pluck('level')->values()->all() : [], 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString(), 'can_delete' => $item->kind === 'song' ? $item->song?->organization_id === auth()->user()->organization_id : null, 'generated_sheet_path' => $item->generated_sheet_path, 'generated_sheet_a4_path' => $item->generated_sheet_a4_path, 'generated_chord_sheet_paths' => $item->generated_chord_sheet_paths, 'sheet_id' => $item->sheet?->id];
+        return ['id' => $item->id, 'song_id' => $item->song?->id, 'kind' => $item->kind, 'name' => $item->kind === 'songbook' ? 'Gruppenliederbuch' : ($item->song?->title ?? $item->original_name ?? $item->title ?? $item->name), 'description' => $taskDescription ?? $songDescription ?? $item->description ?? $item->song?->copyright_notice, 'copyrights' => $item->copyrights, 'original_name' => $item->original_name, 'title' => $item->song?->title ?? $item->title ?? ($item->kind === 'songbook' ? 'Gruppenliederbuch' : null), 'url' => $item->url, 'mime_type' => $item->mime_type, 'size' => $item->size, 'page_count' => $item->page_count, 'material_number' => $item->material_number, 'storage_location' => $item->storage_location, 'solution' => $item->solution, 'max_points' => $item->max_points, 'competency_id' => $item->education_plan_competency_id, 'competency' => $item->kind === 'assessment-task' ? $this->assessmentTaskCompetencyText($item) : null, 'education_plan_id' => $item->education_plan_id, 'education_plan_competency_id' => $item->education_plan_competency_id, 'education_plan' => $item->educationPlan?->title, 'has_differentiation' => $item->kind === 'assessment-task' && $item->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)), 'levels' => $item->kind === 'assessment-task' ? $item->levels->pluck('level')->values()->all() : [], 'image_url' => $item->image_path ? route('resources.library.materials.image', $item->id) : null, 'relationships' => $relationships, 'created_at' => $item->created_at?->toISOString(), 'can_delete' => $item->kind === 'song' ? $item->song?->user_id === auth()->user()->id : null, 'generated_sheet_path' => $item->generated_sheet_path, 'generated_sheet_a4_path' => $item->generated_sheet_a4_path, 'generated_chord_sheet_paths' => $item->generated_chord_sheet_paths, 'sheet_id' => $item->sheet?->id];
     }
 
     private function assessmentTaskDescription(AssessmentTask $task): string
@@ -888,13 +888,13 @@ class ResourceLibraryController extends Controller
         };
 
         if ($kind === 'song') {
-            return $model::whereKey($id)->whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->findOrFail($id);
+            return $model::whereKey($id)->whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->findOrFail($id);
         }
         if ($kind === 'songbook') {
-            return $model::whereKey($id)->whereHas('group', fn ($query) => $query->where('organization_id', $request->user()->organization_id))->findOrFail($id);
+            return $model::whereKey($id)->whereHas('group', fn ($query) => $query->where('user_id', $request->user()->id))->findOrFail($id);
         }
 
-        return $model::where('organization_id', $request->user()->organization_id)->findOrFail($id);
+        return $model::where('user_id', $request->user()->id)->findOrFail($id);
     }
 
     private function associationCount(ResourceReference|ResourceLink|MaterialItem|SongVersion|GroupSongbook|AssessmentTask $item, string $kind): int
@@ -939,9 +939,9 @@ class ResourceLibraryController extends Controller
         return Lesson::whereKey($id)->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $group->id))->firstOrFail();
     }
 
-    private function competencies(int $organizationId)
+    private function competencies(int $userId)
     {
-        return EducationPlanCompetency::whereHas('teachingUnits', fn ($query) => $query->where('organization_id', $organizationId))->with('teachingUnits:id,title')->get(['id', 'external_identifier', 'number', 'text'])->map(fn ($item) => ['id' => $item->id, 'label' => $item->external_identifier ?: ($item->number ?: $item->text), 'unit' => $item->teachingUnits->pluck('title')->unique()->implode(', ')]);
+        return EducationPlanCompetency::whereHas('teachingUnits', fn ($query) => $query->where('user_id', $userId))->with('teachingUnits:id,title')->get(['id', 'external_identifier', 'number', 'text'])->map(fn ($item) => ['id' => $item->id, 'label' => $item->external_identifier ?: ($item->number ?: $item->text), 'unit' => $item->teachingUnits->pluck('title')->unique()->implode(', ')]);
     }
 
     private function addToSongbook(TeachingGroup $group, SongVersion $version): void

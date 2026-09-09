@@ -49,7 +49,7 @@ Fachdaten nicht.
 - zeitliche Mitgliedschaften mit Eintritt und Austritt abbilden
 - mehrere Jahrgangsstufen und regelmäßige Stundenplantermine je Gruppe
   hinterlegen
-- personenbezogene Daten über Mandantenscopes und Policies schützen
+- personenbezogene Daten über Benutzer-Scope und Policies schützen
 
 ### Jahresplanung
 
@@ -272,7 +272,7 @@ benötigt.
 ## Datenschutz
 
 Schülerdaten, Beobachtungen und Bewertungen sind besonders schützenswert.
-Roo berücksichtigt deshalb von Beginn an Mandantenscopes, Policies, private
+Roo berücksichtigt deshalb von Beginn an Benutzer-Scope, Policies, private
 Dateispeicher und den Verzicht auf Schülerdaten in Logs, Meilisearch und
 KI-Anfragen. Schüler:innen können in der authentifizierten globalen Suche
 mandantengeschützt direkt aus PostgreSQL gefunden werden. Dokumente und

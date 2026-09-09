@@ -10,7 +10,7 @@ trait SearchableFields
             ->mapWithKeys(fn (string $field): array => [$field => $this->getAttribute($field)])
             ->all();
 
-        return ['id' => (string) $this->getKey(), 'organization_id' => $this->organization_id] + $fields + [
+        return ['id' => (string) $this->getKey(), 'user_id' => $this->user_id] + $fields + [
             'search_text' => collect($fields)->flatten()->filter(fn ($value): bool => is_scalar($value) && filled($value))->implode(' '),
         ];
     }

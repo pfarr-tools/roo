@@ -5,15 +5,13 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanStage;
 use App\Models\EducationPlanVersion;
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 it('shows the selected education plan version with its hierarchy', function () {
-    $organization = Organization::create(['name' => 'Test Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
     $plan = EducationPlan::create(['external_identifier' => 'PLAN', 'subject' => 'Evangelische Religionslehre', 'title' => 'Bildungsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '2.0.0', 'title' => 'Fassung 2026', 'is_complete' => true, 'raw_payload' => []]);
     $stage = EducationPlanStage::create(['education_plan_version_id' => $version->id, 'external_identifier' => '3.1', 'label' => 'Klassen 5/6', 'position' => 0]);

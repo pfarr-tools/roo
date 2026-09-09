@@ -777,7 +777,7 @@ class AssessmentController extends Controller
         $this->authorize('update', $teachingGroup);
         $data = $this->validatedAssessment($request, $teachingGroup);
         DB::transaction(function () use ($data, $teachingGroup): void {
-            $assessment = $teachingGroup->assessments()->create(['organization_id' => $teachingGroup->organization_id, 'report_period_id' => $data['report_period_id'] ?? null, 'grade_component_id' => $data['grade_component_id'] ?? null, 'grade_component_label' => $data['grade_component_label'] ?? null, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
+            $assessment = $teachingGroup->assessments()->create(['user_id' => $teachingGroup->user_id, 'report_period_id' => $data['report_period_id'] ?? null, 'grade_component_id' => $data['grade_component_id'] ?? null, 'grade_component_label' => $data['grade_component_label'] ?? null, 'title' => $data['title'], 'assessed_on' => $data['assessed_on'] ?? null, 'notes' => $data['notes'] ?? null]);
             if (array_key_exists('tasks', $data)) {
                 $this->syncTasks($assessment, $teachingGroup, $data['tasks'] ?? []);
             }
@@ -919,7 +919,7 @@ class AssessmentController extends Controller
             ->whereDate('date', '<=', $assessmentDate->toDateString());
 
         $tasks = AssessmentTask::query()
-            ->where('organization_id', $teachingGroup->organization_id)
+            ->where('user_id', $teachingGroup->user_id)
             ->whereHas('lessons', fn ($query) => $query
                 ->whereHas('unit', fn ($unitQuery) => $unitQuery->where('teaching_group_id', $teachingGroup->id))
                 ->whereHas('scheduledLessons.slot', $slotFilter))
@@ -1081,7 +1081,7 @@ class AssessmentController extends Controller
                 abort_unless($levels->isNotEmpty(), 422, 'Für differenzierte Gruppen muss mindestens ein G/M/E-Niveau gewählt werden.');
             }
             if (! empty($task['task_id'])) {
-                $model = AssessmentTask::where('organization_id', $teachingGroup->organization_id)->whereKey($task['task_id'])->firstOrFail();
+                $model = AssessmentTask::where('user_id', $teachingGroup->user_id)->whereKey($task['task_id'])->firstOrFail();
                 $assignedToGroup = $model->lessons()->whereHas('unit', fn ($query) => $query->where('teaching_group_id', $teachingGroup->id))->exists();
                 $alreadyAssigned = $assessment->tasks()->whereKey($model->id)->exists();
                 abort_unless($educationPlanCompetencyIds->contains($model->education_plan_competency_id) || $assignedToGroup || $alreadyAssigned, 422);
@@ -1094,7 +1094,7 @@ class AssessmentController extends Controller
                 $competencyId = $task['education_plan_competency_id'] ?? $task['competency_id'] ?? null;
                 abort_unless($competencyId && $educationPlanCompetencyIds->contains($competencyId), 422);
                 $educationPlanCompetency = EducationPlanCompetency::with('area.version')->findOrFail($competencyId);
-                $model = AssessmentTask::create(['organization_id' => $teachingGroup->organization_id, 'education_plan_competency_id' => $competencyId, 'education_plan_id' => $educationPlanCompetency->area->version->education_plan_id, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
+                $model = AssessmentTask::create(['user_id' => $teachingGroup->user_id, 'education_plan_competency_id' => $competencyId, 'education_plan_id' => $educationPlanCompetency->area->version->education_plan_id, 'title' => $task['title'], 'solution' => $task['solution'] ?? null, 'max_points' => $task['max_points'] ?? null, 'level' => $levels->first()]);
                 $model->levels()->delete();
                 $model->levels()->createMany($levels->map(fn ($level) => ['level' => $level])->all());
             }

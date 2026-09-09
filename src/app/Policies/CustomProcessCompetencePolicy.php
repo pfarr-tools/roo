@@ -9,7 +9,7 @@ class CustomProcessCompetencePolicy
 {
     public function view(User $user, CustomProcessCompetence $competence): bool
     {
-        return $user->organization_id === $competence->school->organization_id;
+        return $user->id === $competence->school->user_id;
     }
 
     public function update(User $user, CustomProcessCompetence $competence): bool

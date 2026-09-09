@@ -27,7 +27,7 @@ class TeachingUnitResourceController extends Controller
             $pageCount = $inspector->pageCount(Storage::disk('local')->path($path));
         }
         $teachingUnit->resources()->create([
-            'organization_id' => $request->user()->organization_id,
+            'user_id' => $request->user()->id,
             'lesson_id' => $this->lessonId($request, $teachingUnit),
             'original_name' => $file->getClientOriginalName(),
             'description' => $request->input('description'),
@@ -89,7 +89,7 @@ class TeachingUnitResourceController extends Controller
     private function authorizeUnit(Request $request, TeachingGroup $teachingGroup, TeachingUnit $teachingUnit): void
     {
         $this->authorize('update', $teachingGroup);
-        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnit->organization_id === $request->user()->organization_id, 404);
+        abort_unless($teachingUnit->teaching_group_id === $teachingGroup->id && $teachingUnit->user_id === $request->user()->id, 404);
     }
 
     private function filenameFor(TeachingUnit $teachingUnit, ResourceReference $resource): string

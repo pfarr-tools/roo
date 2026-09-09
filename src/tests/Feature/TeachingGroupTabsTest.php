@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Assessment;
-use App\Models\Organization;
 use App\Models\ReportPeriod;
 use App\Models\ScheduleSlot;
 use App\Models\School;
@@ -16,11 +15,10 @@ use Illuminate\Support\Facades\URL;
 uses(RefreshDatabase::class);
 
 it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
-    $organization = Organization::create(['name' => 'Tab Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Tab Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Tabgruppe']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Tab Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Tabgruppe']);
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
         ->component('TeachingGroups/Show')
         ->where('group.name', 'Tabgruppe')
@@ -30,7 +28,7 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/neu")
         ->assertInertia(fn ($page) => $page->component('Assessments/Form'));
 
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Schöpfung', 'assessed_on' => '2026-11-12']);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Schöpfung', 'assessed_on' => '2026-11-12']);
     ScheduleSlot::create(['teaching_group_id' => $group->id, 'assessment_id' => $assessment->id, 'date' => '2026-11-12', 'period_number' => 2, 'starts_at' => '09:00', 'ends_at' => '09:45', 'status' => 'lse']);
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/bearbeiten?return_tab=assessments")
@@ -47,13 +45,12 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
 });
 
 it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', function () {
-    $organization = Organization::create(['name' => 'Bewertungsnavigation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bewertungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $firstGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $secondGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $period = ReportPeriod::create(['organization_id' => $organization->id, 'teaching_group_id' => $secondGroup->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Bewertungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $firstGroup = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $secondGroup = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $period = ReportPeriod::create(['user_id' => $user->id, 'teaching_group_id' => $secondGroup->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
 
     $this->actingAs($user)->get('/bewertungen?group='.$secondGroup->id)
         ->assertInertia(fn ($page) => $page
@@ -84,7 +81,7 @@ it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', fu
     expect($period->fresh()->whole_grades)->toBeTrue()
         ->and($period->fresh()->include_full_school_year)->toBeTrue();
 
-    $student = Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '5a']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '5a']);
     $this->actingAs($user)->post("/unterrichtsgruppen/{$secondGroup->id}/mitglieder", ['student_id' => $student->id])
         ->assertRedirect();
     $this->assertDatabaseHas('student_evaluations', ['report_period_id' => $period->id, 'student_id' => $student->id]);
@@ -95,12 +92,11 @@ it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', fu
 });
 
 it('liefert geplante Einheiten mit signierten Elternseiten im Gruppeneditor', function () {
-    $organization = Organization::create(['name' => 'Unit Tab Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Unit Tab Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Unit Tab Gruppe']);
-    $unit = TeachingUnit::create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'Schöpfung', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Unit Tab Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Unit Tab Gruppe']);
+    $unit = TeachingUnit::create(['user_id' => $user->id, 'created_by_user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'Schöpfung', 'position' => 1]);
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
         ->component('TeachingGroups/Show')
@@ -110,14 +106,13 @@ it('liefert geplante Einheiten mit signierten Elternseiten im Gruppeneditor', fu
 });
 
 it('löscht eine Lernstandserhebung nur innerhalb ihrer Unterrichtsgruppe', function () {
-    $organization = Organization::create(['name' => 'Delete Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Delete Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Löschgruppe']);
-    $otherGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Andere Gruppe']);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE löschen']);
-    $otherAssessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $otherGroup->id, 'title' => 'Andere LSE']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Delete Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Löschgruppe']);
+    $otherGroup = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Andere Gruppe']);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE löschen']);
+    $otherAssessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $otherGroup->id, 'title' => 'Andere LSE']);
 
     $this->actingAs($user)->delete("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$otherAssessment->id}")->assertNotFound();
     expect($otherAssessment->fresh())->not->toBeNull();

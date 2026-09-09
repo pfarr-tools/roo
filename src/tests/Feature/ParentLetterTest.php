@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\ResourceReference;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -15,17 +14,16 @@ use Illuminate\Support\Facades\URL;
 uses(RefreshDatabase::class);
 
 it('saves the introduction and downloads a parent letter', function () {
-    $organization = Organization::create(['name' => 'Elternbrief Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id, 'name' => 'Lehrkraft Elternbrief', 'email' => 'lehrkraft@example.test', 'public_phone' => '+49 170 1234567']);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Elternbrief Schule', 'city' => 'Stuttgart', 'messenger_name' => 'Untis']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4b', 'aktenzeichen' => '62.53']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'title' => 'Wasser des Lebens', 'position' => 1]);
+    $user = User::factory()->create(['name' => 'Lehrkraft Elternbrief', 'email' => 'lehrkraft@example.test', 'public_phone' => '+49 170 1234567']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Elternbrief Schule', 'city' => 'Stuttgart', 'messenger_name' => 'Untis']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4b', 'aktenzeichen' => '62.53']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'created_by_user_id' => $user->id, 'title' => 'Wasser des Lebens', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Wasserbilder', 'position' => 1, 'duration' => 1]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-10', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'free']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id, 'status' => 'planned']);
     $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
-    $resource = ResourceReference::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'parent-letter/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'security_status' => 'pending']);
+    $resource = ResourceReference::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'parent-letter/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'security_status' => 'pending']);
     Storage::disk('local')->put($resource->storage_path, 'PDF-Inhalt');
     $phase->resources()->attach($resource, ['publication_status' => 'shared_immediately']);
 
@@ -53,12 +51,11 @@ it('saves the introduction and downloads a parent letter', function () {
 });
 
 it('liefert das zuletzt gewählte Elternbrief-Format für den nächsten Export', function () {
-    $organization = Organization::create(['name' => 'Format Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Format Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Formatgruppe']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'created_by_user_id' => $user->id, 'title' => 'Format Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Format Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Formatgruppe']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'created_by_user_id' => $user->id, 'title' => 'Format Einheit', 'position' => 1]);
 
     $this->actingAs($user)->post(route('teaching-units.parent-letter.download', $unit), [
         'format' => 'odt',

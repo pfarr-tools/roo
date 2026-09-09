@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'publication_status'])]
+#[Fillable(['user_id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'publication_status'])]
 class ResourceLink extends Model
 {
     use Searchable, SearchableFields;
@@ -30,9 +30,9 @@ class ResourceLink extends Model
         return ['publication_status' => PublicationStatus::class];
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function teachingUnit(): BelongsTo

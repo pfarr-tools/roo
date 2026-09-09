@@ -47,8 +47,8 @@ class YearPlanController extends Controller
 {
     public function index(): Response|RedirectResponse
     {
-        $organizationId = auth()->user()->organization_id;
-        $groups = TeachingGroup::where('organization_id', $organizationId)->with(['school:id,name', 'schoolYear:id,name'])->with('yearPlan')->orderBy('name')->get();
+        $userId = auth()->user()->id;
+        $groups = TeachingGroup::where('user_id', $userId)->with(['school:id,name', 'schoolYear:id,name'])->with('yearPlan')->orderBy('name')->get();
 
         if ($groups->isNotEmpty()) {
             $group = $groups->firstWhere('id', auth()->user()->last_year_plan_teaching_group_id) ?? $groups->first();
@@ -108,7 +108,7 @@ class YearPlanController extends Controller
             ->mapWithKeys(fn ($competency) => [$competency->external_identifier => $competency->area])
             ->filter();
 
-        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description', 'songs.song:id,title', 'educationPlanCompetencies:id,education_plan_competence_area_id,external_identifier,number,text', 'educationPlanCompetencies.variants:id,education_plan_competency_id,text,position', 'educationPlanCompetencies.area:id,kind,external_identifier,title', 'lessons.template:id,title', 'lessons.resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,source,version', 'lessons.galleryImages.resource:id,original_name,mime_type', 'lessons.resourceLinks:id,organization_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.materialItems:id,name,description', 'lessons.songs.song:id,title', 'lessons.songbooks', 'lessons.educationPlanCompetencies', 'lessons.phases.socialForm', 'lessons.phases.songs.song:id,title', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
+        $workspaceUnits = $teachingGroup->teachingUnits()->with(['template:id,title', 'educationPlan:id,title,external_identifier', 'sourceCurriculumTopic:id,title', 'resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,security_status,source,version', 'resourceLinks:id,user_id,teaching_unit_id,lesson_id,title,url,description', 'materialItems:id,name,description', 'songs.song:id,title', 'educationPlanCompetencies:id,education_plan_competence_area_id,external_identifier,number,text', 'educationPlanCompetencies.variants:id,education_plan_competency_id,text,position', 'educationPlanCompetencies.area:id,kind,external_identifier,title', 'lessons.template:id,title', 'lessons.resources:id,teaching_unit_id,lesson_id,original_name,description,mime_type,size,page_count,checksum,source,version', 'lessons.galleryImages.resource:id,original_name,mime_type', 'lessons.resourceLinks:id,user_id,teaching_unit_id,lesson_id,title,url,description', 'lessons.materialItems:id,name,description', 'lessons.songs.song:id,title', 'lessons.songbooks', 'lessons.educationPlanCompetencies', 'lessons.phases.socialForm', 'lessons.phases.songs.song:id,title', 'lessons.scheduledLessons.slot'])->orderBy('position')->get();
         $workspaceUnits->each(function ($unit) use ($competencyResolver): void {
             $unit->lessons->each(function ($lesson): void {
                 $galleryImages = $lesson->galleryImages->map(fn ($image): array => [
@@ -139,7 +139,7 @@ class YearPlanController extends Controller
             'group' => $teachingGroup->load(['school:id,name,slug', 'schoolYear:id,name,slug,starts_on,ends_on', 'schoolYear.days', 'timetableSlots', 'gradeLevels:id,teaching_group_id,grade_level']),
             'plan' => $plan,
             'canUndoReflow' => $plan->revisions->contains(fn ($revision) => $revision->action === 'slot_reflow' && ! empty($revision->payload)),
-            'unitTemplates' => UnitTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
+            'unitTemplates' => UnitTemplate::where('user_id', auth()->user()->id)->where('is_active', true)->orderBy('title')->get(['id', 'title', 'expected_hours']),
             'checks' => $this->checks($teachingGroup, $plan),
             'calendar' => $this->calendar($teachingGroup),
             'holidayPeriods' => $teachingGroup->schoolYear->holidayPeriods()->orderBy('starts_on')->get(['id', 'starts_on', 'ends_on', 'name']),
@@ -149,16 +149,16 @@ class YearPlanController extends Controller
                 'slots' => $teachingGroup->scheduleSlots()->with(['scheduledLesson.lesson.unit', 'assessment:id,title,assessed_on'])->orderBy('date')->orderBy('period_number')->get(),
                 'coverage' => $coverage,
             ],
-            'groupOptions' => TeachingGroup::where('organization_id', auth()->user()->organization_id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
-            'availableUnits' => TeachingUnit::where('organization_id', auth()->user()->organization_id)
+            'groupOptions' => TeachingGroup::where('user_id', auth()->user()->id)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
+            'availableUnits' => TeachingUnit::where('user_id', auth()->user()->id)
                 ->where('teaching_group_id', '!=', $teachingGroup->id)
                 ->with(['group:id,name,school_year_id', 'group.schoolYear:id,name'])
                 ->orderBy('title')->get(['id', 'teaching_group_id', 'education_plan_id', 'title', 'notes']),
             'curriculumColumnOpen' => $curriculumColumnPreference['open'] ?? true,
-            'materialItems' => MaterialItem::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name', 'material_number', 'storage_location', 'description']),
-            'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', auth()->user()->organization_id))->with('song:id,title')->orderBy('name')->get(),
-            'phaseTemplates' => PhaseTemplate::where('organization_id', auth()->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),
-            'socialForms' => SocialForm::where('organization_id', auth()->user()->organization_id)->orderBy('name')->get(['id', 'name']),
+            'materialItems' => MaterialItem::where('user_id', auth()->user()->id)->orderBy('name')->get(['id', 'name', 'material_number', 'storage_location', 'description']),
+            'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', auth()->user()->id))->with('song:id,title')->orderBy('name')->get(),
+            'phaseTemplates' => PhaseTemplate::where('user_id', auth()->user()->id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'material']),
+            'socialForms' => SocialForm::where('user_id', auth()->user()->id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -178,7 +178,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['source_id' => ['required', 'integer']]);
-        $source = TeachingUnit::where('organization_id', $teachingGroup->organization_id)->findOrFail($data['source_id']);
+        $source = TeachingUnit::where('user_id', $teachingGroup->user_id)->findOrFail($data['source_id']);
         $unit = $workspace->copyTeachingUnit($teachingGroup, $source);
         $this->revise($this->planFor($teachingGroup), $request->user()->id, 'teaching_unit_copied', 'Unterrichtseinheit „'.$unit->title.'“ aus einer anderen Planung übernommen.');
 
@@ -230,7 +230,7 @@ class YearPlanController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'keyword' => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string']]);
-        $teachingGroup->teachingUnits()->create($data + ['education_plan_id' => $this->educationPlanIdsForGroup($teachingGroup)->first(), 'organization_id' => $teachingGroup->organization_id, 'created_by_user_id' => $request->user()->id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
+        $teachingGroup->teachingUnits()->create($data + ['education_plan_id' => $this->educationPlanIdsForGroup($teachingGroup)->first(), 'user_id' => $teachingGroup->user_id, 'created_by_user_id' => $request->user()->id, 'position' => ($teachingGroup->teachingUnits()->max('position') ?? 0) + 1]);
 
         return back()->with('success', 'Eigene Unterrichtseinheit wurde angelegt.');
     }
@@ -247,19 +247,19 @@ class YearPlanController extends Controller
         $teachingUnit->update(collect($data)->only(['title', 'keyword', 'notes', 'introduction_text'])->all());
         foreach ($data['resource_links'] ?? [] as $link) {
             if (! empty($link['id'])) {
-                ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(['title' => $link['title'], 'url' => $link['url']]);
+                ResourceLink::where('user_id', $teachingGroup->user_id)->whereKey($link['id'])->where('teaching_unit_id', $teachingUnit->id)->update(['title' => $link['title'], 'url' => $link['url']]);
             } else {
-                ResourceLink::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $teachingUnit->id, 'title' => $link['title'], 'url' => $link['url']]);
+                ResourceLink::create(['user_id' => $teachingGroup->user_id, 'teaching_unit_id' => $teachingUnit->id, 'title' => $link['title'], 'url' => $link['url']]);
             }
         }
-        ResourceLink::where('organization_id', $teachingGroup->organization_id)->where('teaching_unit_id', $teachingUnit->id)->whereIn('id', $data['deleted_resource_link_ids'])->delete();
+        ResourceLink::where('user_id', $teachingGroup->user_id)->where('teaching_unit_id', $teachingUnit->id)->whereIn('id', $data['deleted_resource_link_ids'])->delete();
         $materialItemIds = [];
         foreach ($data['material_items'] ?? [] as $item) {
             if (! empty($item['id'])) {
-                $material = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereKey($item['id'])->firstOrFail();
+                $material = MaterialItem::where('user_id', $teachingGroup->user_id)->whereKey($item['id'])->firstOrFail();
                 $material->update(['name' => $item['name'], 'material_number' => $item['material_number'] ?? null, 'storage_location' => $item['storage_location'] ?? null, 'description' => $item['description'] ?? null]);
             } else {
-                $material = MaterialItem::firstOrCreate(['organization_id' => $teachingGroup->organization_id, 'name' => $item['name']], ['material_number' => $item['material_number'] ?? null, 'storage_location' => $item['storage_location'] ?? null, 'description' => $item['description'] ?? null]);
+                $material = MaterialItem::firstOrCreate(['user_id' => $teachingGroup->user_id, 'name' => $item['name']], ['material_number' => $item['material_number'] ?? null, 'storage_location' => $item['storage_location'] ?? null, 'description' => $item['description'] ?? null]);
             }
             $materialItemIds[] = $material->id;
         }
@@ -368,7 +368,7 @@ class YearPlanController extends Controller
         if ($template) {
             $template->update($attributes + ['version' => $template->version + 1]);
         } else {
-            $template = UnitTemplate::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'version' => 1, 'is_active' => true]);
+            $template = UnitTemplate::create($attributes + ['user_id' => $teachingGroup->user_id, 'version' => 1, 'is_active' => true]);
             $teachingUnit->update(['unit_template_id' => $template->id]);
         }
 
@@ -394,35 +394,35 @@ class YearPlanController extends Controller
         $data['deleted_resource_link_ids'] = $request->validate(['deleted_resource_link_ids' => ['sometimes', 'array'], 'deleted_resource_link_ids.*' => ['integer']])['deleted_resource_link_ids'] ?? [];
         $data['deleted_material_item_ids'] = $request->validate(['deleted_material_item_ids' => ['sometimes', 'array'], 'deleted_material_item_ids.*' => ['integer']])['deleted_material_item_ids'] ?? [];
         $phaseTemplateIds = collect($data['phases'] ?? [])->pluck('phase_template_id')->filter()->unique();
-        abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
+        abort_unless(PhaseTemplate::where('user_id', $teachingGroup->user_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu diesem Benutzerkonto.');
         DB::transaction(function () use ($data, $lesson, $teachingGroup): void {
             $lesson->update(collect($data)->except(['competency_ids', 'education_plan_competency_ids', 'phases', 'resource_links', 'material_items', 'deleted_resource_link_ids', 'deleted_material_item_ids'])->all());
             $resourceLinkIds = [];
             $materialItemIdsByKey = [];
             foreach ($data['material_items'] ?? [] as $item) {
                 if (! empty($item['id'])) {
-                    $existing = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereKey($item['id'])->firstOrFail();
+                    $existing = MaterialItem::where('user_id', $teachingGroup->user_id)->whereKey($item['id'])->firstOrFail();
                     $existing->update(['name' => $item['name'], 'description' => $item['description'] ?? null]);
                     $materialItemIdsByKey[$item['local_key'] ?? 'id-'.$existing->id] = $existing->id;
                 } else {
-                    $created = MaterialItem::firstOrCreate(['organization_id' => $teachingGroup->organization_id, 'name' => $item['name']], ['description' => $item['description'] ?? null]);
+                    $created = MaterialItem::firstOrCreate(['user_id' => $teachingGroup->user_id, 'name' => $item['name']], ['description' => $item['description'] ?? null]);
                     $materialItemIdsByKey[$item['local_key'] ?? 'id-'.$created->id] = $created->id;
                 }
             }
             foreach ($data['resource_links'] ?? [] as $link) {
                 if (! empty($link['id'])) {
-                    $existing = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereKey($link['id'])->firstOrFail();
+                    $existing = ResourceLink::where('user_id', $teachingGroup->user_id)->whereKey($link['id'])->firstOrFail();
                     $existing->update(['teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? $existing->description]);
                     $resourceLinkIds[$link['local_key'] ?? 'id-'.$existing->id] = $existing->id;
                 } else {
-                    $created = ResourceLink::create(['organization_id' => $teachingGroup->organization_id, 'teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? null]);
+                    $created = ResourceLink::create(['user_id' => $teachingGroup->user_id, 'teaching_unit_id' => $lesson->teaching_unit_id, 'lesson_id' => $lesson->id, 'title' => $link['title'], 'url' => $link['url'], 'description' => $link['description'] ?? null]);
                     $resourceLinkIds[$link['local_key'] ?? 'id-'.$created->id] = $created->id;
                 }
             }
-            ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_resource_link_ids'])->where(function ($query) use ($lesson): void {
+            ResourceLink::where('user_id', $teachingGroup->user_id)->whereIn('id', $data['deleted_resource_link_ids'])->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->delete();
-            MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $data['deleted_material_item_ids'])->delete();
+            MaterialItem::where('user_id', $teachingGroup->user_id)->whereIn('id', $data['deleted_material_item_ids'])->delete();
             if (array_key_exists('material_items', $data)) {
                 $lesson->materialItems()->sync(array_values($materialItemIdsByKey));
             }
@@ -437,7 +437,7 @@ class YearPlanController extends Controller
                     $materialItemSelection = collect($phase['material_item_ids'] ?? [])->map(fn ($id) => is_numeric($id) ? (int) $id : ($materialItemIdsByKey[$id] ?? null))->filter()->values()->all();
                     $resourceLinkPhaseIds = collect($phase['resource_link_ids'] ?? [])->map(fn ($id) => is_numeric($id) ? (int) $id : ($resourceLinkIds[$id] ?? null))->filter()->values()->all();
                     $resourceLinkPublicationStatuses = collect($phase['resource_link_publication_statuses'] ?? [])->mapWithKeys(fn ($status, $id): array => [(int) $id => (string) $status]);
-                    $validResourceIds = ResourceReference::where('organization_id', $teachingGroup->organization_id)
+                    $validResourceIds = ResourceReference::where('user_id', $teachingGroup->user_id)
                         ->whereIn('id', $resourceIds)
                         ->where(function ($query) use ($lesson): void {
                             $query->where('teaching_unit_id', $lesson->teaching_unit_id)
@@ -445,16 +445,16 @@ class YearPlanController extends Controller
                         })
                         ->pluck('id')->all();
                     if (! empty($phase['id'])) {
-                        $phaseResourceIds = ResourceReference::where('organization_id', $teachingGroup->organization_id)
+                        $phaseResourceIds = ResourceReference::where('user_id', $teachingGroup->user_id)
                             ->whereIn('id', $resourceIds)
                             ->whereHas('phases', fn ($query) => $query->where('lesson_id', $lesson->id)->whereKey($phase['id']))
                             ->pluck('id');
                         $validResourceIds = collect($validResourceIds)->merge($phaseResourceIds)->unique()->values()->all();
                     }
-                    $validMaterialItemIds = MaterialItem::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $materialItemSelection)->pluck('id')->all();
+                    $validMaterialItemIds = MaterialItem::where('user_id', $teachingGroup->user_id)->whereIn('id', $materialItemSelection)->pluck('id')->all();
                     $songSelection = collect($phase['song_ids'] ?? [])->filter(fn ($id): bool => is_numeric($id))->map(fn ($id) => (int) $id)->values()->all();
-                    $validSongIds = SongVersion::whereIn('id', $songSelection)->whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $teachingGroup->organization_id))->pluck('id')->all();
-                    $validResourceLinkIds = ResourceLink::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $resourceLinkPhaseIds)->where(function ($query) use ($lesson): void {
+                    $validSongIds = SongVersion::whereIn('id', $songSelection)->whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $teachingGroup->user_id))->pluck('id')->all();
+                    $validResourceLinkIds = ResourceLink::where('user_id', $teachingGroup->user_id)->whereIn('id', $resourceLinkPhaseIds)->where(function ($query) use ($lesson): void {
                         $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
                     })->pluck('id')->all();
                     abort_unless(count($validResourceIds) === count($resourceIds), 422, 'Eine Datei gehört nicht zu dieser Unterrichtseinheit.');
@@ -468,7 +468,7 @@ class YearPlanController extends Controller
                     $attributes = collect($phase)->except(['id', 'local_key', 'resource_ids', 'resource_link_ids', 'material_item_ids', 'materials', 'media'])->merge(['position' => $position + 1, 'materials' => null, 'media' => null])->all();
                     $socialFormName = trim((string) ($attributes['social_form'] ?? ''));
                     unset($attributes['social_form']);
-                    $attributes['social_form_id'] = $socialFormName === '' ? null : SocialForm::firstOrCreate(['organization_id' => $lesson->unit->organization_id, 'name' => $socialFormName])->id;
+                    $attributes['social_form_id'] = $socialFormName === '' ? null : SocialForm::firstOrCreate(['user_id' => $lesson->unit->user_id, 'name' => $socialFormName])->id;
                     $savedPhase = ! empty($phase['id']) ? tap($lesson->phases()->whereKey($phase['id'])->firstOrFail())->update($attributes) : $lesson->phases()->create($attributes);
                     if ($savedPhase instanceof LessonPhase) {
                         $savedPhase->resources()->sync(collect($validResourceIds)->mapWithKeys(fn (int $id): array => [$id => ['publication_status' => $resourcePublicationStatuses->get($id, PublicationStatus::NOT_SHARED->value)]])->all());
@@ -535,7 +535,7 @@ class YearPlanController extends Controller
         $unitTemplate = $lesson->unit->template;
         if (! $unitTemplate) {
             $unitTemplate = UnitTemplate::create([
-                'organization_id' => $teachingGroup->organization_id,
+                'user_id' => $teachingGroup->user_id,
                 'title' => $lesson->unit->title,
                 'expected_hours' => max(1, (int) $lesson->unit->lessons()->sum('duration')),
                 'notes' => $lesson->unit->notes,
@@ -555,7 +555,7 @@ class YearPlanController extends Controller
         if ($template) {
             $template->update($attributes + ['version' => $template->version + 1]);
         } else {
-            $template = LessonTemplate::create($attributes + ['organization_id' => $teachingGroup->organization_id, 'version' => 1, 'is_active' => true]);
+            $template = LessonTemplate::create($attributes + ['user_id' => $teachingGroup->user_id, 'version' => 1, 'is_active' => true]);
             $lesson->update(['lesson_template_id' => $template->id]);
         }
 
@@ -572,7 +572,7 @@ class YearPlanController extends Controller
         $lesson = $phase->lesson->fresh('template');
         $phase->refresh();
         PhaseTemplate::create([
-            'organization_id' => $teachingGroup->organization_id,
+            'user_id' => $teachingGroup->user_id,
             'lesson_template_id' => $lesson->template->id,
             'title' => $phase->title,
             'duration_minutes' => $phase->duration_minutes,
@@ -622,7 +622,7 @@ class YearPlanController extends Controller
         abort_unless($lesson->unit->teaching_group_id === $teachingGroup->id, 404);
         $data = $request->validated();
         $template = ! empty($data['phase_template_id'])
-            ? PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->findOrFail($data['phase_template_id'])
+            ? PhaseTemplate::where('user_id', $teachingGroup->user_id)->findOrFail($data['phase_template_id'])
             : null;
         $lesson->phases()->create([
             'phase_template_id' => $template?->id,
@@ -878,7 +878,7 @@ class YearPlanController extends Controller
             $assessment = Assessment::where('teaching_group_id', $slot->teaching_group_id)
                 ->whereDate('assessed_on', $slot->date)
                 ->whereHas('scheduleSlots', fn ($query) => $query->where('status', 'lse'))
-                ->first() ?? Assessment::create(['organization_id' => $slot->group->organization_id, 'teaching_group_id' => $slot->teaching_group_id, 'title' => 'Lernstandserhebung', 'assessed_on' => $slot->date, 'status' => 'draft']);
+                ->first() ?? Assessment::create(['user_id' => $slot->group->user_id, 'teaching_group_id' => $slot->teaching_group_id, 'title' => 'Lernstandserhebung', 'assessed_on' => $slot->date, 'status' => 'draft']);
             $slot->update(['assessment_id' => $assessment->id]);
 
             return;
@@ -910,7 +910,7 @@ class YearPlanController extends Controller
         $data = $request->validated();
         abort_unless($this->dateInYear($teachingGroup, $data['starts_on']) && $this->dateInYear($teachingGroup, $data['ends_on']), 422, 'Die Planung muss innerhalb des Schuljahres liegen.');
         if (! empty($data['unit_template_id'])) {
-            abort_unless(UnitTemplate::where('id', $data['unit_template_id'])->where('organization_id', $teachingGroup->organization_id)->exists(), 422);
+            abort_unless(UnitTemplate::where('id', $data['unit_template_id'])->where('user_id', $teachingGroup->user_id)->exists(), 422);
         }
         $this->validateTopicScope($teachingGroup, $data['curriculum_topic_id'] ?? null);
         $plan = $this->planFor($teachingGroup);
@@ -1024,7 +1024,7 @@ class YearPlanController extends Controller
 
     private function planFor(TeachingGroup $group): GroupYearPlan
     {
-        return GroupYearPlan::firstOrCreate(['teaching_group_id' => $group->id], ['organization_id' => $group->organization_id, 'school_year_id' => $group->school_year_id]);
+        return GroupYearPlan::firstOrCreate(['teaching_group_id' => $group->id], ['user_id' => $group->user_id, 'school_year_id' => $group->school_year_id]);
     }
 
     private function dateInYear(TeachingGroup $group, string $date): bool

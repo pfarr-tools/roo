@@ -19,18 +19,18 @@ class PhaseTemplateController extends Controller
 {
     public function index(Request $request): Response
     {
-        $organizationId = auth()->user()->organization_id;
+        $userId = auth()->user()->id;
         $query = trim((string) $request->query('q', ''));
         $templates = PhaseTemplate::query()
             ->with(['lessonTemplate:id,title', 'socialForm:id,name', 'materialItems:id,name', 'resources:id,phase_template_id,original_name,description,mime_type,size,page_count'])
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->where('is_active', true)
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('material', 'like', "%{$query}%")))
             ->orderBy('position')
             ->orderBy('title')
             ->get(['id', 'lesson_template_id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'position', 'version']);
         $lessonTemplates = LessonTemplate::query()
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->where('is_active', true)
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -41,13 +41,13 @@ class PhaseTemplateController extends Controller
     public function store(StorePhaseTemplateRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $this->ensureLessonTemplateBelongsToOrganization((int) $data['lesson_template_id']);
+        $this->ensureLessonTemplateBelongsToUser((int) $data['lesson_template_id']);
         $materialItems = $data['material_items'] ?? [];
         unset($data['material_items']);
         $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
         unset($data['social_form']);
         $data['position'] ??= $this->nextPosition((int) $data['lesson_template_id']);
-        $template = PhaseTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
+        $template = PhaseTemplate::create($data + ['user_id' => $request->user()->id, 'version' => 1, 'is_active' => true]);
         $this->syncMaterialItems($template, $materialItems);
 
         return to_route('phase-templates.index')->with('success', 'Phasen-Vorlage wurde angelegt.');
@@ -57,7 +57,7 @@ class PhaseTemplateController extends Controller
     {
         $this->ensureVisible($phaseTemplate);
         $data = $request->validated();
-        $this->ensureLessonTemplateBelongsToOrganization((int) $data['lesson_template_id']);
+        $this->ensureLessonTemplateBelongsToUser((int) $data['lesson_template_id']);
         $materialItems = $data['material_items'] ?? [];
         unset($data['material_items']);
         $data['social_form_id'] = $this->resolveSocialForm($data['social_form'] ?? null);
@@ -92,7 +92,7 @@ class PhaseTemplateController extends Controller
         $this->ensureVisible($phaseTemplate);
         $file = $request->file('resource');
         $path = $file->store('phase-templates/'.$phaseTemplate->id, 'local');
-        $phaseTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+        $phaseTemplate->resources()->create(['user_id' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
 
         return to_route('phase-templates.index')->with('success', 'Anhang wurde hochgeladen.');
     }
@@ -100,7 +100,7 @@ class PhaseTemplateController extends Controller
     public function destroyResource(PhaseTemplate $phaseTemplate, ResourceReference $resource): RedirectResponse
     {
         $this->ensureVisible($phaseTemplate);
-        abort_unless($resource->phase_template_id === $phaseTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        abort_unless($resource->phase_template_id === $phaseTemplate->id && $resource->user_id === auth()->user()->id, 404);
         Storage::disk('local')->delete($resource->storage_path);
         $resource->delete();
 
@@ -109,12 +109,12 @@ class PhaseTemplateController extends Controller
 
     private function ensureVisible(PhaseTemplate $phaseTemplate): void
     {
-        abort_unless($phaseTemplate->organization_id === auth()->user()->organization_id && $phaseTemplate->is_active, 403);
+        abort_unless($phaseTemplate->user_id === auth()->user()->id && $phaseTemplate->is_active, 403);
     }
 
-    private function ensureLessonTemplateBelongsToOrganization(int $lessonTemplateId): void
+    private function ensureLessonTemplateBelongsToUser(int $lessonTemplateId): void
     {
-        abort_unless(LessonTemplate::query()->whereKey($lessonTemplateId)->where('organization_id', auth()->user()->organization_id)->where('is_active', true)->exists(), 403);
+        abort_unless(LessonTemplate::query()->whereKey($lessonTemplateId)->where('user_id', auth()->user()->id)->where('is_active', true)->exists(), 403);
     }
 
     private function nextPosition(int $lessonTemplateId): int
@@ -131,14 +131,14 @@ class PhaseTemplateController extends Controller
         }
 
         return SocialForm::firstOrCreate([
-            'organization_id' => auth()->user()->organization_id,
+            'user_id' => auth()->user()->id,
             'name' => $name,
         ])->id;
     }
 
     private function syncMaterialItems(PhaseTemplate $template, array $names): void
     {
-        $itemIds = collect($names)->map(fn (string $name): string => trim($name))->filter()->unique()->map(fn (string $name): int => MaterialItem::firstOrCreate(['organization_id' => auth()->user()->organization_id, 'name' => $name])->id);
+        $itemIds = collect($names)->map(fn (string $name): string => trim($name))->filter()->unique()->map(fn (string $name): int => MaterialItem::firstOrCreate(['user_id' => auth()->user()->id, 'name' => $name])->id);
         $template->materialItems()->sync($itemIds);
     }
 }

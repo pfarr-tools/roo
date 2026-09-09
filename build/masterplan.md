@@ -275,7 +275,7 @@ enthalten.
 
 ### Datenschutz
 
-- Policies und Mandantenscopes vollständig
+- Policies und direkte Benutzer-Scope vollständig
 - Export- und Löschpfade vorbereiten
 - Schüler:innen werden nicht in Meilisearch indexiert. Die globale Suche fragt
   sie bei authentifizierten Anfragen mandantengeschützt direkt in PostgreSQL

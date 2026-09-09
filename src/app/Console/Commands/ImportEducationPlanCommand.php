@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class ImportEducationPlanCommand extends Command
 {
-    protected $signature = 'education-plans:import {path : Pfad zur JSON-Datei oder zu einem Verzeichnis} {--organization= : Organisations-ID für einen organisationsbezogenen Import}';
+    protected $signature = 'education-plans:import {path : Pfad zur JSON-Datei oder zu einem Verzeichnis}';
 
     protected $description = 'Importiert einen strukturierten Bildungsplan aus JSON.';
 
@@ -16,7 +16,7 @@ class ImportEducationPlanCommand extends Command
         $path = $this->argument('path');
         $files = is_dir($path) ? glob(rtrim($path, '/').'/*.json') : [$path];
         foreach ($files as $file) {
-            $result = $import->execute($file, $this->option('organization') ? (int) $this->option('organization') : null);
+            $result = $import->execute($file);
             $this->info('Bildungsplan importiert: '.$result['plan']->title.' ('.$result['version']->external_identifier.')');
         }
 

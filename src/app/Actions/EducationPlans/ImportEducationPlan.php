@@ -19,16 +19,16 @@ use RuntimeException;
 class ImportEducationPlan
 {
     /** @return array{plan: EducationPlan, version: EducationPlanVersion, import_run: EducationPlanImportRun} */
-    public function execute(string $path, ?int $organizationId = null): array
+    public function execute(string $path, ?int $userId = null): array
     {
         $payload = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
         $this->assertPayload($payload);
         $checksum = hash_file('sha256', $path);
         $metadata = $payload['metadata'];
 
-        return DB::transaction(function () use ($path, $checksum, $payload, $metadata, $organizationId): array {
+        return DB::transaction(function () use ($path, $checksum, $payload, $metadata, $userId): array {
             $run = EducationPlanImportRun::create([
-                'organization_id' => $organizationId,
+                'user_id' => $userId,
                 'source_path' => $path,
                 'source_checksum' => $checksum,
                 'schema_version' => $payload['schema_version'],
@@ -38,7 +38,7 @@ class ImportEducationPlan
 
             try {
                 $plan = EducationPlan::updateOrCreate(
-                    ['organization_id' => $organizationId, 'external_identifier' => $metadata['plan_code']],
+                    ['user_id' => null, 'external_identifier' => $metadata['plan_code']],
                     [
                         'country' => $metadata['country'] ?? null,
                         'state' => $metadata['state'] ?? null,

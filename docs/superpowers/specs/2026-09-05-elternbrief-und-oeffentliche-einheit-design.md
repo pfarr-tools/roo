@@ -107,7 +107,7 @@ nicht wiederherstellen, wenn der Status inzwischen zurückgesetzt wurde.
 - Die Einheitsseite wird nicht in der Navigation verlinkt.
 - Öffentliche Dateidownloads erhalten separate dauerhaft gültige signierte
   URLs.
-- Jeder Dateidownload prüft zusätzlich Einheit, Organisation, konkrete
+- Jeder Dateidownload prüft zusätzlich Einheit, Benutzerkonto, konkrete
   Zuordnung, aktuellen Freigabestatus und den aktuellen Stunden-Slot.
 - Externe URLs werden nur angezeigt, wenn die konkrete Phasen-Zuordnung aktuell
   öffentlich sichtbar ist.
@@ -122,7 +122,7 @@ nicht wiederherstellen, wenn der Status inzwischen zurückgesetzt wurde.
 
 Die signierte URL muss die konkrete Einheit eindeutig adressieren. Die
 Autorisierung darf nicht ausschließlich auf einer erratbaren numerischen ID
-beruhen; die Signaturprüfung und die Organisation-/Beziehungsprüfungen sind
+beruhen; die Signaturprüfung und die Benutzerkonto-/Beziehungsprüfungen sind
 verbindlich.
 
 ## Datenmodell
@@ -211,7 +211,7 @@ Im Anhangs-/Materialbereich des Einheiteneditors erhalten direkt zugeordnete
 Dateien und URLs eine Auswahl zwischen „nicht freigegeben“ und „sofort
 freigegeben“. „Mit der Stunde freigegeben“ wird dort nicht angeboten.
 
-Die serverseitigen Requests validieren Organisation, Einheit, Stunde, Phase,
+Die serverseitigen Requests validieren Benutzerkonto, Einheit, Stunde, Phase,
 Ressource und URL-Beziehung; eine Manipulation der UI darf keine fremde
 Materialzuordnung veröffentlichen.
 
@@ -238,7 +238,7 @@ Materialzuordnung veröffentlichen.
 
 - Unit-Tests für Enum und Sichtbarkeitsresolver;
 - Feature-Tests für signierte öffentliche Einheitsseiten;
-- Organisationstrennung und konkrete Gruppeneinheit-Prüfungen;
+- Trennung der Benutzerkonten und konkrete Gruppeneinheit-Prüfungen;
 - Statusübergänge direkt an Einheit, Phase und Pivot;
 - `shared_with_lesson` vor/nach Startzeitpunkt;
 - frühester Slot bei zusammenhängenden Stunden;

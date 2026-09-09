@@ -20,16 +20,16 @@ use Illuminate\Support\Str;
 class ImportCurriculum
 {
     /** @return array{curriculum: Curriculum, version: CurriculumVersion, import_run: CurriculumImportRun} */
-    public function execute(string $path, ?int $organizationId = null): array
+    public function execute(string $path, ?int $userId = null): array
     {
         $payload = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
         $this->assertPayload($payload);
         $metadata = $payload['metadata'];
         $checksum = hash_file('sha256', $path);
 
-        return DB::transaction(function () use ($path, $checksum, $payload, $metadata, $organizationId): array {
+        return DB::transaction(function () use ($path, $checksum, $payload, $metadata, $userId): array {
             $run = CurriculumImportRun::create([
-                'organization_id' => $organizationId,
+                'user_id' => $userId,
                 'source_path' => $path,
                 'source_checksum' => $checksum,
                 'status' => 'running',
@@ -38,7 +38,7 @@ class ImportCurriculum
             try {
                 $identifier = pathinfo($path, PATHINFO_FILENAME);
                 $curriculum = Curriculum::updateOrCreate(
-                    ['organization_id' => $organizationId, 'external_identifier' => $identifier],
+                    ['user_id' => null, 'external_identifier' => $identifier],
                     [
                         'title' => $metadata['title'], 'country' => $metadata['country'] ?? null,
                         'state' => $metadata['state'] ?? null, 'school_type' => $metadata['school_type'] ?? null,

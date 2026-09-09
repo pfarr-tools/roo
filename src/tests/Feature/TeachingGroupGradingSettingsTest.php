@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
@@ -12,18 +11,17 @@ uses(RefreshDatabase::class);
 
 function gradingSettingsGroup(): array
 {
-    $organization = Organization::create(['name' => 'Bewertungsorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bewertungsschule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Bewertungsschule']);
     $year = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $year->id,
         'name' => 'Bewertungsgruppe',

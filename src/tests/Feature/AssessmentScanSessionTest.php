@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Assessment;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
@@ -14,29 +13,28 @@ uses(RefreshDatabase::class);
 
 function assessmentScanSessionFixture(): array
 {
-    $organization = Organization::create(['name' => 'Session Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Session Schule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Session Schule']);
     $schoolYear = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $schoolYear->id,
         'name' => '4a Religion',
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Lernstandserhebung Session',
     ]);
 
-    return compact('user', 'group', 'assessment', 'organization', 'school', 'schoolYear');
+    return compact('user', 'group', 'assessment', 'school', 'schoolYear');
 }
 
 it('creates a temporary session and accepts one fragment upload', function () {
@@ -68,13 +66,13 @@ it('rejects foreign assessments and deletes temporary sessions', function () {
     Storage::fake('temporary');
     $fixture = assessmentScanSessionFixture();
     $otherGroup = TeachingGroup::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'school_id' => $fixture['school']->id,
         'school_year_id' => $fixture['schoolYear']->id,
         'name' => '5a Religion',
     ]);
     $otherAssessment = Assessment::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'teaching_group_id' => $otherGroup->id,
         'title' => 'Andere Session',
     ]);

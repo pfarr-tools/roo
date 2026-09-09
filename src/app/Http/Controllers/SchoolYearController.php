@@ -33,10 +33,10 @@ class SchoolYearController extends Controller
 
     public function store(StoreSchoolYearRequest $request): RedirectResponse
     {
-        $school = School::whereKey($request->integer('school_id'))->where('organization_id', $request->user()->organization_id)->firstOrFail();
+        $school = School::whereKey($request->integer('school_id'))->where('user_id', $request->user()->id)->firstOrFail();
         $data = $request->validated();
         $data['second_half_start_on'] ??= Carbon::parse($data['starts_on'])->addYear()->setMonth(2)->setDay(1)->toDateString();
-        $year = SchoolYear::create([...$data, 'organization_id' => $request->user()->organization_id]);
+        $year = SchoolYear::create([...$data, 'user_id' => $request->user()->id]);
         app(GenerateSchoolYearDays::class)->execute($year);
 
         return to_route('school-years.show', ['school' => $school, 'schoolYear' => $year])->with('success', 'Schuljahr wurde angelegt.');

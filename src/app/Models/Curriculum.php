@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'derived_from_id', 'external_identifier', 'title', 'country', 'state', 'school_type', 'grades', 'variant', 'cooperation_model', 'denominations'])]
+#[Fillable(['user_id', 'derived_from_id', 'external_identifier', 'title', 'country', 'state', 'school_type', 'grades', 'variant', 'cooperation_model', 'denominations'])]
 class Curriculum extends Model
 {
     use Searchable, SearchableFields;
@@ -33,6 +33,11 @@ class Curriculum extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(CurriculumVersion::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function derivedFrom(): BelongsTo

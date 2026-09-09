@@ -40,11 +40,11 @@ class TeachingGroupController extends Controller
     public function index(): Response
     {
         $this->authorize('viewAny', TeachingGroup::class);
-        $organizationId = auth()->user()->organization_id;
+        $userId = auth()->user()->id;
 
         return Inertia::render('TeachingGroups/Index', [
-            'groups' => TeachingGroup::where('organization_id', $organizationId)->with(['school:id,name', 'schoolYear:id,name', 'gradeLevels:id,teaching_group_id,grade_level'])->withCount('students')->orderBy('name')->get(),
-            'schools' => School::where('organization_id', $organizationId)->with('schoolYears:id,school_id,name')->orderBy('name')->get(['id', 'name']),
+            'groups' => TeachingGroup::where('user_id', $userId)->with(['school:id,name', 'schoolYear:id,name', 'gradeLevels:id,teaching_group_id,grade_level'])->withCount('students')->orderBy('name')->get(),
+            'schools' => School::where('user_id', $userId)->with('schoolYears:id,school_id,name')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -52,7 +52,7 @@ class TeachingGroupController extends Controller
     {
         $this->authorize('view', $teachingGroup);
         $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
-        $organizationId = auth()->user()->organization_id;
+        $userId = auth()->user()->id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
         $planCompetencies = CurriculumTopicEducationPlanReference::query()
             ->whereHas('topic.version', fn ($query) => $query->whereIn('curriculum_id', $teachingGroup->curricula->pluck('id')))
@@ -163,11 +163,11 @@ class TeachingGroupController extends Controller
             'group' => $teachingGroup,
             'pronounSets' => PronounSets::toArray(),
             'songbookVersions' => $songbookVersions,
-            'students' => Student::where('organization_id', $organizationId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
-            'curricula' => Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->orderBy('title')->get(['id', 'title']),
+            'students' => Student::where('user_id', $userId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
+            'curricula' => Curriculum::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $userId))->orderBy('title')->get(['id', 'title']),
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),
-            'ritualPhaseTemplates' => PhaseTemplate::where('organization_id', $organizationId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
-            'songVersions' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->with('song:id,title')->orderBy('name')->get(),
+            'ritualPhaseTemplates' => PhaseTemplate::where('user_id', $userId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
+            'songVersions' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $userId))->with('song:id,title')->orderBy('name')->get(),
             'assessments' => $teachingGroup->assessments->sortByDesc('assessed_on')->values(),
             'reportPeriods' => $teachingGroup->reportPeriods->sortByDesc('ends_on')->values(),
             'competencies' => $competencies,
@@ -212,7 +212,7 @@ class TeachingGroupController extends Controller
 
         return SongVersion::query()
             ->join('songs', 'songs.id', '=', 'song_versions.song_id')
-            ->whereHas('song', fn ($song) => $song->where(fn ($scope) => $scope->whereNull('organization_id')->orWhere('organization_id', $teachingGroup->organization_id))->where('title', 'like', "%{$query}%"))
+            ->whereHas('song', fn ($song) => $song->where(fn ($scope) => $scope->whereNull('user_id')->orWhere('user_id', $teachingGroup->user_id))->where('title', 'like', "%{$query}%"))
             ->with('song:id,title')
             ->orderBy('songs.title')
             ->limit(20)
@@ -223,9 +223,9 @@ class TeachingGroupController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $ids = collect($request->validated()['phase_template_ids'] ?? [])->unique()->values();
-        abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $ids)->count() === $ids->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
+        abort_unless(PhaseTemplate::where('user_id', $teachingGroup->user_id)->whereIn('id', $ids)->count() === $ids->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu diesem Benutzerkonto.');
         $teachingGroup->rituals()->delete();
-        $teachingGroup->rituals()->createMany($ids->values()->map(fn (int $id, int $position): array => ['organization_id' => $teachingGroup->organization_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
+        $teachingGroup->rituals()->createMany($ids->values()->map(fn (int $id, int $position): array => ['user_id' => $teachingGroup->user_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
 
         return back()->with('success', 'Gruppenrituale wurden gespeichert.');
     }
@@ -275,11 +275,11 @@ class TeachingGroupController extends Controller
     public function store(StoreTeachingGroupRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $school = School::whereKey($data['school_id'])->where('organization_id', $request->user()->organization_id)->firstOrFail();
-        $schoolYear = SchoolYear::whereKey($data['school_year_id'])->where('organization_id', $request->user()->organization_id)->where('school_id', $school->id)->firstOrFail();
+        $school = School::whereKey($data['school_id'])->where('user_id', $request->user()->id)->firstOrFail();
+        $schoolYear = SchoolYear::whereKey($data['school_year_id'])->where('user_id', $request->user()->id)->where('school_id', $school->id)->firstOrFail();
 
         $group = DB::transaction(function () use ($data, $request, $schoolYear): TeachingGroup {
-            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
+            $group = TeachingGroup::create(collect($data)->only(['school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes'])->merge(['user_id' => $request->user()->id])->all());
             $group->gradeLevels()->createMany(collect($data['grade_levels'])->map(fn (string $grade) => ['grade_level' => trim($grade)])->all());
             $group->gradeComponents()->createMany([
                 ['type' => 'observations', 'label' => 'Beobachtungen im Unterricht', 'percentage' => 50, 'position' => 1],
@@ -298,8 +298,8 @@ class TeachingGroupController extends Controller
         $secondHalfStart = $schoolYear->second_half_start_on ?? $schoolYear->starts_on->copy()->addYear()->setMonth(2)->setDay(1);
 
         $teachingGroup->reportPeriods()->createMany([
-            ['organization_id' => $teachingGroup->organization_id, 'label' => '1. Halbjahr', 'starts_on' => $schoolYear->starts_on, 'ends_on' => $secondHalfStart->copy()->subDay(), 'whole_grades' => false, 'include_full_school_year' => false],
-            ['organization_id' => $teachingGroup->organization_id, 'label' => '2. Halbjahr', 'starts_on' => $secondHalfStart, 'ends_on' => $schoolYear->ends_on, 'whole_grades' => true, 'include_full_school_year' => true],
+            ['user_id' => $teachingGroup->user_id, 'label' => '1. Halbjahr', 'starts_on' => $schoolYear->starts_on, 'ends_on' => $secondHalfStart->copy()->subDay(), 'whole_grades' => false, 'include_full_school_year' => false],
+            ['user_id' => $teachingGroup->user_id, 'label' => '2. Halbjahr', 'starts_on' => $secondHalfStart, 'ends_on' => $schoolYear->ends_on, 'whole_grades' => true, 'include_full_school_year' => true],
         ]);
     }
 
@@ -325,13 +325,12 @@ class TeachingGroupController extends Controller
             }
             if (array_key_exists('phase_template_ids', $data)) {
                 $phaseTemplateIds = collect($data['phase_template_ids'])->unique()->values();
-                abort_unless(PhaseTemplate::where('organization_id', $teachingGroup->organization_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu dieser Organisation.');
+                abort_unless(PhaseTemplate::where('user_id', $teachingGroup->user_id)->whereIn('id', $phaseTemplateIds)->count() === $phaseTemplateIds->count(), 422, 'Eine Phasen-Vorlage gehört nicht zu diesem Benutzerkonto.');
                 $teachingGroup->rituals()->delete();
-                $teachingGroup->rituals()->createMany($phaseTemplateIds->map(fn (int $id, int $position): array => ['organization_id' => $teachingGroup->organization_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
+                $teachingGroup->rituals()->createMany($phaseTemplateIds->map(fn (int $id, int $position): array => ['user_id' => $teachingGroup->user_id, 'phase_template_id' => $id, 'position' => $position + 1])->all());
             }
         });
         if ($nameChanged) {
-            $teachingGroup->students()->get()->each->searchable();
         }
 
         return back()->with('success', 'Unterrichtsgruppe wurde gespeichert.');
@@ -340,9 +339,8 @@ class TeachingGroupController extends Controller
     public function storeStudent(StoreStudentRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $school = School::whereKey($data['school_id'])->where('organization_id', $request->user()->organization_id)->firstOrFail();
-        $student = Student::create($data + ['organization_id' => $school->organization_id]);
-        $student->searchable();
+        $school = School::whereKey($data['school_id'])->where('user_id', $request->user()->id)->firstOrFail();
+        $student = Student::create($data + ['user_id' => $school->user_id]);
 
         return back()->with('success', 'Schüler:in wurde angelegt.');
     }
@@ -354,10 +352,9 @@ class TeachingGroupController extends Controller
         abort_unless((int) $data['school_id'] === $teachingGroup->school_id, 422);
 
         DB::transaction(function () use ($data, $teachingGroup): void {
-            $student = Student::create($data + ['organization_id' => $teachingGroup->organization_id]);
+            $student = Student::create($data + ['user_id' => $teachingGroup->user_id]);
             $teachingGroup->students()->attach($student->id);
             $this->ensurePeriodEvaluations($teachingGroup, collect([$student->id]));
-            $student->searchable();
         });
 
         return back()->with('success', 'Schüler:in wurde angelegt und der Gruppe zugeordnet.');
@@ -366,7 +363,7 @@ class TeachingGroupController extends Controller
     public function importStudents(ImportStudentsRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $school = School::whereKey($data['school_id'])->where('organization_id', $request->user()->organization_id)->firstOrFail();
+        $school = School::whereKey($data['school_id'])->where('user_id', $request->user()->id)->firstOrFail();
         $lines = file($request->file('students')->getRealPath(), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         abort_if(count($lines) < 2, 422, 'Die CSV-Datei enthält keine Schüler:innen.');
         $delimiter = str_contains($lines[0], ';') ? ';' : ',';
@@ -384,7 +381,7 @@ class TeachingGroupController extends Controller
                     continue;
                 }
                 $createdStudents->push(Student::create([
-                    'organization_id' => $school->organization_id,
+                    'user_id' => $school->user_id,
                     'school_id' => $school->id,
                     'first_name' => trim($row['first_name']),
                     'last_name' => trim($row['last_name']),
@@ -394,7 +391,6 @@ class TeachingGroupController extends Controller
                 $created++;
             }
         });
-        $createdStudents->each->searchable();
 
         return back()->with('success', $created.' Schüler:innen wurden importiert.');
     }
@@ -402,7 +398,6 @@ class TeachingGroupController extends Controller
     public function updateStudent(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
         $student->update($request->validated());
-        $student->searchable();
 
         return back()->with('success', 'Schüler:in wurde gespeichert.');
     }
@@ -410,7 +405,6 @@ class TeachingGroupController extends Controller
     public function destroyStudent(Student $student): RedirectResponse
     {
         $this->authorize('delete', $student);
-        $student->unsearchable();
         $student->delete();
 
         return back()->with('success', 'Schüler:in wurde gelöscht.');
@@ -421,13 +415,12 @@ class TeachingGroupController extends Controller
         $this->authorize('update', $teachingGroup);
         $data = $request->validated();
         $studentIds = collect($data['student_ids'] ?? [$data['student_id']])->filter()->unique()->values();
-        abort_unless(Student::whereIn('id', $studentIds)->where('organization_id', $request->user()->organization_id)->where('school_id', $teachingGroup->school_id)->count() === $studentIds->count(), 422);
+        abort_unless(Student::whereIn('id', $studentIds)->where('user_id', $request->user()->id)->where('school_id', $teachingGroup->school_id)->count() === $studentIds->count(), 422);
         $pivot = collect($data)->only(['starts_on', 'ends_on'])->all();
         DB::transaction(function () use ($teachingGroup, $studentIds, $pivot): void {
             $teachingGroup->students()->syncWithoutDetaching($studentIds->mapWithKeys(fn (int $studentId): array => [$studentId => $pivot])->all());
             $this->ensurePeriodEvaluations($teachingGroup, $studentIds);
         });
-        Student::whereIn('id', $studentIds)->get()->each->searchable();
 
         return back()->with('success', 'Schüler:in wurde der Gruppe zugeordnet.');
     }
@@ -445,7 +438,6 @@ class TeachingGroupController extends Controller
     {
         $this->authorize('update', $teachingGroup);
         $teachingGroup->students()->detach($student->id);
-        $student->searchable();
 
         return back()->with('success', 'Zuordnung wurde entfernt.');
     }
@@ -463,7 +455,7 @@ class TeachingGroupController extends Controller
         $this->authorize('update', $teachingGroup);
         $assignments = collect($request->validated()['curriculum_assignments'] ?? []);
         abort_if($assignments->where('role', 'primary')->count() > 1, 422, 'Es kann nur ein primäres Curriculum geben.');
-        $allowed = Curriculum::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->whereIn('id', $assignments->pluck('curriculum_id'))->count();
+        $allowed = Curriculum::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->whereIn('id', $assignments->pluck('curriculum_id'))->count();
         abort_unless($allowed === $assignments->pluck('curriculum_id')->unique()->count(), 403);
         $teachingGroup->curricula()->sync($assignments->mapWithKeys(fn (array $assignment) => [$assignment['curriculum_id'] => ['role' => $assignment['role']]])->all());
 
@@ -476,7 +468,6 @@ class TeachingGroupController extends Controller
         $studentIds = $teachingGroup->students()->pluck('students.id');
         $teachingGroup->assessments()->get()->each->delete();
         $teachingGroup->delete();
-        Student::whereIn('id', $studentIds)->get()->each->searchable();
 
         return to_route('teaching-groups.index')->with('success', 'Unterrichtsgruppe wurde gelöscht.');
     }

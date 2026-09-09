@@ -14,7 +14,6 @@ use App\Models\EducationPlanVersion;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
-use App\Models\Organization;
 use App\Models\PhaseTemplate;
 use App\Models\ResourceLink;
 use App\Models\ScheduledLesson;
@@ -41,11 +40,10 @@ beforeEach(function () {
 
 function phaseSixOneGroup(): array
 {
-    $organization = Organization::create(['name' => 'Phase 6.1 Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Arbeitsbereichschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a Religion']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Arbeitsbereichschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a Religion']);
     $period = SchoolPeriod::create(['school_id' => $school->id, 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $group->schoolPeriods()->attach($period->id, ['weekday' => 2]);
 
@@ -54,11 +52,11 @@ function phaseSixOneGroup(): array
 
 it('übernimmt eine Curriculum-UE als unabhängige eigene UE mit Herkunft', function () {
     [$user, $group] = phaseSixOneGroup();
-    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Curriculum Religion']);
+    $curriculum = Curriculum::create(['user_id' => $user->id, 'title' => 'Curriculum Religion']);
     $group->curricula()->attach($curriculum->id, ['role' => 'primary']);
     $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'external_identifier' => 'v1', 'is_editable' => false, 'is_complete' => true]);
     $topic = CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Nach Gott fragen', 'hours' => 2, 'position' => 1]);
-    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $plan = EducationPlan::create(['user_id' => $user->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => 'religion', 'title' => 'Religion', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => 'K1', 'text' => 'Fragen stellen', 'position' => 1, 'is_active' => true]);
@@ -91,17 +89,17 @@ it('erzeugt Slots ohne schulfreie Tage und plant eine mehrstündige Lesson', fun
 
 it('speichert Kompetenzen aus dem Picker einer UE und kann sie wieder entfernen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Picker-Curriculum']);
+    $curriculum = Curriculum::create(['user_id' => $user->id, 'title' => 'Picker-Curriculum']);
     $group->curricula()->attach($curriculum->id, ['role' => 'primary']);
     $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'external_identifier' => 'v1', 'is_editable' => false, 'is_complete' => true]);
-    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $plan = EducationPlan::create(['user_id' => $user->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     CurriculumEducationPlanBinding::create(['curriculum_version_id' => $version->id, 'education_plan_id' => $plan->id]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Wahrnehmen', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.1', 'text' => 'Wahrnehmen und beschreiben', 'position' => 1, 'is_active' => true]);
     $secondCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.2', 'text' => 'Darstellen und gestalten', 'position' => 2, 'is_active' => true]);
     $group->gradeLevels()->create(['grade_level' => '4']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Picker UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Picker UE', 'position' => 1]);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}/kompetenzen/picker")
         ->assertJsonPath('competencies.0.competency_presentation.kind', 'process');
@@ -152,7 +150,7 @@ it('verschiebt eine geplante Lesson beim Ausfall auf den nächsten freien Slot',
 
 it('ordnet den Jahresplan beim Sperren und Freigeben eines Slots neu', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Reflow UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Reflow UE', 'position' => 1]);
     $firstLesson = $unit->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
     $secondLesson = $unit->lessons()->create(['title' => 'Zweite Stunde', 'position' => 2, 'duration' => 1]);
 
@@ -203,7 +201,7 @@ it('erstellt eine LSE beim Sperren und verschiebt oder löscht sie beim Freigebe
 
 it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Status UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Status UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Statusstunde', 'position' => 1, 'duration' => 1]);
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slot = ScheduleSlot::firstOrFail();
@@ -215,7 +213,7 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
     expect($scheduled->fresh()->status)->toBe('planned');
     $phase = $lesson->phases()->firstOrFail();
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", ['title' => $lesson->title, 'duration' => 1, 'phases' => [['id' => $phase->id, 'title' => 'Einstieg', 'duration_minutes' => 15, 'social_form' => 'Plenum']]])->assertRedirect();
-    expect(SocialForm::where('organization_id', $user->organization_id)->where('name', 'Plenum')->exists())->toBeTrue()
+    expect(SocialForm::where('user_id', $user->id)->where('name', 'Plenum')->exists())->toBeTrue()
         ->and($phase->fresh()->duration_minutes)->toBe(15);
     $this->actingAs($user)->put("/jahresplanung/{$group->id}/geplante-stunden/{$scheduled->id}/status", ['status' => 'ready'])->assertRedirect();
     expect($scheduled->fresh()->status)->toBe('ready');
@@ -226,7 +224,7 @@ it('verwaltet den Vorbereitungsstand einer konkreten Einplanung', function () {
 
 it('verschiebt eine Phase an den Anfang der nächsten geplanten Stunde', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Phasen UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Phasen UE', 'position' => 1]);
     $firstLesson = $unit->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
     $secondLesson = $unit->lessons()->create(['title' => 'Nächste Stunde', 'position' => 2, 'duration' => 1]);
     $firstPhase = $firstLesson->phases()->create(['title' => 'Zu verschieben', 'position' => 1]);
@@ -245,16 +243,16 @@ it('verschiebt eine Phase an den Anfang der nächsten geplanten Stunde', functio
 
 it('ordnet Dateien, Ressourcen und MaterialItems einer Phase zu', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ressourcen UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Ressourcen UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Ressourcenstunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
-    $file = $unit->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'test/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
-    $lessonFile = $lesson->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Stundenbild.pdf', 'storage_path' => 'test/stundenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
-    $phaseFile = $lesson->resources()->create(['organization_id' => $user->organization_id, 'original_name' => 'Phasenbild.pdf', 'storage_path' => 'test/phasenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $file = $unit->resources()->create(['user_id' => $user->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'test/arbeitsblatt.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $lessonFile = $lesson->resources()->create(['user_id' => $user->id, 'original_name' => 'Stundenbild.pdf', 'storage_path' => 'test/stundenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+    $phaseFile = $lesson->resources()->create(['user_id' => $user->id, 'original_name' => 'Phasenbild.pdf', 'storage_path' => 'test/phasenbild.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
     $phaseFile->update(['teaching_unit_id' => null, 'lesson_id' => null]);
     $phase->resources()->attach($phaseFile->id);
-    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'title' => 'Erklärvideo', 'url' => 'https://example.test/video']);
-    $materialItem = MaterialItem::create(['organization_id' => $user->organization_id, 'name' => 'Bibel']);
+    $link = ResourceLink::create(['user_id' => $user->id, 'title' => 'Erklärvideo', 'url' => 'https://example.test/video']);
+    $materialItem = MaterialItem::create(['user_id' => $user->id, 'name' => 'Bibel']);
 
     $response = $this->actingAs($user)->put("/jahresplanung/{$group->id}/lessons/{$lesson->id}", [
         'title' => $lesson->title,
@@ -273,7 +271,7 @@ it('ordnet Dateien, Ressourcen und MaterialItems einer Phase zu', function () {
 
 it('speichert eine neue Ressource direkt mit ihrer Phasenzuordnung', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue Ressource UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Neue Ressource UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Neue Ressourcenstunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Einstieg', 'position' => 1]);
 
@@ -290,10 +288,10 @@ it('speichert eine neue Ressource direkt mit ihrer Phasenzuordnung', function ()
 
 it('ordnet Bibliotheksressourcen und MaterialItems sofort einer Stunde zu', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bibliotheks UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Bibliotheks UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Bibliotheksstunde', 'position' => 1, 'duration' => 1]);
-    $link = ResourceLink::create(['organization_id' => $user->organization_id, 'title' => 'Bibliothekslink', 'url' => 'https://example.test/bibliothek']);
-    $material = MaterialItem::create(['organization_id' => $user->organization_id, 'name' => 'Bibliotheksmaterial']);
+    $link = ResourceLink::create(['user_id' => $user->id, 'title' => 'Bibliothekslink', 'url' => 'https://example.test/bibliothek']);
+    $material = MaterialItem::create(['user_id' => $user->id, 'name' => 'Bibliotheksmaterial']);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/resource/{$link->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/ressourcen/material/{$material->id}/zuordnen", ['target_type' => 'lesson', 'target_id' => $lesson->id])->assertRedirect();
@@ -304,14 +302,14 @@ it('ordnet Bibliotheksressourcen und MaterialItems sofort einer Stunde zu', func
 
 it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum', function () {
     [$user, $group] = phaseSixOneGroup();
-    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $plan = EducationPlan::create(['user_id' => $user->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'process', 'external_identifier' => '2.1', 'title' => 'Wahrnehmen', 'position' => 1]);
     $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '2.1.1.1', 'text' => '2.1.1 Wahrnehmen und beschreiben', 'position' => 1, 'is_active' => true]);
     $contentArea = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => '3.2.3', 'title' => 'Biblische Bildworte', 'position' => 2]);
     $contentCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $contentArea->id, 'external_identifier' => '3.2.3.4', 'text' => null, 'position' => 1, 'is_active' => true]);
     EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $contentCompetency->id, 'text' => 'die Sprache der biblischen Bildworte wahrnehmen und deuten', 'position' => 1]);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Kompetenz UE', 'position' => 1]);
     $unit->educationPlanCompetencies()->attach([$educationCompetency->id, $contentCompetency->id]);
     $link = $educationCompetency;
     $contentLink = $contentCompetency;
@@ -333,11 +331,11 @@ it('liefert Kompetenzart und Text zentral normalisiert an den Stundenarbeitsraum
 
 it('entfernt abgewählte sekundäre Kompetenzen vollständig aus der Stunde', function () {
     [$user, $group] = phaseSixOneGroup();
-    $plan = EducationPlan::create(['organization_id' => $user->organization_id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $plan = EducationPlan::create(['user_id' => $user->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $planVersion = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $planVersion->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $educationCompetency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Eine Kompetenz', 'position' => 1, 'is_active' => true]);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Kompetenz UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Kompetenz UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Kompetenzstunde', 'position' => 1, 'duration' => 1]);
     $unit->educationPlanCompetencies()->attach($educationCompetency->id, ['is_secondary' => true]);
     $unitCompetency = $educationCompetency;
@@ -359,7 +357,7 @@ it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', func
     [$user, $group] = phaseSixOneGroup();
     $group->update(['aktenzeichen' => '62.53']);
     $group->gradeLevels()->create(['grade_level' => '4']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Gottesbilder', 'keyword' => 'Gottesbilder', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Reich Gottes', 'position' => 1, 'duration' => 1]);
     $archivePath = tempnam(sys_get_temp_dir(), 'wscdoc-');
     $archive = new ZipArchive;
@@ -387,11 +385,11 @@ it('lädt UE-Anhänge hoch und erzeugt den vorgeschriebenen Downloadnamen', func
 
 it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Phasen UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Phasen UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Phasenstunde', 'position' => 1, 'duration' => 1]);
-    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
-    $templateLesson = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
-    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $templateLesson->id, 'title' => 'Ritual', 'version' => 1, 'is_active' => true]);
+    $unitTemplate = UnitTemplate::create(['user_id' => $user->id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $templateLesson = LessonTemplate::create(['user_id' => $user->id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['user_id' => $user->id, 'lesson_template_id' => $templateLesson->id, 'title' => 'Ritual', 'version' => 1, 'is_active' => true]);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/lessons/{$lesson->id}/phasen", ['phase_template_id' => $template->id])->assertRedirect();
     $phase = $lesson->phases()->firstOrFail();
@@ -408,8 +406,8 @@ it('legt Phasen aus Vorlagen an, sortiert sie und schützt fremde Phasen', funct
 
 it('speichert alle Phasenfelder auch über die UE-Phasenvorlagenverwaltung', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
-    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
+    $unitTemplate = UnitTemplate::create(['user_id' => $user->id, 'title' => 'Vorlagen UE', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $lessonTemplate = LessonTemplate::create(['user_id' => $user->id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Vorlagenstunde', 'version' => 1, 'is_active' => true]);
 
     $this->actingAs($user)->post('/unterrichtseinheiten/phasen-vorlagen', [
         'lesson_template_id' => $lessonTemplate->id,
@@ -436,11 +434,11 @@ it('speichert alle Phasenfelder auch über die UE-Phasenvorlagenverwaltung', fun
 
 it('ergänzt Gruppenrituale beim Einplanen automatisch als geplante Phasen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Ritual UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Ritual UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Neue Stunde', 'position' => 1, 'duration' => 1]);
-    $unitTemplate = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Ritualvorlagen', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
-    $lessonTemplate = LessonTemplate::create(['organization_id' => $user->organization_id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Ritualstunde', 'version' => 1, 'is_active' => true]);
-    $template = PhaseTemplate::create(['organization_id' => $user->organization_id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'version' => 1, 'is_active' => true]);
+    $unitTemplate = UnitTemplate::create(['user_id' => $user->id, 'title' => 'Ritualvorlagen', 'expected_hours' => 1, 'version' => 1, 'is_active' => true]);
+    $lessonTemplate = LessonTemplate::create(['user_id' => $user->id, 'unit_template_id' => $unitTemplate->id, 'title' => 'Ritualstunde', 'version' => 1, 'is_active' => true]);
+    $template = PhaseTemplate::create(['user_id' => $user->id, 'lesson_template_id' => $lessonTemplate->id, 'title' => 'Ankommensritual', 'duration_minutes' => 5, 'version' => 1, 'is_active' => true]);
     $group->gradeLevels()->create(['grade_level' => '4']);
     $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}", [
         'school_id' => $group->school_id,
@@ -510,7 +508,7 @@ it('entfernt Lesson- und UE-Belegungen ohne die eigene Planung zu löschen', fun
 it('zeigt im Jahresplan nur Curriculum-UEs der Gruppenjahrgänge', function () {
     [$user, $group] = phaseSixOneGroup();
     $group->gradeLevels()->create(['grade_level' => '4a']);
-    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Jahrgangs-Curriculum']);
+    $curriculum = Curriculum::create(['user_id' => $user->id, 'title' => 'Jahrgangs-Curriculum']);
     $group->curricula()->attach($curriculum->id, ['role' => 'primary']);
     $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'external_identifier' => 'v1', 'is_editable' => false, 'is_complete' => true]);
     CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Passende UE', 'year' => 4, 'position' => 1]);
@@ -530,7 +528,7 @@ it('öffnet die zuletzt verwendete Jahresplanungsgruppe direkt', function () {
     expect($user->fresh()->last_year_plan_teaching_group_id)->toBe($group->id);
 
     $secondGroup = TeachingGroup::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $group->school_id,
         'school_year_id' => $group->school_year_id,
         'name' => 'Zweite Gruppe',
@@ -541,9 +539,9 @@ it('öffnet die zuletzt verwendete Jahresplanungsgruppe direkt', function () {
 
 it('fügt Stunden in belegte Slots ein und kann getrennte Teile wieder zusammenführen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unitA = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Zusammenhängende UE', 'position' => 1]);
+    $unitA = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Zusammenhängende UE', 'position' => 1]);
     $lessonA = $unitA->lessons()->create(['title' => 'Dreiteilige Stunde', 'position' => 1, 'duration' => 3]);
-    $unitB = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Einfüge-UE', 'position' => 2]);
+    $unitB = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einfüge-UE', 'position' => 2]);
     $lessonB = $unitB->lessons()->create(['title' => 'Zwischenstunde', 'position' => 1, 'duration' => 1]);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
@@ -566,9 +564,9 @@ it('fügt Stunden in belegte Slots ein und kann getrennte Teile wieder zusammenf
 
 it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken, Fixierungen und Entfernen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unitA = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bestehende UE', 'position' => 1]);
+    $unitA = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Bestehende UE', 'position' => 1]);
     $lessonA = $unitA->lessons()->create(['title' => 'Bestehende Stunde', 'position' => 1, 'duration' => 1]);
-    $unitB = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue UE', 'position' => 2]);
+    $unitB = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Neue UE', 'position' => 2]);
     $lessonB = $unitB->lessons()->create(['title' => 'Neue Stunde', 'position' => 1, 'duration' => 1]);
 
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
@@ -595,7 +593,7 @@ it('nutzt freie Plätze ohne unnötiges Verschieben und unterstützt Nachrücken
 it('verschiebt Inhalte um fixierte Stunden herum', function () {
     [$user, $group] = phaseSixOneGroup();
     $units = collect(['Erste UE', 'Fixierte UE', 'Zu verschiebende UE'])->map(function (string $title, int $index) use ($group, $user) {
-        $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => $title, 'position' => $index + 1]);
+        $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => $title, 'position' => $index + 1]);
         $lesson = $unit->lessons()->create(['title' => $title.' – Stunde', 'position' => 1, 'duration' => 1]);
 
         return $lesson;
@@ -615,10 +613,10 @@ it('verschiebt Inhalte um fixierte Stunden herum', function () {
 
 it('verschiebt eine UE um ihre fixierte Stunde herum', function () {
     [$user, $group] = phaseSixOneGroup();
-    $fixedUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Teilfixierte UE', 'position' => 1]);
+    $fixedUnit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Teilfixierte UE', 'position' => 1]);
     $fixedLesson = $fixedUnit->lessons()->create(['title' => 'Fixierte Stunde', 'position' => 1, 'duration' => 1]);
     $movableLesson = $fixedUnit->lessons()->create(['title' => 'Verschiebbare Stunde', 'position' => 2, 'duration' => 1]);
-    $otherUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Andere UE', 'position' => 2]);
+    $otherUnit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Andere UE', 'position' => 2]);
     $otherLesson = $otherUnit->lessons()->create(['title' => 'Andere Stunde', 'position' => 1, 'duration' => 1]);
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -635,9 +633,9 @@ it('verschiebt eine UE um ihre fixierte Stunde herum', function () {
 
 it('bestätigt und erlaubt Überlauf am Ende beim Einfügen', function () {
     [$user, $group] = phaseSixOneGroup();
-    $existingUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Bestehende UE', 'position' => 1]);
+    $existingUnit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Bestehende UE', 'position' => 1]);
     $existingLesson = $existingUnit->lessons()->create(['title' => 'Letzte Stunde', 'position' => 1, 'duration' => 1]);
-    $newUnit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Neue UE', 'position' => 2]);
+    $newUnit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Neue UE', 'position' => 2]);
     $newLesson = $newUnit->lessons()->create(['title' => 'Mehrstündige neue Stunde', 'position' => 1, 'duration' => 2]);
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -654,7 +652,7 @@ it('bestätigt und erlaubt Überlauf am Ende beim Einfügen', function () {
 
 it('warnt beim Verschieben einer mehrstündigen UE auf den letzten Slot', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Letzte UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Letzte UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Zweistündige Stunde', 'position' => 1, 'duration' => 2]);
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -670,7 +668,7 @@ it('warnt beim Verschieben einer mehrstündigen UE auf den letzten Slot', functi
 
 it('behält bewusst entfernte Stunden beim Verschieben einer UE entfernt', function () {
     [$user, $group] = phaseSixOneGroup();
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Teilweise geplante UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Teilweise geplante UE', 'position' => 1]);
     $lessons = collect(range(1, 3))->map(fn (int $position) => $unit->lessons()->create(['title' => 'Stunde '.$position, 'position' => $position, 'duration' => 1]));
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -689,7 +687,7 @@ it('behält bewusst entfernte Stunden beim Verschieben einer UE entfernt', funct
 it('verschiebt eine UE mit der tatsächlichen Reihenfolge ihrer geplanten Stunden', function () {
     [$user, $group, , $year] = phaseSixOneGroup();
     $year->update(['ends_on' => '2026-10-31']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Umsortierte UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Umsortierte UE', 'position' => 1]);
     $lessons = collect(range(1, 3))->map(fn (int $position) => $unit->lessons()->create(['title' => 'Stunde '.$position, 'position' => $position, 'duration' => 1]));
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -710,7 +708,7 @@ it('verschiebt eine UE mit der tatsächlichen Reihenfolge ihrer geplanten Stunde
 it('verschiebt eine mehrstündige Lesson auch bei überlappendem Zielbereich', function () {
     [$user, $group, , $year] = phaseSixOneGroup();
     $year->update(['ends_on' => '2026-10-31']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'Mehrstunden-UE', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Mehrstunden-UE', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Fünfstündige Lesson', 'position' => 1, 'duration' => 5]);
     $this->actingAs($user)->get("/jahresplanung/{$group->id}");
     $slots = ScheduleSlot::orderBy('date')->get();
@@ -729,7 +727,7 @@ it('fragt beim Einfügen einer späteren Stunde nach dem Nachrücken und verschi
     [$user, $group, , $year] = phaseSixOneGroup();
     $year->update(['ends_on' => '2026-10-31']);
     $lessons = collect(range(1, 7))->map(function (int $number) use ($group, $user) {
-        $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => 'UE '.$number, 'position' => $number]);
+        $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'UE '.$number, 'position' => $number]);
 
         return $unit->lessons()->create(['title' => 'Stunde '.$number, 'position' => 1, 'duration' => 1]);
     });
@@ -754,7 +752,7 @@ it('fragt beim Einfügen einer späteren Stunde nach dem Nachrücken und verschi
 it('speichert die UE-Reihenfolge und plant nicht geplante UEs automatisch danach ein', function () {
     [$user, $group] = phaseSixOneGroup();
     $units = collect(['Bereits geplant', 'Zweite UE', 'Dritte UE'])->map(function (string $title, int $index) use ($group, $user) {
-        $unit = $group->teachingUnits()->create(['organization_id' => $user->organization_id, 'title' => $title, 'position' => $index + 1]);
+        $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => $title, 'position' => $index + 1]);
         $unit->lessons()->create(['title' => $title.' – Stunde', 'position' => 1, 'duration' => $index === 1 ? 2 : 1]);
 
         return $unit;

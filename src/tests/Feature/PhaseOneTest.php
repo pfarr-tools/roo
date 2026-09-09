@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Curriculum;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
@@ -20,9 +19,8 @@ beforeEach(function () {
 
 function phaseOneUser(): User
 {
-    $organization = Organization::create(['name' => 'Test Organisation']);
 
-    return User::factory()->create(['organization_id' => $organization->id]);
+    return User::factory()->create();
 }
 
 it('allows a teacher to create a school in their organization', function () {
@@ -30,12 +28,12 @@ it('allows a teacher to create a school in their organization', function () {
 
     $this->actingAs($user)->post('/schulen', ['_token' => csrf_token(), 'name' => 'Grundschule am Bach', 'city' => 'Ulm'])->assertRedirect('/schulen');
 
-    $this->assertDatabaseHas('schools', ['organization_id' => $user->organization_id, 'name' => 'Grundschule am Bach']);
+    $this->assertDatabaseHas('schools', ['user_id' => $user->id, 'name' => 'Grundschule am Bach']);
 });
 
 it('derives the school year name from its start date', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
 
     $this->actingAs($user)->post('/schuljahre', ['_token' => csrf_token(), 'school_id' => $school->id, 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin'])->assertRedirect();
 
@@ -44,8 +42,8 @@ it('derives the school year name from its start date', function () {
 
 it('does not expose another organizations schools', function () {
     $user = phaseOneUser();
-    $other = Organization::create(['name' => 'Andere Organisation']);
-    $school = School::create(['organization_id' => $other->id, 'name' => 'Fremde Schule']);
+    $other = User::factory()->create();
+    $school = School::create(['user_id' => $other->id, 'name' => 'Fremde Schule']);
 
     $this->actingAs($user)->get('/schulen')->assertSuccessful()->assertInertia(fn ($page) => $page->has('schools', 0));
     $this->actingAs($user)->get('/schulen/fremdschule/fremdjahr')->assertNotFound();
@@ -53,7 +51,7 @@ it('does not expose another organizations schools', function () {
 
 it('allows a teacher to delete a school in their organization', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Zu löschende Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Zu löschende Schule']);
 
     $this->actingAs($user)->delete('/schulen/'.$school->slug)->assertRedirect('/schulen');
 
@@ -62,7 +60,7 @@ it('allows a teacher to delete a school in their organization', function () {
 
 it('allows a teacher to update a school through its slug route', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Alte Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Alte Schule']);
 
     $this->actingAs($user)->put('/schulen/'.$school->slug, ['name' => 'Neue Schule', 'short_name' => 'NS', 'city' => 'Ulm', 'messenger_name' => 'Untis', 'notes' => 'Notiz'])->assertRedirect('/schulen');
 
@@ -71,9 +69,9 @@ it('allows a teacher to update a school through its slug route', function () {
 
 it('assigns a curriculum directly to a teaching group in a school year', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Grundschule am Bach']);
-    $schoolYear = SchoolYear::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin']);
-    $group = TeachingGroup::create(['organization_id' => $user->organization_id, 'school_id' => $school->id, 'school_year_id' => $schoolYear->id, 'name' => 'Religionsgruppe']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Grundschule am Bach']);
+    $schoolYear = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $schoolYear->id, 'name' => 'Religionsgruppe']);
     $curriculum = Curriculum::create(['title' => 'Mein Curriculum', 'school_type' => 'GS', 'grades' => [1, 2], 'denominations' => []]);
 
     $this->actingAs($user)->put('/unterrichtsgruppen/'.$group->id.'/curricula', ['curriculum_assignments' => [['curriculum_id' => $curriculum->id, 'role' => 'primary']]])->assertRedirect();
@@ -83,9 +81,9 @@ it('assigns a curriculum directly to a teaching group in a school year', functio
 
 it('includes school year slugs for the school overview links', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
     SchoolYear::create([
-        'organization_id' => $user->organization_id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
@@ -107,7 +105,7 @@ it('creates calendar days and keeps local exceptions after importing BW holidays
             ->push([]),
     ]);
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
 
     $this->actingAs($user)->post('/schuljahre', ['_token' => csrf_token(), 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'timezone' => 'Europe/Berlin'])->assertRedirect();
     $year = SchoolYear::firstOrFail();
@@ -126,7 +124,7 @@ it('creates calendar days and keeps local exceptions after importing BW holidays
 
 it('allows editing a day without changing its date', function () {
     $user = phaseOneUser();
-    $school = School::create(['organization_id' => $user->organization_id, 'name' => 'Schule']);
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
     $this->actingAs($user)->post('/schuljahre', ['_token' => csrf_token(), 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-02', 'timezone' => 'Europe/Berlin'])->assertRedirect();
     $year = SchoolYear::firstOrFail();
     $day = $year->days()->whereDate('date', '2026-09-01')->firstOrFail();

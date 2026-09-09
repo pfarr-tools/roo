@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'external_identifier', 'country', 'state', 'subject', 'title'])]
+#[Fillable(['user_id', 'external_identifier', 'country', 'state', 'subject', 'title'])]
 class EducationPlan extends Model
 {
     use Searchable, SearchableFields;
@@ -26,5 +27,10 @@ class EducationPlan extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(EducationPlanVersion::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

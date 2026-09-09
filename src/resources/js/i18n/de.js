@@ -319,7 +319,7 @@ export default {
     modules: "Module",
     identity: "Benutzerkonto",
     account: "Profil und Kontoeinstellungen",
-    organization: "Organisation",
+    schoolLife: "Schulalltag",
     content: "Inhalte",
     teaching: "Unterricht",
     planning: "Planung",

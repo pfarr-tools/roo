@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'name', 'slug', 'short_name', 'city', 'notes', 'messenger_name', 'observation_scale_interval_count'])]
+#[Fillable(['user_id', 'name', 'slug', 'short_name', 'city', 'notes', 'messenger_name', 'observation_scale_interval_count'])]
 class School extends Model
 {
     use Searchable, SearchableFields;
@@ -37,7 +37,7 @@ class School extends Model
                 $base = Str::slug($school->name) ?: 'schule';
                 $slug = $base;
                 $suffix = 2;
-                while (static::query()->where('organization_id', $school->organization_id)->where('slug', $slug)->when($school->exists, fn ($query) => $query->whereKeyNot($school->id))->exists()) {
+                while (static::query()->where('user_id', $school->user_id)->where('slug', $slug)->when($school->exists, fn ($query) => $query->whereKeyNot($school->id))->exists()) {
                     $slug = $base.'-'.$suffix++;
                 }
                 $school->slug = $slug;
@@ -50,9 +50,9 @@ class School extends Model
         return 'slug';
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function schoolYears(): HasMany

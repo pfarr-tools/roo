@@ -51,7 +51,7 @@ pg_dump --format=custom --file=/opt/roo/backups/roo-$(date +%F-%H%M).dump \
 
 Das Passwort über `.pgpass` oder einen Secret-Mechanismus zuführen, nicht als
 Argument und nicht in der Shell-Historie. Aufbewahrung, Verschlüsselung und
-Löschung nach dem Datenschutzkonzept der betreibenden Organisation festlegen.
+Löschung nach dem Datenschutzkonzept der betreibenden Benutzerkonto festlegen.
 
 ## Wiederherstellungstest
 

@@ -16,13 +16,13 @@ class EducationPlanController extends Controller
 {
     public function index(Request $request): Response
     {
-        $organizationId = auth()->user()->organization_id;
+        $userId = auth()->user()->id;
         $search = trim((string) $request->string('q'));
 
         return Inertia::render('EducationPlans/Index', [
             'educationPlans' => EducationPlan::query()
-                ->where(function ($query) use ($organizationId): void {
-                    $query->whereNull('organization_id')->orWhere('organization_id', $organizationId);
+                ->where(function ($query) use ($userId): void {
+                    $query->whereNull('user_id')->orWhere('user_id', $userId);
                 })
                 ->when($search !== '', function ($query) use ($search): void {
                     $like = '%'.mb_strtolower($search).'%';
@@ -160,6 +160,6 @@ class EducationPlanController extends Controller
 
     private function ensureVisible(EducationPlan $educationPlan): void
     {
-        abort_unless($educationPlan->organization_id === null || $educationPlan->organization_id === auth()->user()->organization_id, HttpResponse::HTTP_NOT_FOUND);
+        abort_unless($educationPlan->user_id === null || $educationPlan->user_id === auth()->user()->id, HttpResponse::HTTP_NOT_FOUND);
     }
 }

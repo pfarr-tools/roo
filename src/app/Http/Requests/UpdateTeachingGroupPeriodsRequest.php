@@ -8,7 +8,7 @@ class UpdateTeachingGroupPeriodsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->organization_id !== null;
+        return $this->user()->id !== null;
     }
 
     public function rules(): array

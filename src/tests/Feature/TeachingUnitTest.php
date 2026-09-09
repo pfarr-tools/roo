@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\ResourceLink;
 use App\Models\ResourceReference;
 use App\Models\School;
@@ -13,13 +12,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('lists canonical teaching units and imports a recursive independent copy', function () {
-    $organization = Organization::create(['name' => 'Unterrichtseinheiten Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $sourceGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $targetGroup = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4b']);
-    $source = $sourceGroup->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Schöpfung bewahren', 'position' => 1, 'notes' => 'Quelle']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $sourceGroup = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $targetGroup = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4b']);
+    $source = $sourceGroup->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Schöpfung bewahren', 'position' => 1, 'notes' => 'Quelle']);
     $competency = officialCompetency($source, 'Verantwortung übernehmen');
     $lesson = $source->lessons()->create(['title' => 'Einstieg', 'position' => 1, 'duration' => 1]);
     $lesson->educationPlanCompetencies()->attach($competency->id);
@@ -39,20 +37,19 @@ it('lists canonical teaching units and imports a recursive independent copy', fu
 });
 
 it('persists the public introduction, creator, and material publication statuses', function () {
-    $organization = Organization::create(['name' => 'Öffentliche Einheit Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Öffentliche Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Öffentliche Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $unit = $group->teachingUnits()->create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Schöpfung bewahren',
         'position' => 1,
         'introduction_text' => 'Wir untersuchen, wie Menschen Verantwortung übernehmen.',
         'created_by_user_id' => $user->id,
     ]);
-    $resource = ResourceReference::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/1/arbeitsblatt.pdf', 'publication_status' => 'not_shared']);
-    $link = ResourceLink::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'title' => 'Weiterlesen', 'url' => 'https://example.test/weiterlesen', 'publication_status' => 'shared_immediately']);
+    $resource = ResourceReference::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/1/arbeitsblatt.pdf', 'publication_status' => 'not_shared']);
+    $link = ResourceLink::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'title' => 'Weiterlesen', 'url' => 'https://example.test/weiterlesen', 'publication_status' => 'shared_immediately']);
     $lesson = $unit->lessons()->create(['title' => 'Einstieg', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Gespräch', 'position' => 1]);
     $phase->resources()->attach($resource, ['publication_status' => 'shared_with_lesson']);
@@ -68,13 +65,12 @@ it('persists the public introduction, creator, and material publication statuses
 });
 
 it('updates the introduction and direct URL publication status through the unit editor', function () {
-    $organization = Organization::create(['name' => 'Einheiteneditor Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Einheiteneditor Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Alte Einheit', 'position' => 1]);
-    $link = ResourceLink::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'title' => 'Quelle', 'url' => 'https://example.test/alt']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Einheiteneditor Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Alte Einheit', 'position' => 1]);
+    $link = ResourceLink::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'title' => 'Quelle', 'url' => 'https://example.test/alt']);
 
     $this->actingAs($user)->put('/unterrichtseinheiten/'.$unit->id, [
         'title' => 'Neue Einheit',
@@ -95,13 +91,12 @@ it('updates the introduction and direct URL publication status through the unit 
 });
 
 it('rejects lesson-timed publication for a direct unit URL', function () {
-    $organization = Organization::create(['name' => 'Statusvalidierung Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Statusvalidierung Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
-    $link = ResourceLink::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'title' => 'Quelle', 'url' => 'https://example.test/alt']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Statusvalidierung Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
+    $link = ResourceLink::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'title' => 'Quelle', 'url' => 'https://example.test/alt']);
 
     $this->actingAs($user)->put('/unterrichtseinheiten/'.$unit->id, [
         'title' => 'Einheit',
@@ -115,16 +110,15 @@ it('rejects lesson-timed publication for a direct unit URL', function () {
 });
 
 it('persists publication statuses on concrete phase assignments', function () {
-    $organization = Organization::create(['name' => 'Phasenfreigabe Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Phasenfreigabe Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Phasenfreigabe Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1, 'duration' => 1]);
     $phase = $lesson->phases()->create(['title' => 'Arbeitsphase', 'position' => 1]);
-    $resource = ResourceReference::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/1/arbeitsblatt.pdf']);
-    $link = ResourceLink::create(['organization_id' => $organization->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'title' => 'Erklärung', 'url' => 'https://example.test/erklaerung']);
+    $resource = ResourceReference::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'teaching-units/1/arbeitsblatt.pdf']);
+    $link = ResourceLink::create(['user_id' => $user->id, 'teaching_unit_id' => $unit->id, 'lesson_id' => $lesson->id, 'title' => 'Erklärung', 'url' => 'https://example.test/erklaerung']);
 
     $this->actingAs($user)->put('/jahresplanung/'.$group->id.'/lessons/'.$lesson->id, [
         'title' => $lesson->title,

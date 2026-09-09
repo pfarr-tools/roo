@@ -2,7 +2,7 @@
 
 use App\Models\AssessmentTask;
 use App\Models\AssessmentTaskExpectation;
-use App\Models\Organization;
+use App\Models\User;
 use App\Services\AssessmentEvaluation\ExpectationOccurrences;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -10,9 +10,9 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 it('expands every expectation repetition into an independently scoreable occurrence', function () {
-    $organization = Organization::create(['name' => 'Erwartungsausprägungen']);
+    $user = User::factory()->create();
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Schöpfung beschreiben',
     ]));
     $firstExpectation = AssessmentTaskExpectation::create([

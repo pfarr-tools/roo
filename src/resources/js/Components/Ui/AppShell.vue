@@ -103,7 +103,7 @@ const moduleGroups = [
         { label: labels.timetable, icon: 'bi-grid-1x2', url: '/dashboard', enabled: true },
         { label: labels.planningModule, icon: 'bi-calendar-range', url: '/jahresplanung', enabled: true },
     ] },
-    { title: labels.organization, items: [
+    { title: labels.schoolLife, items: [
         { label: labels.schools, icon: 'bi-building', url: '/schulen', enabled: true },
         { label: labels.teachingGroups, icon: 'bi-people', url: '/unterrichtsgruppen', enabled: true },
         { label: labels.students, icon: 'bi-person-vcard', url: '/schueler:innen', enabled: true },

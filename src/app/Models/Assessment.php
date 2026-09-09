@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'teaching_group_id', 'report_period_id', 'grade_component_id', 'grade_component_label', 'title', 'assessed_on', 'status', 'notes'])]
+#[Fillable(['user_id', 'teaching_group_id', 'report_period_id', 'grade_component_id', 'grade_component_label', 'title', 'assessed_on', 'status', 'notes'])]
 class Assessment extends Model
 {
     use Searchable, SearchableFields;

@@ -17,17 +17,17 @@ class LessonTemplateController extends Controller
 {
     public function index(Request $request): Response
     {
-        $organizationId = auth()->user()->organization_id;
+        $userId = auth()->user()->id;
         $query = trim((string) $request->query('q', ''));
         $templates = LessonTemplate::query()
             ->with(['unitTemplate:id,title', 'resources:id,lesson_template_id,original_name,description,mime_type,size,page_count'])
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->where('is_active', true)
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('objective', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
             ->orderBy('title')
             ->get(['id', 'unit_template_id', 'title', 'duration_minutes', 'objective', 'notes', 'version']);
         $unitTemplates = UnitTemplate::query()
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->where('is_active', true)
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -38,8 +38,8 @@ class LessonTemplateController extends Controller
     public function store(StoreLessonTemplateRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $this->ensureUnitTemplateBelongsToOrganization((int) $data['unit_template_id']);
-        LessonTemplate::create($data + ['organization_id' => $request->user()->organization_id, 'version' => 1, 'is_active' => true]);
+        $this->ensureUnitTemplateBelongsToUser((int) $data['unit_template_id']);
+        LessonTemplate::create($data + ['user_id' => $request->user()->id, 'version' => 1, 'is_active' => true]);
 
         return to_route('lesson-templates.index')->with('success', 'Stunden-Vorlage wurde angelegt.');
     }
@@ -48,7 +48,7 @@ class LessonTemplateController extends Controller
     {
         $this->ensureVisible($lessonTemplate);
         $data = $request->validated();
-        $this->ensureUnitTemplateBelongsToOrganization((int) $data['unit_template_id']);
+        $this->ensureUnitTemplateBelongsToUser((int) $data['unit_template_id']);
         $lessonTemplate->update($data + ['version' => $lessonTemplate->version + 1]);
 
         return to_route('lesson-templates.index')->with('success', 'Stunden-Vorlage wurde gespeichert.');
@@ -77,7 +77,7 @@ class LessonTemplateController extends Controller
         $this->ensureVisible($lessonTemplate);
         $file = $request->file('resource');
         $path = $file->store('lesson-templates/'.$lessonTemplate->id, 'local');
-        $lessonTemplate->resources()->create(['organization_id' => $request->user()->organization_id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
+        $lessonTemplate->resources()->create(['user_id' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'copyrights' => $request->input('copyrights'), 'storage_path' => $path, 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()]);
 
         return to_route('lesson-templates.index')->with('success', 'Anhang wurde hochgeladen.');
     }
@@ -85,7 +85,7 @@ class LessonTemplateController extends Controller
     public function destroyResource(LessonTemplate $lessonTemplate, ResourceReference $resource): RedirectResponse
     {
         $this->ensureVisible($lessonTemplate);
-        abort_unless($resource->lesson_template_id === $lessonTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        abort_unless($resource->lesson_template_id === $lessonTemplate->id && $resource->user_id === auth()->user()->id, 404);
         Storage::disk('local')->delete($resource->storage_path);
         $resource->delete();
 
@@ -94,11 +94,11 @@ class LessonTemplateController extends Controller
 
     private function ensureVisible(LessonTemplate $lessonTemplate): void
     {
-        abort_unless($lessonTemplate->organization_id === auth()->user()->organization_id && $lessonTemplate->is_active, 403);
+        abort_unless($lessonTemplate->user_id === auth()->user()->id && $lessonTemplate->is_active, 403);
     }
 
-    private function ensureUnitTemplateBelongsToOrganization(int $unitTemplateId): void
+    private function ensureUnitTemplateBelongsToUser(int $unitTemplateId): void
     {
-        abort_unless(UnitTemplate::query()->whereKey($unitTemplateId)->where('organization_id', auth()->user()->organization_id)->where('is_active', true)->exists(), 403);
+        abort_unless(UnitTemplate::query()->whereKey($unitTemplateId)->where('user_id', auth()->user()->id)->where('is_active', true)->exists(), 403);
     }
 }

@@ -40,7 +40,7 @@ class ImportHolidaysFromApi
 
         return DB::transaction(function () use ($schoolYear, $stateCode, $years, $holidays): int {
             $source = DataSource::create([
-                'organization_id' => $schoolYear->organization_id,
+                'user_id' => $schoolYear->user_id,
                 'name' => 'Ferien-API',
                 'kind' => 'ferien-api',
                 'external_identifier' => strtoupper($stateCode).'-'.implode('-', $years),

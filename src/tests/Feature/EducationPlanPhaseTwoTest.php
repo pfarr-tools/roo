@@ -4,7 +4,6 @@ use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -12,8 +11,7 @@ uses(RefreshDatabase::class);
 
 function phaseTwoPlanContext(): array
 {
-    $organization = Organization::create(['name' => 'Test Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
     $plan = EducationPlan::create(['external_identifier' => 'PLAN', 'subject' => 'Evangelische Religionslehre', 'title' => 'Bildungsplan']);
 
     return [$user, $plan];

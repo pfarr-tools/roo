@@ -271,9 +271,9 @@ konsistent und teilweise außerhalb des Metadatenbereichs sind.
 ### Curriculum und Schule
 
 `CurriculumSchoolAssignment` ordnet ein Curriculum einer Schule innerhalb der
-Organisation der angemeldeten Lehrkraft zu. Die Zuordnung kann mit `valid_from`
+Benutzerkonto der angemeldeten Lehrkraft zu. Die Zuordnung kann mit `valid_from`
 und `valid_until`, Schulart, Jahrgängen und Notizen ergänzt werden. Ein global
-importiertes Curriculum kann dadurch organisationsbezogen verwendet werden,
+importiertes Curriculum kann dadurch benutzerbezogen verwendet werden,
 ohne die globale Vorlage zu verändern.
 
 Die erste Phase-3-Datenbankmigration umfasst außerdem zeitlich erweiterbare
@@ -319,7 +319,7 @@ Diese Entscheidungen werden nicht ohne eigenen Arbeitsschritt festgelegt:
 ## Phase-2-Datenbankentscheidungen
 
 - Bildungspläne sind standardmäßig globale Referenzdaten
-  (`organization_id` darf null sein); organisationsbezogene Importe können
+  (`user_id` darf null sein); benutzerbezogene Importe können
   über denselben Owner-Scope getrennt werden.
 - Externe Kennungen sind nur innerhalb des Plans bzw. der Fassung eindeutig.
   Die Datenbank erzwingt deshalb Eindeutigkeit immer mit dem jeweiligen

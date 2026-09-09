@@ -2,7 +2,6 @@
 
 namespace App\Actions\Fortify;
 
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -34,16 +33,11 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return \DB::transaction(function () use ($input): User {
-            $organization = Organization::create(['name' => $input['name'].'s Organisation']);
-
-            return User::create([
-                'organization_id' => $organization->id,
+        return User::create([
                 'name' => $input['name'],
                 'email' => $input['email'],
                 // User::$casts hashes the password exactly once when it is persisted.
                 'password' => $input['password'],
-            ]);
-        });
+        ]);
     }
 }

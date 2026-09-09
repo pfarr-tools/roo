@@ -25,7 +25,7 @@ Laravel + Inertia
 - Transaktionen über Planung, Stunden und Bewertungen bleiben einfach.
 - Deployment und lokale Entwicklung bleiben überschaubar.
 - Module können später extrahiert werden, wenn reale Last oder
-  Organisationsgrenzen dies verlangen.
+  Benutzerkontosgrenzen dies verlangen.
 
 ## Schichten
 
@@ -71,6 +71,30 @@ erhalten jedoch Interfaces und Adapter.
 ## Datenbank
 
 PostgreSQL ist die Quelle der Wahrheit.
+
+### Besitzmodell
+
+Roo ist ein persönliches Lehrwerkzeug. Jedes veränderliche Fachobjekt gehört
+direkt über `user_id` zu genau einem Benutzerkonto. Policies und Abfragen
+verwenden diesen Besitzbezug; ein Benutzerkonto sieht niemals die Schulen,
+Schuljahre, Gruppen, Schülerdaten, Planungen, Materialien, Lieder,
+Beobachtungen oder Bewertungen eines anderen Kontos. Eine eigene Curriculum-
+Kopie ist ebenfalls benutzerbezogen.
+
+Importierte Bildungspläne und Curricula sind dagegen gemeinsame, unveränderliche
+Referenzdaten. Sie haben `user_id = null` und dürfen von allen Konten gelesen
+werden. Verwendungen dieser Referenzdaten, insbesondere Zuordnungen zu Schulen
+und Gruppen, bleiben benutzerbezogene Daten. Schülerdaten werden aus
+Datenschutzgründen nicht in Meilisearch indexiert; die Schüler:innen-Suche läuft
+direkt über die geschützte Datenbankabfrage.
+
+Die frühere Organisationstabelle ist vollständig entfernt. Die Migration in
+`2026_09_09_120000_add_user_ownership_to_records.php` übernimmt bestehende
+Datensätze nur dann automatisch, wenn jede frühere Organisation höchstens ein
+Benutzerkonto hatte. Andernfalls bricht sie mit einer verständlichen Meldung
+ab. Die nachfolgende Entfernungsmigration löscht die alte Struktur erst nach
+einer Prüfung auf verwaiste private Datensätze; ihr Rollback erfolgt sicher über
+eine Sicherungswiederherstellung.
 
 JSONB nur für:
 

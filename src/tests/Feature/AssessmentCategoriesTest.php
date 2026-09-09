@@ -2,7 +2,6 @@
 
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
@@ -15,18 +14,17 @@ uses(RefreshDatabase::class);
 
 function assessmentCategoryFixture(): array
 {
-    $organization = Organization::create(['name' => 'Kategorieorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Kategorieschule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Kategorieschule']);
     $year = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $year->id,
         'name' => 'Kategoriegruppe',
@@ -39,7 +37,7 @@ function assessmentCategoryFixture(): array
         'position' => 3,
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Ordnereinsicht',
     ]);
@@ -90,7 +88,7 @@ it('rejects a category belonging to another group or an inactive category', func
     $fixture = assessmentCategoryFixture();
     $otherComponent = TeachingGroupGradeComponent::create([
         'teaching_group_id' => TeachingGroup::create([
-            'organization_id' => $fixture['group']->organization_id,
+            'user_id' => $fixture['group']->user_id,
             'school_id' => $fixture['group']->school_id,
             'school_year_id' => $fixture['group']->school_year_id,
             'name' => 'Andere Kategoriegruppe',
@@ -111,7 +109,7 @@ it('rejects a category belonging to another group or an inactive category', func
 
 it('legt ein manuelles Exemplar direkt für ein Gruppenmitglied an', function () {
     $fixture = assessmentCategoryFixture();
-    $student = Student::create(['organization_id' => $fixture['group']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $student = Student::create(['user_id' => $fixture['group']->user_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
     $fixture['group']->students()->attach($student);
 
     $this->actingAs($fixture['user'])->post(route('assessments.booklets.manual.store', [$fixture['group'], $fixture['assessment']]), ['student_id' => $student->id])->assertRedirect();
@@ -124,9 +122,9 @@ it('legt ein manuelles Exemplar direkt für ein Gruppenmitglied an', function ()
 
 it('stellt manuelle Exemplare als bewertbare Ziele ohne Scanfragment bereit', function () {
     $fixture = assessmentCategoryFixture();
-    $student = Student::create(['organization_id' => $fixture['group']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $student = Student::create(['user_id' => $fixture['group']->user_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Mara', 'last_name' => 'Muster', 'class_name' => '4a']);
     $fixture['group']->students()->attach($student);
-    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['group']->organization_id, 'title' => 'Erwartung']));
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['user_id' => $fixture['group']->user_id, 'title' => 'Erwartung']));
     $fixture['assessment']->tasks()->attach($task);
     $fixture['assessment']->booklets()->create(['student_id' => $student->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
 

@@ -5,7 +5,6 @@ use App\Models\CompetenceEvidence;
 use App\Models\CustomProcessCompetence;
 use App\Models\Observation;
 use App\Models\ObservationType;
-use App\Models\Organization;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
 use App\Models\School;
@@ -19,17 +18,16 @@ uses(RefreshDatabase::class);
 
 function observationFixture(): array
 {
-    $organization = Organization::create(['name' => 'Beobachtungsorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Beobachtungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $student = Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Beobachtungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
     $group->students()->attach($student->id);
-    $lesson = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Beobachtungsstunde', 'position' => 1])->lessons()->create(['title' => 'Stunde', 'position' => 1]);
+    $lesson = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Beobachtungsstunde', 'position' => 1])->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $scheduledLesson = ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
-    $type = ObservationType::create(['organization_id' => $organization->id, 'label' => 'Material fehlt', 'symbol' => 'M']);
+    $type = ObservationType::create(['user_id' => $user->id, 'label' => 'Material fehlt', 'symbol' => 'M']);
 
     return compact('user', 'group', 'student', 'slot', 'scheduledLesson', 'type');
 }
@@ -45,7 +43,7 @@ it('zeigt Schüler:innen und konfigurierbare Beobachtungstypen im Stundenarbeits
 it('zeigt Beobachtungen organisationsgeschützt, filterbar und sortierbar', function () {
     $fixture = observationFixture();
     $otherStudent = Student::create([
-        'organization_id' => $fixture['user']->organization_id,
+        'user_id' => $fixture['user']->id,
         'school_id' => $fixture['group']->school_id,
         'first_name' => 'Noah',
         'last_name' => 'Anders',
@@ -96,7 +94,7 @@ it('speichert Anwesenheit und Beobachtungen nur für Schüler:innen der Gruppe',
 
 it('verhindert Beobachtungen für fremde Gruppen', function () {
     $fixture = observationFixture();
-    $foreignStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Fremd', 'last_name' => 'Kind', 'class_name' => '4b']);
+    $foreignStudent = Student::create(['user_id' => $fixture['user']->id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Fremd', 'last_name' => 'Kind', 'class_name' => '4b']);
 
     $this->actingAs($fixture['user'])->put("/unterricht/{$fixture['slot']->id}/beobachtungen", [
         'students' => [['student_id' => $foreignStudent->id, 'attendance' => 'present']],
@@ -106,7 +104,7 @@ it('verhindert Beobachtungen für fremde Gruppen', function () {
 
 it('speichert eine einzelne Beobachtung sofort ohne andere Schülerdaten zu überschreiben', function () {
     $fixture = observationFixture();
-    $otherStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
+    $otherStudent = Student::create(['user_id' => $fixture['user']->id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
     $fixture['group']->students()->attach($otherStudent->id);
 
     $this->actingAs($fixture['user'])->put("/unterricht/{$fixture['slot']->id}/beobachtungen/{$fixture['student']->id}", [
@@ -122,7 +120,7 @@ it('speichert eine einzelne Beobachtung sofort ohne andere Schülerdaten zu übe
 
 it('bewertet mit alle bewerten nur leere Felder anwesender Schüler:innen', function () {
     $fixture = observationFixture();
-    $otherStudent = Student::create(['organization_id' => $fixture['user']->organization_id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
+    $otherStudent = Student::create(['user_id' => $fixture['user']->id, 'school_id' => $fixture['group']->school_id, 'first_name' => 'Noah', 'last_name' => 'Anders', 'class_name' => '4a']);
     $fixture['group']->students()->attach($otherStudent->id);
     $lessonCompetency = officialCompetency($fixture['scheduledLesson']->lesson->unit, 'Erklärt religiöse Fragen');
     $fixture['scheduledLesson']->lesson->educationPlanCompetencies()->attach($lessonCompetency->id);

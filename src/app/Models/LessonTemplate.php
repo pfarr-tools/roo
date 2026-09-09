@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'unit_template_id', 'copied_from_id', 'title', 'duration_minutes', 'objective', 'notes', 'version', 'is_active'])]
+#[Fillable(['user_id', 'unit_template_id', 'copied_from_id', 'title', 'duration_minutes', 'objective', 'notes', 'version', 'is_active'])]
 class LessonTemplate extends Model
 {
     use Searchable, SearchableFields;
@@ -24,9 +24,9 @@ class LessonTemplate extends Model
         return $this->searchablePayload();
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function unitTemplate(): BelongsTo

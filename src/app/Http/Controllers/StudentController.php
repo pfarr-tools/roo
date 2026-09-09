@@ -41,7 +41,7 @@ class StudentController extends Controller
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Student::class);
-        $organizationId = $request->user()->organization_id;
+        $userId = $request->user()->id;
         $search = trim((string) $request->query('q', ''));
         $schoolId = $request->integer('school_id') ?: null;
         $gradeLevel = trim((string) $request->query('grade_level', ''));
@@ -51,10 +51,10 @@ class StudentController extends Controller
         $sort = in_array($request->query('sort'), ['last_name', 'first_name', 'class_name', 'school'], true) ? $request->query('sort') : 'last_name';
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
-        $searchableStudentIds = $this->searchableStudentIds($search, $organizationId);
+        $searchableStudentIds = $this->searchableStudentIds($search, $userId);
 
         $students = Student::query()
-            ->where('students.organization_id', $organizationId)
+            ->where('students.user_id', $userId)
             ->when($searchableStudentIds !== null, fn ($query) => $query->whereIn('students.id', $searchableStudentIds))
             ->with(['school:id,name', 'teachingGroups:id,name,school_year_id'])
             ->with('teachingGroups.schoolYear:id,name')
@@ -72,11 +72,11 @@ class StudentController extends Controller
 
         return Inertia::render('Students/Index', [
             'students' => $students,
-            'schools' => School::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
-            'classes' => Student::where('organization_id', $organizationId)->distinct()->orderBy('class_name')->pluck('class_name')->values(),
-            'gradeLevels' => Student::where('organization_id', $organizationId)->pluck('class_name')->map(fn (string $className): ?string => preg_match('/^\d+/', $className, $matches) ? $matches[0] : null)->filter()->unique()->sort()->values(),
-            'groups' => TeachingGroup::where('organization_id', $organizationId)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
-            'schoolYears' => TeachingGroup::where('organization_id', $organizationId)->with('schoolYear:id,name')->get()->pluck('schoolYear')->filter()->unique('id')->sortBy('name')->map(fn ($schoolYear) => ['id' => $schoolYear->id, 'name' => $schoolYear->name])->values(),
+            'schools' => School::where('user_id', $userId)->orderBy('name')->get(['id', 'name']),
+            'classes' => Student::where('user_id', $userId)->distinct()->orderBy('class_name')->pluck('class_name')->values(),
+            'gradeLevels' => Student::where('user_id', $userId)->pluck('class_name')->map(fn (string $className): ?string => preg_match('/^\d+/', $className, $matches) ? $matches[0] : null)->filter()->unique()->sort()->values(),
+            'groups' => TeachingGroup::where('user_id', $userId)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
+            'schoolYears' => TeachingGroup::where('user_id', $userId)->with('schoolYear:id,name')->get()->pluck('schoolYear')->filter()->unique('id')->sortBy('name')->map(fn ($schoolYear) => ['id' => $schoolYear->id, 'name' => $schoolYear->name])->values(),
             'filters' => ['q' => $search, 'school_id' => $schoolId, 'grade_level' => $gradeLevel, 'class_name' => $className, 'teaching_group_id' => $groupId, 'school_year_id' => $schoolYearId, 'sort' => $sort, 'direction' => $direction],
             'pronounSets' => PronounSets::toArray(),
         ]);
@@ -85,16 +85,16 @@ class StudentController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $this->authorize('export', Student::class);
-        $organizationId = $request->user()->organization_id;
+        $userId = $request->user()->id;
         $search = trim((string) $request->query('q', ''));
         $schoolId = $request->integer('school_id') ?: null;
         $className = trim((string) $request->query('class_name', ''));
         $groupId = $request->integer('teaching_group_id') ?: null;
         $schoolYearId = $request->integer('school_year_id') ?: null;
-        $searchableStudentIds = $this->searchableStudentIds($search, $organizationId);
+        $searchableStudentIds = $this->searchableStudentIds($search, $userId);
 
         $students = Student::query()
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->when($searchableStudentIds !== null, fn ($query) => $query->whereIn('students.id', $searchableStudentIds))
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
             ->when($className !== '', fn ($query) => $query->where('class_name', $className))
@@ -122,18 +122,15 @@ class StudentController extends Controller
         }, 'schuelerinnen.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    private function searchableStudentIds(string $search, int $organizationId): ?array
+    private function searchableStudentIds(string $search, int $userId): ?array
     {
         if ($search === '') {
             return null;
         }
 
-        $indexedIds = Student::search($search)
-            ->where('organization_id', $organizationId)
-            ->keys();
         $needle = mb_strtolower($search);
         $databaseIds = Student::query()
-            ->where('organization_id', $organizationId)
+            ->where('user_id', $userId)
             ->where(function ($query) use ($needle): void {
                 foreach (['first_name', 'last_name', 'class_name'] as $column) {
                     $query->orWhereRaw('LOWER('.$column.') LIKE ?', ['%'.$needle.'%']);
@@ -142,6 +139,6 @@ class StudentController extends Controller
             })
             ->pluck('id');
 
-        return collect($indexedIds)->merge($databaseIds)->unique()->values()->all();
+        return $databaseIds->values()->all();
     }
 }

@@ -5,7 +5,6 @@ use App\Models\CurriculumTopic;
 use App\Models\CurriculumVersion;
 use App\Models\GroupYearPlan;
 use App\Models\LessonOccurrence;
-use App\Models\Organization;
 use App\Models\PlannedUnit;
 use App\Models\School;
 use App\Models\SchoolPeriod;
@@ -25,11 +24,10 @@ beforeEach(function () {
 
 function phaseSixGroup(): array
 {
-    $organization = Organization::create(['name' => 'Phase 6 Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Planungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a Religion']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Planungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a Religion']);
     $period = SchoolPeriod::create(['school_id' => $school->id, 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $group->schoolPeriods()->attach($period->id, ['weekday' => 2]);
 
@@ -38,7 +36,7 @@ function phaseSixGroup(): array
 
 it('creates a scoped year plan and planned unit from a template', function () {
     [$user, $year, $group] = phaseSixGroup();
-    $template = UnitTemplate::create(['organization_id' => $user->organization_id, 'title' => 'Schöpfung', 'expected_hours' => 2]);
+    $template = UnitTemplate::create(['user_id' => $user->id, 'title' => 'Schöpfung', 'expected_hours' => 2]);
 
     $this->actingAs($user)->post("/jahresplanung/{$group->id}/einheiten", [
         'title' => 'Schöpfung bewahren', 'unit_template_id' => $template->id,
@@ -89,9 +87,7 @@ it('keeps actual lesson status separate from planning and protects organizations
     expect($occurrence->fresh()->planned_on->toDateString())->toBe('2026-09-01')
         ->and($occurrence->fresh()->actual_on->toDateString())->toBe('2026-09-02')
         ->and($occurrence->fresh()->status)->toBe('conducted');
-
-    $otherOrganization = Organization::create(['name' => 'Fremd']);
-    $otherUser = User::factory()->create(['organization_id' => $otherOrganization->id]);
+    $otherUser = User::factory()->create();
     $this->actingAs($otherUser)->get("/jahresplanung/{$group->id}")->assertForbidden();
 });
 
@@ -122,7 +118,7 @@ it('explicitly marks and resumes an interrupted planned unit', function () {
 
 it('rejects curriculum topics that are not assigned to the teaching group', function () {
     [$user, , $group] = phaseSixGroup();
-    $curriculum = Curriculum::create(['organization_id' => $user->organization_id, 'title' => 'Eigene Lehrpläne']);
+    $curriculum = Curriculum::create(['user_id' => $user->id, 'title' => 'Eigene Lehrpläne']);
     $version = CurriculumVersion::create(['curriculum_id' => $curriculum->id, 'is_editable' => true]);
     $topic = CurriculumTopic::create(['curriculum_version_id' => $version->id, 'title' => 'Nicht zugeordnet', 'position' => 1]);
 

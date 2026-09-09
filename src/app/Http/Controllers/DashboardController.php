@@ -16,9 +16,9 @@ class DashboardController extends Controller
     {
         $timezone = (string) config('app.timezone', 'Europe/Berlin');
         $currentMonday = CarbonImmutable::now($timezone)->startOfWeek(CarbonImmutable::MONDAY);
-        $organizationId = $request->user()->organization_id;
-        $schoolYears = SchoolYear::where('organization_id', $organizationId)->with('school:id,name')->orderBy('starts_on')->get();
-        $periodNumbers = SchoolPeriod::whereHas('school', fn ($query) => $query->where('organization_id', $organizationId))->distinct()->orderBy('period_number')->pluck('period_number')->values();
+        $userId = $request->user()->id;
+        $schoolYears = SchoolYear::where('user_id', $userId)->with('school:id,name')->orderBy('starts_on')->get();
+        $periodNumbers = SchoolPeriod::whereHas('school', fn ($query) => $query->where('user_id', $userId))->distinct()->orderBy('period_number')->pluck('period_number')->values();
         $weekInSchoolYear = fn (CarbonImmutable $monday): bool => $schoolYears->contains(fn (SchoolYear $year) => $year->starts_on->lte($monday->addDays(4)) && $year->ends_on->gte($monday));
         $nextMonday = $schoolYears->filter(fn (SchoolYear $year) => $year->ends_on->gte($currentMonday->addWeek()))->map(fn (SchoolYear $year): CarbonImmutable => CarbonImmutable::parse($year->starts_on->toDateString(), $timezone)->startOfWeek(CarbonImmutable::MONDAY))->filter(fn (CarbonImmutable $monday) => $monday->gte($currentMonday->addWeek()))->sort()->first() ?? $currentMonday->addWeek();
         $requestedWeek = $request->date('week');
@@ -37,8 +37,8 @@ class DashboardController extends Controller
         }
         $weekOptions = $weekOptions->sortKeys()->values();
         $schoolYearIds = $schoolYears->filter(fn (SchoolYear $year) => $year->starts_on->lte($selectedMonday->addDays(4)) && $year->ends_on->gte($selectedMonday))->pluck('id');
-        $groups = $request->user()->organization_id
-            ? TeachingGroup::where('organization_id', $organizationId)->whereIn('school_year_id', $schoolYearIds)->with([
+        $groups = $request->user()->id
+            ? TeachingGroup::where('user_id', $userId)->whereIn('school_year_id', $schoolYearIds)->with([
                 'school:id,name,slug,short_name',
                 'schoolYear:id,name',
                 'schoolPeriods:id,school_id,period_number,starts_at,ends_at',

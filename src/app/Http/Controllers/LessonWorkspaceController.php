@@ -53,7 +53,7 @@ class LessonWorkspaceController extends Controller
         $group = $scheduleSlot->group;
         $this->authorize('update', $group);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
-        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->user_id === $group->user_id, 404);
 
         $assessmentTask->load(['educationPlanCompetency.variants', 'levels', 'expectations', 'images.resource', 'images.labels']);
         $assessmentTask->setRelation('images', $assessmentTask->images->map(fn ($image): array => [
@@ -100,9 +100,9 @@ class LessonWorkspaceController extends Controller
             'task' => $task,
             'initialEducationPlanId' => $initialEducationPlanId,
             'initialCompetency' => $initialCompetency,
-            'imageLibrary' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name'])->map(fn (ResourceReference $image): array => ['id' => $image->id, 'name' => $image->original_name, 'preview_url' => route('resources.library.files.preview', $image)])->values(),
+            'imageLibrary' => ResourceReference::where('user_id', $request->user()->id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name'])->map(fn (ResourceReference $image): array => ['id' => $image->id, 'name' => $image->original_name, 'preview_url' => route('resources.library.files.preview', $image)])->values(),
             'imageUploadUrl' => route('resources.library.images.store'),
-            'educationPlans' => EducationPlan::whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id)->orderBy('title')->get(['id', 'title']),
+            'educationPlans' => EducationPlan::whereNull('user_id')->orWhere('user_id', $request->user()->id)->orderBy('title')->get(['id', 'title']),
         ]);
     }
 
@@ -181,7 +181,7 @@ class LessonWorkspaceController extends Controller
         $labeling = $this->validatedImageLabeling($request, $data['task_type']);
         $data['content'] = ($data['content'] ?? []) + $labeling['content'] + ['lineated' => $request->boolean('content.lineated')];
         $attributes = [
-            'organization_id' => $group->organization_id,
+            'user_id' => $group->user_id,
             'title' => $data['title'],
             'task_type' => $data['task_type'],
             'content' => $data['content'] ?? null,
@@ -189,7 +189,7 @@ class LessonWorkspaceController extends Controller
             'max_points' => $data['task_type'] === 'sentence_builder' ? ($data['max_points'] ?? null) : ($expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null),
             'level' => collect($data['levels'] ?? [])->first(),
         ];
-        abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+        abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $group->user_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
         abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
         $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         $task = AssessmentTask::create($attributes);
@@ -198,7 +198,7 @@ class LessonWorkspaceController extends Controller
         $task->update(['max_points' => $task->maximumPoints()]);
         $task->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
         $lesson->assessmentTasks()->syncWithoutDetaching([$task->id]);
-        $this->syncTaskImages($task, $this->orderedTaskImages($request, $data['images'] ?? []), $group->organization_id);
+        $this->syncTaskImages($task, $this->orderedTaskImages($request, $data['images'] ?? []), $group->user_id);
         $this->syncTaskImageLabels($task, $labeling['labels']);
         $task->update(['max_points' => $task->maximumPoints()]);
 
@@ -210,7 +210,7 @@ class LessonWorkspaceController extends Controller
         $group = $scheduleSlot->group;
         $this->authorize('update', $group);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
-        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->user_id === $group->user_id, 404);
         $expectations = $this->validatedExpectations($request);
         $request->validate(['education_plan_id' => ['required', 'integer'], 'education_plan_competency_id' => ['required', 'integer']]);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'task_type' => ['required', Rule::in(AssessmentTaskType::values())], 'content' => ['nullable', 'array'], 'content.prompt' => ['nullable', 'string', 'max:10000'], 'content.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.show_solutions' => ['sometimes', 'boolean'], 'content.points_per_correct_answer' => ['nullable', 'integer', 'min:0', 'max:10000'], 'content.matching_scoring_mode' => ['nullable', Rule::in(['per_category', 'complete_row'])], 'content.categories' => ['nullable', 'array'], 'content.categories.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.categories.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows' => ['nullable', 'array'], 'content.rows.*.id' => ['required_if:task_type,matching_table', 'string', 'max:100'], 'content.rows.*.text' => ['required_if:task_type,matching_table', 'string', 'max:2000'], 'content.rows.*.category_ids' => ['required_if:task_type,matching_table', 'array'], 'content.rows.*.category_ids.*' => ['string', 'max:100'], 'content.subtasks' => ['nullable', 'array'], 'content.subtasks.*.key' => ['required_with:content.subtasks', 'string', 'max:100'], 'content.subtasks.*.label' => [Rule::requiredIf(fn () => $request->input('task_type') === 'subtask_table'), 'nullable', 'string', 'max:2000'], 'content.subtasks.*.image_identifier' => [Rule::requiredIf(fn () => $request->input('task_type') === 'image_answer_table'), 'nullable', 'string', 'max:100'], 'content.subtasks.*.solution' => ['nullable', 'string', 'max:2000'], 'content.subtasks.*.lines' => ['required_with:content.subtasks', 'integer', 'min:0', 'max:200'], 'content.subtasks.*.points' => ['nullable', 'integer', 'min:1', 'max:10000'], 'content.reading_text' => ['nullable', 'string', 'max:50000'], 'content.options' => ['nullable', 'array'], 'content.options.*.text' => ['required_with:content.options', 'string', 'max:2000'], 'content.options.*.correct' => ['sometimes', 'boolean'], 'content.columns' => ['nullable', 'array'], 'content.columns.*' => ['nullable', 'array'], 'content.columns.*.*' => ['nullable'], 'content.rows' => ['nullable', 'array'], 'content.rows.*' => ['array'], 'content.rows.*.*' => ['nullable'], 'content.rows.*.label' => ['nullable'], 'content.rows.*.answer' => ['nullable'], 'content.images' => ['prohibited'], 'content.image_width_cm' => ['nullable', 'numeric', 'min:1.5', 'max:4'], 'images' => ['nullable', 'array'], 'images.*.identifier' => ['nullable', 'string', 'max:100'], 'images.*.resource_id' => ['required', 'integer'], 'images.*.label' => ['nullable', 'string', 'max:255'], 'images.*.answer' => ['nullable', 'string', 'max:2000'], 'content.questions' => ['nullable', 'array'], 'content.questions.*.label' => ['required_with:content.questions', 'string', 'max:2000'], 'content.questions.*.lines' => ['nullable', 'integer', 'min:0', 'max:200'], 'content.words' => ['nullable', 'string', 'max:5000'], 'solution' => ['nullable', 'string'], 'max_points' => ['nullable', 'integer', 'min:1'], 'education_plan_id' => ['nullable', 'integer'], 'education_plan_competency_id' => ['nullable', 'integer'], 'levels' => ['sometimes', 'array'], 'levels.*' => ['in:G,M,E']]);
@@ -240,7 +240,7 @@ class LessonWorkspaceController extends Controller
         $data['content'] = ($data['content'] ?? []) + ['lineated' => $request->boolean('content.lineated'), 'optional_reading_text' => $request->input('content.optional_reading_text'), 'rating_scale' => $request->input('content.rating_scale'), 'rating_scale_label' => $request->input('content.rating_scale_label')];
         $attributes = ['title' => $data['title'], 'task_type' => $data['task_type'], 'content' => $data['content'] ?? null, 'solution' => $data['solution'] ?? null, 'max_points' => $data['task_type'] === 'sentence_builder' ? ($data['max_points'] ?? null) : ($expectations ? collect($expectations)->sum(fn ($expectation) => $expectation['points'] * $expectation['repetitions']) : null), 'level' => collect($data['levels'] ?? [])->first()];
         if (filled($data['education_plan_id'] ?? null) && filled($data['education_plan_competency_id'] ?? null)) {
-            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $group->organization_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
+            abort_unless(EducationPlan::whereKey($data['education_plan_id'])->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $group->user_id))->exists(), 422, 'Der Bildungsplan ist nicht verfügbar.');
             abort_unless(EducationPlanCompetency::whereKey($data['education_plan_competency_id'])->whereHas('area.version', fn ($query) => $query->where('education_plan_id', $data['education_plan_id']))->exists(), 422, 'Die Kompetenz gehört nicht zum gewählten Bildungsplan.');
             $attributes += ['education_plan_id' => $data['education_plan_id'], 'education_plan_competency_id' => $data['education_plan_competency_id']];
         }
@@ -251,7 +251,7 @@ class LessonWorkspaceController extends Controller
         $assessmentTask->update(['max_points' => $assessmentTask->maximumPoints()]);
         $assessmentTask->levels()->delete();
         $assessmentTask->levels()->createMany(collect($data['levels'] ?? [])->map(fn ($level) => ['level' => $level])->all());
-        $this->syncTaskImages($assessmentTask, $this->orderedTaskImages($request, $data['images'] ?? []), $group->organization_id);
+        $this->syncTaskImages($assessmentTask, $this->orderedTaskImages($request, $data['images'] ?? []), $group->user_id);
         $this->syncTaskImageLabels($assessmentTask, $labeling['labels']);
         $assessmentTask->update(['max_points' => $assessmentTask->maximumPoints()]);
 
@@ -371,10 +371,10 @@ class LessonWorkspaceController extends Controller
         })->values()->all();
     }
 
-    private function syncTaskImages(AssessmentTask $task, array $images, int $organizationId): void
+    private function syncTaskImages(AssessmentTask $task, array $images, int $userId): void
     {
         $ids = collect($images)->pluck('resource_id')->filter()->unique()->values();
-        $resources = ResourceReference::where('organization_id', $organizationId)->whereIn('id', $ids)->where('mime_type', 'like', 'image/%')->pluck('id');
+        $resources = ResourceReference::where('user_id', $userId)->whereIn('id', $ids)->where('mime_type', 'like', 'image/%')->pluck('id');
         abort_unless($resources->count() === $ids->count(), 422, 'Das Bild ist nicht verfügbar.');
         $task->images()->delete();
         $images = collect($images)->sortBy(fn (array $image, int $index): int => (int) ($image['position'] ?? $index))->values();
@@ -442,7 +442,7 @@ class LessonWorkspaceController extends Controller
         $group = $scheduleSlot->group;
         $this->authorize('update', $group);
         $lesson = $scheduleSlot->scheduledLesson?->lesson;
-        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->organization_id === $group->organization_id, 404);
+        abort_unless($lesson && $lesson->assessmentTasks()->whereKey($assessmentTask->id)->exists() && $assessmentTask->user_id === $group->user_id, 404);
         $lesson->assessmentTasks()->detach($assessmentTask->id);
 
         return back()->with('success', 'Prüfungsaufgabe wurde aus der Stunde entfernt.');
@@ -513,12 +513,12 @@ class LessonWorkspaceController extends Controller
             ->orderBy('date')->orderBy('period_number')
             ->first();
         $groupStudents = $group->students()->orderBy('last_name')->orderBy('first_name')->get(['students.id', 'first_name', 'last_name', 'class_name']);
-        $observationTypes = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))
+        $observationTypes = ObservationType::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))
             ->where('is_active', true)->orderBy('position')->orderBy('label')->get(['id', 'label', 'symbol', 'color']);
         if ($observationTypes->isEmpty()) {
             $defaults = [['label' => 'Material fehlt', 'symbol' => 'M'], ['label' => 'Hausaufgabe fehlt', 'symbol' => 'H'], ['label' => 'Mitarbeit', 'symbol' => '★']];
             foreach ($defaults as $position => $default) {
-                $observationTypes->push(ObservationType::firstOrCreate(['organization_id' => $request->user()->organization_id, 'label' => $default['label']], $default + ['position' => $position]));
+                $observationTypes->push(ObservationType::firstOrCreate(['user_id' => $request->user()->id, 'label' => $default['label']], $default + ['position' => $position]));
             }
         }
         $targetCompetencies = $lesson->competencies
@@ -540,18 +540,18 @@ class LessonWorkspaceController extends Controller
             'group' => $group,
             'lesson' => $lesson,
             'unit' => $lesson->unit,
-            'phaseTemplates' => PhaseTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
-            'socialForms' => SocialForm::where('organization_id', $request->user()->organization_id)->orderBy('name')->get(['id', 'name']),
+            'phaseTemplates' => PhaseTemplate::where('user_id', $request->user()->id)->where('is_active', true)->with('socialForm:id,name')->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']),
+            'socialForms' => SocialForm::where('user_id', $request->user()->id)->orderBy('name')->get(['id', 'name']),
             'materialItems' => $lesson->unit->materialItems->merge($lesson->materialItems)->unique('id')->values(),
             'assessmentTasks' => $lesson->assessmentTasks->each(function ($task): void {
                 $task->setAttribute('competency_identifier', $task->educationPlanCompetency?->external_identifier);
                 $task->setAttribute('has_differentiation', $task->educationPlanCompetency?->variants?->contains(fn ($variant) => filled($variant->education_plan_level_id)) ?? false);
             }),
-            'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
-            'resourceLinks' => ResourceLink::where('organization_id', $request->user()->organization_id)->where(function ($query) use ($lesson): void {
+            'songs' => SongVersion::whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->with('song:id,title,author,composer,copyright_notice')->orderBy('name')->get(),
+            'resourceLinks' => ResourceLink::where('user_id', $request->user()->id)->where(function ($query) use ($lesson): void {
                 $query->where('teaching_unit_id', $lesson->teaching_unit_id)->orWhere('lesson_id', $lesson->id);
             })->orderBy('title')->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description']),
-            'lessonTemplates' => LessonTemplate::where('organization_id', $request->user()->organization_id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
+            'lessonTemplates' => LessonTemplate::where('user_id', $request->user()->id)->where('is_active', true)->orderBy('title')->get(['id', 'title']),
             'targetCompetencies' => ['process' => $targetCompetencies['process'] ?? [], 'content' => $targetCompetencies['content'] ?? []],
             'customProcessCompetences' => $customProcessCompetences,
             'customProcessCompetenceScaleIntervalCount' => $group->school->observation_scale_interval_count,
@@ -587,7 +587,7 @@ class LessonWorkspaceController extends Controller
         ]);
         $studentIds = collect($data['students'])->pluck('student_id');
         abort_unless($studentIds->unique()->count() === $studentIds->count() && $studentIds->diff($students)->isEmpty(), 422);
-        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->pluck('id');
+        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->pluck('id');
         $competencyIds = $scheduledLesson->lesson->educationPlanCompetencies()->pluck('education_plan_competencies.id');
         $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
         foreach ($data['students'] as $student) {
@@ -704,7 +704,7 @@ class LessonWorkspaceController extends Controller
     private function persistStudentObservation(ScheduleSlot $scheduleSlot, $group, Student $student, array $data): void
     {
         $scheduledLesson = $scheduleSlot->scheduledLesson;
-        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', request()->user()->organization_id))->pluck('id');
+        $typeIds = ObservationType::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', request()->user()->id))->pluck('id');
         $competencyIds = $scheduledLesson->lesson->educationPlanCompetencies()->pluck('education_plan_competencies.id');
         $customCompetences = $group->school->customProcessCompetences()->where('is_active', true)->get(['id']);
         foreach ($data['evidences'] ?? [] as $evidence) {

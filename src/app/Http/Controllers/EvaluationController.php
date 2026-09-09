@@ -20,11 +20,11 @@ class EvaluationController extends Controller
     {
         $this->authorize('viewAny', TeachingGroup::class);
         $groups = TeachingGroup::query()
-            ->where('organization_id', $request->user()->organization_id)
+            ->where('user_id', $request->user()->id)
             ->orderBy('name')
             ->get(['id', 'name', 'grading_model']);
         $preference = $request->user()->preferences()->where('key', 'evaluations.last_group')->first()?->value ?? [];
-        $selectedGroup = ($teachingGroup && $teachingGroup->organization_id === $request->user()->organization_id ? $groups->firstWhere('id', $teachingGroup->id) : null)
+        $selectedGroup = ($teachingGroup && $teachingGroup->user_id === $request->user()->id ? $groups->firstWhere('id', $teachingGroup->id) : null)
             ?? $groups->firstWhere('id', $request->integer('group'))
             ?? $groups->firstWhere('id', (int) ($preference['group_id'] ?? 0))
             ?? $groups->first();
@@ -85,7 +85,7 @@ class EvaluationController extends Controller
             $data['include_full_school_year'] = false;
         }
         DB::transaction(function () use ($data, $teachingGroup, $templateGenerator): void {
-            $period = $teachingGroup->reportPeriods()->create([...$data, 'organization_id' => $teachingGroup->organization_id]);
+            $period = $teachingGroup->reportPeriods()->create([...$data, 'user_id' => $teachingGroup->user_id]);
             $teachingGroup->students()->get()->each(fn ($student) => $period->evaluations()->create(['student_id' => $student->id]));
             if ($teachingGroup->grading_model === 'competency_texts_and_grades') {
                 $period->evaluationTemplates()->createMany($templateGenerator->generate($period)->all());

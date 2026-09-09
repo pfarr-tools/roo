@@ -2,7 +2,6 @@
 
 use App\Models\Assessment;
 use App\Models\AssessmentTask;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
@@ -17,29 +16,28 @@ uses(RefreshDatabase::class);
 
 function browserScanResultFixture(): array
 {
-    $organization = Organization::create(['name' => 'Result Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Result Schule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Result Schule']);
     $schoolYear = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $schoolYear->id,
         'name' => '4a Religion',
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Lernstandserhebung Ergebnis',
     ]);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Aufgabe eins',
     ]));
     $assessment->tasks()->attach($task, ['position' => 1]);

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type'])]
+#[Fillable(['user_id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type'])]
 class MaterialItem extends Model
 {
     use Searchable, SearchableFields;
@@ -24,9 +24,9 @@ class MaterialItem extends Model
         return $this->searchablePayload();
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function phaseTemplates(): BelongsToMany

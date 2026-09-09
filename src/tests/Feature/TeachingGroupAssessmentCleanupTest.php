@@ -4,7 +4,6 @@ use App\Models\Assessment;
 use App\Models\AssessmentBooklet;
 use App\Models\AssessmentBookletFragment;
 use App\Models\AssessmentTask;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\TeachingGroup;
@@ -16,29 +15,28 @@ uses(RefreshDatabase::class);
 
 it('cleans assessment booklet crops when a teaching group is deleted', function () {
     Storage::fake('documents');
-    $organization = Organization::create(['name' => 'Löschprüfung Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Löschprüfung Schule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Löschprüfung Schule']);
     $schoolYear = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $schoolYear->id,
         'name' => 'Löschprüfung Gruppe',
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Löschprüfung Assessment',
     ]);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Löschprüfung Aufgabe',
     ]));
     $assessment->tasks()->attach($task, ['position' => 1]);

@@ -2,7 +2,6 @@
 
 use App\Models\AssessmentTask;
 use App\Models\MaterialItem;
-use App\Models\Organization;
 use App\Models\ResourceLink;
 use App\Models\ResourceReference;
 use App\Models\School;
@@ -18,28 +17,26 @@ uses(RefreshDatabase::class);
 
 it('shows the complete organization library and protects its CRUD actions', function () {
     Storage::fake('local');
-    $organization = Organization::create(['name' => 'Bibliothek']);
-    $otherOrganization = Organization::create(['name' => 'Andere Bibliothek']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $otherUser = User::factory()->create();
+    $user = User::factory()->create();
     $file = UploadedFile::fake()->create('Arbeitsblatt.pdf', 20, 'application/pdf');
     Storage::disk('local')->put('library/test.pdf', $file->getContent());
-    $reference = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'library/test.pdf', 'mime_type' => 'application/pdf', 'size' => 20]);
-    ResourceLink::create(['organization_id' => $organization->id, 'title' => 'Religionspädagogik', 'url' => 'https://example.test/ru']);
-    MaterialItem::create(['organization_id' => $organization->id, 'name' => 'Erzählkarten']);
-    ResourceLink::create(['organization_id' => $otherOrganization->id, 'title' => 'Nicht sichtbar', 'url' => 'https://example.test/other']);
+    $reference = ResourceReference::create(['user_id' => $user->id, 'original_name' => 'Arbeitsblatt.pdf', 'storage_path' => 'library/test.pdf', 'mime_type' => 'application/pdf', 'size' => 20]);
+    ResourceLink::create(['user_id' => $user->id, 'title' => 'Religionspädagogik', 'url' => 'https://example.test/ru']);
+    MaterialItem::create(['user_id' => $user->id, 'name' => 'Erzählkarten']);
+    ResourceLink::create(['user_id' => $otherUser->id, 'title' => 'Nicht sichtbar', 'url' => 'https://example.test/other']);
 
     $this->actingAs($user)->get('/ressourcen/bibliothek')->assertInertia(fn ($page) => $page->component('Resources/Library')->has('items', 3)->where('counts.resource', 1)->where('counts.total', 3));
     $this->actingAs($user)->post('/ressourcen/bibliothek/ressourcen', ['title' => 'Neue Quelle', 'url' => 'https://example.test/new'])->assertRedirect();
     $this->actingAs($user)->get('/ressourcen/bibliothek?q=Erzählkarten&type=material')->assertInertia(fn ($page) => $page->has('items', 1));
     $this->actingAs($user)->get('/ressourcen/bibliothek/dateien/'.$reference->id.'/download')->assertOk();
-    expect(ResourceLink::where('organization_id', $organization->id)->count())->toBe(2);
+    expect(ResourceLink::where('user_id', $user->id)->count())->toBe(2);
 });
 
 it('zeigt Lieder mit Musikcredits in der Bibliothek', function () {
-    $organization = Organization::create(['name' => 'Lieder Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
     $version = Song::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Unser Lied',
         'author' => 'Ada Text',
         'composer' => 'Ben Musik',
@@ -55,9 +52,8 @@ it('zeigt Lieder mit Musikcredits in der Bibliothek', function () {
 });
 
 it('öffnet den Liededitor unter der Bibliotheksroute', function () {
-    $organization = Organization::create(['name' => 'Editor Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $version = Song::create(['organization_id' => $organization->id, 'title' => 'Editorlied'])
+    $user = User::factory()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Editorlied'])
         ->versions()->create(['name' => 'Standardfassung']);
 
     $this->actingAs($user)->get('/bibliothek/lied/'.$version->id)
@@ -71,8 +67,7 @@ it('öffnet den Liededitor unter der Bibliotheksroute', function () {
 
 it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien', function () {
     Storage::fake('local');
-    $organization = Organization::create(['name' => 'Copyright Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/dateien', [
         'resource' => UploadedFile::fake()->image('flux.png'),
@@ -87,8 +82,7 @@ it('speichert Beschreibung und Copyrights bei hochgeladenen Bibliotheksdateien',
 
 it('erstellt gedroppte Dateien und URLs als Bibliothekseinträge und gibt sie zurück', function () {
     Storage::fake('local');
-    $organization = Organization::create(['name' => 'Drop Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
 
     $response = $this->actingAs($user)->postJson('/ressourcen/bibliothek/drop', [
         'files' => [UploadedFile::fake()->create('Arbeitsblatt.pdf', 20, 'application/pdf')],
@@ -100,28 +94,26 @@ it('erstellt gedroppte Dateien und URLs als Bibliothekseinträge und gibt sie zu
         ->assertJsonPath('items.0.name', 'Arbeitsblatt.pdf')
         ->assertJsonPath('items.1.kind', 'resource')
         ->assertJsonPath('items.1.url', 'https://example.test/arbeitsblatt');
-    expect(ResourceReference::where('organization_id', $organization->id)->count())->toBe(1)
-        ->and(ResourceLink::where('organization_id', $organization->id)->count())->toBe(1);
+    expect(ResourceReference::where('user_id', $user->id)->count())->toBe(1)
+        ->and(ResourceLink::where('user_id', $user->id)->count())->toBe(1);
 });
 
 it('isoliert gedroppte Bibliothekseinträge nach Organisation', function () {
-    $organization = Organization::create(['name' => 'Eigene Drop Organisation']);
-    $otherOrganization = Organization::create(['name' => 'Andere Drop Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $otherUser = User::factory()->create();
+    $user = User::factory()->create();
 
     $this->actingAs($user)->postJson('/ressourcen/bibliothek/drop', [
         'urls' => ['https://example.test/eigene-ressource'],
     ])->assertCreated();
 
-    expect(ResourceLink::where('organization_id', $organization->id)->count())->toBe(1)
-        ->and(ResourceLink::where('organization_id', $otherOrganization->id)->count())->toBe(0);
+    expect(ResourceLink::where('user_id', $user->id)->count())->toBe(1)
+        ->and(ResourceLink::where('user_id', $otherUser->id)->count())->toBe(0);
 });
 
 it('speichert eine URL-Ressource aus dem geöffneten Drop-Editor', function () {
-    $organization = Organization::create(['name' => 'Drop Editor Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
     $resource = ResourceLink::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'https://example.test/alt',
         'url' => 'https://example.test/alt',
     ]);
@@ -138,8 +130,7 @@ it('speichert eine URL-Ressource aus dem geöffneten Drop-Editor', function () {
 
 it('macht hochgeladene Bilder zu geschützten Bibliotheksressourcen', function () {
     Storage::fake('local');
-    $organization = Organization::create(['name' => 'Bildbibliothek']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
 
     $response = $this->actingAs($user)->postJson('/ressourcen/bibliothek/bilder', [
         'image' => UploadedFile::fake()->image('Karte.png'),
@@ -157,8 +148,7 @@ it('macht hochgeladene Bilder zu geschützten Bibliotheksressourcen', function (
 });
 
 it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
-    $organization = Organization::create(['name' => 'Keine Bild-URLs']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
+    $user = User::factory()->create();
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Bildaufgabe',
@@ -171,12 +161,11 @@ it('weist externe Bild-URLs bei Prüfungsaufgaben zurück', function () {
 });
 
 it('speichert Sätze sortieren mit stabilen Satz-IDs und Punkten pro Satz', function () {
-    $organization = Organization::create(['name' => 'Sortier Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Sortierschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Sortierschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann ordnen');
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -202,14 +191,13 @@ it('speichert Sätze sortieren mit stabilen Satz-IDs und Punkten pro Satz', func
 });
 
 it('speichert Referenzpunkte für Bildbeschriftungen', function () {
-    $organization = Organization::create(['name' => 'Beschriftungs Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Beschriftungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Pflanzen', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Beschriftungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Pflanzen', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann beschriften');
-    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Pflanze.png', 'storage_path' => 'library/pflanze.png', 'mime_type' => 'image/png', 'size' => 10]);
+    $image = ResourceReference::create(['user_id' => $user->id, 'original_name' => 'Pflanze.png', 'storage_path' => 'library/pflanze.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Beschrifte die Pflanze',
@@ -232,15 +220,14 @@ it('speichert Referenzpunkte für Bildbeschriftungen', function () {
 });
 
 it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie Stunden zu', function () {
-    $organization = Organization::create(['name' => 'Aufgaben Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Aufgabenschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Aufgabenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann begründen');
-    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
+    $image = ResourceReference::create(['user_id' => $user->id, 'original_name' => 'Karte.png', 'storage_path' => 'library/karte.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', ['title' => 'Begründe deine Antwort', 'task_type' => 'free_text', 'content' => ['prompt' => 'Begründe deine Antwort', 'lines' => 5, 'lineated' => true, 'image_width_cm' => 3.5, 'optional_reading_text' => 'Lies diesen Text.', 'rating_scale' => 'stars', 'rating_scale_label' => 'Wie sicher bist du?'], 'images' => [['resource_id' => $image->id, 'label' => 'Bild', 'answer' => 'Karte']], 'expectations' => [['text' => 'Korrektes Merkmal benannt', 'points' => 1, 'repetitions' => 3]], 'competency_id' => $competency->id, 'levels' => ['G', 'M']])->assertRedirect();
 
@@ -284,12 +271,11 @@ it('legt wiederverwendbare Prüfungsaufgaben kompetenzbezogen an und ordnet sie 
 });
 
 it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschriften', function () {
-    $organization = Organization::create(['name' => 'Teilaufgaben Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Teilaufgabenschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Teilaufgabenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann zuordnen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -321,14 +307,13 @@ it('speichert eine Tabelle mit Teilaufgaben ohne generische Spaltenüberschrifte
 });
 
 it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', function () {
-    $organization = Organization::create(['name' => 'Bildtabellen Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bildtabellenschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Bildtabellenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann darstellen');
-    $image = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Baum.png', 'storage_path' => 'library/baum.png', 'mime_type' => 'image/png', 'size' => 10]);
+    $image = ResourceReference::create(['user_id' => $user->id, 'original_name' => 'Baum.png', 'storage_path' => 'library/baum.png', 'mime_type' => 'image/png', 'size' => 10]);
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
         'title' => 'Bildtabelle',
@@ -361,12 +346,11 @@ it('speichert eine Tabelle mit Bildern und Lösungsfeldern als Bildzeilen', func
 });
 
 it('speichert eine Gestaltungsaufgabe mit manuellen Erwartungen', function () {
-    $organization = Organization::create(['name' => 'Gestaltungsaufgaben Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Gestaltungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Gestaltungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann gestalten');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -388,12 +372,11 @@ it('speichert eine Gestaltungsaufgabe mit manuellen Erwartungen', function () {
 });
 
 it('speichert Lückentexte mit automatisch synchronisierten Erwartungen', function () {
-    $organization = Organization::create(['name' => 'Lückentext Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Lückentextschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Lückentextschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann ergänzen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -428,12 +411,11 @@ it('speichert Lückentexte mit automatisch synchronisierten Erwartungen', functi
 });
 
 it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', function () {
-    $organization = Organization::create(['name' => 'Überschriftentabellen Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Überschriftenschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Überschriftenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann ordnen');
 
     $response = $this->actingAs($user)->post('/ressourcen/bibliothek/pruefungsaufgaben', [
@@ -473,12 +455,11 @@ it('speichert Überschriften-Tabellen mit Zelllösungen und Erwartungen', functi
 });
 
 it('speichert Zuordnungstabellen und berechnet beide Bewertungsmodi', function () {
-    $organization = Organization::create(['name' => 'Zuordnungstabellen Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Zuordnungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Zuordnungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann zuordnen');
 
     $payload = [

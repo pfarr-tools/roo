@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -8,8 +7,7 @@ use Illuminate\Support\Facades\Http;
 uses(RefreshDatabase::class);
 
 it('proxyfiziert Credits, Bildauftrag und asynchrones FLUX-Ergebnis mit dem Benutzerschlüssel', function () {
-    $organization = Organization::create(['name' => 'Flux Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id, 'flux_api_key' => 'secret-key']);
+    $user = User::factory()->create(['flux_api_key' => 'secret-key']);
     Http::fake([
         'https://api.bfl.ai/v1/credits' => Http::response(['credits' => 42], 200),
         'https://api.bfl.ai/v1/flux-2-flex' => Http::response(['polling_url' => 'https://api.bfl.ai/v1/get_result?id=abc', 'cost' => 3], 200),

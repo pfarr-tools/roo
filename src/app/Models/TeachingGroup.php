@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes', 'grading_model', 'numeric_grades_enabled'])]
+#[Fillable(['user_id', 'school_id', 'school_year_id', 'name', 'aktenzeichen', 'denomination', 'notes', 'grading_model', 'numeric_grades_enabled'])]
 class TeachingGroup extends Model
 {
     use Searchable, SearchableFields;
@@ -41,9 +41,9 @@ class TeachingGroup extends Model
         return $this->belongsTo(SchoolYear::class);
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function students(): BelongsToMany

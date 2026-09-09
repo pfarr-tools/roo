@@ -9,7 +9,7 @@ class StudentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->organization_id !== null;
+        return $user->id !== null;
     }
 
     public function export(User $user): bool
@@ -19,12 +19,12 @@ class StudentPolicy
 
     public function view(User $user, Student $student): bool
     {
-        return $user->organization_id === $student->organization_id;
+        return $user->id === $student->user_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->organization_id !== null;
+        return $user->id !== null;
     }
 
     public function update(User $user, Student $student): bool

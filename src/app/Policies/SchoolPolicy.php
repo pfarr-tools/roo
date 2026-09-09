@@ -9,17 +9,17 @@ class SchoolPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->organization_id !== null;
+        return $user->id !== null;
     }
 
     public function view(User $user, School $school): bool
     {
-        return $user->organization_id === $school->organization_id;
+        return $user->id === $school->user_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->organization_id !== null;
+        return $user->id !== null;
     }
 
     public function update(User $user, School $school): bool

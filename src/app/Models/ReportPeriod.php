@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['organization_id', 'teaching_group_id', 'label', 'starts_on', 'ends_on', 'whole_grades', 'include_full_school_year'])]
+#[Fillable(['user_id', 'teaching_group_id', 'label', 'starts_on', 'ends_on', 'whole_grades', 'include_full_school_year'])]
 class ReportPeriod extends Model
 {
     protected function casts(): array

@@ -57,6 +57,6 @@ Datenbankstands.
 ./roo prod logs app horizon scheduler web
 ```
 
-Danach Anmeldung, Mandantentrennung, private Dateien, Suche, Queue, Mail und
+Danach Anmeldung, Trennung der Benutzerkonten, private Dateien, Suche, Queue, Mail und
 die zentralen Fachabläufe prüfen. Weitere Hinweise stehen unter
 [Produktionsskripte verwenden](07-produktionsskripte.md).

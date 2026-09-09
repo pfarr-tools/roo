@@ -1,16 +1,16 @@
 <?php
 
 use App\Models\AssessmentTask;
-use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
 it('converts multiple choice tasks to checkbox and keeps rollback information', function () {
-    $organization = Organization::create(['name' => 'Migration organisation']);
+    $user = User::factory()->create();
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Alte Multiple-Choice-Aufgabe',
         'task_type' => 'multiple_choice',
         'content' => ['options' => []],
@@ -27,9 +27,9 @@ it('converts multiple choice tasks to checkbox and keeps rollback information', 
 });
 
 it('preserves legacy checkbox expectations while marking their evaluation mode', function () {
-    $organization = Organization::create(['name' => 'Legacy organisation']);
+    $user = User::factory()->create();
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Alte Checkbox-Aufgabe',
         'task_type' => 'checkbox',
         'content' => ['automatic_expectations' => true, 'options' => [['text' => 'Ja', 'correct' => true]]],
@@ -43,9 +43,9 @@ it('preserves legacy checkbox expectations while marking their evaluation mode',
 });
 
 it('normalizes old checkbox options for specialized evaluation', function () {
-    $organization = Organization::create(['name' => 'Checkbox organisation']);
+    $user = User::factory()->create();
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Alte Checkbox-Aufgabe',
         'task_type' => 'checkbox',
         'content' => ['options' => [['text' => 'Ja', 'correct' => true]]],

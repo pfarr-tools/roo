@@ -16,7 +16,7 @@ class SongbookController extends Controller
         $this->authorize('update', $teachingGroup);
         $data = $request->validate(['song_version_ids' => ['sometimes', 'array'], 'song_version_ids.*' => ['integer']]);
         $ids = collect($data['song_version_ids'] ?? [])->unique()->values();
-        abort_unless(SongVersion::whereIn('id', $ids)->whereHas('song', fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $teachingGroup->organization_id))->count() === $ids->count(), 422, 'Ein Lied ist nicht verfügbar.');
+        abort_unless(SongVersion::whereIn('id', $ids)->whereHas('song', fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $teachingGroup->user_id))->count() === $ids->count(), 422, 'Ein Lied ist nicht verfügbar.');
         $book = $teachingGroup->songbook()->firstOrCreate([]);
         $existing = $book->entries()->pluck('song_version_id');
         $book->entries()->whereNotIn('song_version_id', $ids)->delete();

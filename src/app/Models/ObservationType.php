@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['organization_id', 'label', 'symbol', 'color', 'is_active', 'position'])]
+#[Fillable(['user_id', 'label', 'symbol', 'color', 'is_active', 'position'])]
 class ObservationType extends Model
 {
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function observations(): HasMany

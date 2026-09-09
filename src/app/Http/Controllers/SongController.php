@@ -26,7 +26,7 @@ class SongController extends Controller
     public function edit(Request $request, SongVersion $songVersion): Response
     {
         $this->authorizeEditableVersion($request, $songVersion);
-        $songVersion->load(['song:id,organization_id,title,composer,author,copyright_notice,age_group,topics,notes', 'sheet', 'parts', 'images', 'chordSets.chords']);
+        $songVersion->load(['song:id,user_id,title,composer,author,copyright_notice,age_group,topics,notes', 'sheet', 'parts', 'images', 'chordSets.chords']);
 
         return Inertia::render('Songs/Index', $this->editorProps($request, $songVersion));
     }
@@ -36,7 +36,7 @@ class SongController extends Controller
         return [
             'songVersion' => $songVersion,
             'isCreating' => $songVersion === null,
-            'libraryImages' => ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
+            'libraryImages' => ResourceReference::where('user_id', $request->user()->id)->where('mime_type', 'like', 'image/%')->orderBy('original_name')->get(['id', 'original_name', 'mime_type']),
             'flux' => ['enabled' => filled($request->user()->flux_api_key), 'userName' => $request->user()->name, 'models' => config('flux.models')],
             'songStyles' => collect(config('songs'))->only([
                 'title_font_family', 'title_font_size', 'title_font_weight',
@@ -59,7 +59,7 @@ class SongController extends Controller
             'sheet' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
-        $song = Song::create(collect($data)->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->merge(['organization_id' => $request->user()->organization_id])->all());
+        $song = Song::create(collect($data)->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->merge(['user_id' => $request->user()->id])->all());
         $version = $song->versions()->create(collect($data)->only(['version_name', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed'])->merge(['name' => $data['version_name']])->all());
         if ($request->hasFile('sheet')) {
             $this->storeSheet($version, $request->file('sheet'));
@@ -71,7 +71,7 @@ class SongController extends Controller
 
     public function destroy(Request $request, Song $song): RedirectResponse
     {
-        abort_unless($song->organization_id === $request->user()->organization_id, 404);
+        abort_unless($song->user_id === $request->user()->id, 404);
 
         $song->load(['versions.sheet', 'versions.images']);
         foreach ($song->versions as $version) {
@@ -156,7 +156,7 @@ class SongController extends Controller
     {
         $this->authorizeEditableVersion($request, $songVersion);
         $data = $request->validate(['resource_id' => ['required', 'integer']]);
-        $resource = ResourceReference::where('organization_id', $request->user()->organization_id)->where('mime_type', 'like', 'image/%')->findOrFail($data['resource_id']);
+        $resource = ResourceReference::where('user_id', $request->user()->id)->where('mime_type', 'like', 'image/%')->findOrFail($data['resource_id']);
         abort_unless(Storage::disk('local')->exists($resource->storage_path), 404);
         $extension = pathinfo($resource->original_name, PATHINFO_EXTENSION);
         $path = 'songs/images/'.Str::uuid().($extension ? '.'.$extension : '');
@@ -297,11 +297,11 @@ class SongController extends Controller
 
     private function authorizeVersion(Request $request, SongVersion $version): void
     {
-        abort_unless($version->song()->where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $request->user()->organization_id))->exists(), 404);
+        abort_unless($version->song()->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))->exists(), 404);
     }
 
     private function authorizeEditableVersion(Request $request, SongVersion $version): void
     {
-        abort_unless($version->song()->where('organization_id', $request->user()->organization_id)->exists(), 404);
+        abort_unless($version->song()->where('user_id', $request->user()->id)->exists(), 404);
     }
 }

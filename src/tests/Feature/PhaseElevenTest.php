@@ -9,7 +9,6 @@ use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
-use App\Models\Organization;
 use App\Models\ReportPeriod;
 use App\Models\ReportPeriodEvaluationTemplate;
 use App\Models\ScheduledLesson;
@@ -27,12 +26,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('remembers the last selected evaluation group', function () {
-    $org = Organization::create(['name' => 'Gruppenvoreinstellung']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Schule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
-    $second = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $second = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
 
     $this->actingAs($user)->get("/bewertungen?group={$second->id}")->assertInertia(fn ($page) => $page->where('group.id', $second->id));
     expect(UserPreference::where('user_id', $user->id)->where('key', 'evaluations.last_group')->first()->value)->toBe(['group_id' => $second->id]);
@@ -41,10 +39,9 @@ it('remembers the last selected evaluation group', function () {
 });
 
 it('creates the two default evaluation periods when creating a teaching group', function () {
-    $org = Organization::create(['name' => 'Standardzeiträume']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Schule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'second_half_start_on' => '2027-02-01']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31', 'second_half_start_on' => '2027-02-01']);
 
     $this->actingAs($user)->post('/unterrichtsgruppen', ['school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grade_levels' => ['4']])->assertRedirect();
 
@@ -58,21 +55,19 @@ it('creates the two default evaluation periods when creating a teaching group', 
         ->and($periods[1]->include_full_school_year)->toBeTrue();
 });
 it('legt einen Bewertungszeitraum an und trennt den Entwurf vom Bestätigungsstatus', function () {
-    $org = Organization::create(['name' => 'Evaluation']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Schule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a']);
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume", ['label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01'])->assertRedirect();
     expect(ReportPeriod::first()->label)->toBe('1. Halbjahr');
 });
 
 it('erzeugt und bearbeitet Vorlagen für Kompetenztexte und Noten', function () {
-    $org = Organization::create(['name' => 'Vorlagen']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Vorlagenschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'competency_texts_and_grades']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Vorlagenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'competency_texts_and_grades']);
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume", ['label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01'])->assertRedirect("/unterrichtsgruppen/{$group->id}?tab=evaluations");
     $period = $group->reportPeriods()->first();
@@ -86,11 +81,10 @@ it('erzeugt und bearbeitet Vorlagen für Kompetenztexte und Noten', function () 
 });
 
 it('generates differentiated proposal sentences from treated content competences', function () {
-    $org = Organization::create(['name' => 'Satzvorschläge']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Satzschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a', 'grading_model' => 'competency_texts_and_grades']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Satzschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a', 'grading_model' => 'competency_texts_and_grades']);
     $plan = EducationPlan::create(['external_identifier' => 'BP2016BW_ALLG_SEK1_RAK', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.3.1', 'title' => 'Inhalt', 'position' => 1]);
@@ -100,14 +94,14 @@ it('generates differentiated proposal sentences from treated content competences
         EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
         EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $secondCompetency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
     }
-    $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $unit->educationPlanCompetencies()->attach([$competency->id, $secondCompetency->id]);
     $lesson->educationPlanCompetencies()->attach([$competency->id, $secondCompetency->id]);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-08', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
 
-    $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $group->reportPeriods()->create(['user_id' => $user->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
     $period = $group->reportPeriods()->first();
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume/{$period->id}/vorlage")->assertInertia(fn ($page) => $page->has('period.evaluation_templates', 3));
 
@@ -130,16 +124,15 @@ it('generates differentiated proposal sentences from treated content competences
 });
 
 it('shows competency scales and the evaluation draft for competency text grading', function () {
-    $org = Organization::create(['name' => 'Kompetenzbewertung']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Kompetenzschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5b', 'grading_model' => 'competency_texts_and_grades']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Kompetenzschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5b', 'grading_model' => 'competency_texts_and_grades']);
     $group->gradeComponents()->createMany([
         ['type' => 'observations', 'label' => 'Beobachtungen im Unterricht', 'percentage' => 50, 'position' => 1],
         ['type' => 'written_assessments', 'label' => 'Schriftliche Leistungen', 'percentage' => 50, 'position' => 2],
     ]);
-    $student = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '5b']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '5b']);
     $group->students()->attach($student->id);
     $plan = EducationPlan::create(['external_identifier' => 'KOMPETENZBEWERTUNG', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'raw_payload' => []]);
@@ -148,7 +141,7 @@ it('shows competency scales and the evaluation draft for competency text grading
     foreach (['G' => 'auf G-Niveau beschreiben', 'M' => 'auf M-Niveau erklären', 'E' => 'auf E-Niveau beurteilen'] as $position => $text) {
         EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => null, 'text' => $text, 'position' => array_search($position, ['G', 'M', 'E'], true)]);
     }
-    $unit = $group->teachingUnits()->create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'education_plan_id' => $plan->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1]);
     $unit->educationPlanCompetencies()->attach($competency->id);
     $lesson->educationPlanCompetencies()->attach($competency->id);
@@ -159,10 +152,10 @@ it('shows competency scales and the evaluation draft for competency text grading
     $secondSlot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => '2026-09-15', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
     $secondScheduledLesson = ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $secondSlot->id]);
     CompetenceEvidence::create(['scheduled_lesson_id' => $secondScheduledLesson->id, 'student_id' => $student->id, 'education_plan_competency_id' => $competency->id, 'scale' => '4']);
-    $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $period = $group->reportPeriods()->create(['user_id' => $user->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
     $evaluation = $period->evaluations()->create(['student_id' => $student->id, 'draft_text' => 'Bewertungsentwurf']);
-    $assessment = Assessment::create(['organization_id' => $org->id, 'teaching_group_id' => $group->id, 'report_period_id' => $period->id, 'title' => 'LSE September', 'assessed_on' => '2026-09-08']);
-    $task = AssessmentTask::create(['organization_id' => $org->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe', 'max_points' => 10]);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'report_period_id' => $period->id, 'title' => 'LSE September', 'assessed_on' => '2026-09-08']);
+    $task = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe', 'max_points' => 10]);
     $task->levels()->create(['level' => 'G']);
     $assessment->tasks()->attach($task->id);
     StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'level' => 'G', 'points' => 8]);
@@ -195,12 +188,11 @@ it('shows competency scales and the evaluation draft for competency text grading
 });
 
 it('uses live school scale definitions in drafts and snapshots them on confirmation', function () {
-    $org = Organization::create(['name' => 'Skalenbewertung']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Skalenschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
-    $student = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Skalenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
     $group->students()->attach($student->id);
     $competence = CustomProcessCompetence::create(['school_id' => $school->id, 'text' => 'Religiöse Fragen besprechen', 'position' => 1]);
 
@@ -226,12 +218,11 @@ it('uses live school scale definitions in drafts and snapshots them on confirmat
 });
 
 it('rejects a level that no longer exists after the school scale is reduced', function () {
-    $org = Organization::create(['name' => 'Skalenänderung']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Änderungsschule', 'observation_scale_interval_count' => 4]);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
-    $student = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Änderungsschule', 'observation_scale_interval_count' => 4]);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
     $group->students()->attach($student->id);
     $competence = CustomProcessCompetence::create(['school_id' => $school->id, 'text' => 'Wahrnehmen', 'position' => 1]);
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/bewertungen/zeiträume", ['label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
@@ -245,17 +236,16 @@ it('rejects a level that no longer exists after the school scale is reduced', fu
 });
 
 it('calculates competence averages from numeric observations in the evaluation period', function () {
-    $org = Organization::create(['name' => 'Durchschnitt']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Durchschnittsschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
-    $student = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Durchschnittsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Mia', 'last_name' => 'Muster', 'class_name' => '4a']);
     $group->students()->attach($student->id);
     $competence = CustomProcessCompetence::create(['school_id' => $school->id, 'text' => 'Wahrnehmen', 'position' => 1]);
-    $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
+    $period = $group->reportPeriods()->create(['user_id' => $user->id, 'label' => 'September', 'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30']);
     $evaluation = $period->evaluations()->create(['student_id' => $student->id]);
-    $lesson = $group->teachingUnits()->create(['organization_id' => $org->id, 'title' => 'Beobachtungen', 'position' => 1])->lessons()->create(['title' => 'Stunde', 'position' => 1]);
+    $lesson = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Beobachtungen', 'position' => 1])->lessons()->create(['title' => 'Stunde', 'position' => 1]);
 
     foreach ([['2026-09-08', 2], ['2026-09-15', 3], ['2026-09-22', null], ['2026-10-01', 4]] as [$date, $level]) {
         $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'date' => $date, 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45']);
@@ -275,15 +265,14 @@ it('calculates competence averages from numeric observations in the evaluation p
 });
 
 it('provides sorted evaluation navigation and saves to the next student', function () {
-    $org = Organization::create(['name' => 'Bewertungsnavigation']);
-    $user = User::factory()->create(['organization_id' => $org->id]);
-    $school = School::create(['organization_id' => $org->id, 'name' => 'Navigationsschule']);
-    $year = SchoolYear::create(['organization_id' => $org->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $org->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
-    $firstStudent = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Zoe', 'last_name' => 'Zimmer', 'class_name' => '4a']);
-    $secondStudent = Student::create(['organization_id' => $org->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Albrecht', 'class_name' => '4a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Navigationsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '4a', 'grading_model' => 'observation_scales']);
+    $firstStudent = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Zoe', 'last_name' => 'Zimmer', 'class_name' => '4a']);
+    $secondStudent = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'Albrecht', 'class_name' => '4a']);
     $group->students()->attach([$firstStudent->id, $secondStudent->id]);
-    $period = $group->reportPeriods()->create(['organization_id' => $org->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
+    $period = $group->reportPeriods()->create(['user_id' => $user->id, 'label' => '1. Halbjahr', 'starts_on' => '2026-09-01', 'ends_on' => '2027-02-01']);
     $firstEvaluation = $period->evaluations()->create(['student_id' => $firstStudent->id]);
     $secondEvaluation = $period->evaluations()->create(['student_id' => $secondStudent->id]);
 

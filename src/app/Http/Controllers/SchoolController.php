@@ -18,7 +18,7 @@ class SchoolController extends Controller
         $this->authorize('viewAny', School::class);
 
         return Inertia::render('Schools/Index', [
-            'schools' => School::query()->where('organization_id', auth()->user()->organization_id)->with('schoolYears:id,school_id,name,slug,starts_on,ends_on')->withCount('schoolYears')->orderBy('name')->get(),
+            'schools' => School::query()->where('user_id', auth()->user()->id)->with('schoolYears:id,school_id,name,slug,starts_on,ends_on')->withCount('schoolYears')->orderBy('name')->get(),
         ]);
     }
 
@@ -56,7 +56,7 @@ class SchoolController extends Controller
 
     public function store(StoreSchoolRequest $request): RedirectResponse
     {
-        School::create([...$request->validated(), 'organization_id' => $request->user()->organization_id]);
+        School::create([...$request->validated(), 'user_id' => $request->user()->id]);
 
         return to_route('schools.index')->with('success', 'Schule wurde angelegt.');
     }

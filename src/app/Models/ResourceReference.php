@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'teaching_unit_id', 'lesson_id', 'unit_template_id', 'lesson_template_id', 'phase_template_id', 'original_name', 'description', 'copyrights', 'storage_path', 'mime_type', 'size', 'page_count', 'checksum', 'security_status', 'source', 'version', 'publication_status'])]
+#[Fillable(['user_id', 'teaching_unit_id', 'lesson_id', 'unit_template_id', 'lesson_template_id', 'phase_template_id', 'original_name', 'description', 'copyrights', 'storage_path', 'mime_type', 'size', 'page_count', 'checksum', 'security_status', 'source', 'version', 'publication_status'])]
 class ResourceReference extends Model
 {
     use Searchable, SearchableFields;
@@ -30,9 +30,9 @@ class ResourceReference extends Model
         return ['publication_status' => PublicationStatus::class];
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function unitTemplate(): BelongsTo

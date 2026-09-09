@@ -8,7 +8,6 @@ use App\Models\AssessmentTaskExpectation;
 use App\Models\AssessmentTaskImage;
 use App\Models\AssessmentTaskReview;
 use App\Models\AssessmentTaskReviewOption;
-use App\Models\Organization;
 use App\Models\ResourceReference;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -29,29 +28,28 @@ uses(RefreshDatabase::class);
 
 function assessmentEvaluationWorkflowFixture(int $bookletCount = 1): array
 {
-    $organization = Organization::create(['name' => 'Auswertungsworkflow Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Auswertungsworkflow Schule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Auswertungsworkflow Schule']);
     $schoolYear = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $schoolYear->id,
         'name' => '4a Religion',
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Lernstandserhebung Schöpfung',
     ]);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Aufgabe eins',
     ]));
     $assessment->tasks()->attach($task, ['position' => 1]);
@@ -63,21 +61,21 @@ function assessmentEvaluationWorkflowFixture(int $bookletCount = 1): array
         'position' => 1,
     ]);
     $student = Student::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Mara',
         'last_name' => 'Muster',
         'class_name' => '4a',
     ]);
     $secondStudent = Student::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Noah',
         'last_name' => 'Nachname',
         'class_name' => '4a',
     ]);
     $nonMember = Student::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Tina',
         'last_name' => 'Fremd',
@@ -104,7 +102,7 @@ function assessmentEvaluationWorkflowFixture(int $bookletCount = 1): array
         return $booklet;
     });
 
-    return compact('user', 'organization', 'school', 'schoolYear', 'group', 'assessment', 'task', 'expectation', 'student', 'secondStudent', 'nonMember', 'booklets');
+    return compact('user', 'school', 'schoolYear', 'group', 'assessment', 'task', 'expectation', 'student', 'secondStudent', 'nonMember', 'booklets');
 }
 
 it('renders the evaluation workspace with group students, booklet progress, and task fragments', function () {
@@ -132,7 +130,7 @@ it('renders the evaluation workspace with group students, booklet progress, and 
 it('passes the persisted sorting order to the evaluation workspace', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Sätze sortieren',
         'task_type' => 'sorting',
         'content' => [
@@ -154,7 +152,7 @@ it('passes the persisted sorting order to the evaluation workspace', function ()
 it('stores checkbox selections and synchronizes option and manual points', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Checkbox-Aufgabe',
         'level' => 'M',
         'task_type' => 'checkbox',
@@ -215,13 +213,13 @@ it('uses the scanned booklet level for the student result', function () {
 it('stores image matching selections and synchronizes their points', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Bildzuordnung',
         'task_type' => 'image_matching',
         'content' => ['points_per_correct_answer' => 2],
     ]));
-    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['organization_id' => $fixture['organization']->id, 'original_name' => 'Löwe.png', 'storage_path' => 'library/loewe.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-1', 'position' => 0, 'label' => 'Löwe', 'answer' => 'Mut']);
-    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['organization_id' => $fixture['organization']->id, 'original_name' => 'Taube.png', 'storage_path' => 'library/taube.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-2', 'position' => 1, 'label' => 'Taube', 'answer' => 'Frieden']);
+    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['user_id' => $fixture['user']->id, 'original_name' => 'Löwe.png', 'storage_path' => 'library/loewe.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-1', 'position' => 0, 'label' => 'Löwe', 'answer' => 'Mut']);
+    AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => ResourceReference::create(['user_id' => $fixture['user']->id, 'original_name' => 'Taube.png', 'storage_path' => 'library/taube.png', 'mime_type' => 'image/png'])->id, 'identifier' => 'pair-2', 'position' => 1, 'label' => 'Taube', 'answer' => 'Frieden']);
     $fixture['assessment']->tasks()->attach($task, ['position' => 2]);
     $fixture['booklets'][0]->update(['student_id' => $fixture['student']->id]);
 
@@ -237,7 +235,7 @@ it('stores image matching selections and synchronizes their points', function ()
 it('stores matching table selections and synchronizes category points', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Zuordnungstabelle',
         'task_type' => 'matching_table',
         'content' => [
@@ -266,7 +264,7 @@ it('stores matching table selections and synchronizes category points', function
 it('stores sorting sequences and synchronizes their pairwise score', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Sätze sortieren',
         'task_type' => 'sorting',
         'content' => [
@@ -296,7 +294,7 @@ it('stores sorting sequences and synchronizes their pairwise score', function ()
 it('stores sentence-builder answers and synchronizes their pairwise score', function () {
     $fixture = assessmentEvaluationWorkflowFixture(1);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Satz aus Worten',
         'task_type' => 'sentence_builder',
         'solution' => 'Die Katze schläft.',
@@ -376,13 +374,13 @@ it('rejects assessment booklets and fragments outside the requested group', func
     Storage::fake('documents');
     $fixture = assessmentEvaluationWorkflowFixture();
     $otherGroup = TeachingGroup::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'school_id' => $fixture['school']->id,
         'school_year_id' => $fixture['schoolYear']->id,
         'name' => '4b Religion',
     ]);
     $otherAssessment = Assessment::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'teaching_group_id' => $otherGroup->id,
         'title' => 'Andere Lernstandserhebung',
     ]);
@@ -526,7 +524,7 @@ it('requires a review row for every expectation occurrence', function () {
 it('saves signed extra points for a task without expectations', function () {
     $fixture = assessmentEvaluationWorkflowFixture();
     $taskWithoutExpectations = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'title' => 'Aufgabe ohne Erwartung',
     ]));
     $fixture['assessment']->tasks()->attach($taskWithoutExpectations, ['position' => 2]);

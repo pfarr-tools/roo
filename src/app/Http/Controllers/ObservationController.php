@@ -15,7 +15,7 @@ class ObservationController extends Controller
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', TeachingGroup::class);
-        $organizationId = $request->user()->organization_id;
+        $userId = $request->user()->id;
         $search = trim((string) $request->query('q', ''));
         $groupId = $request->integer('group') ?: null;
         $schoolYearId = $request->integer('school_year') ?: null;
@@ -30,7 +30,7 @@ class ObservationController extends Controller
             ->join('teaching_groups', 'teaching_groups.id', '=', 'schedule_slots.teaching_group_id')
             ->join('students', 'students.id', '=', 'observations.student_id')
             ->join('observation_types', 'observation_types.id', '=', 'observations.observation_type_id')
-            ->where('teaching_groups.organization_id', $organizationId)
+            ->where('teaching_groups.user_id', $userId)
             ->when($groupId, fn ($query) => $query->where('teaching_groups.id', $groupId))
             ->when($schoolYearId, fn ($query) => $query->where('teaching_groups.school_year_id', $schoolYearId))
             ->when($typeId, fn ($query) => $query->where('observation_types.id', $typeId))
@@ -62,9 +62,9 @@ class ObservationController extends Controller
 
         return Inertia::render('Observations/Index', [
             'observations' => $observations,
-            'groups' => TeachingGroup::where('organization_id', $organizationId)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
-            'schoolYears' => SchoolYear::where('organization_id', $organizationId)->orderByDesc('starts_on')->get(['id', 'name']),
-            'observationTypes' => ObservationType::where(fn ($query) => $query->whereNull('organization_id')->orWhere('organization_id', $organizationId))->where('is_active', true)->orderBy('position')->orderBy('label')->get(['id', 'label']),
+            'groups' => TeachingGroup::where('user_id', $userId)->with('schoolYear:id,name')->orderBy('name')->get(['id', 'name', 'school_year_id']),
+            'schoolYears' => SchoolYear::where('user_id', $userId)->orderByDesc('starts_on')->get(['id', 'name']),
+            'observationTypes' => ObservationType::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $userId))->where('is_active', true)->orderBy('position')->orderBy('label')->get(['id', 'label']),
             'filters' => ['q' => $search, 'group' => $groupId, 'school_year' => $schoolYearId, 'type' => $typeId, 'sort' => $sort, 'direction' => $direction],
         ]);
     }

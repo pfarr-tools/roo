@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 
-#[Fillable(['organization_id', 'created_by_user_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes', 'introduction_text'])]
+#[Fillable(['user_id', 'created_by_user_id', 'teaching_group_id', 'education_plan_id', 'copied_from_id', 'source_curriculum_topic_id', 'unit_template_id', 'title', 'keyword', 'position', 'notes', 'introduction_text'])]
 class TeachingUnit extends Model
 {
     use Searchable, SearchableFields;

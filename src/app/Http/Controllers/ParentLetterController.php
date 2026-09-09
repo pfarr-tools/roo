@@ -20,7 +20,7 @@ final class ParentLetterController extends Controller
 {
     public function download(Request $request, TeachingUnit $teachingUnit, TeachingUnitPublicViewResolver $resolver, PhpOfficeDocumentRenderer $renderer, QrCodeRenderer $qrCodeRenderer): Response
     {
-        abort_unless($teachingUnit->organization_id === $request->user()->organization_id, 404);
+        abort_unless($teachingUnit->user_id === $request->user()->id, 404);
         $this->authorize('update', $teachingUnit->group);
 
         $data = $request->validate([

@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'school_id', 'name', 'slug', 'starts_on', 'ends_on', 'second_half_start_on', 'timezone'])]
+#[Fillable(['user_id', 'school_id', 'name', 'slug', 'starts_on', 'ends_on', 'second_half_start_on', 'timezone'])]
 class SchoolYear extends Model
 {
     use Searchable, SearchableFields;
@@ -49,9 +49,9 @@ class SchoolYear extends Model
         return ['starts_on' => 'date', 'ends_on' => 'date', 'second_half_start_on' => 'date'];
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function school(): BelongsTo

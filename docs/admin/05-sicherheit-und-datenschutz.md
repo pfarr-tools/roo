@@ -24,13 +24,13 @@ werden.
 
 Nach Erstinstallation und jedem relevanten Update testen:
 
-1. Benutzer A sieht die erlaubten Daten seiner Organisation.
+1. Benutzer A sieht die erlaubten Daten seines Benutzerkontos.
 2. Benutzer A kann keine Schule, Gruppe, Schülerdaten oder Dateien einer
-   fremden Organisation aufrufen.
+   fremden Benutzerkontos aufrufen.
 3. Abgemeldete Personen erhalten keine privaten Dateien.
 4. Ein abgelaufener oder widerrufener Download-Link funktioniert nicht mehr.
 5. Die globale Suche darf Schüler:innen nur im authentifizierten und
-   mandantengeschützten PostgreSQL-Abgleich anzeigen; Beobachtungen und
+   benutzergeschützten PostgreSQL-Abgleich anzeigen; Beobachtungen und
    Bewertungen erscheinen nicht als globale Treffer.
 
 ## Vorfälle

@@ -66,7 +66,7 @@ class YearPlanningWorkspace
     {
         return DB::transaction(function () use ($group, $topic): TeachingUnit {
             $unit = $group->teachingUnits()->create([
-                'organization_id' => $group->organization_id,
+                'user_id' => $group->user_id,
                 'education_plan_id' => $topic->loadMissing('version.bindings')->version?->bindings->firstWhere('education_plan_id', '!=', null)?->education_plan_id,
                 'source_curriculum_topic_id' => $topic->id,
                 'title' => $topic->title,
@@ -93,12 +93,12 @@ class YearPlanningWorkspace
 
     public function copyTeachingUnit(TeachingGroup $targetGroup, TeachingUnit $source): TeachingUnit
     {
-        abort_unless($source->organization_id === $targetGroup->organization_id, 404);
+        abort_unless($source->user_id === $targetGroup->user_id, 404);
 
         return DB::transaction(function () use ($targetGroup, $source): TeachingUnit {
             $source->load(['educationPlanCompetencies', 'lessons' => fn ($query) => $query->orderBy('position'), 'lessons.educationPlanCompetencies', 'lessons.phases' => fn ($query) => $query->orderBy('position')]);
             $copy = $targetGroup->teachingUnits()->create([
-                'organization_id' => $targetGroup->organization_id,
+                'user_id' => $targetGroup->user_id,
                 'education_plan_id' => $source->education_plan_id,
                 'copied_from_id' => $source->id,
                 'source_curriculum_topic_id' => $source->source_curriculum_topic_id,

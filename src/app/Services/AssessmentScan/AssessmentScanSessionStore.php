@@ -19,7 +19,7 @@ final class AssessmentScanSessionStore
         $expiresAt = now()->addMinutes(self::TTL_MINUTES);
         $this->filesystem()->put($this->manifestPath($sessionId), json_encode([
             'assessment_id' => (string) $assessment->getKey(),
-            'organization_id' => (string) $assessment->organization_id,
+            'user_id' => (string) $assessment->user_id,
             'expires_at' => $expiresAt->toIso8601String(),
             'fragments' => [],
         ], JSON_THROW_ON_ERROR));

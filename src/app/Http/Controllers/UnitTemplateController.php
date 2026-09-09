@@ -19,7 +19,7 @@ class UnitTemplateController extends Controller
     {
         $query = trim((string) $request->query('q', ''));
         $templates = UnitTemplate::query()
-            ->where('organization_id', auth()->user()->organization_id)
+            ->where('user_id', auth()->user()->id)
             ->where('is_active', true)
             ->with(['tags:id,name', 'resources:id,unit_template_id,original_name,description,mime_type,size,page_count'])
             ->when($query !== '', fn ($builder) => $builder->where(fn ($builder) => $builder->where('title', 'like', "%{$query}%")->orWhere('description', 'like', "%{$query}%")->orWhere('notes', 'like', "%{$query}%")))
@@ -35,7 +35,7 @@ class UnitTemplateController extends Controller
         $tags = $data['tags'] ?? [];
         unset($data['tags']);
         $template = UnitTemplate::create($data + [
-            'organization_id' => $request->user()->organization_id,
+            'user_id' => $request->user()->id,
             'version' => 1,
             'is_active' => true,
         ]);
@@ -81,7 +81,7 @@ class UnitTemplateController extends Controller
         $file = $request->file('resource');
         $path = $file->store('unit-templates/'.$unitTemplate->id, 'local');
         $unitTemplate->resources()->create([
-            'organization_id' => $request->user()->organization_id,
+            'user_id' => $request->user()->id,
             'original_name' => $file->getClientOriginalName(),
             'copyrights' => $request->input('copyrights'),
             'storage_path' => $path,
@@ -95,7 +95,7 @@ class UnitTemplateController extends Controller
     public function destroyResource(UnitTemplate $unitTemplate, ResourceReference $resource): RedirectResponse
     {
         $this->ensureVisible($unitTemplate);
-        abort_unless($resource->unit_template_id === $unitTemplate->id && $resource->organization_id === auth()->user()->organization_id, 404);
+        abort_unless($resource->unit_template_id === $unitTemplate->id && $resource->user_id === auth()->user()->id, 404);
         Storage::disk('local')->delete($resource->storage_path);
         $resource->delete();
 
@@ -104,12 +104,12 @@ class UnitTemplateController extends Controller
 
     private function ensureVisible(UnitTemplate $unitTemplate): void
     {
-        abort_unless($unitTemplate->organization_id === auth()->user()->organization_id && $unitTemplate->is_active, 403);
+        abort_unless($unitTemplate->user_id === auth()->user()->id && $unitTemplate->is_active, 403);
     }
 
     private function syncTags(UnitTemplate $template, array $names): void
     {
-        $tagIds = collect($names)->map(fn (string $name): string => trim($name))->filter()->unique()->map(fn (string $name): int => Tag::firstOrCreate(['organization_id' => auth()->user()->organization_id, 'name' => $name])->id);
+        $tagIds = collect($names)->map(fn (string $name): string => trim($name))->filter()->unique()->map(fn (string $name): int => Tag::firstOrCreate(['user_id' => auth()->user()->id, 'name' => $name])->id);
         $template->tags()->sync($tagIds);
     }
 }

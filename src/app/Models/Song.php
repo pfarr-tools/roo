@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 use App\Search\SearchableFields;
 
-#[Fillable(['organization_id', 'title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])]
+#[Fillable(['user_id', 'title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])]
 class Song extends Model
 {
     use Searchable, SearchableFields;
@@ -24,9 +24,9 @@ class Song extends Model
         return $this->searchablePayload();
     }
 
-    public function organization(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(User::class);
     }
 
     public function versions(): HasMany

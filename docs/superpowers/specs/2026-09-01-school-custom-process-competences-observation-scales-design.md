@@ -164,5 +164,5 @@ keine zusätzlichen schulischen Prozesskompetenzen.
   unveränderlichen Snapshot.
 - Deaktivierte Kompetenzen sind nicht neu auswählbar, bleiben aber historisch
   sichtbar.
-- Tests prüfen Mandantentrennung, Bewertungsmodus, Deaktivierung,
+- Tests prüfen Trennung der Benutzerkonten, Bewertungsmodus, Deaktivierung,
   Stufenänderungen, Snapshot-Verhalten und `ne`.

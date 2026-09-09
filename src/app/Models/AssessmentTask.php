@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 use Laravel\Scout\Searchable;
 
-#[Fillable(['organization_id', 'education_plan_id', 'education_plan_competency_id', 'title', 'task_type', 'content', 'solution', 'max_points', 'level', 'position'])]
+#[Fillable(['user_id', 'education_plan_id', 'education_plan_competency_id', 'title', 'task_type', 'content', 'solution', 'max_points', 'level', 'position'])]
 class AssessmentTask extends Model
 {
     use Searchable, SearchableFields;
@@ -34,8 +34,8 @@ class AssessmentTask extends Model
     protected static function booted(): void
     {
         static::saving(function (self $task): void {
-            if (! $task->organization_id) {
-                throw ValidationException::withMessages(['organization_id' => 'Eine Prüfungsaufgabe benötigt eine Organisation.']);
+            if (! $task->user_id) {
+                throw ValidationException::withMessages(['user_id' => 'Eine Prüfungsaufgabe benötigt ein Benutzerkonto.']);
             }
             if (! $task->education_plan_competency_id) {
                 throw ValidationException::withMessages(['education_plan_competency_id' => 'Eine Prüfungsaufgabe benötigt eine Kompetenz.']);

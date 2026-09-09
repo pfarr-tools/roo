@@ -8,7 +8,6 @@ use App\Models\EducationPlan;
 use App\Models\EducationPlanCompetenceArea;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanVersion;
-use App\Models\Organization;
 use App\Models\ResourceReference;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleSlot;
@@ -25,11 +24,10 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 it('legt eine Lernstandserhebung zunächst ohne Aufgaben an', function () {
-    $organization = Organization::create(['name' => 'Aufgabenlose Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Aufgabenlose Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Aufgabenlose Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE ohne Aufgaben', 'grade_component_id' => null])->assertRedirect();
 
@@ -37,12 +35,11 @@ it('legt eine Lernstandserhebung zunächst ohne Aufgaben an', function () {
 });
 
 it('legt eine Lernstandserhebung mit differenzierten Aufgaben an', function () {
-    $organization = Organization::create(['name' => 'Bewertungsorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Bewertungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Bewertungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann erklären');
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", ['title' => 'LSE Schöpfung', 'grade_component_id' => null, 'assessed_on' => '2026-11-12', 'tasks' => [['title' => 'Erkläre den Begriff', 'max_points' => 10, 'level' => 'M', 'competency_id' => $competency->id]]])->assertRedirect();
@@ -53,15 +50,14 @@ it('legt eine Lernstandserhebung mit differenzierten Aufgaben an', function () {
 });
 
 it('verwendet eine Bibliotheksaufgabe in mehreren Erhebungen und verlangt mehrere G/M/E-Niveaus', function () {
-    $organization = Organization::create(['name' => 'Differenzierte Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Differenzierte Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5 G/M/E']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Differenzierte Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5 G/M/E']);
     TeachingGroupGradeLevel::create(['teaching_group_id' => $group->id, 'grade_level' => 'G/M/E']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann vergleichen');
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Vergleiche', 'max_points' => 6]);
+    $task = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Vergleiche', 'max_points' => 6]);
 
     $payload = ['title' => 'LSE', 'grade_component_id' => null, 'tasks' => [['task_id' => $task->id, 'levels' => ['G', 'M']]]];
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", $payload)->assertRedirect();
@@ -71,18 +67,17 @@ it('verwendet eine Bibliotheksaufgabe in mehreren Erhebungen und verlangt mehrer
 });
 
 it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', function () {
-    $organization = Organization::create(['name' => 'Gewichtungsorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Gewichtungsschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Gewichtungsgruppe']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Gewichtungsschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Gewichtungsgruppe']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann anwenden');
     $lesson = $unit->lessons()->create(['title' => 'Aufgabenstunde', 'position' => 1]);
-    $first = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
-    $second = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
+    $first = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Erste Aufgabe', 'max_points' => 4]);
+    $second = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Zweite Aufgabe', 'max_points' => 8]);
     $lesson->assessmentTasks()->attach([$first->id, $second->id]);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gewichtung']);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Gewichtung']);
 
     $this->actingAs($user)->put("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}", [
         'title' => 'LSE Gewichtung',
@@ -110,23 +105,22 @@ it('speichert Reihenfolge und Gewichtung der Aufgaben assessmentbezogen', functi
 });
 
 it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne Aufgabe', function () {
-    $organization = Organization::create(['name' => 'Kompetenzgruppenorganisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Kompetenzgruppenschule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $plan = EducationPlan::create(['organization_id' => $organization->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Kompetenzgruppenschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $plan = EducationPlan::create(['user_id' => $user->id, 'external_identifier' => 'BP', 'subject' => 'Religion', 'title' => 'Bildungsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => '2026', 'schema_version' => '1', 'title' => '2026', 'is_complete' => true, 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $withoutTask = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Ohne Aufgabe', 'position' => 1, 'is_active' => true]);
     $withTask = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.2', 'text' => 'Mit Aufgabe', 'position' => 2, 'is_active' => true]);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $lesson = $unit->lessons()->create(['title' => 'Stunde', 'position' => 1, 'duration' => 1]);
     $unit->educationPlanCompetencies()->attach([$withoutTask->id, $withTask->id]);
     $lesson->educationPlanCompetencies()->attach([$withoutTask->id, $withTask->id]);
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $withTask->id, 'title' => 'Aufgabe']);
+    $task = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $withTask->id, 'title' => 'Aufgabe']);
     $lesson->assessmentTasks()->attach($task);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE', 'assessed_on' => '2026-10-01']);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE', 'assessed_on' => '2026-10-01']);
     $slot = ScheduleSlot::create(['teaching_group_id' => $group->id, 'assessment_id' => $assessment->id, 'date' => '2026-10-01', 'period_number' => 1, 'starts_at' => '08:00', 'ends_at' => '08:45', 'status' => 'lse']);
     ScheduledLesson::create(['lesson_id' => $lesson->id, 'schedule_slot_id' => $slot->id]);
 
@@ -138,13 +132,12 @@ it('liefert alle inhaltsbezogenen Kompetenzen des relevanten Zeitraums auch ohne
 });
 
 it('lädt eine Lernstandserhebung als ODT herunter', function () {
-    $organization = Organization::create(['name' => 'ODT Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'ODT Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'ODT Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
     $group->gradeLevels()->create(['grade_level' => '2']);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Lesen', 'assessed_on' => '2026-10-01']);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Lesen', 'assessed_on' => '2026-10-01']);
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download")
         ->assertOk()
@@ -162,12 +155,11 @@ it('lädt eine Lernstandserhebung als ODT herunter', function () {
 });
 
 it('lädt bei einer differenzierten Lernstandserhebung nur das gewählte Niveau', function () {
-    $organization = Organization::create(['name' => 'Niveau Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Niveau Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Einheit', 'position' => 1]);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Niveau Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '5a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann unterscheiden');
 
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/lernstandserhebungen", [
@@ -194,17 +186,16 @@ it('lädt bei einer differenzierten Lernstandserhebung nur das gewählte Niveau'
 
 it('übernimmt Freitextbilder in den produktiven ODT-Download', function () {
     Storage::fake('local');
-    $organization = Organization::create(['name' => 'Freitextbild Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Freitextbild Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Freitextbild Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '2a']);
     $group->gradeLevels()->create(['grade_level' => '2']);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Freitext', 'assessed_on' => '2026-10-01']);
-    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $organization->id, 'title' => 'Beschreibe das Bild', 'task_type' => 'free_text', 'content' => ['prompt' => 'Beschreibe das Bild.', 'lines' => 2, 'image_width_cm' => 3, 'optional_reading_text' => 'Lies den Begleittext.']]));
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'LSE Freitext', 'assessed_on' => '2026-10-01']);
+    $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['user_id' => $user->id, 'title' => 'Beschreibe das Bild', 'task_type' => 'free_text', 'content' => ['prompt' => 'Beschreibe das Bild.', 'lines' => 2, 'image_width_cm' => 3, 'optional_reading_text' => 'Lies den Begleittext.']]));
     $assessment->tasks()->attach($task);
     Storage::disk('local')->put('free-text.png', file_get_contents(base_path('resources/images/branding/roo-icon.png')));
-    $resource = ResourceReference::create(['organization_id' => $organization->id, 'original_name' => 'Freitext.png', 'storage_path' => 'free-text.png', 'mime_type' => 'image/png', 'size' => 10]);
+    $resource = ResourceReference::create(['user_id' => $user->id, 'original_name' => 'Freitext.png', 'storage_path' => 'free-text.png', 'mime_type' => 'image/png', 'size' => 10]);
     AssessmentTaskImage::create(['assessment_task_id' => $task->id, 'resource_reference_id' => $resource->id, 'identifier' => 'free-text-image', 'position' => 0]);
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download")->assertOk();
@@ -221,18 +212,17 @@ it('übernimmt Freitextbilder in den produktiven ODT-Download', function () {
 });
 
 it('druckt einen Ergebnisbericht für einen Schüler oder die gesamte Gruppe', function () {
-    $organization = Organization::create(['name' => 'Ergebnisbericht Organisation']);
-    $user = User::factory()->create(['organization_id' => $organization->id]);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Ergebnisbericht Schule']);
-    $year = SchoolYear::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7ab', 'aktenzeichen' => '62.55']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Ergebnisbericht Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7ab', 'aktenzeichen' => '62.55']);
     $group->gradeLevels()->create(['grade_level' => '7 M']);
-    $student = Student::create(['organization_id' => $organization->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '7ab']);
+    $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'class_name' => '7ab']);
     $group->students()->attach($student);
-    $assessment = Assessment::create(['organization_id' => $organization->id, 'teaching_group_id' => $group->id, 'title' => 'Test LSE', 'assessed_on' => '2026-09-06']);
-    $unit = $group->teachingUnits()->create(['organization_id' => $organization->id, 'title' => 'Test Einheit', 'position' => 1]);
+    $assessment = Assessment::create(['user_id' => $user->id, 'teaching_group_id' => $group->id, 'title' => 'Test LSE', 'assessed_on' => '2026-09-06']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Test Einheit', 'position' => 1]);
     $competency = officialCompetency($unit, 'Kann testen');
-    $task = AssessmentTask::create(['organization_id' => $organization->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5]);
+    $task = AssessmentTask::create(['user_id' => $user->id, 'education_plan_id' => $competency->area->version->education_plan_id, 'education_plan_competency_id' => $competency->id, 'title' => 'Mock-Aufgabe', 'task_type' => 'checkbox', 'max_points' => 5]);
     $assessment->tasks()->attach($task);
     AssessmentTaskExpectation::create(['assessment_task_id' => $task->id, 'text' => 'Erwartung erfüllt', 'points' => 5, 'position' => 1]);
     StudentAssessmentResult::create(['assessment_id' => $assessment->id, 'assessment_task_id' => $task->id, 'student_id' => $student->id, 'points' => 5, 'numeric_grade' => '1']);

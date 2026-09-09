@@ -15,7 +15,6 @@ use App\Models\EducationPlanCompetenceVariant;
 use App\Models\EducationPlanCompetency;
 use App\Models\EducationPlanLevel;
 use App\Models\EducationPlanVersion;
-use App\Models\Organization;
 use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Student;
@@ -29,28 +28,28 @@ uses(RefreshDatabase::class);
 
 function assessmentEvaluationDataFixture(): array
 {
-    $organization = Organization::create(['name' => 'Auswertungsorganisation']);
-    $school = School::create(['organization_id' => $organization->id, 'name' => 'Auswertungsschule']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Auswertungsschule']);
     $schoolYear = SchoolYear::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'name' => '2026/27',
         'starts_on' => '2026-09-01',
         'ends_on' => '2027-07-31',
     ]);
     $group = TeachingGroup::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'school_year_id' => $schoolYear->id,
         'name' => '4a Religion',
     ]);
     $assessment = Assessment::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'teaching_group_id' => $group->id,
         'title' => 'Lernstandserhebung Schöpfung',
     ]);
     $student = Student::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'school_id' => $school->id,
         'first_name' => 'Mara',
         'last_name' => 'Muster',
@@ -58,7 +57,7 @@ function assessmentEvaluationDataFixture(): array
     ]);
     $group->students()->attach($student);
     $task = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create([
-        'organization_id' => $organization->id,
+        'user_id' => $user->id,
         'title' => 'Aufgabe eins',
     ]));
     $assessment->tasks()->attach($task, ['position' => 1]);
@@ -70,12 +69,12 @@ function assessmentEvaluationDataFixture(): array
         'position' => 1,
     ]);
 
-    return compact('organization', 'assessment', 'student', 'task', 'expectation');
+    return compact('user', 'assessment', 'student', 'task', 'expectation');
 }
 
 it('provides capped weighted student results for the evaluation tab', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
     $fixture['assessment']->tasks()->updateExistingPivot($fixture['task']->id, ['weight' => 50]);
     $booklet = $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 12, 'level' => 'M']);
@@ -95,7 +94,7 @@ it('provides the calculated total percentage and grade for evaluation results', 
     $fixture['expectation']->update(['points' => 10, 'repetitions' => 1]);
     $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 8]);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page
@@ -107,14 +106,14 @@ it('provides the calculated total percentage and grade for evaluation results', 
 it('lists every group student and allows a missing result decision to count as zero', function () {
     $fixture = assessmentEvaluationDataFixture();
     $secondStudent = Student::create([
-        'organization_id' => $fixture['organization']->id,
+        'user_id' => $fixture['user']->id,
         'school_id' => $fixture['assessment']->group->school_id,
         'first_name' => 'Alex',
         'last_name' => 'Beispiel',
         'class_name' => '4a',
     ]);
     $fixture['assessment']->group->students()->syncWithoutDetaching([$secondStudent->id]);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page
@@ -135,14 +134,14 @@ it('lists every group student and allows a missing result decision to count as z
 
 it('uses the assessment task education plan competency in result groups', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'TEST', 'subject' => 'Religion', 'title' => 'Testplan']);
+    $plan = EducationPlan::create(['user_id' => $fixture['user']->id, 'external_identifier' => 'TEST', 'subject' => 'Religion', 'title' => 'Testplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'TEST-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Kompetenz direkt aus dem Bildungsplan', 'position' => 1, 'is_active' => true]);
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
     $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 1]);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page->where('results.0.competencies.0.title', 'Du kannst Kompetenz direkt aus dem Bildungsplan.'));
@@ -150,7 +149,7 @@ it('uses the assessment task education plan competency in result groups', functi
 
 it('uses only the selected level competency variant without its identifier in the result report', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'VARIANT', 'subject' => 'Religion', 'title' => 'Variantenplan']);
+    $plan = EducationPlan::create(['user_id' => $fixture['user']->id, 'external_identifier' => 'VARIANT', 'subject' => 'Religion', 'title' => 'Variantenplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'VARIANT-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => null, 'position' => 1, 'is_active' => true]);
@@ -158,7 +157,7 @@ it('uses only the selected level competency variant without its identifier in th
     EducationPlanCompetenceVariant::create(['education_plan_competency_id' => $competency->id, 'education_plan_level_id' => $level->id, 'text' => 'die M-Kompetenzvariante', 'position' => 1]);
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'M']);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
     $path = tempnam(sys_get_temp_dir(), 'roo-test-variant-report-');
@@ -176,7 +175,7 @@ it('uses only the selected level competency variant without its identifier in th
 
 it('uses the student level competency variant in evaluation result groups', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'LEVEL', 'subject' => 'Religion', 'title' => 'Niveausplan']);
+    $plan = EducationPlan::create(['user_id' => $fixture['user']->id, 'external_identifier' => 'LEVEL', 'subject' => 'Religion', 'title' => 'Niveausplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'LEVEL-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'die Grundkompetenz', 'position' => 1, 'is_active' => true]);
@@ -185,7 +184,7 @@ it('uses the student level competency variant in evaluation result groups', func
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
     $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'source' => 'manual']);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 1, 'level' => 'M']);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung")
         ->assertInertia(fn ($page) => $page->where('results.0.competencies.0.title', 'Du kannst die M-Kompetenzvariante.'));
@@ -224,7 +223,7 @@ it('includes the scanned student level, task details, notes, and branded page fu
         'points' => 2,
         'level' => 'E',
     ]);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
     $path = tempnam(sys_get_temp_dir(), 'roo-test-result-report-');
@@ -267,24 +266,24 @@ it('includes the scanned student level, task details, notes, and branded page fu
 
 it('druckt nur aktive Aufgaben, Gewichtungen und Noten nur für benotete Schüler', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'REPORT', 'subject' => 'Religion', 'title' => 'Berichtsplan']);
+    $plan = EducationPlan::create(['user_id' => $fixture['user']->id, 'external_identifier' => 'REPORT', 'subject' => 'Religion', 'title' => 'Berichtsplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'REPORT-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.1', 'text' => 'Du kannst Inhalte (Zusatz) vergleichen', 'position' => 1, 'is_active' => true]);
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe M und E']);
     $fixture['task']->levels()->createMany([['level' => 'M'], ['level' => 'E']]);
     $fixture['assessment']->tasks()->updateExistingPivot($fixture['task']->id, ['weight' => 75]);
-    $activeTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['organization']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe ebenfalls M']));
+    $activeTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['user_id' => $fixture['user']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe ebenfalls M']));
     $activeTask->levels()->create(['level' => 'M']);
     $activeTask->expectations()->create(['text' => 'Ebenfalls drucken', 'points' => 1, 'position' => 1]);
     $fixture['assessment']->tasks()->attach($activeTask, ['position' => 2, 'weight' => 25]);
-    $inactiveTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['organization_id' => $fixture['organization']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe nur G']));
+    $inactiveTask = AssessmentTask::withoutEvents(fn (): AssessmentTask => AssessmentTask::create(['user_id' => $fixture['user']->id, 'education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id, 'title' => 'Aufgabe nur G']));
     $inactiveTask->levels()->create(['level' => 'G']);
     $inactiveTask->expectations()->create(['text' => 'Nicht drucken', 'points' => 1, 'position' => 1]);
     $fixture['assessment']->tasks()->attach($inactiveTask, ['position' => 3, 'weight' => 10]);
     $booklet = $fixture['assessment']->booklets()->create(['student_id' => $fixture['student']->id, 'number' => 1, 'status' => 'open', 'level' => 'M']);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'M']);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
     $path = tempnam(sys_get_temp_dir(), 'roo-test-filtered-report-');
@@ -318,7 +317,7 @@ it('druckt nur aktive Aufgaben, Gewichtungen und Noten nur für benotete Schüle
 
 it('uses ordered unlabelled level variants for the student result report', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $plan = EducationPlan::create(['organization_id' => $fixture['organization']->id, 'external_identifier' => 'ORDERED', 'subject' => 'Religion', 'title' => 'Reihenfolgeplan']);
+    $plan = EducationPlan::create(['user_id' => $fixture['user']->id, 'external_identifier' => 'ORDERED', 'subject' => 'Religion', 'title' => 'Reihenfolgeplan']);
     $version = EducationPlanVersion::create(['education_plan_id' => $plan->id, 'external_identifier' => 'ORDERED-1', 'schema_version' => '1', 'title' => 'Version', 'raw_payload' => []]);
     $area = EducationPlanCompetenceArea::create(['education_plan_version_id' => $version->id, 'kind' => 'content', 'external_identifier' => '3.1', 'title' => 'Inhalt', 'position' => 1]);
     $competency = EducationPlanCompetency::create(['education_plan_competence_area_id' => $area->id, 'external_identifier' => '3.1.2', 'text' => null, 'position' => 1, 'is_active' => true]);
@@ -327,7 +326,7 @@ it('uses ordered unlabelled level variants for the student result report', funct
     }
     $fixture['task']->updateQuietly(['education_plan_id' => $plan->id, 'education_plan_competency_id' => $competency->id]);
     StudentAssessmentResult::create(['assessment_id' => $fixture['assessment']->id, 'assessment_task_id' => $fixture['task']->id, 'student_id' => $fixture['student']->id, 'points' => 6, 'level' => 'E']);
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}/auswertung/ergebnisbericht?student={$fixture['student']->id}");
     $path = tempnam(sys_get_temp_dir(), 'roo-test-ordered-variants-');
@@ -345,7 +344,7 @@ it('uses ordered unlabelled level variants for the student result report', funct
 
 it('keeps already assigned legacy tasks editable before competency backfill runs', function () {
     $fixture = assessmentEvaluationDataFixture();
-    $user = User::factory()->create(['organization_id' => $fixture['organization']->id]);
+    $user = $fixture['user'];
 
     $this->actingAs($user)->put("/unterrichtsgruppen/{$fixture['assessment']->teaching_group_id}/lernstandserhebungen/{$fixture['assessment']->id}", [
         'title' => $fixture['assessment']->title,
