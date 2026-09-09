@@ -13,6 +13,10 @@ fi
 
 mkdir -p "$SRC"
 
+if [[ ! -f "$SRC/.env" ]]; then
+  cp "$ROOT/.env" "$SRC/.env"
+fi
+
 if [[ ! -f "$SRC/artisan" ]]; then
   if [[ -n "$(find "$SRC" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
     echo "Fehler: src/ ist nicht leer, enthält aber kein Laravel-Projekt." >&2
