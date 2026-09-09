@@ -983,15 +983,15 @@ class PhpOfficeDocumentRenderer
         return preg_replace_callback(
             '/<table:table\s[^>]*>\s*(?:<table:table-column\s[^>]*>\s*){3}/s',
             static function (array $tableMatches) use ($tableStyle): string {
-                $table = preg_replace(
+                $table = preg_replace_callback(
                     '/(table:style-name=")[^"]+(")/',
-                    '$1'.$tableStyle.'$2',
+                    static fn (array $matches): string => $matches[1].$tableStyle.$matches[2],
                     $tableMatches[0],
                     1,
                 ) ?: $tableMatches[0];
-                $table = preg_replace(
+                $table = preg_replace_callback(
                     '/(table:table-column\s+table:style-name=")[^"]+(\.[0-2]")/',
-                    '$1'.$tableStyle.'$2',
+                    static fn (array $matches): string => $matches[1].$tableStyle.$matches[2],
                     $table,
                 ) ?: $table;
 

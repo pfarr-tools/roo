@@ -130,12 +130,22 @@ it('verwendet den festen Kompetenztabellenstil in jeder Ergebnissesektion', func
     unlink($path);
 
     preg_match('/<style:style style:name="([^"]+)" style:family="table"><style:table-properties[^>]*style:width="17\.1cm"/', (string) $styles, $styleMatch);
-    preg_match_all('/<table:table\s[^>]*table:style-name="([^"]+)"[^>]*>\s*(?:<table:table-column\s[^>]*>\s*){3}/s', (string) $content, $tableMatches);
+    $contentDom = new DOMDocument;
+    $contentDom->loadXML((string) $content, LIBXML_NONET);
+    $contentXPath = new DOMXPath($contentDom);
+    $contentXPath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+    $contentXPath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+    $tableStyles = [];
+    foreach ($contentXPath->query('//text:section/table:table') as $table) {
+        if ($contentXPath->query('./table:table-column', $table)->length === 3) {
+            $tableStyles[] = $table->getAttributeNS('urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'style-name');
+        }
+    }
 
     expect($styleMatch[1] ?? null)->not->toBeNull()
-        ->and($tableMatches[1] ?? [])->toHaveCount(3)
-        ->and(array_unique($tableMatches[1]))->toHaveCount(1)
-        ->and($tableMatches[1][0] ?? null)->toBe($styleMatch[1] ?? null)
+        ->and($tableStyles)->toHaveCount(3)
+        ->and(array_unique($tableStyles))->toHaveCount(1)
+        ->and($tableStyles[0] ?? null)->toBe($styleMatch[1] ?? null)
         ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.0"')
         ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.1"')
         ->and($content)->toContain('table:style-name="'.$styleMatch[1].'.2"');

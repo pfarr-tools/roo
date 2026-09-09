@@ -18,6 +18,10 @@ if [[ ! -f "$SRC/.env" ]]; then
   chmod a+rw "$SRC/.env"
 fi
 
+if grep -q '^REDIS_PASSWORD=null$' "$SRC/.env"; then
+  sed -i 's/^REDIS_PASSWORD=null$/REDIS_PASSWORD=roo-development-redis-secret/' "$SRC/.env"
+fi
+
 if [[ ! -f "$SRC/artisan" ]]; then
   if [[ -n "$(find "$SRC" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
     echo "Fehler: src/ ist nicht leer, enthält aber kein Laravel-Projekt." >&2
