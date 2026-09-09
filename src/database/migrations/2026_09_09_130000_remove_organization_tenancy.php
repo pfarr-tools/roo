@@ -40,13 +40,22 @@ return new class extends Migration
             }
         }
 
-        foreach ($this->organizationIndexes as $index) {
-            foreach ($this->tables as $table) {
-                if (Schema::hasTable($table)) {
-                    try {
-                        Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
-                    } catch (Throwable) {
-                        // Indexes differ slightly between historical installations.
+        foreach ($this->tables as $table) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
+
+            foreach (Schema::getIndexes($table) as $index) {
+                if (in_array($index['name'], $this->organizationIndexes, true)
+                    || str_contains($index['name'], 'organization')) {
+                    $quotedTable = '"'.str_replace('"', '""', $table).'"';
+                    $quotedName = '"'.str_replace('"', '""', $index['name']).'"';
+
+                    if (DB::getDriverName() === 'pgsql') {
+                        DB::statement("alter table {$quotedTable} drop constraint if exists {$quotedName}");
+                        DB::statement("drop index if exists {$quotedName}");
+                    } else {
+                        Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index['name']));
                     }
                 }
             }
@@ -54,26 +63,32 @@ return new class extends Migration
 
         foreach ($this->tables as $table) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, 'organization_id')) {
-                Schema::table($table, function (Blueprint $blueprint): void {
-                    try {
-                        $blueprint->dropForeign(['organization_id']);
-                    } catch (Throwable) {
-                        // Historical installations may not have a foreign key here.
+                if (DB::getDriverName() === 'sqlite') {
+                    Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropForeign(['organization_id']));
+                } else {
+                    foreach (Schema::getForeignKeys($table) as $foreign) {
+                        if ($foreign['columns'] === ['organization_id']) {
+                            Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign['name']));
+                        }
                     }
-                    $blueprint->dropColumn('organization_id');
-                });
+                }
+
+                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropColumn('organization_id'));
             }
         }
 
         if (Schema::hasColumn('users', 'organization_id')) {
-            Schema::table('users', function (Blueprint $blueprint): void {
-                try {
-                    $blueprint->dropForeign(['organization_id']);
-                } catch (Throwable) {
-                    // Historical installations may not have a foreign key here.
+            if (DB::getDriverName() === 'sqlite') {
+                Schema::table('users', fn (Blueprint $blueprint) => $blueprint->dropForeign(['organization_id']));
+            } else {
+                foreach (Schema::getForeignKeys('users') as $foreign) {
+                    if ($foreign['columns'] === ['organization_id']) {
+                        Schema::table('users', fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign['name']));
+                    }
                 }
-                $blueprint->dropColumn('organization_id');
-            });
+            }
+
+            Schema::table('users', fn (Blueprint $blueprint) => $blueprint->dropColumn('organization_id'));
         }
 
         if (Schema::hasTable('organizations')) {

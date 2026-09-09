@@ -15,16 +15,18 @@ return new class extends Migration
             Schema::table('lesson_competencies', function (Blueprint $table): void {
                 $table->dropUnique(['lesson_id', 'teaching_unit_competency_id']);
                 $table->dropColumn('teaching_unit_competency_id');
-                $table->unique(['lesson_id', 'education_plan_competency_id']);
             });
+
+            $this->replaceIndexWithUnique('lesson_competencies', ['lesson_id', 'education_plan_competency_id'], 'lesson_competencies_direct_unique');
         }
 
         if (Schema::hasTable('competence_evidences') && Schema::hasColumn('competence_evidences', 'teaching_unit_competency_id')) {
             Schema::table('competence_evidences', function (Blueprint $table): void {
                 $table->dropUnique(['scheduled_lesson_id', 'student_id', 'teaching_unit_competency_id']);
                 $table->dropColumn('teaching_unit_competency_id');
-                $table->unique(['scheduled_lesson_id', 'student_id', 'education_plan_competency_id']);
             });
+
+            $this->replaceIndexWithUnique('competence_evidences', ['scheduled_lesson_id', 'student_id', 'education_plan_competency_id'], 'competence_evidences_direct_unique');
         }
 
         if (Schema::hasTable('assessment_tasks') && Schema::hasColumn('assessment_tasks', 'teaching_unit_competency_id')) {
@@ -83,5 +85,16 @@ return new class extends Migration
                 ->exists()) {
             throw new RuntimeException('Cannot remove TeachingUnitCompetency: duplicate official evidence exists for one student and lesson. Resolve it before migrating.');
         }
+    }
+
+    private function replaceIndexWithUnique(string $table, array $columns, string $uniqueName): void
+    {
+        foreach (Schema::getIndexes($table) as $index) {
+            if ($index['columns'] === $columns) {
+                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index['name']));
+            }
+        }
+
+        Schema::table($table, fn (Blueprint $blueprint) => $blueprint->unique($columns, $uniqueName));
     }
 };
