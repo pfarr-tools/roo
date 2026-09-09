@@ -15,6 +15,7 @@ mkdir -p "$SRC"
 
 if [[ ! -f "$SRC/.env" ]]; then
   cp "$ROOT/.env" "$SRC/.env"
+  chmod a+rw "$SRC/.env"
 fi
 
 if [[ ! -f "$SRC/artisan" ]]; then
