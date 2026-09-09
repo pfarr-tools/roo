@@ -64,7 +64,6 @@ cp -n "$ROOT/scaffold/routes/web.php" "$SRC/routes/web.php" || true
 
 echo "Aktiviere Laravel-Pakete ..."
 docker compose run --rm --no-deps app php artisan horizon:install
-docker compose run --rm --no-deps app php artisan fortify:install
 docker compose run --rm --no-deps app php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider" || true
 
 echo "Setze Anwendungsschlüssel ..."
