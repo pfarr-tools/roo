@@ -219,15 +219,12 @@ function resetForm() {
         setSelectedCompetency(props.initialCompetency);
     else {
         selectedCompetencyNumber.value = "";
-        selectedCompetencyWording.value = props.task?.competency ?? "";
-        selectedCompetencyText.value = props.task?.competency ?? "";
+        selectedCompetencyWording.value = "";
+        selectedCompetencyText.value = "";
     }
     selectedCompetencyDifferentiated.value =
         props.task?.has_differentiation ||
         competencyIsDifferentiated(props.task?.education_plan_competency) ||
-        competencyIsDifferentiated(
-            props.task?.competency?.education_plan_competency,
-        ) ||
         false;
 }
 watch(() => props.task?.id, resetForm, { immediate: true });
