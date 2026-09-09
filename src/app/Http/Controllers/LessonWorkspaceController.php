@@ -460,7 +460,7 @@ class LessonWorkspaceController extends Controller
             'scheduledLesson.lesson.resources',
             'scheduledLesson.lesson.galleryImages.resource',
             'scheduledLesson.lesson.materialItems',
-            'scheduledLesson.lesson.assessmentTasks.competency',
+            'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency',
             'scheduledLesson.lesson.assessmentTasks.educationPlanCompetency.variants.level',
             'scheduledLesson.lesson.assessmentTasks.levels',
             'scheduledLesson.lesson.songs.song:id,title,author,composer,copyright_notice',
