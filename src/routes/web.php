@@ -77,7 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/lieder/fassungen/{songVersion}/liedblatt', [SongController::class, 'uploadSheet'])->name('songs.sheets.upload');
     Route::get('/lieder/fassungen/{songVersion}/liedblatt', [SongController::class, 'downloadSheet'])->name('songs.sheets.download');
     Route::put('/lieder/fassungen/{songVersion}', [SongController::class, 'updateVersion'])->name('songs.versions.update');
-    Route::post('/lieder/fassungen/{songVersion}/bilder', [SongController::class, 'uploadImages'])->name('songs.images.upload');
+    Route::post('/lieder/fassungen/{songVersion}/bilder', [SongController::class, 'uploadImages'])->whereNumber('songVersion')->name('songs.images.upload');
     Route::post('/lieder/fassungen/{songVersion}/bilder/bibliothek', [SongController::class, 'importLibraryImage'])->name('songs.images.import');
     Route::get('/lieder/fassungen/{songVersion}/bilder/{songImage}', [SongController::class, 'image'])->name('songs.images.show');
     Route::delete('/lieder/fassungen/{songVersion}/bilder/{songImage}', [SongController::class, 'destroyImage'])->name('songs.images.destroy');

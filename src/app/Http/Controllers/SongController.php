@@ -57,10 +57,30 @@ class SongController extends Controller
             'text_export_allowed' => ['sometimes', 'boolean'],
             'metadata_export_allowed' => ['sometimes', 'boolean'],
             'sheet' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'parts' => ['sometimes', 'array'], 'parts.*.id' => ['nullable', 'integer'], 'parts.*.content' => ['required', 'string'],
+            'parts.*.is_refrain' => ['sometimes', 'boolean'], 'parts.*.is_repeated' => ['sometimes', 'boolean'], 'parts.*.repeat_count' => ['nullable', 'integer', 'min:2'],
+            'parts.*.is_numbered' => ['sometimes', 'boolean'], 'parts.*.number' => ['nullable', 'integer', 'min:1'],
+            'chord_sets' => ['sometimes', 'array'], 'chord_sets.*.instrument' => ['required', 'string', 'max:100'], 'chord_sets.*.name' => ['nullable', 'string', 'max:255'], 'chord_sets.*.key_signature' => ['nullable', 'string', 'max:32'],
+            'chord_sets.*.chords' => ['sometimes', 'array'], 'chord_sets.*.chords.*.song_part_id' => ['required', 'integer'], 'chord_sets.*.chords.*.line_number' => ['required', 'integer', 'min:0'], 'chord_sets.*.chords.*.repetition' => ['sometimes', 'integer', 'min:0'], 'chord_sets.*.chords.*.character_offset' => ['required', 'integer', 'min:0'], 'chord_sets.*.chords.*.chord' => ['required', 'string', 'max:32'],
         ]);
+        $data['copyright_notice'] = $this->normalizeCopyrightNotice($data['copyright_notice'] ?? null);
 
         $song = Song::create(collect($data)->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->merge(['user_id' => $request->user()->id])->all());
         $version = $song->versions()->create(collect($data)->only(['version_name', 'lyrics', 'notation', 'chords', 'text_export_allowed', 'metadata_export_allowed'])->merge(['name' => $data['version_name']])->all());
+        $partIds = [];
+        foreach (collect($data['parts'] ?? [])->values() as $position => $part) {
+            $createdPart = $version->parts()->create([
+                'content' => $part['content'], 'position' => $position + 1,
+                'is_refrain' => $part['is_refrain'] ?? false, 'is_repeated' => $part['is_repeated'] ?? false,
+                'repeat_count' => ($part['is_repeated'] ?? false) ? ($part['repeat_count'] ?? 2) : null,
+                'is_numbered' => $part['is_numbered'] ?? false, 'number' => $part['number'] ?? null,
+            ]);
+            $partIds[(string) ($part['id'] ?? $position)] = $createdPart->id;
+        }
+        foreach ($data['chord_sets'] ?? [] as $set) {
+            $chordSet = $version->chordSets()->create(['instrument' => $set['instrument'], 'name' => $set['name'] ?? null, 'key_signature' => $set['key_signature'] ?? null]);
+            $chordSet->chords()->createMany(collect($set['chords'] ?? [])->filter(fn (array $chord): bool => isset($partIds[(string) $chord['song_part_id']]))->map(fn (array $chord): array => ['song_part_id' => $partIds[(string) $chord['song_part_id']], 'line_number' => $chord['line_number'], 'repetition' => $chord['repetition'] ?? 0, 'character_offset' => $chord['character_offset'], 'chord' => $chord['chord']])->all());
+        }
         if ($request->hasFile('sheet')) {
             $this->storeSheet($version, $request->file('sheet'));
         }
@@ -116,7 +136,11 @@ class SongController extends Controller
             $lockedVersion = SongVersion::query()->lockForUpdate()->findOrFail($songVersion->id);
             $lockedVersion->update(collect($data)->only(['name', 'language', 'layout_data'])->all());
             if (isset($data['song'])) {
-                $lockedVersion->song->update(collect($data['song'])->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->all());
+                $songData = collect($data['song'])->only(['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'])->all();
+                if (array_key_exists('copyright_notice', $songData)) {
+                    $songData['copyright_notice'] = $this->normalizeCopyrightNotice($songData['copyright_notice']);
+                }
+                $lockedVersion->song->update($songData);
             }
             if (array_key_exists('parts', $data)) {
                 $submittedIds = collect($data['parts'])->pluck('id')->filter()->map(fn ($id): int => (int) $id);
@@ -303,5 +327,10 @@ class SongController extends Controller
     private function authorizeEditableVersion(Request $request, SongVersion $version): void
     {
         abort_unless($version->song()->where('user_id', $request->user()->id)->exists(), 404);
+    }
+
+    private function normalizeCopyrightNotice(?string $notice): ?string
+    {
+        return $notice === null ? null : preg_replace('/\([cC]\)/', '©', $notice);
     }
 }

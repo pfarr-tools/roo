@@ -30,6 +30,73 @@ it('legt ein Lied mit Fassung und A5-Liedblatt an', function () {
     Storage::disk('local')->assertExists($version->sheet->storage_path);
 });
 
+it('speichert Liedteile und Akkorde bereits beim ersten Anlegen', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/lieder', [
+        'title' => 'Erstes Akkordlied',
+        'version_name' => 'Gitarrenfassung',
+        'parts' => [[
+            'id' => -1,
+            'content' => 'Geh mit mir',
+            'is_refrain' => false,
+        ]],
+        'chord_sets' => [[
+            'instrument' => 'Gitarre',
+            'name' => 'Benannte Kopie',
+            'key_signature' => 'G-Dur',
+            'chords' => [[
+                'song_part_id' => -1,
+                'line_number' => 0,
+                'character_offset' => 0,
+                'chord' => 'G',
+            ]],
+        ]],
+    ])->assertRedirect();
+
+    $version = SongVersion::firstOrFail()->load(['parts', 'chordSets.chords']);
+    expect($version->parts)->toHaveCount(1)
+        ->and($version->parts->first()->content)->toBe('Geh mit mir')
+        ->and($version->chordSets)->toHaveCount(1)
+        ->and($version->chordSets->first()->name)->toBe('Benannte Kopie')
+        ->and($version->chordSets->first()->chords->first()->chord)->toBe('G');
+});
+
+it('ersetzt (c) im Rechtehinweis beim Speichern durch das Copyright-Zeichen', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/lieder', [
+        'title' => 'Copyrightlied',
+        'version_name' => 'Standardfassung',
+        'copyright_notice' => '(c) 2026 Roo',
+    ])->assertRedirect();
+
+    expect(Song::firstOrFail()->copyright_notice)->toBe('© 2026 Roo');
+});
+
+it('normalisiert den Rechtehinweis auch beim Bearbeiten einer Liedfassung', function () {
+    $user = User::factory()->create();
+    $song = Song::create(['user_id' => $user->id, 'title' => 'Copyrightlied']);
+    $version = $song->versions()->create(['name' => 'Standardfassung']);
+
+    $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", [
+        'name' => 'Standardfassung',
+        'language' => 'de',
+        'song' => ['title' => 'Copyrightlied', 'copyright_notice' => '(C) 2026 Roo'],
+    ])->assertRedirect();
+
+    expect($song->fresh()->copyright_notice)->toBe('© 2026 Roo');
+});
+
+it('weist Bilduploads ohne numerische Liedfassungs-ID zurück', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/lieder/fassungen/null/bilder', [
+        'images' => [UploadedFile::fake()->image('bild.png')],
+    ])->assertNotFound();
+});
+
 it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und führt es ins Gruppenliederbuch', function () {
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Liederschule']);
@@ -167,6 +234,7 @@ it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function ()
 
     expect($version->fresh()->chordSets)->toHaveCount(1)
         ->and($version->fresh()->chordSets->first()->instrument)->toBe('Gitarre')
+        ->and($version->fresh()->chordSets->first()->name)->toBe('Capo 2')
         ->and($version->fresh()->chordSets->first()->key_signature)->toBe('G-Dur')
         ->and($version->fresh()->chordSets->first()->chords)->toHaveCount(3)
         ->and($version->fresh()->chordSets->first()->chords->firstWhere('repetition', 1)->chord)->toBe('Em');

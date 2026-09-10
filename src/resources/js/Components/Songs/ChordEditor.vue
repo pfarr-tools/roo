@@ -1,5 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { transposeChords } from "../../Features/Songs/chordTransposition";
+import { requestConfirmation } from "../../utils/confirmation";
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
@@ -44,6 +46,13 @@ const activeSetIndex = ref(0),
     minor = ref(false),
     sus = ref(""),
     extension = ref("");
+const copyModalOpen = ref(false),
+    copySourceSet = ref(null),
+    copyName = ref(""),
+    copyKeySignature = ref(""),
+    keyChangeModalOpen = ref(false),
+    keyChangeSetIndex = ref(null),
+    pendingKeySignature = ref("");
 const currentChord = computed(
     () =>
         quickChord.value ??
@@ -119,12 +128,88 @@ function addSet() {
     ]);
     activeSetIndex.value = props.modelValue.length;
 }
-function removeSet() {
-    if (!activeSet.value) return;
+function openCopyModal(set) {
+    copySourceSet.value = set;
+    copyName.value = `${set.instrument || "Akkordsatz"} Kopie`;
+    copyKeySignature.value = set.key_signature || "";
+    copyModalOpen.value = true;
+}
+function closeCopyModal() {
+    copyModalOpen.value = false;
+    copySourceSet.value = null;
+}
+function copySet() {
+    const source = copySourceSet.value;
+    const name = copyName.value.trim();
+    if (!source || !name) return;
+    const copied = {
+        instrument: name,
+        id: null,
+        name: source.name || "",
+        key_signature: copyKeySignature.value,
+        chords: transposeChords(
+            source.chords,
+            source.key_signature,
+            copyKeySignature.value,
+        ),
+    };
+    updateSets([...props.modelValue, copied]);
+    activeSetIndex.value = props.modelValue.length;
+    closeCopyModal();
+}
+function requestKeyChange(keySignature) {
+    const set = activeSet.value;
+    if (!set || keySignature === set.key_signature) return;
+    if (!(set.chords ?? []).length) {
+        updateSets(
+            props.modelValue.map((item, index) =>
+                index === activeSetIndex.value
+                    ? { ...item, key_signature: keySignature }
+                    : item,
+            ),
+        );
+        return;
+    }
+    keyChangeSetIndex.value = activeSetIndex.value;
+    pendingKeySignature.value = keySignature;
+    keyChangeModalOpen.value = true;
+}
+function closeKeyChangeModal() {
+    keyChangeModalOpen.value = false;
+    keyChangeSetIndex.value = null;
+    pendingKeySignature.value = "";
+}
+function applyKeyChange(action) {
+    const index = keyChangeSetIndex.value;
+    const set = index === null ? null : props.modelValue[index];
+    if (!set) return closeKeyChangeModal();
+    const chords = action === "remove"
+        ? []
+        : action === "transpose"
+            ? transposeChords(set.chords, set.key_signature, pendingKeySignature.value)
+            : set.chords;
     updateSets(
-        props.modelValue.filter((_, index) => index !== activeSetIndex.value),
+        props.modelValue.map((item, itemIndex) =>
+            itemIndex === index
+                ? { ...item, key_signature: pendingKeySignature.value, chords }
+                : item,
+        ),
     );
-    activeSetIndex.value = Math.max(0, activeSetIndex.value - 1);
+    closeKeyChangeModal();
+}
+async function removeSet(index) {
+    const set = props.modelValue[index];
+    if (!set || !(await requestConfirmation({
+        title: "Instrumentalsatz löschen",
+        message: `„${set.instrument || "Ohne Instrument"}“ wirklich löschen?`,
+    }))) return;
+    updateSets(
+        props.modelValue.filter((_, setIndex) => setIndex !== index),
+    );
+    activeSetIndex.value = Math.min(
+        activeSetIndex.value > index ? activeSetIndex.value - 1 : activeSetIndex.value,
+        Math.max(0, props.modelValue.length - 2),
+    );
 }
 function selectPosition(line, characterOffset) {
     selected.value = {
@@ -365,22 +450,44 @@ function textParts(line) {
                 </button>
             </div>
             <div class="list-group mt-2">
-                <button
+                <div
                     v-for="(set, index) in modelValue"
                     :key="index"
-                    class="list-group-item list-group-item-action text-start"
+                    class="list-group-item d-flex align-items-start gap-2"
                     :class="{ active: index === activeSetIndex }"
-                    type="button"
-                    @click="activeSetIndex = index"
                 >
-                    {{ set.instrument || "Ohne Instrument"
-                    }}<span v-if="set.name" class="small d-block opacity-75">{{
-                        set.name
-                    }}</span
-                    ><span class="small d-block opacity-75"
-                        >{{ set.chords?.length ?? 0 }} Akkorde</span
+                    <button
+                        class="btn btn-link p-0 flex-grow-1 text-start text-reset text-decoration-none"
+                        type="button"
+                        @click="activeSetIndex = index"
                     >
-                </button>
+                        {{ set.instrument || "Ohne Instrument"
+                        }}<span v-if="set.name || set.key_signature" class="small d-block opacity-75">{{
+                            [set.name, set.key_signature].filter(Boolean).join(" · ")
+                        }}</span
+                        ><span class="small d-block opacity-75"
+                            >{{ set.chords?.length ?? 0 }} Akkorde</span
+                        >
+                    </button>
+                    <button
+                        class="btn btn-sm btn-outline-secondary"
+                        type="button"
+                        title="Akkordsatz kopieren"
+                        aria-label="Akkordsatz kopieren"
+                        @click="openCopyModal(set)"
+                    >
+                        <i class="bi bi-copy"></i>
+                    </button>
+                    <button
+                        class="btn btn-sm btn-outline-danger"
+                        type="button"
+                        title="Akkordsatz löschen"
+                        aria-label="Akkordsatz löschen"
+                        @click="removeSet(index)"
+                    >
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </div>
             <p v-if="!modelValue.length" class="small text-muted mt-3">
                 Lege einen Satz für Gitarre, Klavier oder ein anderes Instrument
@@ -400,8 +507,9 @@ function textParts(line) {
                 <div class="col-md-3">
                     <label class="form-label">Tonart</label>
                     <select
-                        v-model="activeSet.key_signature"
+                        :value="activeSet.key_signature"
                         class="form-select"
+                        @change="requestKeyChange($event.target.value)"
                     >
                         <option value="">Keine Tonart</option>
                         <option
@@ -422,17 +530,6 @@ function textParts(line) {
                         class="form-control"
                         placeholder="z. B. Capo 2"
                     />
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button
-                        class="btn btn-outline-danger"
-                        type="button"
-                        title="Akkordsatz löschen"
-                        aria-label="Akkordsatz löschen"
-                        @click="removeSet"
-                    >
-                        <i class="bi bi-trash"></i>
-                    </button>
                 </div>
             </div>
             <p class="small text-muted">
@@ -637,5 +734,63 @@ function textParts(line) {
                 </div>
             </div>
         </div>
+    </div>
+    <div
+        v-if="copyModalOpen"
+        class="roo-modal-backdrop"
+        role="presentation"
+        @click.self="closeCopyModal"
+    >
+        <section class="roo-modal" role="dialog" aria-modal="true" aria-labelledby="copy-chord-set-title">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 id="copy-chord-set-title" class="h5 mb-0">Akkordsatz kopieren</h2>
+                        <button class="btn-close" type="button" aria-label="Schließen" @click="closeCopyModal"></button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="copy-chord-set-name">Name der Kopie</label>
+                        <input id="copy-chord-set-name" v-model="copyName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="copy-chord-set-key">Zieltonart</label>
+                        <select id="copy-chord-set-key" v-model="copyKeySignature" class="form-select">
+                            <option value="">Keine Tonart</option>
+                            <option v-for="key in keySignatures" :key="key.value" :value="key.value">{{ key.label }}</option>
+                        </select>
+                    </div>
+                    <p v-if="copySourceSet?.key_signature && copyKeySignature && copySourceSet.key_signature !== copyKeySignature" class="small text-muted">
+                        Die Akkorde werden automatisch von {{ copySourceSet.key_signature }} nach {{ copyKeySignature }} transponiert.
+                    </p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-outline-secondary" type="button" @click="closeCopyModal">Abbrechen</button>
+                        <button class="btn btn-primary" type="button" :disabled="!copyName.trim()" @click="copySet">Kopie anlegen</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div
+        v-if="keyChangeModalOpen"
+        class="roo-modal-backdrop"
+        role="presentation"
+        @click.self="closeKeyChangeModal"
+    >
+        <section class="roo-modal" role="dialog" aria-modal="true" aria-labelledby="key-change-title">
+            <div class="card border-0">
+                <div class="card-body">
+                    <h2 id="key-change-title" class="h5">Tonart geändert</h2>
+                    <p class="text-muted">Wie sollen die vorhandenen Akkorde behandelt werden?</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" type="button" @click="applyKeyChange('keep')">Akkorde für neue Tonart beibehalten</button>
+                        <button class="btn btn-outline-danger" type="button" @click="applyKeyChange('remove')">Alle Akkorde entfernen</button>
+                        <button class="btn btn-primary" type="button" @click="applyKeyChange('transpose')">Akkorde in neue Tonart transponieren</button>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button class="btn btn-link" type="button" @click="closeKeyChangeModal">Abbrechen</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </template>

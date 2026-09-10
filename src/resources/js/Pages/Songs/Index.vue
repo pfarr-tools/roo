@@ -22,7 +22,8 @@ const editorTab = ref("metadata"),
     libraryModal = ref(false),
     libraryQuery = ref(""),
     fluxModal = ref(false),
-    toastMessage = ref("");
+    toastMessage = ref(""),
+    nextClientPartId = ref(-1);
 const canvas = { width: 420, height: 595.28 };
 const form = useForm({
     title: "",
@@ -245,6 +246,8 @@ function saveEditor() {
             notes: editor.song.notes,
             version_name: editor.name,
             lyrics: editor.parts.map((part) => part.content).join("\\n\\n"),
+            parts: editor.parts,
+            chord_sets: editor.chord_sets,
         }));
         return form.post("/lieder", {
             preserveScroll: true,
@@ -271,6 +274,10 @@ function saveEditor() {
     });
 }
 function uploadImages() {
+    if (!editorVersion.value?.id) {
+        showToast("Bitte speichere die Liedfassung zuerst.");
+        return;
+    }
     imageForm.post(`/lieder/fassungen/${editorVersion.value.id}/bilder`, {
         forceFormData: true,
         preserveState: true,
@@ -287,6 +294,10 @@ function uploadImages() {
     });
 }
 function importLibraryImage(image) {
+    if (!editorVersion.value?.id) {
+        showToast("Bitte speichere die Liedfassung zuerst.");
+        return;
+    }
     router.post(
         `/lieder/fassungen/${editorVersion.value.id}/bilder/bibliothek`,
         { resource_id: image.id },
@@ -313,6 +324,10 @@ function selectFluxImage(payload) {
     uploadGeneratedImage(payload);
 }
 function uploadGeneratedImage(payload) {
+    if (!editorVersion.value?.id) {
+        showToast("Bitte speichere die Liedfassung zuerst.");
+        return;
+    }
     const file = new File([payload.blob], payload.filename, {
         type: "image/png",
     });
@@ -453,6 +468,7 @@ function generateSheet() {
 }
 function addPart() {
     editor.parts.push({
+        id: nextClientPartId.value--,
         content: "",
         is_refrain: false,
         is_repeated: false,
@@ -1039,6 +1055,7 @@ function closeEditor() {
                                 type="file"
                                 accept="image/*"
                                 multiple
+                                :disabled="isCreating"
                                 @change="
                                     imageForm.images = [...$event.target.files]
                                 "
@@ -1048,6 +1065,7 @@ function closeEditor() {
                                     class="btn btn-sm btn-outline-secondary"
                                     type="button"
                                     :disabled="
+                                        isCreating ||
                                         imageForm.processing ||
                                         !imageForm.images.length
                                     "
@@ -1057,6 +1075,7 @@ function closeEditor() {
                                 ><button
                                     class="btn btn-sm btn-outline-primary"
                                     type="button"
+                                    :disabled="isCreating"
                                     @click="libraryModal = true"
                                 >
                                     <i class="bi bi-images me-1"></i>Bild aus
@@ -1065,6 +1084,7 @@ function closeEditor() {
                                     v-if="flux.enabled"
                                     class="btn btn-sm btn-outline-primary"
                                     type="button"
+                                    :disabled="isCreating"
                                     @click="openFluxGenerator"
                                 >
                                     <i class="bi bi-stars me-1"></i>Bild
