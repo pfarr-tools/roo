@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Search\SearchableFields;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
-use App\Search\SearchableFields;
 
 #[Fillable(['user_id', 'copied_from_id', 'title', 'description', 'expected_hours', 'notes', 'version', 'is_active'])]
 class UnitTemplate extends Model
@@ -17,7 +17,7 @@ class UnitTemplate extends Model
 
     protected function searchableFields(): array
     {
-        return ['title', 'description'];
+        return ['title', 'description', 'notes'];
     }
 
     public function toSearchableArray(): array

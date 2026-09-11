@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Enums\PublicationStatus;
+use App\Search\SearchableFields;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
-use App\Search\SearchableFields;
 
 #[Fillable(['user_id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'publication_status'])]
 class ResourceLink extends Model
@@ -17,7 +17,7 @@ class ResourceLink extends Model
 
     protected function searchableFields(): array
     {
-        return ['title', 'url', 'description'];
+        return ['title', 'url', 'description', 'publication_status'];
     }
 
     public function toSearchableArray(): array

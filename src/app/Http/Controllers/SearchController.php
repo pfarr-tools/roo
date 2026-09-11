@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assessment;
+use App\Models\AssessmentTask;
 use App\Models\Curriculum;
 use App\Models\EducationPlan;
-use App\Models\AssessmentTask;
-use App\Models\Assessment;
+use App\Models\Lesson;
+use App\Models\LessonPhase;
 use App\Models\LessonTemplate;
 use App\Models\MaterialItem;
 use App\Models\PhaseTemplate;
@@ -40,21 +42,23 @@ class SearchController extends Controller
             'curricula' => $query ? Curriculum::where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $userId))->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'external_identifier', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'external_identifier']) : collect(),
             'educationPlans' => $query ? EducationPlan::where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $userId))->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'external_identifier', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'external_identifier']) : collect(),
             'students' => $query ? Student::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'first_name'), 'last_name', 'or'), 'class_name', 'or'))->with('school:id,name')->orderBy('last_name')->limit(10)->get(['id', 'school_id', 'first_name', 'last_name', 'class_name']) : collect(),
-            'teachingUnits' => $query ? TeachingUnit::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'keyword', 'or'))->with('group:id,name')->orderBy('title')->limit(10)->get(['id', 'teaching_group_id', 'title', 'keyword']) : collect(),
-            'unitTemplates' => $query ? UnitTemplate::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'description', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'description']) : collect(),
-            'lessonTemplates' => $query ? LessonTemplate::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'objective', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'objective']) : collect(),
-            'phaseTemplates' => $query ? PhaseTemplate::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($this->matches($q, 'title'), 'teacher_interaction', 'or'), 'learner_activity', 'or'), 'material', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'material']) : collect(),
-            'songs' => $query ? Song::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'title'), 'composer', 'or'), 'author', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'composer', 'author']) : collect(),
-            'assessmentTasks' => $query ? AssessmentTask::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'title'), 'task_type', 'or'), 'level', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'task_type', 'level']) : collect(),
+            'teachingUnits' => $query ? TeachingUnit::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'keyword', 'notes', 'introduction_text']))->with('group:id,name')->orderBy('title')->limit(10)->get(['id', 'teaching_group_id', 'title', 'keyword']) : collect(),
+            'lessons' => $query ? Lesson::whereHas('unit', fn ($q) => $q->where('user_id', $userId))->where(fn ($q) => $this->matchesAny($q, ['title', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes']))->with('unit:id,teaching_group_id,title')->orderBy('title')->limit(10)->get(['id', 'teaching_unit_id', 'title']) : collect(),
+            'lessonPhases' => $query ? LessonPhase::whereHas('lesson.unit', fn ($q) => $q->where('user_id', $userId))->where(fn ($q) => $this->matchesAny($q, ['title', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'materials', 'media']))->with('lesson:id,teaching_unit_id,title', 'lesson.unit:id,teaching_group_id,title')->orderBy('title')->limit(10)->get(['id', 'lesson_id', 'title']) : collect(),
+            'unitTemplates' => $query ? UnitTemplate::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'description', 'notes']))->orderBy('title')->limit(10)->get(['id', 'title', 'description']) : collect(),
+            'lessonTemplates' => $query ? LessonTemplate::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'objective', 'notes']))->orderBy('title')->limit(10)->get(['id', 'title', 'objective']) : collect(),
+            'phaseTemplates' => $query ? PhaseTemplate::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'social_form', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media']))->orderBy('title')->limit(10)->get(['id', 'title', 'material']) : collect(),
+            'songs' => $query ? Song::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes']))->orderBy('title')->limit(10)->get(['id', 'title', 'composer', 'author']) : collect(),
+            'assessmentTasks' => $query ? AssessmentTask::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'task_type', 'content', 'solution', 'level']))->orderBy('title')->limit(10)->get(['id', 'title', 'task_type', 'level']) : collect(),
             'schoolYears' => $query ? SchoolYear::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'name'), 'starts_on', 'or'), 'ends_on', 'or'))->with('school:id,slug,name')->orderByDesc('starts_on')->limit(10)->get(['id', 'school_id', 'name', 'slug', 'starts_on', 'ends_on']) : collect(),
-            'assessments' => $query ? Assessment::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($q, 'title'), 'grade_component_label', 'or'))->with('group:id,name')->orderByDesc('assessed_on')->limit(10)->get(['id', 'teaching_group_id', 'title', 'assessed_on', 'grade_component_label']) : collect(),
-            'files' => $query ? ResourceReference::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($q, 'original_name'), 'description', 'or'))->orderBy('original_name')->limit(10)->get(['id', 'original_name', 'description', 'mime_type']) : collect(),
-            'links' => $query ? ResourceLink::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'title'), 'url', 'or'), 'description', 'or'))->orderBy('title')->limit(10)->get(['id', 'title', 'url', 'description']) : collect(),
+            'assessments' => $query ? Assessment::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'grade_component_label', 'status', 'notes']))->with('group:id,name')->orderByDesc('assessed_on')->limit(10)->get(['id', 'teaching_group_id', 'title', 'assessed_on', 'grade_component_label']) : collect(),
+            'files' => $query ? ResourceReference::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['original_name', 'description', 'copyrights', 'mime_type', 'security_status', 'source', 'publication_status']))->orderBy('original_name')->limit(10)->get(['id', 'original_name', 'description', 'mime_type']) : collect(),
+            'links' => $query ? ResourceLink::where('user_id', $userId)->where(fn ($q) => $this->matchesAny($q, ['title', 'url', 'description', 'publication_status']))->orderBy('title')->limit(10)->get(['id', 'title', 'url', 'description']) : collect(),
             'materials' => $query ? MaterialItem::where('user_id', $userId)->where(fn ($q) => $this->matches($this->matches($this->matches($this->matches($q, 'name'), 'material_number', 'or'), 'storage_location', 'or'), 'description', 'or'))->orderBy('name')->limit(10)->get(['id', 'name', 'material_number', 'storage_location', 'description']) : collect(),
-            'songVersions' => $query ? SongVersion::whereHas('song', function ($song) use ($userId): void {
+            'songVersions' => $query ? SongVersion::where(fn ($q) => $this->matchesAny($q, ['name', 'language', 'lyrics', 'notation', 'chords']))->orWhereHas('song', function ($song) use ($userId): void {
                 $song->where(fn ($scope) => $scope->whereNull('user_id')->orWhere('user_id', $userId))
-                    ->where(fn ($q) => $this->matches($this->matches($this->matches($q, 'title'), 'composer', 'or'), 'author', 'or'));
-            })->with('song:id,title,author,composer')->orderBy('name')->limit(10)->get(['id', 'song_id', 'name']) : collect(),
+                    ->where(fn ($q) => $this->matchesAny($q, ['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes']));
+            })->orWhereHas('parts', fn ($parts) => $this->matchesAny($parts, ['title', 'content']))->whereHas('song', fn ($song) => $song->whereNull('user_id')->orWhere('user_id', $userId))->with('song:id,title,author,composer')->orderBy('name')->limit(10)->get(['id', 'song_id', 'name']) : collect(),
         ];
 
         if ($request->expectsJson()) {
@@ -69,5 +73,14 @@ class SearchController extends Controller
         $method = $boolean === 'or' ? 'orWhereRaw' : 'whereRaw';
 
         return $builder->{$method}('LOWER(CAST("'.$column.'" AS TEXT)) LIKE LOWER(?)', [$this->searchLike]);
+    }
+
+    private function matchesAny($builder, array $columns)
+    {
+        foreach ($columns as $index => $column) {
+            $this->matches($builder, $column, $index === 0 ? 'and' : 'or');
+        }
+
+        return $builder;
     }
 }

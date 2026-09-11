@@ -2,15 +2,32 @@
 
 namespace App\Models;
 
+use App\Search\SearchableFields;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 
 #[Fillable(['teaching_unit_id', 'lesson_template_id', 'title', 'duration', 'position', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes'])]
 class Lesson extends Model
 {
+    use Searchable, SearchableFields;
+
+    protected function searchableFields(): array
+    {
+        return ['title', 'learning_goals', 'materials', 'homework', 'assessment_note', 'notes'];
+    }
+
+    public function toSearchableArray(): array
+    {
+        $payload = $this->searchablePayload();
+        $payload['user_id'] = $this->unit()->value('user_id');
+
+        return $payload;
+    }
+
     public function unit(): BelongsTo
     {
         return $this->belongsTo(TeachingUnit::class, 'teaching_unit_id');

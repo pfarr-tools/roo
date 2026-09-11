@@ -11,6 +11,8 @@ const groups = [
     { key: 'educationPlans', label: de.educationPlans, title: item => item.title, subtitle: item => item.external_identifier, href: item => `/bildungsplaene/${item.id}` },
     { key: 'students', label: de.students, title: item => `${item.last_name}, ${item.first_name}`, subtitle: item => `${item.class_name} · ${item.school?.name}`, href: item => `/schueler:innen/${item.id}` },
     { key: 'teachingUnits', label: de.teachingUnits, title: item => item.title, subtitle: item => item.group?.name, href: () => '/unterrichtseinheiten' },
+    { key: 'lessons', label: de.lessons, title: item => item.title, subtitle: item => item.unit?.title, href: item => item.unit?.teaching_group_id ? `/jahresplanung/${item.unit.teaching_group_id}` : '/jahresplanung' },
+    { key: 'lessonPhases', label: de.phases, title: item => item.title, subtitle: item => item.lesson?.title, href: item => item.lesson?.unit?.teaching_group_id ? `/jahresplanung/${item.lesson.unit.teaching_group_id}` : '/jahresplanung' },
     { key: 'unitTemplates', label: de.unitTemplates, title: item => item.title, subtitle: item => item.description, href: () => '/unterrichtseinheiten' },
     { key: 'lessonTemplates', label: de.lessonTemplates, title: item => item.title, subtitle: item => item.objective, href: () => '/unterrichtseinheiten' },
     { key: 'phaseTemplates', label: de.phaseTemplates, title: item => item.title, subtitle: item => item.material, href: () => '/unterrichtseinheiten' },

@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Search\SearchableFields;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
-use App\Search\SearchableFields;
 
 #[Fillable(['user_id', 'lesson_template_id', 'copied_from_id', 'title', 'duration_minutes', 'social_form_id', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media', 'position', 'version', 'is_active'])]
 class PhaseTemplate extends Model
@@ -17,7 +17,7 @@ class PhaseTemplate extends Model
 
     protected function searchableFields(): array
     {
-        return ['title', 'teacher_interaction', 'learner_activity', 'material'];
+        return ['title', 'social_form', 'teacher_interaction', 'learner_activity', 'differentiation', 'didactic_comment', 'material', 'media'];
     }
 
     public function toSearchableArray(): array

@@ -17,7 +17,7 @@ class TeachingUnit extends Model
 
     protected function searchableFields(): array
     {
-        return ['title', 'keyword'];
+        return ['title', 'keyword', 'notes', 'introduction_text'];
     }
 
     public function toSearchableArray(): array

@@ -18,7 +18,7 @@ class AssessmentTask extends Model
 
     protected function searchableFields(): array
     {
-        return ['title', 'task_type', 'level'];
+        return ['title', 'task_type', 'content', 'solution', 'level'];
     }
 
     public function toSearchableArray(): array
