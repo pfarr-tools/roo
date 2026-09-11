@@ -467,7 +467,6 @@ class TeachingGroupController extends Controller
     public function destroy(TeachingGroup $teachingGroup): RedirectResponse
     {
         $this->authorize('delete', $teachingGroup);
-        $studentIds = $teachingGroup->students()->pluck('students.id');
         $teachingGroup->assessments()->get()->each->delete();
         $teachingGroup->delete();
 

@@ -866,6 +866,9 @@ export default {
     groupGradesHint: "Mindestens eine Stufe, z. B. 2 oder 5/6.",
     schoolYear: "Schuljahr",
     members: "Mitglieder",
+    deleteTeachingGroup: "Unterrichtsgruppe löschen",
+    deleteTeachingGroupConfirm:
+        "Möchtest du diese Unterrichtsgruppe wirklich löschen? Alle zugehörigen Planungen, Stunden und Bewertungen werden ebenfalls entfernt. Schüler:innen werden nicht gelöscht.",
     noTeachingGroups: "Noch keine Unterrichtsgruppen angelegt.",
     noMembers: "Noch keine Schüler:innen zugeordnet.",
     addStudent: "Schüler:in anlegen",

@@ -252,19 +252,23 @@ class ResourceLibraryController extends Controller
         $matches = collect();
 
         if ($type === 'all' || $type === 'file') {
-            $matches = $matches->concat(ResourceReference::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where('original_name', 'like', "%{$query}%"))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'copyrights', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
+            $matches = $matches->concat(ResourceReference::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $this->matchesAny($nested, ['original_name', 'description', 'copyrights', 'mime_type', 'security_status', 'source', 'publication_status'], $query)))->orderBy('original_name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'original_name', 'description', 'copyrights', 'mime_type', 'size', 'page_count', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'file')));
         }
         if ($type === 'all' || $type === 'resource') {
-            $matches = $matches->concat(ResourceLink::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('title', 'like', "%{$query}%")->orWhere('url', 'like', "%{$query}%")))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
+            $matches = $matches->concat(ResourceLink::where('user_id', $userId)->with(['teachingUnit:id,title', 'lesson:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $this->matchesAny($nested, ['title', 'url', 'description', 'publication_status'], $query)))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'teaching_unit_id', 'lesson_id', 'title', 'url', 'description', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'resource')));
         }
         if ($type === 'all' || $type === 'material') {
-            $matches = $matches->concat(MaterialItem::where('user_id', $userId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $nested->where('name', 'like', "%{$query}%")->orWhere('material_number', 'like', "%{$query}%")->orWhere('storage_location', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
+            $matches = $matches->concat(MaterialItem::where('user_id', $userId)->with(['teachingUnits:id,title', 'lessons:id,title', 'phases:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $this->matchesAny($nested, ['name', 'material_number', 'storage_location', 'description'], $query)))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get(['id', 'name', 'material_number', 'storage_location', 'description', 'image_path', 'image_mime_type', 'created_at'])->map(fn ($item) => $item->setAttribute('kind', 'material')));
         }
         if ($type === 'all' || $type === 'song') {
-            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('user_id')->orWhere('user_id', $userId))->with(['song:id,user_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->whereHas('song', fn ($song) => $song->where('title', 'like', "%{$query}%")))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
+            $matches = $matches->concat(SongVersion::whereHas('song', fn ($builder) => $builder->whereNull('user_id')->orWhere('user_id', $userId))->with(['song:id,user_id,title,author,composer', 'sheet'])->when($query !== '', fn ($builder) => $builder->where(function ($nested) use ($query): void {
+                $this->matchesAny($nested, ['name', 'language', 'lyrics', 'notation', 'chords'], $query);
+                $nested->orWhereHas('song', fn ($song) => $this->matchesAny($song, ['title', 'composer', 'author', 'copyright_notice', 'age_group', 'topics', 'notes'], $query));
+                $nested->orWhereHas('parts', fn ($parts) => $this->matchesAny($parts, ['title', 'content'], $query));
+            }))->orderBy('name')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'song')));
         }
         if ($type === 'all' || $type === 'assessment-task') {
-            $matches = $matches->concat(AssessmentTask::where('user_id', $userId)->with(['educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where('title', 'like', "%{$query}%"))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
+            $matches = $matches->concat(AssessmentTask::where('user_id', $userId)->with(['educationPlan:id,title', 'educationPlanCompetency.area', 'educationPlanCompetency.variants.level', 'lessons:id,title'])->when($query !== '', fn ($builder) => $builder->where(fn ($nested) => $this->matchesAny($nested, ['title', 'task_type', 'content', 'solution', 'level'], $query)))->when($request->filled('education_plan_competency_id'), fn ($builder) => $builder->where('education_plan_competency_id', $request->integer('education_plan_competency_id')))->orderBy('title')->when($request->expectsJson(), fn ($builder) => $builder->limit(30))->get()->map(fn ($item) => $item->setAttribute('kind', 'assessment-task')));
         }
         if ($teachingGroup && ($type === 'all' || $type === 'songbook')) {
             $book = $teachingGroup->songbook()->withCount(['entries', 'lessons', 'phases'])->first();
@@ -308,6 +312,16 @@ class ResourceLibraryController extends Controller
             });
 
         return response()->json(['competencies' => $competencies, 'covered_hours' => []]);
+    }
+
+    private function matchesAny($builder, array $columns, string $query)
+    {
+        foreach ($columns as $index => $column) {
+            $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
+            $builder->{$method}('LOWER(CAST("'.$column.'" AS TEXT)) LIKE LOWER(?)', ["%{$query}%"]);
+        }
+
+        return $builder;
     }
 
     public function storeFile(Request $request): RedirectResponse

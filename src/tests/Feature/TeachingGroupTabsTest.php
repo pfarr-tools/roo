@@ -44,6 +44,23 @@ it('zeigt die sechs Bereiche der Unterrichtsgruppe als Tabs', function () {
         ->assertInertia(fn ($page) => $page->component('Evaluations/PeriodForm'));
 });
 
+it('löscht eine Unterrichtsgruppe über ihre eigene Route', function () {
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Löschschule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Zu löschende Gruppe']);
+    $otherUser = User::factory()->create();
+    $otherSchool = School::create(['user_id' => $otherUser->id, 'name' => 'Andere Löschschule']);
+    $otherYear = SchoolYear::create(['user_id' => $otherUser->id, 'school_id' => $otherSchool->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $otherGroup = TeachingGroup::create(['user_id' => $otherUser->id, 'school_id' => $otherSchool->id, 'school_year_id' => $otherYear->id, 'name' => 'Andere Gruppe']);
+
+    $this->actingAs($user)->delete("/unterrichtsgruppen/{$otherGroup->id}")->assertForbidden();
+    $this->actingAs($user)->delete("/unterrichtsgruppen/{$group->id}")->assertRedirect('/unterrichtsgruppen');
+
+    expect($group->fresh())->toBeNull()
+        ->and($otherGroup->fresh())->not->toBeNull();
+});
+
 it('zeigt Bewertungen in einer eigenen Ansicht für die ausgewählte Gruppe', function () {
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Bewertungsschule']);

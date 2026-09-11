@@ -78,6 +78,7 @@ it('searches every lesson and song text column globally', function () {
         ->where('results.songVersions.0.id', $version->id));
 
     $this->actingAs($user)->get('/suche?q=Liedpartsuchtext')->assertInertia(fn ($page) => $page
+        ->where('results.songs.0.id', $song->id)
         ->where('results.songVersions.0.id', $version->id));
 });
 

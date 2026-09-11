@@ -51,6 +51,17 @@ it('zeigt Lieder mit Musikcredits in der Bibliothek', function () {
     expect($version->fresh()->song->title)->toBe('Unser Lied');
 });
 
+it('durchsucht Liedtexte innerhalb der Bibliothek', function () {
+    $user = User::factory()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Lied ohne Suchtext'])
+        ->versions()->create(['name' => 'Fassung', 'lyrics' => 'Ein eindeutiger Liedtext']);
+    $version->parts()->create(['title' => 'Strophe', 'content' => 'Noch ein eindeutiger Liedpart', 'position' => 1]);
+
+    $this->actingAs($user)->get('/bibliothek?q=eindeutiger&type=song')->assertInertia(fn ($page) => $page
+        ->has('items', 1)
+        ->where('items.0.id', $version->id));
+});
+
 it('öffnet den Liededitor unter der Bibliotheksroute', function () {
     $user = User::factory()->create();
     $version = Song::create(['user_id' => $user->id, 'title' => 'Editorlied'])
