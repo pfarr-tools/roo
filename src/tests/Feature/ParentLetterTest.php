@@ -1,10 +1,10 @@
 <?php
 
 use App\Models\ResourceReference;
+use App\Models\ScheduledLesson;
+use App\Models\ScheduleSlot;
 use App\Models\School;
 use App\Models\SchoolYear;
-use App\Models\ScheduleSlot;
-use App\Models\ScheduledLesson;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,6 +64,25 @@ it('liefert das zuletzt gewählte Elternbrief-Format für den nächsten Export',
 
     $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}")->assertInertia(fn ($page) => $page
         ->where('parentLetterFormat', 'odt'));
+});
+
+it('speichert und verwendet das Sekundarstufen-Layout für Elternbriefe', function () {
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Sekundarstufe Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a']);
+    $unit = $group->teachingUnits()->create(['user_id' => $user->id, 'created_by_user_id' => $user->id, 'title' => 'Sekundarstufe Einheit', 'position' => 1]);
+
+    $response = $this->actingAs($user)->post(route('teaching-units.parent-letter.download', $unit), [
+        'format' => 'docx',
+        'template' => 'secondary',
+        'introduction_text' => '',
+    ])->assertOk();
+
+    expect(parentLetterFeatureArchiveText($response->getContent()))
+        ->toContain('Atkinson Hyperlegible Next')
+        ->not->toContain('Comic Neue');
+    expect($user->preferences()->where('key', 'documents.parent-letter.template')->value('value'))->toBe(['template' => 'secondary']);
 });
 
 function parentLetterFeatureArchiveText(string $contents): string

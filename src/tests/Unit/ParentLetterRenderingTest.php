@@ -1,5 +1,6 @@
 <?php
 
+use App\Documents\DocumentLayout;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\ParentLetterDocument;
 use App\Services\PhpOfficeDocumentRenderer;
@@ -96,4 +97,26 @@ it('generates a QR PNG for the permanent public URL', function () {
     $png = app(QrCodeRenderer::class)->png('https://example.test/oeffentlich/1?signature=abc');
 
     expect($png)->toStartWith("\x89PNG\r\n\x1a\n");
+});
+
+it('renders the secondary parent-letter header band in both formats', function () {
+    $document = new ParentLetterDocument(
+        title: 'Elternbrief Sekundarstufe',
+        group: '7a',
+        school: 'Sekundarschule',
+        creator: 'Lehrkraft Beispiel',
+        introduction: 'Einführung.',
+        contentCompetencies: [],
+        processCompetencies: [],
+        scheduledLessons: [],
+        layout: DocumentLayout::SECONDARY,
+    );
+    $renderer = app(PhpOfficeDocumentRenderer::class);
+
+    foreach ([DocumentOutputFormat::DOCX, DocumentOutputFormat::ODT] as $format) {
+        $archiveText = parentLetterArchiveText($renderer->render($document, $format));
+
+        expect($archiveText)->toContain('D9D9D9')
+            ->and($archiveText)->toContain('parentLetterHeaderBand');
+    }
 });

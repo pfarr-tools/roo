@@ -178,8 +178,10 @@ describe('assessment evaluation components', () => {
         expect(root.querySelector('#assessment-result-student').value).toBe('all')
         root.querySelector('#assessment-result-format').value = 'docx'
         root.querySelector('#assessment-result-format').dispatchEvent(new Event('change'))
+        root.querySelector('#assessment-result-template').value = 'secondary'
+        root.querySelector('#assessment-result-template').dispatchEvent(new Event('change'))
         await nextTick()
-        expect(root.querySelector('[data-testid="assessment-result-print-start"]').getAttribute('href')).toBe('/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/ergebnisbericht?student=all&format=docx&template=default')
+        expect(root.querySelector('[data-testid="assessment-result-print-start"]').getAttribute('href')).toBe('/unterrichtsgruppen/11/lernstandserhebungen/3/auswertung/ergebnisbericht?student=all&format=docx&template=secondary')
         unmount()
     })
 

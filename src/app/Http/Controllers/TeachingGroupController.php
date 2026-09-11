@@ -158,6 +158,7 @@ class TeachingGroupController extends Controller
             ])
             ->values();
         $parentLetterPreference = auth()->user()->preferences()->where('key', 'documents.parent-letter.format')->value('value');
+        $parentLetterTemplatePreference = auth()->user()->preferences()->where('key', 'documents.parent-letter.template')->value('value');
 
         return Inertia::render('TeachingGroups/Show', [
             'group' => $teachingGroup,
@@ -173,6 +174,7 @@ class TeachingGroupController extends Controller
             'competencies' => $competencies,
             'teachingUnits' => $teachingUnits,
             'parentLetterFormat' => is_array($parentLetterPreference) ? ($parentLetterPreference['format'] ?? 'docx') : 'docx',
+            'parentLetterTemplate' => is_array($parentLetterTemplatePreference) ? ($parentLetterTemplatePreference['template'] ?? 'primary-school-lower-secondary') : 'primary-school-lower-secondary',
             'denominationOptions' => $teachingGroup->curricula->flatMap(fn ($curriculum) => $curriculum->denominations ?? [])->filter()->unique()->values(),
         ]);
     }

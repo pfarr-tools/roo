@@ -4,12 +4,14 @@ namespace App\Documents\Templates;
 
 use App\Documents\AssessmentResultDocument;
 use App\Documents\Document;
+use App\Documents\DocumentLayoutProfile;
 use App\Documents\DocumentTemplate;
 use InvalidArgumentException;
 use PhpOffice\PhpWord\Element\Cell;
 use PhpOffice\PhpWord\Element\Header;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Style\Tab;
 
 final class AssessmentResultTemplate implements DocumentTemplate
 {
@@ -25,17 +27,25 @@ final class AssessmentResultTemplate implements DocumentTemplate
         }
 
         $word = new PhpWord;
-        $word->setDefaultFontName('Atkinson Hyperlegible Next');
-        $word->setDefaultFontSize(11);
-        $word->addFontStyle('resultHeading', ['name' => 'Comic Neue', 'size' => 14, 'bold' => true]);
-        $word->addFontStyle('resultHeader', ['name' => 'Comic Neue', 'size' => 24, 'bold' => true]);
-        $word->addFontStyle('resultBody', ['name' => 'Atkinson Hyperlegible Next', 'size' => 11]);
-        $word->addFontStyle('resultSmall', ['name' => 'Atkinson Hyperlegible Next', 'size' => 9, 'color' => '666666']);
+        $profile = $document->layoutProfile();
+        $word->setDefaultFontName($profile->fontFamily);
+        $word->setDefaultFontSize($profile->bodyFontSize);
+        $word->addFontStyle('resultHeading', ['name' => $profile->headingFontFamily, 'size' => $profile->headingFontSize, 'bold' => true]);
+        $word->addFontStyle('resultHeader', ['name' => $profile->headingFontFamily, 'size' => $profile->headerFontSize, 'bold' => true]);
+        $word->addFontStyle('resultHeaderMeta', ['name' => $profile->headingFontFamily, 'size' => $profile->headingFontSize]);
+        $word->addParagraphStyle('resultHeaderBand', [
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+            'shading' => ['fill' => 'D9D9D9'],
+            'tabs' => [new Tab(Tab::TAB_STOP_LEFT, 0), new Tab(Tab::TAB_STOP_RIGHT, 10000)],
+        ]);
+        $word->addFontStyle('resultBody', ['name' => $profile->fontFamily, 'size' => $profile->bodyFontSize]);
+        $word->addFontStyle('resultSmall', ['name' => 'Atkinson Hyperlegible Next', 'size' => $profile->smallFontSize, 'color' => '666666']);
         $word->addTableStyle('resultCompetencies', ['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 40]);
         $word->addTableStyle('resultPercentageBar', ['borderSize' => 0, 'cellMargin' => 0, 'width' => 2903, 'layout' => 'fixed']);
 
         foreach ($document->reports as $index => $report) {
-            $section = $word->addSection([
+            $sectionSettings = [
                 'pageSizeW' => 11906,
                 'pageSizeH' => 16838,
                 'marginTop' => 567,
@@ -55,10 +65,16 @@ final class AssessmentResultTemplate implements DocumentTemplate
                 'borderLeftSize' => 6,
                 'borderLeftColor' => '000000',
                 'borderLeftStyle' => 'single',
-            ]);
+            ];
+            if (! $profile->pageFrame) {
+                foreach (['borderTop', 'borderRight', 'borderBottom', 'borderLeft'] as $border) {
+                    unset($sectionSettings[$border.'Size'], $sectionSettings[$border.'Color'], $sectionSettings[$border.'Style']);
+                }
+            }
+            $section = $word->addSection($sectionSettings);
             $title = $report['title'].($report['level'] !== '' ? ' ('.$report['level'].')' : '');
-            $this->addPageHeader($section->addHeader(Header::FIRST), $title, $report['student_name']);
-            $this->addPageHeader($section->addHeader(), $title, $report['student_name']);
+            $this->addPageHeader($section->addHeader(Header::FIRST), $title, $report['student_name'], $profile, $report['date'] ?? null);
+            $this->addPageHeader($section->addHeader(), $title, $report['student_name'], $profile, $report['date'] ?? null);
             $this->addFooter($section, $report);
             foreach ($report['tasks'] as $number => $task) {
                 $section->addText(($number + 1).'. '.$task['title'], 'resultHeading', ['spaceBefore' => $number === 0 ? 0 : 120, 'spaceAfter' => 40]);
@@ -93,7 +109,7 @@ final class AssessmentResultTemplate implements DocumentTemplate
                 $section->addText('Insgesamt hast du '.$report['percentage'].'% der möglichen Leistung erreicht.', 'resultBody', ['spaceBefore' => 260]);
                 $section->addText('Für diese LSE erhältst du die Note '.($report['grade'] ?: '–').'.', 'resultBody', ['spaceBefore' => 180]);
             }
-            $signatureFont = ['name' => 'Atkinson Hyperlegible Next', 'size' => 11, 'color' => '000000'];
+            $signatureFont = ['name' => 'Atkinson Hyperlegible Next', 'size' => $profile->bodyFontSize, 'color' => '000000'];
             $section->addText($report['place'].', '.$report['date'], $signatureFont, ['alignment' => 'right', 'spaceBefore' => 420, 'spaceAfter' => 0]);
             $section->addText($report['author'], $signatureFont, ['alignment' => 'right', 'spaceBefore' => 0, 'spaceAfter' => 0]);
             if ($index < count($document->reports) - 1) {
@@ -120,13 +136,26 @@ final class AssessmentResultTemplate implements DocumentTemplate
         }
     }
 
-    private function addPageHeader(Header $header, string $title, string $studentName): void
+    private function addPageHeader(Header $header, string $title, string $studentName, DocumentLayoutProfile $profile, ?string $date = null): void
     {
+        if ($profile->headerBand) {
+            $header->addText($title, 'resultHeader', 'resultHeaderBand');
+            $meta = $header->addTextRun('resultHeaderBand');
+            $meta->addText($date ?? '', 'resultHeaderMeta');
+            $meta->addText("\t".$studentName, 'resultHeaderMeta');
+            $header->addTextBreak(1);
+
+            return;
+        }
         $table = $header->addTable(['width' => 10000, 'layout' => 'fixed', 'borderSize' => 0, 'cellMarginLeft' => 0, 'cellMarginRight' => 0]);
         $row = $table->addRow();
-        $row->addCell(7000, ['borderSize' => 0])->addText($title, 'resultHeader', ['spaceAfter' => 0]);
-        $row->addCell(3000, ['borderSize' => 0, 'cellMarginLeft' => 283])->addText($studentName, 'resultHeader', ['spaceAfter' => 0, 'alignment' => 'right']);
-        $header->addShape('line', ['points' => '0,0 10000,0', 'width' => 10000, 'height' => 1, 'outline' => ['color' => '000000', 'weight' => 1]]);
+        $cellStyle = ['borderSize' => 0];
+        $row->addCell(7000, $cellStyle)->addText($title, 'resultHeader', ['spaceAfter' => 0]);
+        $nameStyle = ['borderSize' => 0, 'cellMarginLeft' => 283];
+        $row->addCell(3000, $nameStyle)->addText($studentName, 'resultHeader', ['spaceAfter' => 0, 'alignment' => 'right']);
+        if (! $profile->headerBand) {
+            $header->addShape('line', ['points' => '0,0 10000,0', 'width' => 10000, 'height' => 1, 'outline' => ['color' => '000000', 'weight' => 1]]);
+        }
         $header->addTextBreak(1);
     }
 

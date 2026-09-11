@@ -2,7 +2,7 @@
 
 namespace App\Documents;
 
-final class ParentLetterDocument extends Document
+final class ParentLetterDocument extends LayoutDocument
 {
     /** @param list<string> $contentCompetencies  @param list<string> $processCompetencies  @param list<array{date: string, time: string, title: string}> $scheduledLessons  @param list<array{label: string, value: string}> $contacts */
     public function __construct(
@@ -19,8 +19,9 @@ final class ParentLetterDocument extends Document
         public readonly array $contacts = [],
         public readonly ?string $place = null,
         public readonly ?string $letterDate = null,
+        DocumentLayout $layout = DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY,
     ) {
-        parent::__construct($title);
+        parent::__construct($title, layout: $layout);
     }
 
     public function templateKey(): string

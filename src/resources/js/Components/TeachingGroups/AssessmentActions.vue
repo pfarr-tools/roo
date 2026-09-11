@@ -69,6 +69,7 @@ function openDownload() {
                         <label class="form-label" for="assessment-download-template">{{ de.assessmentDownloadTemplate }}</label>
                         <select id="assessment-download-template" v-model="downloadTemplate" class="form-select">
                             <option value="primary-school-lower-secondary">{{ de.assessmentTemplatePrimarySchoolLowerSecondary }}</option>
+                            <option value="secondary">{{ de.assessmentTemplateSecondary }}</option>
                         </select>
                     </div>
                     <div class="d-flex justify-content-end gap-2">

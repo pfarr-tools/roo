@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Documents\DocumentLayout;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\ParentLetterDocument;
 use App\Models\CurriculumTopicEducationPlanReference;
@@ -25,11 +26,16 @@ final class ParentLetterController extends Controller
 
         $data = $request->validate([
             'format' => ['required', 'in:docx,odt'],
+            'template' => ['nullable', 'in:primary-school-lower-secondary,secondary'],
             'introduction_text' => ['nullable', 'string'],
         ]);
         UserPreference::updateOrCreate(
             ['user_id' => $request->user()->id, 'key' => 'documents.parent-letter.format'],
             ['value' => ['format' => $data['format']]],
+        );
+        UserPreference::updateOrCreate(
+            ['user_id' => $request->user()->id, 'key' => 'documents.parent-letter.template'],
+            ['value' => ['template' => $data['template'] ?? DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY->value]],
         );
         $teachingUnit->update(['introduction_text' => $data['introduction_text'] ?? null]);
 
@@ -64,6 +70,7 @@ final class ParentLetterController extends Controller
             contacts: $contacts,
             place: $view->school->city ?: $view->school->name,
             letterDate: $letterDate->format('d.m.Y'),
+            layout: DocumentLayout::from($data['template'] ?? DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY->value),
         );
         $contents = $renderer->render($document, $format);
 

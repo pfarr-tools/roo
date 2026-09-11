@@ -478,6 +478,7 @@ export default {
     assessmentDownloadTemplate: "Vorlage",
     assessmentDownloadStart: "Download starten",
     assessmentTemplatePrimarySchoolLowerSecondary: "Grundschule/Unterstufe",
+    assessmentTemplateSecondary: "Sekundarstufe",
     assessmentScanTitle: "LSE auswerten",
     assessmentScanBooklets: "Exemplare erkannt",
     assessmentScanBooklet: "Exemplar",

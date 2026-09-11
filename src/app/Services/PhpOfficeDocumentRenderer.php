@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Documents\AssessmentDocument;
 use App\Documents\AssessmentResultDocument;
 use App\Documents\Document;
+use App\Documents\DocumentLayoutProfile;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplateRegistry;
+use App\Documents\LayoutDocument;
 use App\Documents\ParentLetterDocument;
 use Com\Tecnick\Barcode\Barcode;
 use PfarrTools\RooRuling\PhpWord\DrawingRulingRenderer;
@@ -845,6 +847,7 @@ class PhpOfficeDocumentRenderer
             }
 
             $metadata = $document->metadata;
+            $layoutProfile = $document instanceof LayoutDocument ? $document->layoutProfile() : null;
             $isParentLetter = $document instanceof ParentLetterDocument;
             $pageMarkerPng = $this->pageMarkerPng($this->pageMarker($metadata));
             $taskMarkers = $this->taskMarkers($document);
@@ -853,17 +856,19 @@ class PhpOfficeDocumentRenderer
                 $styles = $this->normalizeAssessmentResultTableStyleDefinitions($styles);
             }
 
-            $styles = preg_replace_callback(
-                '/(<style:page-layout-properties\b)([^>]*)(>)/',
-                static function (array $matches): string {
-                    $attributes = $matches[2];
-                    $attributes = preg_replace('/\s+fo:border="[^"]*"/', '', $attributes) ?: $attributes;
-                    $attributes = preg_replace('/\s+fo:padding="[^"]*"/', '', $attributes) ?: $attributes;
+            if ($layoutProfile?->pageFrame !== false) {
+                $styles = preg_replace_callback(
+                    '/(<style:page-layout-properties\b)([^>]*)(>)/',
+                    static function (array $matches): string {
+                        $attributes = $matches[2];
+                        $attributes = preg_replace('/\s+fo:border="[^"]*"/', '', $attributes) ?: $attributes;
+                        $attributes = preg_replace('/\s+fo:padding="[^"]*"/', '', $attributes) ?: $attributes;
 
-                    return $matches[1].$attributes.' fo:border="0.05cm solid #000000" fo:padding="0.4cm"'.$matches[3];
-                },
-                $styles,
-            ) ?: $styles;
+                        return $matches[1].$attributes.' fo:border="0.05cm solid #000000" fo:padding="0.4cm"'.$matches[3];
+                    },
+                    $styles,
+                ) ?: $styles;
+            }
             $styles = preg_replace_callback(
                 '/(<style:page-layout-properties\b[^>]*?) fo:margin-left="([^"]+)" fo:margin-right="([^"]+)"/',
                 static fn (array $matches): string => $matches[1].' fo:margin-left="'.$matches[3].'" fo:margin-right="'.$matches[2].'"',
@@ -887,11 +892,12 @@ class PhpOfficeDocumentRenderer
                 );
                 $styles = preg_replace_callback(
                     '/<style:footer>(.*?)<\/style:footer>/s',
-                    static function (array $matches) use ($metadata): string {
+                    static function (array $matches) use ($metadata, $layoutProfile): string {
                         $footer = str_replace('text:style-name="Normal"', 'text:style-name="assessmentFooterParagraph"', $matches[1]);
                         $footer = preg_replace('/<text:span(?![^>]*text:style-name)/', '<text:span text:style-name="assessmentFooterText"', $footer) ?: $footer;
                         $version = htmlspecialchars((string) ($metadata['roo_version'] ?? config('app.version', '0.1.0')), ENT_XML1);
-                        $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="1" draw:name="assessmentRooMark" draw:style-name="assessmentRooMarkFrame" draw:text-style-name="assessmentRooMarkParagraph" svg:width="4cm" svg:height="0.6cm" draw:transform="rotate (1.5707963267949) translate (1.00008333333333cm 0.252236111111111cm)"><draw:text-box><text:p><text:span text:style-name="assessmentRooMarkText">ROO '.$version.'</text:span></text:p></draw:text-box></draw:frame><draw:frame text:anchor-type="char" draw:style-name="assessmentRooMarkImage" draw:name="assessmentRooIcon" svg:x="-1.466cm" svg:y="0.333cm" svg:width="0.31cm" svg:height="0.265cm" draw:z-index="2" draw:transform="translate (1.311cm -0.4655cm) rotate (1.5707963267949) translate (-1.311cm 0.4655cm)"><draw:image xlink:href="Pictures/roo-icon.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
+                        $brandingX = $layoutProfile?->headerBand === true ? '0.5' : '1.00008333333333';
+                        $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="1" draw:name="assessmentRooMark" draw:style-name="assessmentRooMarkFrame" draw:text-style-name="assessmentRooMarkParagraph" svg:width="4cm" svg:height="0.6cm" draw:transform="rotate (1.5707963267949) translate ('.$brandingX.'cm 0.252236111111111cm)"><draw:text-box><text:p><text:span text:style-name="assessmentRooMarkText">ROO '.$version.'</text:span></text:p></draw:text-box></draw:frame><draw:frame text:anchor-type="char" draw:style-name="assessmentRooMarkImage" draw:name="assessmentRooIcon" svg:x="-1.466cm" svg:y="0.333cm" svg:width="0.31cm" svg:height="0.265cm" draw:z-index="2" draw:transform="translate (1.311cm -0.4655cm) rotate (1.5707963267949) translate (-1.311cm 0.4655cm)"><draw:image xlink:href="Pictures/roo-icon.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
                         $lastParagraphEnd = strrpos($footer, '</text:p>');
                         if ($lastParagraphEnd !== false) {
                             $footer = substr_replace($footer, $frame, $lastParagraphEnd, 0);
@@ -920,7 +926,10 @@ class PhpOfficeDocumentRenderer
             }
             $styles = preg_replace_callback(
                 '/<style:header>(.*?)<\/style:header>/s',
-                static function (array $matches): string {
+                static function (array $matches) use ($layoutProfile): string {
+                    if ($layoutProfile?->headerBand === true) {
+                        return $matches[0];
+                    }
                     $line = '<draw:line text:anchor-type="paragraph" draw:z-index="0" draw:name="assessmentHeaderLineObject" draw:style-name="assessmentHeaderLine" svg:x1="-0.45cm" svg:y1="1.222cm" svg:x2="17.55cm" svg:y2="1.222cm"><text:p/></draw:line>';
                     $header = preg_replace('/(<table:table-row>\s*<table:table-cell[^>]*><text:p[^>]*>)/s', '$1'.$line, $matches[1], 1) ?: $matches[1];
                     $header = preg_replace('/(<table:table-row>.*?<table:table-cell[^>]*>.*?<\/table:table-cell>\s*)(<table:table-cell)/s', '$1$2 table:style-name="assessmentNameCell"', $header, 1) ?: $header;
@@ -929,7 +938,20 @@ class PhpOfficeDocumentRenderer
                 },
                 $styles,
             ) ?: $styles;
-            $styles = $this->addOdtFirstPageHeader($styles, $pageMarkerPng);
+            if ($layoutProfile?->headerBand === true) {
+                $styles = preg_replace_callback(
+                    '/(<style:style\s+style:name="(?:assessmentHeaderBand|resultHeaderBand|parentLetterHeaderBand)"[^>]*>.*?<style:paragraph-properties)([^>]*)(>)/s',
+                    static function (array $matches): string {
+                        if (str_contains($matches[2], 'fo:background-color=')) {
+                            return $matches[0];
+                        }
+
+                        return $matches[1].$matches[2].' fo:background-color="#D9D9D9"'.$matches[3];
+                    },
+                    $styles,
+                ) ?: $styles;
+            }
+            $styles = $this->addOdtFirstPageHeader($styles, $pageMarkerPng, $layoutProfile);
             $archive->addFromString('styles.xml', $styles);
             $iconPath = base_path('resources/images/branding/roo-icon.png');
             if (is_file($iconPath)) {
@@ -960,8 +982,8 @@ class PhpOfficeDocumentRenderer
                     ) ?: $content;
                 }
                 $content = str_replace('<text:tracked-changes/>', '', $content);
-                $content = $this->addOdtTaskMarkerStyle($content);
-                $content = $this->injectTaskMarkers($content, $taskMarkers);
+                $content = $this->addOdtTaskMarkerStyle($content, $layoutProfile);
+                $content = $this->injectTaskMarkers($content, $taskMarkers, $layoutProfile);
                 $archive->addFromString('content.xml', $content);
             }
             $archive->close();
@@ -1105,22 +1127,31 @@ class PhpOfficeDocumentRenderer
         return $payload;
     }
 
-    private function addOdtTaskMarkerStyle(string $content): string
+    private function addOdtTaskMarkerStyle(string $content, ?DocumentLayoutProfile $layoutProfile): string
     {
-        $style = '<style:style style:name="assessmentTaskMarkerFrame" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" draw:wrap-influence-on-position="once-concurrent" style:flow-with-text="false"/></style:style>';
+        $styleName = $layoutProfile?->headerBand === true ? 'assessmentSecondaryTaskMarkerFrame' : 'assessmentTaskMarkerFrame';
+        $horizontalRelation = $layoutProfile?->headerBand === true ? 'page' : 'paragraph';
+        $style = '<style:style style:name="'.$styleName.'" style:family="graphic"><style:graphic-properties draw:stroke="none" draw:fill="none" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="'.$horizontalRelation.'" draw:wrap-influence-on-position="once-concurrent" style:flow-with-text="false"/></style:style>';
 
         return str_replace('</office:automatic-styles>', $style.'</office:automatic-styles>', $content);
     }
 
     /** @param array<string, array{path: string, png: string}> $taskMarkers */
-    private function injectTaskMarkers(string $content, array $taskMarkers): string
+    private function injectTaskMarkers(string $content, array $taskMarkers, ?DocumentLayoutProfile $layoutProfile): string
     {
         foreach ($taskMarkers as $token => $marker) {
             [$kind, $taskId] = array_pad(explode('_', substr($token, strlen('ROO_TASK_')), 2), 2, '');
-            $y = $kind === 'END' ? '-0.199cm' : '0cm';
-            $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="4" draw:name="assessmentTaskMarker'.htmlspecialchars($kind.$taskId, ENT_XML1).'" draw:style-name="assessmentTaskMarkerFrame" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" svg:x="-1.9cm" svg:y="'.$y.'" svg:width="0.8cm" svg:height="0.8cm"><draw:image xlink:href="'.htmlspecialchars($marker['path'], ENT_XML1).'" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
-            $pattern = '/<text:p(?![^>]*\/>)([^>]*)>(?:(?!<\/text:p>)[\s\S])*?'.preg_quote($token, '/').'(?:(?!<\/text:p>)[\s\S])*?<\/text:p>/';
-            $content = preg_replace($pattern, '<text:p$1>'.$frame.'</text:p>', $content, 1) ?: $content;
+            $y = $kind === 'END' ? '-0.199cm' : ($layoutProfile?->headerBand === true ? '0.45cm' : '0cm');
+            $x = (string) ($layoutProfile?->taskMarkerOffsetCm ?? -1.9);
+            $horizontalRelation = $layoutProfile?->headerBand === true ? 'page' : 'paragraph';
+            $styleName = $layoutProfile?->headerBand === true ? 'assessmentSecondaryTaskMarkerFrame' : 'assessmentTaskMarkerFrame';
+            $frame = '<draw:frame text:anchor-type="paragraph" draw:z-index="4" draw:name="assessmentTaskMarker'.htmlspecialchars($kind.$taskId, ENT_XML1).'" draw:style-name="'.$styleName.'" style:horizontal-pos="from-left" style:horizontal-rel="'.$horizontalRelation.'" svg:x="'.$x.'cm" svg:y="'.$y.'" svg:width="0.8cm" svg:height="0.8cm"><draw:image xlink:href="'.htmlspecialchars($marker['path'], ENT_XML1).'" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>';
+            $spanPattern = '/<text:span([^>]*)>'.preg_quote($token, '/').'<\/text:span>/';
+            if (preg_match($spanPattern, $content) === 1) {
+                $content = preg_replace($spanPattern, $frame, $content, 1) ?: $content;
+            } else {
+                $content = preg_replace('/'.preg_quote($token, '/').'/', $frame, $content, 1) ?: $content;
+            }
         }
 
         return $content;
@@ -1146,7 +1177,7 @@ class PhpOfficeDocumentRenderer
         $archive->addFromString('META-INF/manifest.xml', $manifest);
     }
 
-    private function addOdtFirstPageHeader(string $styles, ?string $pageMarkerPng): string
+    private function addOdtFirstPageHeader(string $styles, ?string $pageMarkerPng, ?DocumentLayoutProfile $layoutProfile): string
     {
         if (preg_match('/<style:master-page style:name="Standard1"[^>]*>.*?<\/style:master-page>/s', $styles, $masterMatches) !== 1) {
             return $styles;
@@ -1158,12 +1189,12 @@ class PhpOfficeDocumentRenderer
         }
 
         $header = $headerMatches[0];
-        $defaultHeader = str_replace('Name:', '', $header);
+        $defaultHeader = $layoutProfile?->headerBand === true ? $header : str_replace('Name:', '', $header);
         $standardMaster = str_replace($header, $defaultHeader, $master);
         $firstHeader = $pageMarkerPng !== null
             ? preg_replace(
-                '/(<table:table-row>\s*<table:table-cell[^>]*><text:p[^>]*>)/s',
-                '$1<draw:frame text:anchor-type="paragraph" draw:z-index="3" draw:name="assessmentPageMarker" draw:style-name="assessmentPageMarkerFrame" svg:x="0.5cm" svg:y="1cm" svg:width="1.2cm" svg:height="1.2cm"><draw:image xlink:href="Pictures/assessment-page-marker.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>',
+                '/(<style:header(?:-first)?\b[^>]*>.*?<text:p\b[^>]*>)/s',
+                '$1<draw:frame text:anchor-type="paragraph" draw:z-index="3" draw:name="assessmentPageMarker" draw:style-name="assessmentPageMarkerFrame" svg:x="'.(string) ($layoutProfile?->pageMarkerOffsetCm ?? 0.5).'cm" svg:y="1cm" svg:width="1.2cm" svg:height="1.2cm"><draw:image xlink:href="Pictures/assessment-page-marker.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad" draw:mime-type="image/png"/></draw:frame>',
                 $header,
                 1,
             ) ?: $header

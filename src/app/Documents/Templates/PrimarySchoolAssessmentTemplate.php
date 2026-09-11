@@ -4,6 +4,7 @@ namespace App\Documents\Templates;
 
 use App\Documents\AssessmentDocument;
 use App\Documents\Document;
+use App\Documents\DocumentLayoutProfile;
 use App\Documents\DocumentTemplate;
 use App\Services\Assessment\ClozeTextParser;
 use InvalidArgumentException;
@@ -19,6 +20,7 @@ use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Style\Cell as CellStyle;
+use PhpOffice\PhpWord\Style\Tab;
 
 final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
 {
@@ -27,6 +29,14 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     private const ATKINSON = 'Atkinson Hyperlegible Next';
 
     private const CONTENT_WIDTH_MM = 175.0;
+
+    private string $headingFont = self::COMIC;
+
+    private int $bodyFontSize = 14;
+
+    private int $headingFontSize = 14;
+
+    private int $solutionFontSize = 14;
 
     public function key(): string
     {
@@ -40,22 +50,37 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         }
 
         $word = new PhpWord;
-        $word->setDefaultFontName(self::ATKINSON);
-        $word->setDefaultFontSize(14);
+        $profile = $document->layoutProfile();
+        $this->headingFont = $profile->headingFontFamily;
+        $this->bodyFontSize = $profile->bodyFontSize;
+        $this->headingFontSize = $profile->headingFontSize;
+        $this->solutionFontSize = $profile->solutionFontSize;
+        $word->setDefaultFontName($profile->fontFamily);
+        $word->setDefaultFontSize($profile->bodyFontSize);
         $word->addFontStyle('assessmentPageHeading', [
-            'name' => self::COMIC,
-            'size' => 24,
+            'name' => $this->headingFont,
+            'size' => $profile->headerFontSize,
             'bold' => true,
+        ]);
+        $word->addFontStyle('assessmentHeaderMeta', [
+            'name' => $profile->headingFontFamily,
+            'size' => $profile->headingFontSize,
+        ]);
+        $word->addParagraphStyle('assessmentHeaderBand', [
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+            'shading' => ['fill' => 'D9D9D9'],
+            'tabs' => [new Tab(Tab::TAB_STOP_LEFT, 0), new Tab(Tab::TAB_STOP_RIGHT, 10000)],
         ]);
         $word->addFontStyle('assessmentSolution', [
             'name' => self::ATKINSON,
-            'size' => 14,
+            'size' => $this->solutionFontSize,
         ]);
         $word->addParagraphStyle('imageMatchingSolution', [
             'alignment' => 'center',
             'spaceAfter' => 240,
         ]);
-        $section = $word->addSection([
+        $sectionSettings = [
             'pageSizeW' => 11906,
             'pageSizeH' => 16838,
             'marginTop' => 567,
@@ -74,21 +99,38 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             'borderLeftSize' => 6,
             'borderLeftColor' => '000000',
             'borderLeftStyle' => 'single',
-        ]);
+        ];
+        if (! $profile->pageFrame) {
+            foreach (['borderTop', 'borderRight', 'borderBottom', 'borderLeft'] as $border) {
+                unset($sectionSettings[$border.'Size'], $sectionSettings[$border.'Color'], $sectionSettings[$border.'Style']);
+            }
+        }
+        $section = $word->addSection($sectionSettings);
 
-        $this->addPageHeader($section->addHeader(Header::FIRST), $document->title, true);
-        $this->addPageHeader($section->addHeader(), $document->title, false);
+        $date = $document->metadata['date'] ?? null;
+        $date = is_string($date) ? $date : null;
+        $this->addPageHeader($section->addHeader(Header::FIRST), $document->title, true, $profile, $date);
+        $this->addPageHeader($section->addHeader(), $document->title, $profile->headerBand, $profile, $date);
         $this->addFooter($section, $document->metadata);
         foreach ($document->tasks as $number => $task) {
             $this->addTask($section, $task, $number + 1, $document->gradeLevel);
         }
-        $section->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+        $section->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
         return $word;
     }
 
-    private function addPageHeader(Header $header, string $title, bool $includeName): void
+    private function addPageHeader(Header $header, string $title, bool $includeName, DocumentLayoutProfile $profile, ?string $date = null): void
     {
+        if ($profile->headerBand) {
+            $header->addText($title, 'assessmentPageHeading', 'assessmentHeaderBand');
+            $meta = $header->addTextRun('assessmentHeaderBand');
+            $meta->addText($date ?? '', 'assessmentHeaderMeta');
+            $meta->addText("\tName: ________________________________________", 'assessmentHeaderMeta');
+            $header->addTextBreak(1);
+
+            return;
+        }
         $table = $header->addTable([
             'width' => 10000,
             'layout' => 'fixed',
@@ -97,17 +139,21 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             'cellMarginRight' => 0,
         ]);
         $row = $table->addRow();
-        $row->addCell($includeName ? 7000 : 10000, ['borderSize' => 0])->addText($title, 'assessmentPageHeading', ['spaceAfter' => 0]);
+        $cellStyle = ['borderSize' => 0];
+        $row->addCell($includeName ? 7000 : 10000, $cellStyle)->addText($title, 'assessmentPageHeading', ['spaceAfter' => 0]);
         if ($includeName) {
-            $row->addCell(3000, ['borderSize' => 0, 'cellMarginLeft' => 283])->addText('Name:', 'assessmentPageHeading', ['spaceAfter' => 0, 'alignment' => 'right']);
+            $nameStyle = ['borderSize' => 0, 'cellMarginLeft' => 283];
+            $row->addCell(3000, $nameStyle)->addText('Name:', 'assessmentPageHeading', ['spaceAfter' => 0, 'alignment' => 'right']);
         }
 
-        $header->addShape('line', [
-            'points' => '0,0 10000,0',
-            'width' => 10000,
-            'height' => 1,
-            'outline' => ['color' => '000000', 'weight' => 1],
-        ]);
+        if (! $profile->headerBand) {
+            $header->addShape('line', [
+                'points' => '0,0 10000,0',
+                'width' => 10000,
+                'height' => 1,
+                'outline' => ['color' => '000000', 'weight' => 1],
+            ]);
+        }
         $header->addTextBreak(1);
     }
 
@@ -162,12 +208,13 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     private function addTask(Section $section, array $task, int $number, string $gradeLevel): void
     {
         $markerId = (string) ($task['task_id'] ?? $number);
-        $section->addText('ROO_TASK_START_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF'], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $points = (int) ($task['max_points'] ?? 0);
         $instruction = ($task['task_type'] ?? '') === 'cloze'
             ? (string) ($task['content']['instruction'] ?? $task['title'] ?? '')
             : (string) ($task['content']['prompt'] ?? $task['title'] ?? '');
-        $section->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => self::COMIC, 'size' => 14], ['spaceBefore' => 180, 'spaceAfter' => 120]);
+        $heading = $section->addTextRun(['spaceBefore' => 180, 'spaceAfter' => 120]);
+        $heading->addText($number.'. '.$instruction.' ('.$points.' VP)', ['name' => $this->headingFont, 'size' => $this->headingFontSize]);
+        $heading->addText('ROO_TASK_START_'.$markerId, ['name' => self::ATKINSON, 'size' => 1, 'color' => 'FFFFFF']);
 
         $content = is_array($task['content'] ?? null) ? $task['content'] : [];
         if (($task['task_type'] ?? '') === 'checkbox') {
@@ -278,7 +325,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             }
             $cell->addImage($image['path'], $style);
         } else {
-            $cell->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            $cell->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
         }
         $section->addTextBreak(1);
     }
@@ -291,7 +338,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             return;
         }
 
-        $section->addText($text, ['name' => self::ATKINSON, 'size' => 14, 'bold' => false], ['spaceBefore' => 120, 'spaceAfter' => 120]);
+        $section->addText($text, ['name' => self::ATKINSON, 'size' => $this->bodyFontSize, 'bold' => false], ['spaceBefore' => 120, 'spaceAfter' => 120]);
     }
 
     /** @param array<string, mixed> $content */
@@ -323,9 +370,9 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         foreach ($questions as $question) {
             $row = $table->addRow(720);
             $row->addCell($sentenceWidth, ['borderSize' => 4, 'borderColor' => '000000'])
-                ->addText((string) $question['label'], ['name' => self::ATKINSON, 'size' => 14]);
+                ->addText((string) $question['label'], ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
             $row->addCell($numberWidth, ['borderSize' => 4, 'borderColor' => '000000'])
-                ->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+                ->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
         }
     }
 
@@ -340,7 +387,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $words = collect($matches[0] ?? [])->values();
         }
         if ($words->isNotEmpty()) {
-            $section->addText(implode(' · ', $words->all()), ['name' => self::ATKINSON, 'size' => 14], ['spaceBefore' => 0, 'spaceAfter' => 120]);
+            $section->addText(implode(' · ', $words->all()), ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceBefore' => 0, 'spaceAfter' => 120]);
         }
 
         $this->addWritingLines($section, $content, $gradeLevel);
@@ -366,7 +413,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $run = $section->addTextRun(['lineHeight' => $lineHeight, 'spaceBefore' => 0, 'spaceAfter' => 120]);
         foreach ($parsed['fragments'] as $fragment) {
             if ($fragment['type'] === 'text') {
-                $run->addText((string) $fragment['text'], ['name' => self::ATKINSON, 'size' => 14]);
+                $run->addText((string) $fragment['text'], ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
 
                 continue;
             }
@@ -383,10 +430,10 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                         'height' => max(1, (int) round($ruling->bandHeightMm() * 3.77952756)),
                     ]);
                 } else {
-                    $run->addText(str_repeat('_', max(3, (int) ceil($widthMm / 3))), ['name' => self::ATKINSON, 'size' => 14]);
+                    $run->addText(str_repeat('_', max(3, (int) ceil($widthMm / 3))), ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
                 }
                 if ($wordIndex < count($words) - 1) {
-                    $run->addText(' ', ['name' => self::ATKINSON, 'size' => 14]);
+                    $run->addText(' ', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
                 }
             }
         }
@@ -407,11 +454,11 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             return;
         }
 
-        $container->addText($heading, ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
+        $container->addText($heading, ['name' => $this->headingFont, 'size' => $this->headingFontSize, 'bold' => true], ['spaceBefore' => 0, 'spaceAfter' => 40]);
         $run = $container->addTextRun(['spaceBefore' => 0, 'spaceAfter' => 120]);
         foreach ($solutions as $index => $solution) {
             if ($index > 0) {
-                $run->addText(' · ', ['name' => self::ATKINSON, 'size' => 14]);
+                $run->addText(' · ', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
             }
             $run->addText($solution, 'assessmentSolution');
         }
@@ -431,15 +478,15 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         if ($scale === 'stars') {
             $run = $section->addTextRun(['alignment' => 'left', 'spaceBefore' => 120, 'spaceAfter' => 120]);
             if ($label !== '') {
-                $run->addText($label.' ', ['name' => self::COMIC, 'size' => 14, 'bold' => true]);
+                $run->addText($label.' ', ['name' => $this->headingFont, 'size' => $this->headingFontSize, 'bold' => true]);
             }
-            $run->addText($symbols, ['name' => self::ATKINSON, 'size' => 14]);
+            $run->addText($symbols, ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
 
             return;
         }
 
         if ($label !== '') {
-            $section->addText($label, ['name' => self::COMIC, 'size' => 14, 'bold' => true], ['spaceBefore' => 120, 'spaceAfter' => 0]);
+            $section->addText($label, ['name' => $this->headingFont, 'size' => $this->headingFontSize, 'bold' => true], ['spaceBefore' => 120, 'spaceAfter' => 0]);
         }
 
         $table = $section->addTable([
@@ -452,7 +499,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $cellWidth = (int) floor(self::CONTENT_WIDTH_MM * 56.6929 / 5);
         $checkboxes = $table->addRow();
         foreach (range(0, 4) as $index) {
-            $checkboxes->addCell($cellWidth, ['borderSize' => 0])->addText('□', ['name' => self::ATKINSON, 'size' => 14], ['alignment' => 'center']);
+            $checkboxes->addCell($cellWidth, ['borderSize' => 0])->addText('□', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['alignment' => 'center']);
         }
         $labels = ['Stimme voll zu', 'Stimme eher zu', 'Unentschieden', 'Stimme eher nicht zu', 'Stimme überhaupt nicht zu'];
         $labelRow = $table->addRow();
@@ -499,7 +546,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                     $run = $middle->addTextRun('imageMatchingSolution');
                     foreach ($solutions as $index => $solution) {
                         if ($index > 0) {
-                            $run->addText(' · ', ['name' => self::ATKINSON, 'size' => 14]);
+                            $run->addText(' · ', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
                         }
                         $run->addText($solution, 'assessmentSolution');
                     }
@@ -593,7 +640,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     {
         foreach (array_values($content['options'] ?? []) as $option) {
             $text = is_array($option) ? ($option['text'] ?? '') : (string) $option;
-            $section->addText('☐ '.$text, ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 80]);
+            $section->addText('☐ '.$text, ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 80]);
         }
         $section->addTextBreak(1);
     }
@@ -624,7 +671,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         foreach ($subtasks as $subtask) {
             $row = $table->addRow();
             $row->addCell(self::CONTENT_WIDTH_MM * 56.6929 * 0.30, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top'])
-                ->addText((string) ($subtask['label'] ?? ''), ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+                ->addText((string) ($subtask['label'] ?? ''), ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
             $answerCell = $row->addCell(self::CONTENT_WIDTH_MM * 56.6929 * 0.70, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top']);
             $lines = max(1, (int) ($subtask['lines'] ?? 3));
             $answerTable = $answerCell->addTable(['width' => self::CONTENT_WIDTH_MM * 56.6929 * 0.70, 'layout' => 'fixed', 'borderSize' => 0, 'cellMargin' => 0]);
@@ -634,7 +681,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                     'borderBottomSize' => ! empty($content['lineated']) ? 4 : 0,
                     'borderBottomColor' => '000000',
                     'borderBottomStyle' => 'single',
-                ])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+                ])->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
             }
         }
         $section->addTextBreak(1);
@@ -679,7 +726,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             $lines = max(1, (int) ($subtask['lines'] ?? 3));
             $answerTable = $answerCell->addTable(['width' => $answerWidthTwips, 'layout' => 'fixed', 'borderSize' => 0, 'cellMargin' => 0]);
             for ($line = 0; $line < $lines; $line++) {
-                $answerTable->addRow(360)->addCell(null, ['borderSize' => 0, 'borderBottomSize' => ! empty($content['lineated']) ? 4 : 0, 'borderBottomColor' => '000000', 'borderBottomStyle' => 'single'])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+                $answerTable->addRow(360)->addCell(null, ['borderSize' => 0, 'borderBottomSize' => ! empty($content['lineated']) ? 4 : 0, 'borderBottomColor' => '000000', 'borderBottomStyle' => 'single'])->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
             }
         }
         $section->addTextBreak(1);
@@ -746,16 +793,16 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
         $table = $section->addTable(['width' => $tableWidth, 'layout' => 'fixed', 'borderSize' => 4, 'borderColor' => '000000', 'cellMargin' => 80]);
 
         $header = $table->addRow();
-        $header->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+        $header->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
         foreach ($categories as $category) {
-            $header->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'center'])->addText((string) ($category['text'] ?? ''), ['name' => self::ATKINSON, 'size' => 14], ['align' => 'center']);
+            $header->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'center'])->addText((string) ($category['text'] ?? ''), ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['align' => 'center']);
         }
 
         foreach ($rows as $row) {
             $tableRow = $table->addRow();
-            $tableRow->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top'])->addText((string) ($row['text'] ?? ''), ['name' => self::ATKINSON, 'size' => 14]);
+            $tableRow->addCell($textWidth, ['borderSize' => 4, 'borderColor' => '000000', 'valign' => 'top'])->addText((string) ($row['text'] ?? ''), ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
             foreach ($categories as $category) {
-                $tableRow->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => 14]);
+                $tableRow->addCell($categoryWidth, ['borderSize' => 4, 'borderColor' => '000000'])->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize]);
             }
         }
     }
@@ -764,7 +811,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
     {
         $heading = trim((string) ($definition['heading'] ?? ''));
         if ($heading !== '') {
-            $cell->addText($heading, ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            $cell->addText($heading, ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
 
             return;
         }
@@ -776,7 +823,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
                 'borderBottomSize' => $header || $lineated ? 4 : 0,
                 'borderBottomColor' => '000000',
                 'borderBottomStyle' => 'single',
-            ])->addText('', ['name' => self::ATKINSON, 'size' => 14], ['spaceAfter' => 0]);
+            ])->addText('', ['name' => self::ATKINSON, 'size' => $this->bodyFontSize], ['spaceAfter' => 0]);
         }
     }
 
@@ -791,7 +838,7 @@ final class PrimarySchoolAssessmentTemplate implements DocumentTemplate
             ruling: $this->visibleRuling($ruling->definition()),
             count: $count,
             widthMm: self::CONTENT_WIDTH_MM,
-            fontStyle: ['name' => self::ATKINSON, 'size' => 14],
+            fontStyle: ['name' => self::ATKINSON, 'size' => $this->bodyFontSize],
         );
         $this->makeRulingBordersPrintable($table);
         $section->addTextBreak(1);

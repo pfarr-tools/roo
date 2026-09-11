@@ -5,7 +5,7 @@ namespace App\Documents;
 use PfarrTools\RooRuling\RulingDefinition;
 use PfarrTools\RooRuling\RulingPreset;
 
-final class AssessmentDocument extends Document
+final class AssessmentDocument extends LayoutDocument
 {
     /** @param list<array<string, mixed>> $tasks */
     public function __construct(
@@ -13,8 +13,9 @@ final class AssessmentDocument extends Document
         public readonly array $tasks,
         public readonly string $gradeLevel = '',
         array $metadata = [],
+        DocumentLayout $layout = DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY,
     ) {
-        parent::__construct($title, $metadata);
+        parent::__construct($title, $metadata, $layout);
     }
 
     public function templateKey(): string

@@ -6,6 +6,7 @@ use App\Documents\Document;
 use App\Documents\DocumentTemplate;
 use App\Documents\ParentLetterDocument;
 use InvalidArgumentException;
+use PhpOffice\PhpWord\Element\Header;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Style\Tab;
 
@@ -29,13 +30,24 @@ final class ParentLetterTemplate implements DocumentTemplate
         }
 
         $word = new PhpWord;
-        $word->setDefaultFontName(self::ATKINSON);
-        $word->setDefaultFontSize(11);
-        $word->addFontStyle('parentLetterHeading', ['name' => self::COMIC, 'size' => 14, 'bold' => true]);
-        $word->addFontStyle('parentLetterBody', ['name' => self::ATKINSON, 'size' => 11]);
+        $profile = $document->layoutProfile();
+        $word->setDefaultFontName($profile->fontFamily);
+        $word->setDefaultFontSize($profile->bodyFontSize);
+        $word->addFontStyle('parentLetterHeading', ['name' => $profile->headingFontFamily, 'size' => $profile->headingFontSize, 'bold' => true]);
+        $word->addFontStyle('parentLetterBody', ['name' => $profile->fontFamily, 'size' => $profile->headerBand ? $profile->bodyFontSize : 11]);
+        $word->addParagraphStyle('parentLetterHeaderBand', [
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+            'shading' => ['fill' => 'D9D9D9'],
+            'tabs' => [new Tab(Tab::TAB_STOP_LEFT, 0), new Tab(Tab::TAB_STOP_RIGHT, 10000)],
+        ]);
         $word->addParagraphStyle('parentLetterSection', ['spaceBefore' => 240, 'spaceAfter' => 80]);
         $word->addTableStyle('parentLetterSchedule', ['borderSize' => 6, 'borderColor' => 'B7B7B7', 'cellMargin' => 80]);
         $section = $word->addSection(['marginTop' => 900, 'marginRight' => 900, 'marginBottom' => 900, 'marginLeft' => 900]);
+        if ($profile->headerBand) {
+            $this->addPageHeader($section->addHeader(Header::FIRST), $document->title);
+            $this->addPageHeader($section->addHeader(), $document->title);
+        }
         $footer = $section->addFooter();
         $footerFont = ['name' => self::ATKINSON, 'size' => 8, 'color' => '808080'];
         $footerRun = $footer->addTextRun([
@@ -47,7 +59,9 @@ final class ParentLetterTemplate implements DocumentTemplate
         $footerRun->addText("\tSeite ", $footerFont);
         $footerRun->addField('PAGE', [], ['PreserveFormat'], null, $footerFont);
 
-        $section->addText($document->title, 'parentLetterHeading', ['spaceAfter' => 120]);
+        if (! $profile->headerBand) {
+            $section->addText($document->title, 'parentLetterHeading', ['spaceAfter' => 120]);
+        }
         $section->addText($document->school.' · '.$document->group, 'parentLetterBody', ['spaceAfter' => 280]);
         if ($document->place !== null && $document->letterDate !== null) {
             $section->addText($document->place.', '.$document->letterDate, 'parentLetterBody', ['alignment' => 'right', 'spaceAfter' => 280]);
@@ -104,5 +118,10 @@ final class ParentLetterTemplate implements DocumentTemplate
         foreach (preg_split('/(?:\r?\n){2,}/', trim($text)) ?: [] as $paragraph) {
             $section->addText($paragraph, 'parentLetterBody', ['spaceAfter' => $spaceAfter]);
         }
+    }
+
+    private function addPageHeader(Header $header, string $title): void
+    {
+        $header->addText($title, 'parentLetterHeading', 'parentLetterHeaderBand');
     }
 }

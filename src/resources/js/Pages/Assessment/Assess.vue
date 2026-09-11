@@ -195,7 +195,7 @@ const resultPrintUrl = computed(() => {
                     <label class="form-label" for="assessment-result-format">{{ de.assessmentEvaluationPrintFormat }}</label>
                     <select id="assessment-result-format" v-model="resultPrintFormat" class="form-select mb-3"><option value="odt">ODT</option><option value="docx">DOCX</option></select>
                     <label class="form-label" for="assessment-result-template">{{ de.assessmentEvaluationPrintTemplate }}</label>
-                    <select id="assessment-result-template" v-model="resultPrintTemplate" class="form-select"><option value="default">{{ de.assessmentEvaluationPrintDefault }}</option></select>
+                    <select id="assessment-result-template" v-model="resultPrintTemplate" class="form-select"><option value="default">{{ de.assessmentEvaluationPrintDefault }}</option><option value="secondary">{{ de.assessmentTemplateSecondary }}</option></select>
                     <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" @click="resultPrintOpen = false">{{ de.cancel }}</button><a class="btn btn-primary" :href="resultPrintUrl" data-testid="assessment-result-print-start" @click="resultPrintOpen = false">{{ de.assessmentEvaluationPrintStart }}</a></div>
                 </div>
             </section>

@@ -3,6 +3,7 @@
 use App\Documents\AssessmentDocument;
 use App\Documents\AssessmentResultDocument;
 use App\Documents\Document;
+use App\Documents\DocumentLayout;
 use App\Documents\DocumentOutputFormat;
 use App\Documents\DocumentTemplate;
 use App\Documents\DocumentTemplateRegistry;
@@ -261,6 +262,29 @@ it('rendert das Grundschultemplate mit Lineatur und Ankreuzaufgabe', function ()
         ->and($styles)->toContain('fo:margin-right="0.39375in"')
         ->and(substr_count((string) $styles, 'Name:'))->toBeGreaterThanOrEqual(1)
         ->and($content)->toContain('style:master-page-name="FirstPage"');
+
+    $secondaryDocument = new AssessmentDocument(
+        'LSE Lesen',
+        $document->tasks,
+        '2',
+        $document->metadata,
+        layout: DocumentLayout::SECONDARY,
+    );
+    $secondaryContents = app(PhpOfficeDocumentRenderer::class)->render($secondaryDocument, DocumentOutputFormat::ODT);
+    $secondaryPath = tempnam(sys_get_temp_dir(), 'roo-secondary-marker-test-');
+    file_put_contents($secondaryPath, $secondaryContents);
+    $secondaryArchive = new ZipArchive;
+    $secondaryArchive->open($secondaryPath);
+    $secondaryContent = (string) $secondaryArchive->getFromName('content.xml');
+    $secondaryStyles = (string) $secondaryArchive->getFromName('styles.xml');
+    $secondaryArchive->close();
+    unlink($secondaryPath);
+
+    expect($secondaryStyles)->toContain('assessmentHeaderBand')
+        ->and($secondaryStyles)->toContain('fo:background-color="#D9D9D9"')
+        ->and($secondaryContent)->toContain('style:horizontal-pos="from-left" style:horizontal-rel="page" svg:x="0.3cm" svg:y="0.45cm"')
+        ->and($secondaryContent)->toContain('style:horizontal-pos="from-left" style:horizontal-rel="page" svg:x="0.3cm" svg:y="-0.199cm"')
+        ->and($secondaryContent)->toMatch('/<text:p[^>]*>.*?1\..*?assessmentTaskMarkerSTART1.*?<\/text:p>/s');
 });
 
 it('rendert Freitextbilder in maximal drei Spalten und den optionalen Lesetext danach', function () {

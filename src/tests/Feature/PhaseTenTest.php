@@ -152,6 +152,31 @@ it('lädt eine Lernstandserhebung als ODT herunter', function () {
         ->assertHeader('Content-Disposition', 'attachment; filename="2026-27_2a_20261001 LSE Lesen.docx"');
 
     expect($docxResponse->getContent())->not->toBeEmpty();
+
+    $secondaryResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/lernstandserhebungen/{$assessment->id}/download?format=odt&template=secondary")
+        ->assertOk();
+    $secondaryPath = tempnam(sys_get_temp_dir(), 'roo-secondary-download-');
+    file_put_contents($secondaryPath, $secondaryResponse->getContent());
+    $secondaryArchive = new ZipArchive;
+    $secondaryArchive->open($secondaryPath);
+    $secondaryContent = (string) $secondaryArchive->getFromName('styles.xml').$secondaryArchive->getFromName('content.xml');
+    $secondaryArchive->close();
+    unlink($secondaryPath);
+    expect($secondaryContent)->toContain('Atkinson Hyperlegible Next')
+        ->toContain('D9D9D9')
+        ->toContain('fo:font-size="10pt"')
+        ->toContain('svg:x="0.3cm"')
+        ->toContain('01.10.2026')
+        ->toContain('Name: ________________________________________')
+        ->toContain('assessmentHeaderMeta')
+        ->toContain('assessmentHeaderBand')
+        ->toContain('fo:background-color="#D9D9D9"')
+        ->toContain('<text:tab/>')
+        ->toContain('assessmentRooMark')
+        ->toContain('translate (0.5cm 0.252236111111111cm)')
+        ->not->toContain('assessmentHeaderLineObject')
+        ->not->toContain('Comic Neue')
+        ->not->toContain('M 1');
 });
 
 it('lädt bei einer differenzierten Lernstandserhebung nur das gewählte Niveau', function () {

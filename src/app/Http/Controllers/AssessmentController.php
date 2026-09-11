@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Documents\AssessmentDocument;
 use App\Documents\AssessmentResultDocument;
+use App\Documents\DocumentLayout;
 use App\Documents\DocumentOutputFormat;
 use App\Http\Requests\AssessmentBookletAssignmentRequest;
 use App\Http\Requests\AssessmentScanFragmentRequest;
@@ -71,7 +72,7 @@ class AssessmentController extends Controller
         $options = $request->validate([
             'level' => ['nullable', 'in:G,M,E'],
             'format' => ['nullable', 'in:odt,docx'],
-            'template' => ['nullable', 'in:primary-school-lower-secondary'],
+            'template' => ['nullable', 'in:primary-school-lower-secondary,secondary'],
         ]);
         $differentiated = $assessment->is_differentiated;
         $level = $differentiated ? ($options['level'] ?? 'M') : null;
@@ -104,6 +105,7 @@ class AssessmentController extends Controller
                 'footer_title' => $assessment->title.($differentiated ? " ({$level})" : ''),
                 'date' => $assessment->assessed_on?->format('d.m.Y'),
             ],
+            layout: DocumentLayout::from($options['template'] ?? DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY->value),
         );
         $contents = $renderer->render($document, $format);
         $filename = $this->assessmentDownloadFilename($teachingGroup, $assessment);
@@ -126,7 +128,7 @@ class AssessmentController extends Controller
         $options = $request->validate([
             'student' => ['nullable', 'in:all,'.$teachingGroup->students()->pluck('students.id')->implode(',')],
             'format' => ['nullable', 'in:odt,docx'],
-            'template' => ['nullable', 'in:default'],
+            'template' => ['nullable', 'in:default,secondary'],
         ]);
         $studentId = ($options['student'] ?? 'all') === 'all' ? null : (int) $options['student'];
         $students = $teachingGroup->students()->orderBy('last_name')->orderBy('first_name')->get();
@@ -138,7 +140,10 @@ class AssessmentController extends Controller
         $assessment->load(['booklets.student', 'tasks.results', 'tasks.levels', 'tasks.expectations', 'tasks.reviews.booklet.student', 'tasks.reviews.items', 'tasks.educationPlanCompetency.variants.level']);
         $reports = $students->map(fn (Student $student): array => $this->resultReportForStudent($assessment, $teachingGroup, $student))->all();
         $format = DocumentOutputFormat::from($options['format'] ?? 'odt');
-        $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports), $format);
+        $layout = ($options['template'] ?? 'default') === 'secondary'
+            ? DocumentLayout::SECONDARY
+            : DocumentLayout::PRIMARY_SCHOOL_LOWER_SECONDARY;
+        $contents = $renderer->render(new AssessmentResultDocument($assessment->title, $reports, layout: $layout), $format);
         $filename = $this->resultReportFilename($teachingGroup, $assessment, $studentId !== null ? $students->first() : null);
         $mimeType = $format === DocumentOutputFormat::DOCX
             ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

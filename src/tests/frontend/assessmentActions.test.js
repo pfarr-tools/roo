@@ -55,15 +55,18 @@ describe('AssessmentActions', () => {
         expect([...root.querySelector('#assessment-download-level').options].map(option => option.value)).toEqual(['G', 'M', 'E'])
         expect(root.querySelector('#assessment-download-level').value).toBe('M')
         expect([...root.querySelector('#assessment-download-format').options].map(option => option.value)).toEqual(['odt', 'docx'])
+        expect([...root.querySelector('#assessment-download-template').options].map(option => option.value)).toEqual(['primary-school-lower-secondary', 'secondary'])
         expect(root.querySelector('#assessment-download-template').value).toBe('primary-school-lower-secondary')
 
         root.querySelector('#assessment-download-level').value = 'E'
         root.querySelector('#assessment-download-level').dispatchEvent(new Event('change'))
         root.querySelector('#assessment-download-format').value = 'docx'
         root.querySelector('#assessment-download-format').dispatchEvent(new Event('change'))
+        root.querySelector('#assessment-download-template').value = 'secondary'
+        root.querySelector('#assessment-download-template').dispatchEvent(new Event('change'))
         await nextTick()
 
-        expect(root.querySelector('[data-testid="assessment-download"]').getAttribute('href')).toBe('/unterrichtsgruppen/12/lernstandserhebungen/34/download?level=E&format=docx&template=primary-school-lower-secondary')
+        expect(root.querySelector('[data-testid="assessment-download"]').getAttribute('href')).toBe('/unterrichtsgruppen/12/lernstandserhebungen/34/download?level=E&format=docx&template=secondary')
 
         unmount()
     })
