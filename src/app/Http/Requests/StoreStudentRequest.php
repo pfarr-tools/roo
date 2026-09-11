@@ -16,6 +16,6 @@ class StoreStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['school_id' => ['required', 'integer', 'exists:schools,id'], 'first_name' => ['required', 'string', 'max:100'], 'last_name' => ['required', 'string', 'max:100'], 'class_name' => ['required', 'string', 'max:50'], 'notes' => ['nullable', 'string'], 'receives_grades' => ['sometimes', 'boolean'], 'pronoun_set' => ['sometimes', Rule::in(PronounSets::keys())]];
+        return ['school_id' => ['required', 'integer', 'exists:schools,id'], 'first_name' => ['required', 'string', 'max:100'], 'last_name' => ['required', 'string', 'max:100'], 'class_name' => ['required', 'string', 'max:50'], 'notes' => ['nullable', 'string'], 'receives_grades' => ['sometimes', 'boolean'], 'pronoun_set' => ['sometimes', Rule::in(PronounSets::keys())], 'denomination' => ['nullable', 'string', 'max:50']];
     }
 }

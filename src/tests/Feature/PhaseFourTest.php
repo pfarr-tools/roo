@@ -16,6 +16,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Laravel\Scout\Searchable;
 
 uses(RefreshDatabase::class);
 
@@ -210,7 +211,7 @@ it('filters students by the numeric grade level prefix', function () {
 });
 
 it('keeps student records out of the global search index', function () {
-    expect(class_uses_recursive(Student::class))->not->toContain(Laravel\Scout\Searchable::class);
+    expect(class_uses_recursive(Student::class))->not->toContain(Searchable::class);
 });
 
 it('exports only the organizations students with their school years', function () {
@@ -288,8 +289,8 @@ it('allows editing and deleting a student only within the organization', functio
     [$school] = phaseFourSchoolYear($user);
     $student = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Anna', 'last_name' => 'A', 'class_name' => '2a']);
 
-    $this->actingAs($user)->put("/schuelerinnen/{$student->id}", ['first_name' => 'Anja', 'last_name' => 'A', 'class_name' => '2b'])->assertRedirect();
-    expect($student->fresh()->first_name)->toBe('Anja')->and($student->fresh()->class_name)->toBe('2b');
+    $this->actingAs($user)->put("/schuelerinnen/{$student->id}", ['first_name' => 'Anja', 'last_name' => 'A', 'class_name' => '2b', 'denomination' => 'catholic'])->assertRedirect();
+    expect($student->fresh()->first_name)->toBe('Anja')->and($student->fresh()->class_name)->toBe('2b')->and($student->fresh()->denomination)->toBe('catholic');
 
     $otherUser = phaseFourUser();
     $this->actingAs($otherUser)->put("/schuelerinnen/{$student->id}", ['first_name' => 'Fremd', 'last_name' => 'Konto', 'class_name' => '9'])->assertForbidden();

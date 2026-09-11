@@ -51,7 +51,7 @@ class TeachingGroupController extends Controller
     public function show(TeachingGroup $teachingGroup, SongbookContentsResolver $contentsResolver, CompetencyResolver $competencyResolver): Response
     {
         $this->authorize('view', $teachingGroup);
-        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
+        $teachingGroup->load(['school:id,name', 'schoolYear:id,name,starts_on,ends_on', 'gradeLevels', 'gradeComponents', 'students:id,school_id,first_name,last_name,class_name,notes,receives_grades,pronoun_set,denomination', 'timetableSlots', 'curricula:id,title,denominations', 'schoolPeriods:id,school_id,period_number,starts_at,ends_at', 'rituals.phaseTemplate:id,title,duration_minutes', 'songbook.entries.songVersion.song', 'songbook.entries.songVersion.sheet', 'songbook.entries.songVersion.chordSets', 'assessments.tasks', 'reportPeriods.evaluations.student']);
         $userId = auth()->user()->id;
         $gradeLevels = $teachingGroup->gradeLevels->pluck('grade_level')->map(fn ($grade) => (int) preg_replace('/\D+/', '', (string) $grade))->filter();
         $planCompetencies = CurriculumTopicEducationPlanReference::query()
@@ -164,7 +164,7 @@ class TeachingGroupController extends Controller
             'group' => $teachingGroup,
             'pronounSets' => PronounSets::toArray(),
             'songbookVersions' => $songbookVersions,
-            'students' => Student::where('user_id', $userId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes']),
+            'students' => Student::where('user_id', $userId)->where('school_id', $teachingGroup->school_id)->orderBy('last_name')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'class_name', 'notes', 'pronoun_set', 'denomination']),
             'curricula' => Curriculum::where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $userId))->orderBy('title')->get(['id', 'title']),
             'schoolPeriods' => $teachingGroup->school->periods()->orderBy('period_number')->get(['id', 'school_id', 'period_number', 'starts_at', 'ends_at']),
             'ritualPhaseTemplates' => PhaseTemplate::where('user_id', $userId)->where('is_active', true)->orderBy('position')->orderBy('title')->get(['id', 'title', 'duration_minutes']),
@@ -370,7 +370,7 @@ class TeachingGroupController extends Controller
         abort_if(count($lines) < 2, 422, 'Die CSV-Datei enthält keine Schüler:innen.');
         $delimiter = str_contains($lines[0], ';') ? ';' : ',';
         $headers = array_map(fn (string $header): string => Str::lower(trim(ltrim($header, "\xEF\xBB\xBF"))), str_getcsv($lines[0], $delimiter));
-        $aliases = ['vorname' => 'first_name', 'nachname' => 'last_name', 'klasse' => 'class_name', 'notizen' => 'notes'];
+        $aliases = ['vorname' => 'first_name', 'nachname' => 'last_name', 'klasse' => 'class_name', 'notizen' => 'notes', 'konfession' => 'denomination'];
         $headers = array_map(fn (string $header): string => $aliases[$header] ?? $header, $headers);
         abort_unless(collect(['first_name', 'last_name', 'class_name'])->diff($headers)->isEmpty(), 422, 'Die CSV-Datei benötigt die Spalten Vorname, Nachname und Klasse.');
         $createdStudents = collect();
@@ -389,6 +389,7 @@ class TeachingGroupController extends Controller
                     'last_name' => trim($row['last_name']),
                     'class_name' => trim($row['class_name']),
                     'notes' => filled($row['notes'] ?? null) ? trim($row['notes']) : null,
+                    'denomination' => filled($row['denomination'] ?? null) ? trim($row['denomination']) : null,
                 ]));
                 $created++;
             }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'school_id', 'first_name', 'last_name', 'class_name', 'notes', 'receives_grades', 'pronoun_set'])]
+#[Fillable(['user_id', 'school_id', 'first_name', 'last_name', 'class_name', 'notes', 'receives_grades', 'pronoun_set', 'denomination'])]
 class Student extends Model
 {
     protected function casts(): array

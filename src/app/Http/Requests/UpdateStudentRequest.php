@@ -22,6 +22,7 @@ class UpdateStudentRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'receives_grades' => ['sometimes', 'boolean'],
             'pronoun_set' => ['sometimes', Rule::in(PronounSets::keys())],
+            'denomination' => ['nullable', 'string', 'max:50'],
         ];
     }
 }
