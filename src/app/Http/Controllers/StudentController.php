@@ -10,6 +10,7 @@ use App\Models\StudentEvaluation;
 use App\Models\StudentEvaluationCompetenceRating;
 use App\Models\TeachingGroup;
 use App\Students\PronounSets\PronounSets;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -91,6 +92,13 @@ class StudentController extends Controller
         $className = trim((string) $request->query('class_name', ''));
         $groupId = $request->integer('teaching_group_id') ?: null;
         $schoolYearId = $request->integer('school_year_id') ?: null;
+        $fields = collect($request->input('fields', []))->intersect($this->exportFields())->values();
+        if ($fields->isEmpty()) {
+            $fields = collect(['last_name', 'first_name_plus', 'pronoun_set', 'class_name', 'denomination']);
+        }
+        $sort = in_array($request->query('sort'), ['last_name', 'first_name', 'class_name', 'school', 'school_year', 'denomination', 'pronoun_set'], true) ? $request->query('sort') : 'last_name';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+        $groupByClass = $request->boolean('group_by_class');
         $searchableStudentIds = $this->searchableStudentIds($search, $userId);
 
         $students = Student::query()
@@ -100,26 +108,133 @@ class StudentController extends Controller
             ->when($className !== '', fn ($query) => $query->where('class_name', $className))
             ->when($groupId, fn ($query) => $query->whereHas('teachingGroups', fn ($groupQuery) => $groupQuery->whereKey($groupId)))
             ->when($schoolYearId, fn ($query) => $query->whereHas('teachingGroups', fn ($groupQuery) => $groupQuery->where('school_year_id', $schoolYearId)))
-            ->with(['school:id,name', 'teachingGroups:id,name,school_year_id', 'teachingGroups.schoolYear:id,name'])
-            ->orderByRaw('LOWER(last_name)')
-            ->orderByRaw('LOWER(first_name)')
+            ->with(['school:id,name', 'teachingGroups:id,name,aktenzeichen,school_year_id', 'teachingGroups.schoolYear:id,name'])
             ->get();
 
-        return response()->streamDownload(function () use ($students): void {
+        $students = $this->sortExportStudents($students, $sort, $direction, $groupByClass);
+        $firstNamePlus = $this->firstNamePlus($students);
+        $filename = $this->exportFilename($students);
+
+        return response()->streamDownload(function () use ($students, $fields, $firstNamePlus): void {
             $handle = fopen('php://output', 'wb');
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, ['Nachname', 'Vorname', 'Klasse', 'Schule', 'Schuljahre'], ';');
+            fputcsv($handle, $fields->map(fn (string $field): string => $this->exportFieldLabels()[$field])->all(), ';');
             foreach ($students as $student) {
-                fputcsv($handle, [
-                    $student->last_name,
-                    $student->first_name,
-                    $student->class_name,
-                    $student->school->name,
-                    $student->teachingGroups->pluck('schoolYear.name')->filter()->unique()->implode(', '),
-                ], ';');
+                fputcsv($handle, $fields->map(fn (string $field) => $this->exportFieldValue($student, $field, $firstNamePlus[$student->id] ?? $student->first_name))->all(), ';');
             }
             fclose($handle);
-        }, 'schuelerinnen.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function exportFields(): array
+    {
+        return ['last_name', 'first_name', 'first_name_plus', 'pronoun_set', 'class_name', 'denomination', 'school', 'school_year'];
+    }
+
+    private function exportFieldLabels(): array
+    {
+        return [
+            'last_name' => 'Nachname',
+            'first_name' => 'Vorname',
+            'first_name_plus' => 'Vorname_Plus',
+            'pronoun_set' => 'Pronomen',
+            'class_name' => 'Klasse',
+            'denomination' => 'Konfession',
+            'school' => 'Schule',
+            'school_year' => 'Schuljahre',
+        ];
+    }
+
+    private function exportFieldValue(Student $student, string $field, string $firstNamePlus): string
+    {
+        return match ($field) {
+            'first_name' => (string) $student->first_name,
+            'first_name_plus' => $firstNamePlus,
+            'pronoun_set' => collect(PronounSets::toArray())->firstWhere('key', $student->pronoun_set)['label'] ?? (string) $student->pronoun_set,
+            'class_name' => (string) $student->class_name,
+            'denomination' => [
+                'evangelical' => 'evangelisch',
+                'catholic' => 'katholisch',
+                'old_catholic' => 'alt-katholisch',
+                'syriac_orthodox' => 'syrisch-orthodox',
+            ][$student->denomination] ?? (string) $student->denomination,
+            'school' => (string) ($student->school?->name ?? ''),
+            'school_year' => $student->teachingGroups->pluck('schoolYear.name')->filter()->unique()->implode(', '),
+            default => (string) $student->last_name,
+        };
+    }
+
+    private function sortExportStudents(Collection $students, string $sort, string $direction, bool $groupByClass): Collection
+    {
+        $value = function (Student $student) use ($sort): string {
+            return mb_strtolower(match ($sort) {
+                'first_name' => (string) $student->first_name,
+                'class_name' => (string) $student->class_name,
+                'school' => (string) ($student->school?->name ?? ''),
+                'school_year' => $student->teachingGroups->pluck('schoolYear.name')->filter()->unique()->implode(', '),
+                'denomination' => (string) $student->denomination,
+                'pronoun_set' => (string) $student->pronoun_set,
+                default => (string) $student->last_name,
+            });
+        };
+        $lastName = fn (Student $student): string => mb_strtolower((string) $student->last_name);
+        $firstName = fn (Student $student): string => mb_strtolower((string) $student->first_name);
+
+        return $students->sort(function (Student $a, Student $b) use ($value, $lastName, $firstName, $direction, $groupByClass, $sort): int {
+            $comparison = $groupByClass ? strnatcasecmp((string) $a->class_name, (string) $b->class_name) : 0;
+            if ($comparison === 0 && $sort !== 'class_name') {
+                $comparison = strnatcasecmp($value($a), $value($b));
+            }
+            if ($comparison === 0) {
+                $comparison = strnatcasecmp($lastName($a), $lastName($b));
+            }
+            if ($comparison === 0) {
+                $comparison = strnatcasecmp($firstName($a), $firstName($b));
+            }
+            return $direction === 'desc' && (! $groupByClass || $comparison !== strnatcasecmp((string) $a->class_name, (string) $b->class_name)) ? -$comparison : $comparison;
+        })->values();
+    }
+
+    private function firstNamePlus(Collection $students): array
+    {
+        $counts = $students->countBy(fn (Student $student): string => mb_strtolower(trim((string) $student->first_name)));
+
+        return $students->mapWithKeys(function (Student $student) use ($counts): array {
+            $firstName = (string) $student->first_name;
+            $lastNameInitial = mb_substr(trim((string) $student->last_name), 0, 1);
+            $value = ($counts->get(mb_strtolower(trim($firstName)), 0) > 1 && $lastNameInitial !== '') ? $firstName.' '.$lastNameInitial.'.' : $firstName;
+
+            return [$student->id => $value];
+        })->all();
+    }
+
+    private function exportFilename(Collection $students): string
+    {
+        $groups = $students->flatMap->teachingGroups;
+        $components = collect([
+            $this->uniqueExportComponent($groups->pluck('aktenzeichen')),
+            $this->uniqueExportComponent($groups->pluck('schoolYear.name')->map(fn ($name) => $this->canonicalSchoolYear((string) $name))),
+            $this->uniqueExportComponent($groups->pluck('name')),
+        ])->filter()->values();
+
+        return ($components->isNotEmpty() ? $components->implode('_').' ' : '').'Liste.csv';
+    }
+
+    private function uniqueExportComponent(Collection $values): ?string
+    {
+        $values = $values->map(fn ($value) => $this->filenamePart((string) $value))->filter()->unique()->values();
+
+        return $values->count() === 1 ? $values->first() : null;
+    }
+
+    private function canonicalSchoolYear(string $name): string
+    {
+        return preg_replace('/^(\d{4})\/(\d{2})$/', '$1-$2', trim($name)) ?: trim($name);
+    }
+
+    private function filenamePart(string $value): string
+    {
+        return trim((string) preg_replace(['%[\\/]+%', '/[^\pL\pN._ -]+/u', '/\s+/u', '/\.{2,}/'], ['-', '-', ' ', '.'], $value), ' .-');
     }
 
     private function searchableStudentIds(string $search, int $userId): ?array

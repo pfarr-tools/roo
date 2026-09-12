@@ -225,7 +225,7 @@ it('exports only the organizations students with their school years', function (
     [$otherSchool] = phaseFourSchoolYear($otherUser);
     Student::create(['user_id' => $otherUser->id, 'school_id' => $otherSchool->id, 'first_name' => 'Fremd', 'last_name' => 'Person', 'class_name' => '9']);
 
-    $response = $this->actingAs($user)->get('/schueler:innen/export?class_name=2a');
+    $response = $this->actingAs($user)->get('/schueler:innen/export?class_name=2a&fields[]=last_name&fields[]=first_name&fields[]=class_name&fields[]=school&fields[]=school_year');
     ob_start();
     $response->sendContent();
     $content = ob_get_clean();
@@ -235,6 +235,57 @@ it('exports only the organizations students with their school years', function (
         ->and($content)->toContain('Export;Anna;2a;"Schule Phase 4";2026/27')
         ->and($content)->not->toContain('Nicht;Export;3a')
         ->and($content)->not->toContain('Fremd');
+});
+
+it('exports configurable student fields with Vorname Plus and a contextual filename', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a', 'aktenzeichen' => '62.55']);
+    $hansMueller = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Hans', 'last_name' => 'Müller', 'class_name' => '7a', 'denomination' => 'evangelical']);
+    $hansSchneider = Student::create(['user_id' => $user->id, 'school_id' => $school->id, 'first_name' => 'Hans', 'last_name' => 'Schneider', 'class_name' => '7a', 'denomination' => 'catholic']);
+    $group->students()->attach([$hansMueller->id, $hansSchneider->id]);
+
+    $response = $this->actingAs($user)->get('/schueler:innen/export?teaching_group_id='.$group->id.'&fields[]=first_name_plus&fields[]=denomination');
+    ob_start();
+    $response->sendContent();
+    $content = ob_get_clean();
+
+    expect($response->headers->get('content-disposition'))->toContain('62.55_2026-27_7a Liste.csv')
+        ->and($content)->toContain("Vorname_Plus;Konfession")
+        ->and($content)->toContain('"Hans M.";evangelisch')
+        ->and($content)->toContain('"Hans S.";katholisch')
+        ->and($content)->not->toContain('Nachname')
+        ->and($content)->not->toContain('Schule');
+
+    $defaultResponse = $this->actingAs($user)->get('/schueler:innen/export?teaching_group_id='.$group->id);
+    ob_start();
+    $defaultResponse->sendContent();
+    $defaultContent = ob_get_clean();
+
+    expect($defaultContent)->toContain('Nachname;Vorname_Plus;Pronomen;Klasse;Konfession')
+        ->and($defaultContent)->not->toContain('Schule')
+        ->and($defaultContent)->not->toContain('Schuljahre');
+});
+
+it('sorts and groups student exports by class', function () {
+    $user = phaseFourUser();
+    [$school, $year] = phaseFourSchoolYear($user);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => 'Mehrere Klassen']);
+    $students = collect([
+        ['first_name' => 'Berta', 'last_name' => 'Z', 'class_name' => '7b'],
+        ['first_name' => 'Anna', 'last_name' => 'Y', 'class_name' => '7a'],
+        ['first_name' => 'Clara', 'last_name' => 'X', 'class_name' => '7a'],
+    ])->map(fn (array $attributes) => Student::create(['user_id' => $user->id, 'school_id' => $school->id] + $attributes));
+    $group->students()->attach($students->pluck('id'));
+
+    $response = $this->actingAs($user)->get('/schueler:innen/export?teaching_group_id='.$group->id.'&fields[]=first_name&fields[]=class_name&sort=first_name&direction=asc&group_by_class=1');
+    ob_start();
+    $response->sendContent();
+    $content = ob_get_clean();
+
+    expect($content)->toContain("Vorname;Klasse")
+        ->and(strpos($content, 'Anna;7a'))->toBeLessThan(strpos($content, 'Clara;7a'))
+        ->and(strpos($content, 'Clara;7a'))->toBeLessThan(strpos($content, 'Berta;7b'));
 });
 
 it('redirects the legacy student list path to the canonical path', function () {

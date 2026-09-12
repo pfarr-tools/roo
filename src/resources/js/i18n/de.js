@@ -821,6 +821,11 @@ export default {
     exportStudentsTitle: "Schüler:innen als CSV exportieren",
     exportStudentsIntro:
         "Die aktuellen Filter werden auf den Export angewendet.",
+    exportFields: "Felder",
+    firstNamePlus: "Vorname_Plus",
+    exportSort: "Sortierung",
+    exportSortDirection: "Reihenfolge",
+    exportGroupByClass: "Nach Klasse gruppieren",
     searchStudents: "Name, Klasse oder Schule suchen",
     filterBySchool: "Nach Schule filtern",
     filterByClass: "Nach Klasse filtern",
