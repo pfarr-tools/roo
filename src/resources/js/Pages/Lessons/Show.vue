@@ -249,7 +249,7 @@ async function printLessonSongs() {
     <AppShell>
         <div class="planning-toast-container" aria-live="polite" aria-atomic="true"><div v-for="toast in toastMessages" :key="toast.id" class="planning-toast" :class="`planning-toast-${toast.type}`" role="alert"><span>{{ toast.message }}</span><button class="btn-close btn-close-white ms-3" type="button" :aria-label="de.close" @click="toastMessages = toastMessages.filter(item => item.id !== toast.id)"></button></div></div>
         <template #toolbar>
-            <a href="/dashboard" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+            <a href="/stundenplan" class="btn btn-sm btn-light" :title="de.close" :aria-label="de.close"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             <button v-if="activeTab === 'planning'" class="btn btn-sm btn-primary ms-2" type="button" @click="savePlanning"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button>
             <template v-else-if="activeTab === 'execution'"><button class="btn btn-sm btn-success ms-2" type="button" :disabled="executionForm.processing" @click="markConducted"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ de.markConducted }}</button><button class="btn btn-sm btn-primary ms-2" type="button" :disabled="executionForm.processing" @click="saveExecution"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ de.saveChanges }}</button></template>
             <button v-if="assignedLessonSongs.length" class="btn btn-sm btn-outline-primary ms-2" type="button" @click="showLessonSongPrintModal = true"><i class="bi bi-printer me-1" aria-hidden="true"></i>Neue Lieder drucken</button>

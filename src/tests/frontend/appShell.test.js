@@ -22,7 +22,7 @@ describe('AppShell navigation', () => {
 
         expect(teachingHeading).not.toBeUndefined()
         expect(teachingHeading.nextElementSibling.textContent).toContain('Stundenplan')
-        expect(teachingHeading.nextElementSibling.getAttribute('href')).toBe('/dashboard')
+        expect(teachingHeading.nextElementSibling.getAttribute('href')).toBe('/stundenplan')
         expect(root.textContent).not.toContain('Dokumente und KI')
         expect(root.querySelector('.roo-avatar').textContent).toBe('MM')
         expect(root.textContent).toContain('Max Mustermann')

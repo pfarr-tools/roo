@@ -67,6 +67,7 @@ class DashboardController extends Controller
 
                     return array_merge($entry, [
                         'schedule_slot_id' => $slot?->id,
+                        'slot_status' => $slot?->status,
                         'schedule_slot' => null,
                         'lesson' => $lesson ? [
                             'id' => $lesson->id,

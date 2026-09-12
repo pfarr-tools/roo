@@ -203,6 +203,9 @@ body {
 .dashboard-lesson-card + .dashboard-lesson-card { margin-top: .5rem; }
 .dashboard-lesson-card-planned { border-color: rgba(40,122,89,.35); background: rgba(40,122,89,.08); }
 .dashboard-lesson-card-unplanned { border-color: rgba(234,165,31,.65); background: rgba(234,165,31,.14); }
+.dashboard-lesson-card-absent { border-color: rgba(194,60,60,.55); background: rgba(194,60,60,.12); }
+.dashboard-lesson-card-cancelled { border-color: rgba(234,165,31,.7); background: rgba(234,165,31,.2); }
+.dashboard-lesson-card-blocked { border-color: rgba(108,117,125,.65); background: rgba(108,117,125,.15); }
 .dashboard-lesson-card-clickable { cursor: pointer; }
 .dashboard-lesson-card-clickable:hover, .dashboard-lesson-card-clickable:focus-visible { border-color: var(--roo-orange-dark); box-shadow: 0 .2rem .65rem rgba(60, 37, 13, .1); outline: 0; }
 .dashboard-lesson-header { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; white-space: nowrap; }

@@ -31,7 +31,7 @@ use Inertia\Inertia;
 
 Route::get('/', function (Request $request) {
     if ($request->user()) {
-        return to_route('dashboard');
+        return to_route('stundenplan');
     }
 
     return Inertia::render('Welcome');
@@ -48,7 +48,8 @@ Route::get('/oeffentlich/unterrichtseinheiten/{teachingUnit}/galerie/{galleryIma
     ->name('public.teaching-units.gallery.image');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/stundenplan', DashboardController::class)->name('stundenplan');
+    Route::get('/dashboard', fn () => to_route('stundenplan'))->name('dashboard');
     Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/flux/credits', [FluxController::class, 'credits'])->name('flux.credits');

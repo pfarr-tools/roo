@@ -100,7 +100,7 @@ onBeforeUnmount(() => {
 })
 const moduleGroups = [
     { title: labels.teaching, items: [
-        { label: labels.timetable, icon: 'bi-grid-1x2', url: '/dashboard', enabled: true },
+        { label: labels.timetable, icon: 'bi-grid-1x2', url: '/stundenplan', enabled: true },
         { label: labels.planningModule, icon: 'bi-calendar-range', url: '/jahresplanung', enabled: true },
     ] },
     { title: labels.schoolLife, items: [
@@ -132,7 +132,7 @@ defineProps({
         <ConfirmationModal />
         <div class="roo-toast-container" aria-live="polite" aria-atomic="true"><div v-for="toast in flashToasts" :key="toast.id" class="roo-toast" :class="`roo-toast-${toast.type}`" role="status"><span>{{ toast.message }}</span><button class="btn-close btn-close-white ms-3" type="button" :aria-label="labels.close" @click="flashToasts = flashToasts.filter(item => item.id !== toast.id)"></button></div></div>
         <aside v-if="authenticated && showHeader" class="roo-sidebar" aria-label="Module" @mouseenter="sidebarHovered = true" @mouseleave="sidebarHovered = false">
-            <div class="roo-sidebar-brand"><a class="roo-brand" :href="authenticated ? '/dashboard' : '/'"><img class="roo-sidebar-icon" :src="icon" alt="Roo – Religionsunterricht organisieren"><span v-if="sidebarExpanded" class="roo-sidebar-name">Roo</span></a><button class="btn btn-sm btn-link roo-sidebar-toggle" type="button" :aria-label="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" :title="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" @click="sidebarPinned = !sidebarPinned"><i :class="sidebarPinned ? 'bi bi-pin-angle-fill' : 'bi bi-pin-angle'" aria-hidden="true"></i></button></div>
+            <div class="roo-sidebar-brand"><a class="roo-brand" :href="authenticated ? '/stundenplan' : '/'"><img class="roo-sidebar-icon" :src="icon" alt="Roo – Religionsunterricht organisieren"><span v-if="sidebarExpanded" class="roo-sidebar-name">Roo</span></a><button class="btn btn-sm btn-link roo-sidebar-toggle" type="button" :aria-label="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" :title="sidebarPinned ? 'Navigation lösen' : 'Navigation anheften'" @click="sidebarPinned = !sidebarPinned"><i :class="sidebarPinned ? 'bi bi-pin-angle-fill' : 'bi bi-pin-angle'" aria-hidden="true"></i></button></div>
             <nav class="roo-module-nav" :aria-label="'Hauptnavigation – ' + labels.modules">
                 <template v-for="group in moduleGroups" :key="group.title">
                     <div class="roo-nav-heading"><span>{{ group.title }}</span></div>

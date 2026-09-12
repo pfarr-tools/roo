@@ -13,13 +13,13 @@ it('shows the German login page', function () {
         ->assertInertia(fn (Assert $page) => $page->component('Auth/Login'));
 });
 
-it('redirects authenticated users from the home page to the dashboard', function () {
+it('redirects authenticated users from the home page to the timetable', function () {
     $user = User::factory()->create();
 
-    $this->actingAs($user)->get('/')->assertRedirect('/dashboard');
+    $this->actingAs($user)->get('/')->assertRedirect('/stundenplan');
 });
 
-it('registers a user and redirects to the dashboard', function () {
+it('registers a user and redirects to the timetable', function () {
     $this->withoutMiddleware();
 
     $response = $this->post('/register', [
@@ -30,7 +30,7 @@ it('registers a user and redirects to the dashboard', function () {
         'password_confirmation' => 'Ein-sicheres-Passwort-123!',
     ]);
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/stundenplan');
     $this->assertAuthenticated();
     $this->assertDatabaseHas('users', ['email' => 'erika@example.test']);
 
@@ -41,19 +41,21 @@ it('registers a user and redirects to the dashboard', function () {
         '_token' => csrf_token(),
         'email' => 'erika@example.test',
         'password' => 'Ein-sicheres-Passwort-123!',
-    ])->assertRedirect('/dashboard');
+    ])->assertRedirect('/stundenplan');
 
     $this->assertAuthenticated();
 });
 
-it('protects the dashboard and allows an authenticated user to log out', function () {
+it('protects the timetable and allows an authenticated user to log out', function () {
     $user = User::factory()->create();
 
-    $this->get('/dashboard')->assertRedirect('/login');
+    $this->get('/stundenplan')->assertRedirect('/login');
 
-    $this->actingAs($user)->get('/dashboard')
+    $this->actingAs($user)->get('/stundenplan')
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
+
+    $this->actingAs($user)->get('/dashboard')->assertRedirect('/stundenplan');
 
     $this->post('/logout', ['_token' => csrf_token()])->assertRedirect('/');
     $this->assertGuest();
