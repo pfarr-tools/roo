@@ -264,10 +264,11 @@ it('bricht lange Akkordzeilen im PDF innerhalb des Satzspiegels um', function ()
     $bbox = (new Process(['pdftotext', '-bbox-layout', Storage::disk('local')->path($path), '-']))->mustRun()->getOutput();
     preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>S<\/word>/', $bbox, $start);
     preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>Z<\/word>/', $bbox, $end);
-    preg_match_all('/<line\b[^>]*\byMin="([0-9.]+)"[^>]*>/', $bbox, $lines);
+    preg_match_all('/<line\b[^>]*\byMin="([0-9.]+)"[^>]*\byMax="([0-9.]+)"[^>]*>/', $bbox, $lines);
     $songLineYs = array_values(array_filter(
         array_unique(array_map('floatval', $lines[1] ?? [])),
-        fn (float $y): bool => $y > 120,
+        fn (float $y, int $index): bool => $y > 120 && ((float) ($lines[2][$index] ?? 0) - $y) >= 18,
+        ARRAY_FILTER_USE_BOTH,
     ));
     $lineGaps = [];
     foreach (array_slice($songLineYs, 1) as $index => $y) {
@@ -279,6 +280,31 @@ it('bricht lange Akkordzeilen im PDF innerhalb des Satzspiegels um', function ()
         ->and((float) $end[1])->toBeGreaterThan((float) $start[1])
         ->and($lineGaps)->not->toBeEmpty()
         ->and(min($lineGaps))->toBeGreaterThanOrEqual(27.0);
+});
+
+it('setzt Akkorde jeder Textzeile zwischen die Liedzeilen', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Akkordabstand'])->versions()->create(['name' => 'Fassung']);
+    $part = $version->parts()->create(['content' => "Erste Zeile\nZweite Zeile\nDritte Zeile", 'position' => 1]);
+    $set = $version->chordSets()->create(['instrument' => 'Gitarre']);
+    $set->chords()->createMany([
+        ['song_part_id' => $part->id, 'line_number' => 0, 'character_offset' => 0, 'chord' => 'G'],
+        ['song_part_id' => $part->id, 'line_number' => 1, 'character_offset' => 0, 'chord' => 'C'],
+        ['song_part_id' => $part->id, 'line_number' => 2, 'character_offset' => 0, 'chord' => 'D'],
+    ]);
+
+    $path = app(SongbookPdfExporter::class)->generateSongVersionChordSheets($version)['Gitarre'];
+    $bbox = (new Process(['pdftotext', '-bbox-layout', Storage::disk('local')->path($path), '-']))->mustRun()->getOutput();
+    preg_match('/<word\b[^>]*\byMin="([0-9.]+)"[^>]*\byMax="([0-9.]+)"[^>]*>E<\/word>/', $bbox, $firstText);
+    preg_match('/<word\b[^>]*\byMin="([0-9.]+)"[^>]*>C<\/word>/', $bbox, $secondChord);
+    preg_match('/<word\b[^>]*\byMin="([0-9.]+)"[^>]*>weite<\/word>/', $bbox, $secondText);
+
+    expect($firstText[2] ?? null)->not->toBeNull()
+        ->and($secondChord[1] ?? null)->not->toBeNull()
+        ->and($secondText[1] ?? null)->not->toBeNull()
+        ->and((float) $secondChord[1])->toBeGreaterThanOrEqual((float) $firstText[2])
+        ->and((float) $secondText[1] - (float) $secondChord[1])->toBeLessThanOrEqual(16.0);
 });
 
 it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
