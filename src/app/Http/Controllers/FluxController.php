@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -10,7 +11,13 @@ class FluxController extends Controller
 {
     public function credits(Request $request): JsonResponse
     {
-        $response = Http::withHeaders($this->headers($this->apiKey($request)))->get($this->url('/credits'));
+        try {
+            $response = Http::withHeaders($this->headers($this->apiKey($request)))->get($this->url('/credits'));
+        } catch (ConnectionException $exception) {
+            report($exception);
+
+            return $this->unavailable();
+        }
 
         return response()->json($response->json(), $response->status());
     }
@@ -25,7 +32,13 @@ class FluxController extends Controller
         $model = collect(config('flux.models'))->firstWhere('key', $data['model']);
         abort_unless($model, 422, 'Das gewählte FLUX-Modell ist nicht verfügbar.');
         $payload = collect($data)->only(['prompt', 'width', 'height', 'prompt_upsampling'])->all();
-        $response = Http::withHeaders($this->headers($this->apiKey($request)))->post($this->url('/'.$model['endpoint']), $payload);
+        try {
+            $response = Http::withHeaders($this->headers($this->apiKey($request)))->post($this->url('/'.$model['endpoint']), $payload);
+        } catch (ConnectionException $exception) {
+            report($exception);
+
+            return $this->unavailable();
+        }
 
         return response()->json($response->json(), $response->status());
     }
@@ -34,16 +47,27 @@ class FluxController extends Controller
     {
         $key = $this->apiKey($request);
         $data = $request->validate(['url' => ['required', 'url']]);
-        $response = Http::withHeaders($this->headers($key))->get($this->allowedUrl($data['url']));
-        $payload = $response->json();
-        if ($response->successful() && ($payload['status'] ?? null) === 'Ready' && filled($payload['result']['sample'] ?? null)) {
-            $image = Http::withHeaders($this->headers($key))->get($this->allowedUrl($payload['result']['sample']));
-            if ($image->successful()) {
-                $payload['image_data'] = 'data:'.($image->header('Content-Type') ?: 'image/png').';base64,'.base64_encode($image->body());
+        try {
+            $response = Http::withHeaders($this->headers($key))->get($this->allowedUrl($data['url']));
+            $payload = $response->json();
+            if ($response->successful() && ($payload['status'] ?? null) === 'Ready' && filled($payload['result']['sample'] ?? null)) {
+                $image = Http::withHeaders($this->headers($key))->get($this->allowedUrl($payload['result']['sample']));
+                if ($image->successful()) {
+                    $payload['image_data'] = 'data:'.($image->header('Content-Type') ?: 'image/png').';base64,'.base64_encode($image->body());
+                }
             }
+        } catch (ConnectionException $exception) {
+            report($exception);
+
+            return $this->unavailable();
         }
 
         return response()->json($payload, $response->status());
+    }
+
+    private function unavailable(): JsonResponse
+    {
+        return response()->json(['message' => 'Der FLUX-Dienst ist derzeit nicht erreichbar.'], 502);
     }
 
     private function apiKey(Request $request): string

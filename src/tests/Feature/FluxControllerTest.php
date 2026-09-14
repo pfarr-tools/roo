@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -20,4 +21,14 @@ it('proxyfiziert Credits, Bildauftrag und asynchrones FLUX-Ergebnis mit dem Benu
     $this->actingAs($user)->get('/flux/poll?url='.urlencode('https://api.bfl.ai/v1/get_result?id=abc'))->assertOk()->assertJsonPath('status', 'Ready')->assertJsonPath('image_data', 'data:image/png;base64,cG5nLWRhdGE=');
 
     Http::assertSent(fn ($request) => $request->hasHeader('x-key', 'secret-key'));
+});
+
+it('meldet einen nicht erreichbaren FLUX-Dienst als verständlichen Gateway-Fehler', function () {
+    $user = User::factory()->create(['flux_api_key' => 'secret-key']);
+    Http::fake(fn () => throw new ConnectionException('DNS lookup failed'));
+
+    $this->actingAs($user)
+        ->getJson('/flux/credits')
+        ->assertStatus(502)
+        ->assertJson(['message' => 'Der FLUX-Dienst ist derzeit nicht erreichbar.']);
 });
