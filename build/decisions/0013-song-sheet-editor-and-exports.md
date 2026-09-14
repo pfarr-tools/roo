@@ -36,4 +36,7 @@ an eine konkrete Unterrichtsgruppe gebunden.
 Beim PDF-Export werden lange Akkordzeilen innerhalb des A4-Satzspiegels an
 Wortgrenzen umgebrochen; einzelne überlange Wörter dürfen zusätzlich innerhalb
 des Wortes umbrechen. Die Akkordpositionen bleiben dabei an den jeweiligen
-Textzeichen verankert.
+Textzeichen verankert. Der Liedtext erhält eine doppelte Zeilenhöhe, damit
+Akkorde der folgenden Textzeile nicht in den vorherigen Liedtext ragen.
+Liedteilnummern und Wiederholungsangaben werden auch auf Akkordblättern
+ausgegeben.

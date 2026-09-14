@@ -226,7 +226,7 @@ it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function ()
     $this->actingAs($user)->get("/bibliothek/lied/{$version->id}")->assertInertia(fn ($page) => $page->where('songVersion.chord_sets', []));
     $this->actingAs($user)->put("/lieder/fassungen/{$version->id}", [
         'name' => 'Gitarrenfassung', 'language' => 'de',
-        'parts' => [['id' => $part->id, 'content' => $part->content, 'is_refrain' => false]],
+        'parts' => [['id' => $part->id, 'content' => $part->content, 'is_refrain' => false, 'is_numbered' => true, 'is_repeated' => true, 'repeat_count' => 3]],
         'chord_sets' => [['instrument' => 'Gitarre', 'name' => 'Capo 2', 'key_signature' => 'G-Dur', 'chords' => [
             ['song_part_id' => $part->id, 'line_number' => 0, 'character_offset' => 0, 'chord' => 'G'],
             ['song_part_id' => $part->id, 'line_number' => 1, 'character_offset' => 3, 'chord' => 'C'],
@@ -244,6 +244,8 @@ it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function ()
     $response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt/akkord/Gitarre");
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($response->headers->get('content-disposition'))->toContain('Akkordblatt Gitarre.pdf');
+    $pdfText = (new Process(['pdftotext', '-layout', Storage::disk('local')->path($version->fresh()->generated_chord_sheet_paths['Gitarre']), '-']))->mustRun()->getOutput();
+    expect($pdfText)->toContain('1. (3x)');
 });
 
 it('bricht lange Akkordzeilen im PDF innerhalb des Satzspiegels um', function () {
@@ -262,10 +264,21 @@ it('bricht lange Akkordzeilen im PDF innerhalb des Satzspiegels um', function ()
     $bbox = (new Process(['pdftotext', '-bbox-layout', Storage::disk('local')->path($path), '-']))->mustRun()->getOutput();
     preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>S<\/word>/', $bbox, $start);
     preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>Z<\/word>/', $bbox, $end);
+    preg_match_all('/<line\b[^>]*\byMin="([0-9.]+)"[^>]*>/', $bbox, $lines);
+    $songLineYs = array_values(array_filter(
+        array_unique(array_map('floatval', $lines[1] ?? [])),
+        fn (float $y): bool => $y > 120,
+    ));
+    $lineGaps = [];
+    foreach (array_slice($songLineYs, 1) as $index => $y) {
+        $lineGaps[] = $y - $songLineYs[$index];
+    }
 
     expect($start[1] ?? null)->not->toBeNull()
         ->and($end[1] ?? null)->not->toBeNull()
-        ->and((float) $end[1])->toBeGreaterThan((float) $start[1]);
+        ->and((float) $end[1])->toBeGreaterThan((float) $start[1])
+        ->and($lineGaps)->not->toBeEmpty()
+        ->and(min($lineGaps))->toBeGreaterThanOrEqual(27.0);
 });
 
 it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {

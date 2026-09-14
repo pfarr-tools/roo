@@ -244,7 +244,16 @@ class SongbookPdfExporter
 
     private function renderChordVersion(string $directory, SongVersion $version, $set, string $name): string
     {
-        $parts = $version->parts->map(fn ($part): string => $this->renderChordPart($part, $set->chords))->implode('');
+        $previousNumber = 0;
+        $parts = $version->parts->map(function ($part) use ($set, &$previousNumber): string {
+            $number = null;
+            if ($part->is_numbered) {
+                $number = $part->number ?? $previousNumber + 1;
+                $previousNumber = $number;
+            }
+
+            return $this->renderChordPart($part, $set->chords, $number);
+        })->implode('');
         $heading = '<div class="song-heading"><h1>'.e($version->song->title).'</h1></div>';
         $credits = $this->renderCredits($version);
         $content = $heading.'<div class="chord-instrument">'.e((string) $set->instrument).($set->key_signature ? ' · '.e((string) $set->key_signature) : '').'</div>'.$parts.$credits;
@@ -291,10 +300,15 @@ class SongbookPdfExporter
         return isset($matches[1], $matches[2]) && (float) $matches[1] > (float) $matches[2];
     }
 
-    private function renderChordPart($part, $chords): string
+    private function renderChordPart($part, $chords, ?int $number = null): string
     {
         $lines = preg_split('/\R/u', (string) $part->content) ?: [''];
         $markup = '<section class="part chord-part'.($part->is_refrain ? ' refrain' : '').'">';
+        $prefix = $number === null ? '' : $number.'. ';
+        $repeatSuffix = $part->is_repeated ? ' ('.($part->repeat_count ?? 2).'x)' : '';
+        if ($prefix !== '' || $repeatSuffix !== '') {
+            $markup .= '<div class="chord-part-label">'.e($prefix.$repeatSuffix).'</div>';
+        }
         $repetitions = $part->is_repeated ? max(2, (int) ($part->repeat_count ?? 2)) : 1;
         for ($repetition = 0; $repetition < $repetitions; $repetition++) {
             foreach ($lines as $lineNumber => $line) {
@@ -484,7 +498,7 @@ class SongbookPdfExporter
         $titleFont = config('songs.title_font_family', 'Comic Neue');
         $titleSize = config('songs.title_font_size', 24);
         $titleWeight = config('songs.title_font_weight', 'bold');
-        $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-line{position:relative;min-height:calc(1.25em + 15pt);padding-top:15pt;line-height:1.25;white-space:normal;overflow-wrap:anywhere;word-break:normal}.chord-word{display:inline-block;max-width:100%;white-space:normal;vertical-align:top}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;top:-15pt;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;top:auto;margin-bottom:.25rem}' : '';
+        $chordCss = $isChordSheet ? '.chord-instrument{font-size:10pt;margin:-1.25rem 0 1.5rem}.chord-part{white-space:normal}.chord-part-label{font-weight:bold;line-height:1;margin:0 0 .25rem}.chord-line{position:relative;min-height:calc(2em + 15pt);padding-top:15pt;line-height:2;white-space:normal;overflow-wrap:anywhere;word-break:normal}.chord-word{display:inline-block;max-width:100%;white-space:normal;vertical-align:top}.chord-character{position:relative;display:inline-block;white-space:pre}.chord{position:absolute;left:0;top:-15pt;font-family:"Atkinson Hyperlegible Next";font-size:10pt;font-weight:normal;line-height:1;white-space:nowrap}.chord-empty{position:relative;display:inline-block;top:auto;margin-bottom:.25rem}' : '';
         $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>'.$this->fontFaceCss().'@page{size:'.$size.';margin:0}*{box-sizing:border-box}body{font-family:"'.config('songs.text_font_family', 'Atkinson Hyperlegible Next').'";font-size:'.config('songs.text_font_size', 14).'pt;font-weight:'.config('songs.text_font_weight', 'normal').';width:'.$pageWidth.';height:'.$pageHeight.';position:relative;margin:0;overflow:hidden}.song-export-canvas{position:relative;width:'.$pageWidth.';height:'.$pageHeight.';'.$canvasPadding.';overflow:hidden}'.$copyCss.'.song-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:0 0 2rem}.song-heading h1{font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';margin:0;min-width:0}.song-number{flex:0 0 auto;font-family:"'.$titleFont.'";font-size:'.$titleSize.'pt;font-weight:'.$titleWeight.';line-height:1}.song-imprint{position:absolute;left:'.$left.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:6pt;font-weight:normal;color:#6c757d;line-height:1;white-space:nowrap;transform:rotate(-90deg);transform-origin:left bottom}.song-credits{position:absolute;right:'.$right.'mm;bottom:'.$bottom.'mm;font-family:"Atkinson Hyperlegible Next";font-size:8pt;font-weight:normal;text-align:right;max-width:85%}.part{margin:0 0 1.25rem;white-space:pre-line}.refrain{font-family:"'.config('songs.refrain_font_family', 'Comic Neue').'";font-size:'.config('songs.refrain_font_size', 14).'pt;font-weight:'.config('songs.refrain_font_weight', 'normal').';border:0;padding:0}.placed-image{position:absolute;object-fit:contain;transform-origin:center}.title-image{width:100%;height:100%;object-fit:contain}.portrait-crop-left{width:100%;height:100%;overflow:hidden}.portrait-crop-left .title-image{width:200%;max-width:none;object-fit:fill}'.$chordCss.'</style></head><body><div class="song-export-canvas">'.$content.'</div></body></html>';
         $htmlPath = $directory.'/'.$name.'.html';
         File::put($htmlPath, $html);
