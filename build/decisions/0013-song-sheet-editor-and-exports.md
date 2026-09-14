@@ -32,3 +32,8 @@ Damit können Akkorde im Editor direkt über dem jeweiligen Textzeichen gesetzt
 werden, ohne Liedtext und Akkordnotation in einem unvalidierten Freitextfeld zu
 vermischen. Akkordsätze gehören zur Liedfassung und werden nicht global oder
 an eine konkrete Unterrichtsgruppe gebunden.
+
+Beim PDF-Export werden lange Akkordzeilen innerhalb des A4-Satzspiegels an
+Wortgrenzen umgebrochen; einzelne überlange Wörter dürfen zusätzlich innerhalb
+des Wortes umbrechen. Die Akkordpositionen bleiben dabei an den jeweiligen
+Textzeichen verankert.

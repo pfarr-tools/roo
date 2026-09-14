@@ -10,9 +10,11 @@ use App\Models\SongVersion;
 use App\Models\TeachingGroup;
 use App\Models\User;
 use App\Services\SongbookContentsResolver;
+use App\Services\SongbookPdfExporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
 
 uses(RefreshDatabase::class);
 
@@ -242,6 +244,28 @@ it('speichert Akkordsätze pro Instrument an konkreten Textzeichen', function ()
     $response = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/liedblatt/erzeugt/akkord/Gitarre");
     $response->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($response->headers->get('content-disposition'))->toContain('Akkordblatt Gitarre.pdf');
+});
+
+it('bricht lange Akkordzeilen im PDF innerhalb des Satzspiegels um', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Lange Akkordzeile'])->versions()->create(['name' => 'Fassung']);
+    $content = 'S'.str_repeat('Eine sehr lange Liedzeile mit vielen Worten ', 18).'Z';
+    $part = $version->parts()->create(['content' => $content, 'position' => 1]);
+    $set = $version->chordSets()->create(['instrument' => 'Gitarre']);
+    $set->chords()->createMany([
+        ['song_part_id' => $part->id, 'line_number' => 0, 'character_offset' => 0, 'chord' => 'G'],
+        ['song_part_id' => $part->id, 'line_number' => 0, 'character_offset' => mb_strlen($content) - 3, 'chord' => 'C'],
+    ]);
+
+    $path = app(SongbookPdfExporter::class)->generateSongVersionChordSheets($version)['Gitarre'];
+    $bbox = (new Process(['pdftotext', '-bbox-layout', Storage::disk('local')->path($path), '-']))->mustRun()->getOutput();
+    preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>S<\/word>/', $bbox, $start);
+    preg_match('/<word[^>]+yMin="([0-9.]+)"[^>]*>Z<\/word>/', $bbox, $end);
+
+    expect($start[1] ?? null)->not->toBeNull()
+        ->and($end[1] ?? null)->not->toBeNull()
+        ->and((float) $end[1])->toBeGreaterThan((float) $start[1]);
 });
 
 it('erneuert ungültige erzeugte Liedblätter vor dem Download', function () {
