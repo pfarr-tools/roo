@@ -185,13 +185,13 @@ class TeachingGroupController extends Controller
         $data = $request->validate(['title_page' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200']]);
         $book = $teachingGroup->songbook()->firstOrCreate([]);
         if ($book->title_page_path) {
-            Storage::disk('local')->delete($book->title_page_path);
+            Storage::disk(config('filesystems.default'))->delete($book->title_page_path);
         }
         if ($book->title_page_a4_path) {
-            Storage::disk('local')->delete($book->title_page_a4_path);
+            Storage::disk(config('filesystems.default'))->delete($book->title_page_a4_path);
         }
         $file = $data['title_page'];
-        $titlePagePath = $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), 'local');
+        $titlePagePath = $file->storeAs('songbooks', Str::uuid().'.'.$file->getClientOriginalExtension(), config('filesystems.default'));
         $book->update(['title_page_path' => $titlePagePath, 'title_page_a4_path' => $exporter->generateTitlePageA4($titlePagePath), 'title_page_original_name' => $file->getClientOriginalName(), 'title_page_mime_type' => $file->getMimeType(), 'title_page_size' => $file->getSize()]);
 
         return back()->with('success', 'Titelseite des Liederbuchs wurde gespeichert.');
@@ -202,8 +202,10 @@ class TeachingGroupController extends Controller
         $this->authorize('view', $teachingGroup);
         $book = $teachingGroup->songbook;
         abort_unless($book?->title_page_path, 404);
+        $disk = Storage::disk(config('filesystems.default'));
+        abort_unless($disk->exists($book->title_page_path), 404);
 
-        return response()->file(Storage::disk('local')->path($book->title_page_path), ['Content-Type' => $book->title_page_mime_type ?: 'application/octet-stream']);
+        return response($disk->get($book->title_page_path), 200, ['Content-Type' => $book->title_page_mime_type ?: 'application/octet-stream']);
     }
 
     public function searchSongbookSongs(Request $request, TeachingGroup $teachingGroup)

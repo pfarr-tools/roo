@@ -195,6 +195,7 @@ it('stellt ein über die Ressourcenbibliothek zugeordnetes Lied im Unterrichtsar
 
 it('schützt und speichert die Titelseite des Gruppenliederbuchs', function () {
     Storage::fake('local');
+    Storage::fake('s3');
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Titel Schule']);
     $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
@@ -203,7 +204,28 @@ it('schützt und speichert die Titelseite des Gruppenliederbuchs', function () {
     $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/liederbuch/titelseite", ['title_page' => UploadedFile::fake()->create('titelseite.pdf', 10, 'application/pdf')])->assertRedirect();
     $book = $group->fresh()->songbook;
     expect($book->title_page_original_name)->toBe('titelseite.pdf');
-    Storage::disk('local')->assertExists($book->title_page_path);
+    Storage::disk('s3')->assertExists($book->title_page_path);
+});
+
+it('nimmt die Titelseite aus dem konfigurierten Speicher in den Gruppenliederbuchdruck auf', function () {
+    Storage::fake('local');
+    Storage::fake('s3');
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Druck Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6a']);
+    $book = $group->songbook()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Drucklied'])->versions()->create(['name' => 'Fassung']);
+    $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => now()]);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/liederbuch/titelseite", [
+        'title_page' => UploadedFile::fake()->image('druck-titelseite.png', 120, 80),
+    ])->assertRedirect();
+
+    $path = app(SongbookPdfExporter::class)->export($book->fresh(), 'a5');
+    $pdfImages = (new Process(['pdfimages', '-list', Storage::disk('local')->path($path)]))->mustRun()->getOutput();
+
+    expect($pdfImages)->toContain('120')->toContain('80');
 });
 
 it('zeigt gespeicherte Ausgangslieder wieder in der Gruppenansicht an', function () {

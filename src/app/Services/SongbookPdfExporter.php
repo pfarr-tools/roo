@@ -52,7 +52,11 @@ class SongbookPdfExporter
     {
         $temporary = storage_path('app/temporary/title-page-a4-'.Str::uuid());
         File::ensureDirectoryExists($temporary);
-        $source = Storage::disk('local')->path($sourcePath);
+        $source = $this->materializeStorageFile($sourcePath, $temporary, 'title-page');
+        if ($source === null) {
+            File::deleteDirectory($temporary);
+            throw new \RuntimeException('Die Titelseite konnte nicht aus dem Speicher gelesen werden.');
+        }
         $image = $source;
 
         try {
@@ -66,7 +70,7 @@ class SongbookPdfExporter
         }
 
         $stored = 'songs/generated/'.Str::uuid().'.pdf';
-        Storage::disk('local')->put($stored, File::get($pdf));
+        Storage::disk(config('filesystems.default'))->put($stored, File::get($pdf));
         File::deleteDirectory($temporary);
 
         return $stored;
@@ -95,16 +99,22 @@ class SongbookPdfExporter
         $pages = [];
         $pageFormat = $format === 'chord-sheet' ? 'chord-sheet' : $format;
         $titlePageFormat = $format === 'chord-sheet' ? 'a4' : $format;
-        if ($afterDate === null && $book->title_page_path && Storage::disk('local')->exists($book->title_page_path)) {
-            $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path && Storage::disk('local')->exists($book->title_page_a4_path)
-                ? $book->title_page_a4_path
-                : $book->title_page_path;
+        if ($afterDate === null && $book->title_page_path) {
+            $titlePagePath = $pageFormat === 'a4' && $book->title_page_a4_path
+                ? $this->materializeStorageFile($book->title_page_a4_path, $temporary, 'title-page-a4')
+                : null;
+            $titlePagePath ??= $this->materializeStorageFile($book->title_page_path, $temporary, 'title-page');
+            if ($titlePagePath === null) {
+                $titlePagePath = null;
+            }
+        }
+        if (isset($titlePagePath) && $titlePagePath !== null) {
             if ($format === 'chord-sheet') {
-                $pages[] = $this->portraitA4Page($temporary, Storage::disk('local')->path($titlePagePath), 'title', true);
+                $pages[] = $this->portraitA4Page($temporary, $titlePagePath, 'title', true);
             } elseif (str_ends_with(strtolower($titlePagePath), '.pdf')) {
-                $pages[] = Storage::disk('local')->path($titlePagePath);
+                $pages[] = $titlePagePath;
             } else {
-                $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e(Storage::disk('local')->path($titlePagePath)).'">', $titlePageFormat, 'title');
+                $pages[] = $this->htmlPage($temporary, 'Titelseite', '<img class="title-image" src="'.e($titlePagePath).'">', $titlePageFormat, 'title');
             }
         }
         foreach ($entries as $entry) {
@@ -244,6 +254,20 @@ class SongbookPdfExporter
         $content = $format === 'a4' ? '<div class="a4-copy a4-copy-left">'.$page.'</div><div class="a4-copy a4-copy-right">'.$page.'</div>' : $page;
 
         return $this->htmlPage($directory, $version->song->title, $content, $format, 'song-'.$number);
+    }
+
+    private function materializeStorageFile(string $path, string $directory, string $name): ?string
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $localPath = $directory.'/'.$name.($extension ? '.'.$extension : '');
+        File::put($localPath, $disk->get($path));
+
+        return $localPath;
     }
 
     private function renderChordVersion(string $directory, SongVersion $version, $set, string $name): string
