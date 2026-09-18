@@ -99,6 +99,31 @@ it('weist Bilduploads ohne numerische Liedfassungs-ID zurück', function () {
     ])->assertNotFound();
 });
 
+it('speichert und liefert Liedbilder über die konfigurierte Storage-Disk', function () {
+    $originalDisk = config('filesystems.default');
+    Storage::fake('s3');
+    config(['filesystems.default' => 's3']);
+
+    try {
+        $user = User::factory()->create();
+        $version = Song::create(['user_id' => $user->id, 'title' => 'Bildlied'])
+            ->versions()->create(['name' => 'Fassung']);
+
+        $this->actingAs($user)->post("/lieder/fassungen/{$version->id}/bilder", [
+            'images' => [UploadedFile::fake()->image('flux-bild.png')],
+        ])->assertRedirect();
+
+        $image = $version->fresh()->images->firstOrFail();
+        Storage::disk('s3')->assertExists($image->storage_path);
+
+        $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/bilder/{$image->id}")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png');
+    } finally {
+        config(['filesystems.default' => $originalDisk]);
+    }
+});
+
 it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und führt es ins Gruppenliederbuch', function () {
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Liederschule']);
@@ -349,6 +374,7 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
 
 it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', function () {
     Storage::fake('local');
+    Storage::fake('s3');
     $user = User::factory()->create();
     $version = Song::create(['user_id' => $user->id, 'title' => 'Bildlied'])->versions()->create(['name' => 'Fassung']);
 
@@ -358,7 +384,7 @@ it('übernimmt Bibliotheksbilder in Liedfassungen und löscht sie wieder', funct
     $image = $version->fresh()->images->firstOrFail();
     expect($image->original_name)->toBe('quelle.png')->and($image->copyrights)->toBe('Bibliothek / Ada Beispiel');
 
-    Storage::disk('local')->put('songs/images/cache.png', 'image-data');
+    Storage::disk('s3')->put('songs/images/cache.png', 'image-data');
     $image->update(['storage_path' => 'songs/images/cache.png', 'mime_type' => 'image/png']);
     $imageResponse = $this->actingAs($user)->get("/lieder/fassungen/{$version->id}/bilder/{$image->id}?v={$image->updated_at->timestamp}");
     $imageResponse->assertOk();

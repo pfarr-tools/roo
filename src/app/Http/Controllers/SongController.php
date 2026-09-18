@@ -108,7 +108,7 @@ class SongController extends Controller
                 Storage::disk('local')->delete($path);
             }
             foreach ($version->images as $image) {
-                Storage::disk('local')->delete($image->storage_path);
+                $this->songDisk()->delete($image->storage_path);
             }
         }
         $song->delete();
@@ -170,10 +170,15 @@ class SongController extends Controller
         $this->authorizeEditableVersion($request, $songVersion);
         $data = $request->validate(['images' => ['required', 'array', 'max:20'], 'images.*' => ['image', 'max:10240'], 'copyrights' => ['nullable', 'string', 'max:1000']]);
         foreach ($data['images'] as $image) {
-            $songVersion->images()->create(['original_name' => $image->getClientOriginalName(), 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $image->store('songs/images', 'local'), 'mime_type' => $image->getMimeType(), 'size' => $image->getSize()]);
+            $songVersion->images()->create(['original_name' => $image->getClientOriginalName(), 'copyrights' => $data['copyrights'] ?? null, 'storage_path' => $image->store('songs/images', config('filesystems.default')), 'mime_type' => $image->getMimeType(), 'size' => $image->getSize()]);
         }
 
         return back()->with('success', 'Bilder wurden hinzugefügt.');
+    }
+
+    private function songDisk()
+    {
+        return Storage::disk(config('filesystems.default'));
     }
 
     public function importLibraryImage(Request $request, SongVersion $songVersion): RedirectResponse
@@ -184,8 +189,8 @@ class SongController extends Controller
         abort_unless(Storage::disk('local')->exists($resource->storage_path), 404);
         $extension = pathinfo($resource->original_name, PATHINFO_EXTENSION);
         $path = 'songs/images/'.Str::uuid().($extension ? '.'.$extension : '');
-        Storage::disk('local')->copy($resource->storage_path, $path);
-        $songVersion->images()->create(['original_name' => $resource->original_name, 'copyrights' => $resource->copyrights, 'storage_path' => $path, 'mime_type' => $resource->mime_type, 'size' => Storage::disk('local')->size($path)]);
+        $this->songDisk()->put($path, Storage::disk('local')->get($resource->storage_path));
+        $songVersion->images()->create(['original_name' => $resource->original_name, 'copyrights' => $resource->copyrights, 'storage_path' => $path, 'mime_type' => $resource->mime_type, 'size' => $this->songDisk()->size($path)]);
 
         return back()->with('success', 'Bild wurde aus der Bibliothek übernommen.');
     }
@@ -194,7 +199,7 @@ class SongController extends Controller
     {
         $this->authorizeEditableVersion($request, $songVersion);
         abort_unless($songImage->song_version_id === $songVersion->id, 404);
-        Storage::disk('local')->delete($songImage->storage_path);
+        $this->songDisk()->delete($songImage->storage_path);
         $songImage->delete();
         $layout = $songVersion->layout_data ?? [];
         $layout['images'] = collect($layout['images'] ?? [])->reject(fn (array $image): bool => (int) ($image['id'] ?? 0) === $songImage->id)->values()->all();
@@ -297,7 +302,9 @@ class SongController extends Controller
         $this->authorizeVersion($request, $songVersion);
         abort_unless($songImage->song_version_id === $songVersion->id, 404);
 
-        return response()->file(Storage::disk('local')->path($songImage->storage_path), [
+        abort_unless($this->songDisk()->exists($songImage->storage_path), 404);
+
+        return response($this->songDisk()->get($songImage->storage_path), 200, [
             'Content-Type' => $songImage->mime_type ?: 'application/octet-stream',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
