@@ -212,18 +212,22 @@ class SongbookPdfExporter
         if ($parts === '') {
             $parts = '<div class="part">'.e((string) $version->lyrics).'</div>';
         }
-        $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): string {
+        $disk = Storage::disk(config('filesystems.default'));
+        $images = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version, $disk, $directory): string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);
-            if (! $record || ! Storage::disk('local')->exists($record->storage_path)) {
+            if (! $record || ! $disk->exists($record->storage_path)) {
                 return '';
             }
+            $extension = pathinfo($record->storage_path, PATHINFO_EXTENSION) ?: 'png';
+            $imagePath = $directory.'/song-image-'.$record->id.'.'.$extension;
+            File::put($imagePath, $disk->get($record->storage_path));
             $transform = 'rotate('.((float) ($image['rotation'] ?? 0)).'deg) scale('.(($image['flipX'] ?? false) ? -1 : 1).', '.(($image['flipY'] ?? false) ? -1 : 1).')';
             $x = ((float) ($image['x'] ?? 20)) * 148 / 420;
             $y = ((float) ($image['y'] ?? 20)) * 210 / 595.28;
             $width = ((float) ($image['width'] ?? 100)) * 148 / 420;
             $height = ((float) ($image['height'] ?? 100)) * 210 / 595.28;
 
-            return '<img class="placed-image" src="'.e(Storage::disk('local')->path($record->storage_path)).'" style="left:'.$x.'mm;top:'.$y.'mm;width:'.$width.'mm;height:'.$height.'mm;transform:'.$transform.'">';
+            return '<img class="placed-image" src="'.e($imagePath).'" style="left:'.$x.'mm;top:'.$y.'mm;width:'.$width.'mm;height:'.$height.'mm;transform:'.$transform.'">';
         })->implode('');
         $imageCredits = collect($version->layout_data['images'] ?? [])->map(function (array $image) use ($version): ?string {
             $record = $version->images->firstWhere('id', $image['id'] ?? null);

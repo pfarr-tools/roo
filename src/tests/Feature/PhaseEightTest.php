@@ -124,6 +124,31 @@ it('speichert und liefert Liedbilder über die konfigurierte Storage-Disk', func
     }
 });
 
+it('bettet Liedbilder aus der konfigurierten Storage-Disk in das PDF ein', function () {
+    $originalDisk = config('filesystems.default');
+    Storage::fake('s3');
+    config(['filesystems.default' => 's3']);
+
+    try {
+        $user = User::factory()->create();
+        $version = Song::create(['user_id' => $user->id, 'title' => 'PDF-Bildlied'])
+            ->versions()->create(['name' => 'Fassung']);
+
+        $this->actingAs($user)->post("/lieder/fassungen/{$version->id}/bilder", [
+            'images' => [UploadedFile::fake()->image('pdf-bild.png', 120, 80)],
+        ])->assertRedirect();
+        $image = $version->fresh()->images->firstOrFail();
+        $version->update(['layout_data' => ['images' => [['id' => $image->id, 'x' => 20, 'y' => 20, 'width' => 100, 'height' => 100]]]]);
+
+        $path = app(SongbookPdfExporter::class)->generateSongVersion($version->fresh(), $user->name);
+        $pdfImages = (new Process(['pdfimages', '-list', Storage::disk('local')->path($path)]))->mustRun()->getOutput();
+
+        expect($pdfImages)->toContain('120')->toContain('80');
+    } finally {
+        config(['filesystems.default' => $originalDisk]);
+    }
+});
+
 it('ordnet ein Lied über die gemeinsame Ressourcenroute einer Phase zu und führt es ins Gruppenliederbuch', function () {
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Liederschule']);
