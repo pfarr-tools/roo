@@ -251,7 +251,7 @@ function saveEditor() {
         }));
         return form.post("/lieder", {
             preserveScroll: true,
-            onSuccess: closeEditor,
+            onSuccess: refreshEditorVersion,
         });
     }
     const chordSets = editor.chord_sets.map((set) => ({
@@ -270,7 +270,7 @@ function saveEditor() {
     editor.transform((data) => ({ ...data, chord_sets: chordSets }));
     editor.put(`/lieder/fassungen/${editorVersion.value.id}`, {
         preserveScroll: true,
-        onSuccess: closeEditor,
+        onSuccess: refreshEditorVersion,
     });
 }
 function uploadImages() {
