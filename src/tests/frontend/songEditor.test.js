@@ -11,12 +11,15 @@ const { visit, forms } = vi.hoisted(() => ({
 vi.mock("@inertiajs/vue3", () => ({
     router: { visit },
     useForm(initial) {
+        let defaults = { ...initial };
         const form = reactive({
             ...initial,
             processing: false,
             errors: {},
-            defaults: vi.fn(),
-            reset: vi.fn(),
+            defaults: vi.fn((values) => {
+                defaults = values;
+            }),
+            reset: vi.fn(() => Object.assign(form, defaults)),
             transform: vi.fn((callback) => {
                 form.transformed = callback(form);
                 return form;
@@ -45,7 +48,7 @@ vi.mock("../../resources/js/Components/Songs/ChordEditor.vue", () => ({
 
 import SongEditor from "../../resources/js/Pages/Songs/Index.vue";
 
-function mount() {
+function mount(songVersion = {}) {
     const root = document.createElement("div");
     document.body.append(root);
     const app = createApp(SongEditor, {
@@ -58,6 +61,7 @@ function mount() {
             chord_sets: [],
             images: [],
             layout_data: { images: [] },
+            ...songVersion,
         },
         isCreating: false,
         songStyles: {},
@@ -101,6 +105,33 @@ describe("SongEditor", () => {
 
         expect(forms[0].put).not.toHaveBeenCalled();
         expect(visit).toHaveBeenCalledWith("/bibliothek");
+        unmount();
+    });
+
+    it("splits a song part at the current caret into a new part", async () => {
+        forms.length = 0;
+        const { root, unmount } = mount({
+            parts: [{ content: "Ursprünglicher Text", is_refrain: false }],
+        });
+        await nextTick();
+
+        root.querySelectorAll(".nav-link")[1].click();
+        await nextTick();
+
+        const textarea = root.querySelector("textarea[placeholder=\"Text\"]");
+        textarea.value = "Anfang Ende";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        await nextTick();
+        textarea.focus();
+        textarea.setSelectionRange(7, 7);
+
+        root.querySelector('button[aria-label="Teil ab Cursor teilen"]').click();
+        await nextTick();
+
+        const textareas = root.querySelectorAll("textarea[placeholder=\"Text\"]");
+        expect(textareas).toHaveLength(2);
+        expect(textareas[0].value).toBe("Anfang ");
+        expect(textareas[1].value).toBe("Ende");
         unmount();
     });
 });

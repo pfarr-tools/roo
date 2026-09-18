@@ -477,6 +477,25 @@ function addPart() {
         number: null,
     });
 }
+function splitPart(index, event) {
+    const part = editor.parts[index];
+    const content = part.content ?? "";
+    const textarea = event.currentTarget
+        .closest(".border")
+        ?.querySelector("textarea");
+    const splitAt = textarea?.selectionStart ?? content.length;
+
+    part.content = content.slice(0, splitAt);
+    editor.parts.splice(index + 1, 0, {
+        id: nextClientPartId.value--,
+        content: content.slice(splitAt),
+        is_refrain: false,
+        is_repeated: false,
+        repeat_count: 2,
+        is_numbered: false,
+        number: null,
+    });
+}
 function movePart(index, direction) {
     const target = index + direction;
     if (target < 0 || target >= editor.parts.length) return;
@@ -903,6 +922,14 @@ function closeEditor() {
                                         <i
                                             class="bi bi-chevron-down"
                                         ></i></button
+                                    ><button
+                                        class="btn btn-sm btn-link p-0"
+                                        type="button"
+                                        title="Teil ab Cursor teilen"
+                                        aria-label="Teil ab Cursor teilen"
+                                        @click="splitPart(index, $event)"
+                                    >
+                                        <i class="bi bi-scissors"></i></button
                                     ><button
                                         class="btn btn-sm btn-link text-danger p-0"
                                         type="button"
