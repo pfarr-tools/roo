@@ -49,6 +49,22 @@ class SongbookController extends Controller
         $export = $book->exports()->create(['format' => $data['format'], 'through_date' => $data['through_date'] ?? null, 'storage_path' => $path, 'entry_count' => $book->entries()->when($data['through_date'] ?? null, fn ($query) => $query->whereDate('added_at', '<=', $data['through_date']))->when($data['from_date'] ?? null, fn ($query) => $query->where('added_at', '>', $data['from_date'].' 00:00:00'))->count()]);
         $book->checkpoints()->create(['printed_at' => now(), 'entry_count' => $export->entry_count]);
 
-        return Storage::disk('local')->download($path, 'Gruppenliederbuch-'.$format.'.pdf');
+        return Storage::disk('local')->download($path, $this->filename($teachingGroup, $format));
+    }
+
+    private function filename(TeachingGroup $teachingGroup, string $format): string
+    {
+        $teachingGroup->loadMissing('schoolYear');
+        $parts = collect([$teachingGroup->aktenzeichen, $teachingGroup->schoolYear?->name, $teachingGroup->name])
+            ->map(fn (?string $value): string => $this->filenamePart($value))
+            ->filter();
+        $paper = $format === 'a4' ? 'A4' : 'A5';
+
+        return ($parts->isNotEmpty() ? $parts->implode('_').' ' : '').'Liederbuch '.$paper.'.pdf';
+    }
+
+    private function filenamePart(?string $value): string
+    {
+        return trim((string) preg_replace('/[^\pL\pN._-]+/u', '-', (string) $value), '-_.');
     }
 }

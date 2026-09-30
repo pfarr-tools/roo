@@ -106,7 +106,9 @@ async function printSongbook() {
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `Gruppenliederbuch-${printForm.value.format}.pdf`
+        const contentDisposition = response.headers.get('content-disposition') ?? ''
+        const filename = contentDisposition.match(/filename="([^"]+)"/)?.[1]
+        link.download = filename ?? `Liederbuch ${printForm.value.format.toUpperCase()}.pdf`
         document.body.appendChild(link)
         link.click()
         link.remove()

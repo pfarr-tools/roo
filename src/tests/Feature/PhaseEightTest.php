@@ -228,6 +228,47 @@ it('nimmt die Titelseite aus dem konfigurierten Speicher in den Gruppenliederbuc
     expect($pdfImages)->toContain('120')->toContain('80');
 });
 
+it('nimmt die Titelseite beim Querformatdruck des gesamten Gruppenliederbuchs auf', function () {
+    Storage::fake('local');
+    Storage::fake('s3');
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Querformat Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6b']);
+    $book = $group->songbook()->create();
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Querformatlied'])->versions()->create(['name' => 'Fassung']);
+    $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => now()]);
+
+    $this->actingAs($user)->post("/unterrichtsgruppen/{$group->id}/liederbuch/titelseite", [
+        'title_page' => UploadedFile::fake()->image('querformat-titelseite.png', 120, 80),
+    ])->assertRedirect();
+
+    $path = app(SongbookPdfExporter::class)->export($book->fresh(), 'a4');
+    $pdfInfo = (new Process(['pdfinfo', Storage::disk('local')->path($path)]))->mustRun()->getOutput();
+
+    expect($pdfInfo)->toMatch('/^Pages:\s+2$/m');
+});
+
+it('übernimmt eine vor der Storage-Umstellung gespeicherte Titelseite aus local', function () {
+    Storage::fake('local');
+    Storage::fake('s3');
+    config(['filesystems.default' => 's3']);
+    $user = User::factory()->create();
+    $school = School::create(['user_id' => $user->id, 'name' => 'Alte Titelseite Schule']);
+    $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '6c']);
+    $book = $group->songbook()->create(['title_page_path' => 'songbooks/alte-titelseite.png', 'title_page_mime_type' => 'image/png']);
+    $version = Song::create(['user_id' => $user->id, 'title' => 'Altes Titelbildlied'])->versions()->create(['name' => 'Fassung']);
+    $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => now()]);
+    $file = UploadedFile::fake()->image('alte-titelseite.png', 120, 80);
+    Storage::disk('local')->put('songbooks/alte-titelseite.png', file_get_contents($file->getRealPath()));
+
+    $path = app(SongbookPdfExporter::class)->export($book->fresh(), 'a5');
+    $pdfImages = (new Process(['pdfimages', '-list', Storage::disk('local')->path($path)]))->mustRun()->getOutput();
+
+    expect($pdfImages)->toContain('120')->toContain('80');
+});
+
 it('zeigt gespeicherte Ausgangslieder wieder in der Gruppenansicht an', function () {
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Ausgangslieder Schule']);
@@ -400,7 +441,7 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
     $user = User::factory()->create();
     $school = School::create(['user_id' => $user->id, 'name' => 'Export Schule']);
     $year = SchoolYear::create(['user_id' => $user->id, 'school_id' => $school->id, 'name' => '2026/27', 'starts_on' => '2026-09-01', 'ends_on' => '2027-07-31']);
-    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a']);
+    $group = TeachingGroup::create(['user_id' => $user->id, 'school_id' => $school->id, 'school_year_id' => $year->id, 'name' => '7a', 'aktenzeichen' => '62.53']);
     $version = Song::create(['user_id' => $user->id, 'title' => 'Exportlied'])->versions()->create(['name' => 'Fassung']);
     $lesson = $group->teachingUnits()->create(['user_id' => $user->id, 'title' => 'Exportstunde', 'position' => 1])->lessons()->create(['title' => 'Erste Stunde', 'position' => 1, 'duration' => 1]);
     $phaseVersion = Song::create(['user_id' => $user->id, 'title' => 'Stundenlied'])->versions()->create(['name' => 'Fassung']);
@@ -409,7 +450,7 @@ it('erzeugt einen datierten A5-Gruppenliederbuch-Export und einen Druckstand', f
     $book->entries()->create(['song_version_id' => $version->id, 'song_number' => 1, 'added_at' => '2026-09-01']);
 
     $response = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=a5&through_date=2026-09-30");
-    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    $response->assertOk()->assertHeader('content-type', 'application/pdf')->assertHeader('content-disposition', 'attachment; filename="62.53_2026-27_7a Liederbuch A5.pdf"');
     $chordResponse = $this->actingAs($user)->get("/unterrichtsgruppen/{$group->id}/liederbuch/export?format=chord-sheet&instrument=Gitarre&through_date=2026-09-30");
     $chordResponse->assertOk()->assertHeader('content-type', 'application/pdf');
     expect($book->fresh()->entries)->toHaveCount(1)->and($book->fresh()->entries->pluck('song_version_id')->all())->not->toContain($phaseVersion->id)

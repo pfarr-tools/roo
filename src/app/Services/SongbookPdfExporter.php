@@ -258,16 +258,21 @@ class SongbookPdfExporter
 
     private function materializeStorageFile(string $path, string $directory, string $name): ?string
     {
-        $disk = Storage::disk(config('filesystems.default'));
-        if (! $disk->exists($path)) {
-            return null;
+        $disks = array_values(array_unique([config('filesystems.default'), 'local']));
+        foreach ($disks as $diskName) {
+            $disk = Storage::disk($diskName);
+            if (! $disk->exists($path)) {
+                continue;
+            }
+
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            $localPath = $directory.'/'.$name.($extension ? '.'.$extension : '');
+            File::put($localPath, $disk->get($path));
+
+            return $localPath;
         }
 
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
-        $localPath = $directory.'/'.$name.($extension ? '.'.$extension : '');
-        File::put($localPath, $disk->get($path));
-
-        return $localPath;
+        return null;
     }
 
     private function renderChordVersion(string $directory, SongVersion $version, $set, string $name): string
